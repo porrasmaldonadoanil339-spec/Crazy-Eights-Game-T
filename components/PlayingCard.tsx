@@ -1,11 +1,12 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
+import React, { useEffect } from "react";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/colors";
 import type { Card, Suit } from "@/lib/gameEngine";
 import { suitSymbol, suitColor } from "@/lib/gameEngine";
@@ -20,10 +21,86 @@ interface PlayingCardProps {
 }
 
 const SIZES = {
-  sm: { w: 42, h: 62, rank: 10, suit: 12, corner: 6 },
-  md: { w: 58, h: 84, rank: 14, suit: 16, corner: 8 },
-  lg: { w: 72, h: 104, rank: 17, suit: 20, corner: 10 },
+  sm: { w: 46, h: 68,  rs: 11, ss: 13, corner: 7  },
+  md: { w: 64, h: 92,  rs: 15, ss: 18, corner: 9  },
+  lg: { w: 82, h: 118, rs: 18, ss: 22, corner: 11 },
 };
+
+function CardFront({ card, sobj }: { card: Card; sobj: typeof SIZES.md }) {
+  const color = suitColor(card.suit);
+  const sym = suitSymbol(card.suit);
+  const isRed = card.suit === "hearts" || card.suit === "diamonds";
+  const isEight = card.rank === "8";
+
+  return (
+    <LinearGradient
+      colors={["#FEFDF4", "#F8F4E6", "#EEE8D0"]}
+      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+      style={[styles.cardFace, { borderRadius: sobj.corner, borderColor: isEight ? Colors.gold + "aa" : "rgba(0,0,0,0.12)" }]}
+    >
+      {/* Top-left rank + suit */}
+      <View style={styles.cornerTL}>
+        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color }]}>{card.rank}</Text>
+        <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color }]}>{sym}</Text>
+      </View>
+
+      {/* Center display */}
+      <View style={styles.cardCenterArea}>
+        {isEight ? (
+          <LinearGradient
+            colors={[color, color + "aa"]}
+            style={[styles.eightBadge, { width: sobj.ss + 10, height: sobj.ss + 10, borderRadius: (sobj.ss + 10) / 2 }]}
+          >
+            <Text style={[styles.eightSym, { fontSize: sobj.ss - 2 }]}>{sym}</Text>
+          </LinearGradient>
+        ) : (
+          <Text style={[styles.centerSuitText, { fontSize: sobj.ss + 4, color }]}>{sym}</Text>
+        )}
+        {isEight && (
+          <Text style={[styles.eightNum, { fontSize: sobj.rs - 1, color }]}>8</Text>
+        )}
+      </View>
+
+      {/* Bottom-right (mirrored) */}
+      <View style={styles.cornerBR}>
+        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color, transform: [{ rotate: "180deg" }] }]}>{card.rank}</Text>
+        <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color, transform: [{ rotate: "180deg" }] }]}>{sym}</Text>
+      </View>
+
+      {/* Subtle inner frame */}
+      <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2 }]} />
+    </LinearGradient>
+  );
+}
+
+function CardBack({ sobj }: { sobj: typeof SIZES.md }) {
+  return (
+    <LinearGradient
+      colors={["#1E4080", "#0e2248", "#0a1832"]}
+      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+      style={[styles.cardFace, { borderRadius: sobj.corner, borderColor: Colors.gold + "88" }]}
+    >
+      {/* Diagonal pattern */}
+      <View style={styles.backPatternWrap}>
+        {[0,1,2,3].map(row => (
+          <View key={row} style={styles.backPatternRow}>
+            {[0,1,2,3,4].map(col => (
+              <Text key={col} style={[styles.backDot, { fontSize: sobj.ss * 0.42 }]}>◆</Text>
+            ))}
+          </View>
+        ))}
+      </View>
+      {/* Gold center emblem */}
+      <View style={styles.backCenterWrap}>
+        <View style={[styles.backEmblemCircle, { width: sobj.ss + 6, height: sobj.ss + 6, borderRadius: (sobj.ss + 6) / 2 }]}>
+          <Text style={[styles.backEmblemText, { fontSize: sobj.ss - 2 }]}>◆</Text>
+        </View>
+      </View>
+      {/* Gold inner border */}
+      <View style={[styles.backInnerBorder, { borderRadius: sobj.corner - 2 }]} />
+    </LinearGradient>
+  );
+}
 
 export function PlayingCard({
   card,
@@ -31,216 +108,156 @@ export function PlayingCard({
   isPlayable = false,
   isSelected = false,
   faceDown = false,
-  size = "md",
+  size: sizeKey = "md",
 }: PlayingCardProps) {
-  const s = SIZES[size];
-  const scale = useSharedValue(1);
-  const translateY = useSharedValue(isSelected ? -10 : 0);
+  const sobj = SIZES[sizeKey];
+  const ty = useSharedValue(0);
+  const sc = useSharedValue(1);
+  const glowOp = useSharedValue(0);
 
-  React.useEffect(() => {
-    translateY.value = withSpring(isSelected ? -14 : 0, { damping: 15 });
+  useEffect(() => {
+    ty.value = withSpring(isSelected ? -16 : 0, { damping: 13 });
+    sc.value = withSpring(isSelected ? 1.07 : 1, { damping: 13 });
+    glowOp.value = withTiming(isSelected ? 1 : 0, { duration: 180 });
   }, [isSelected]);
 
   const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateY: translateY.value }],
+    transform: [{ translateY: ty.value }, { scale: sc.value }],
   }));
 
-  const color = suitColor(card.suit);
-  const sym = suitSymbol(card.suit);
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOp.value,
+  }));
 
-  const handlePressIn = () => {
-    if (!onPress) return;
-    scale.value = withSpring(0.94, { damping: 15 });
-  };
-  const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15 });
-  };
+  const shadowEl = isSelected
+    ? { shadowColor: Colors.gold, shadowOpacity: 0.95, shadowRadius: 14, elevation: 14 }
+    : isPlayable
+    ? { shadowColor: "#4ade80", shadowOpacity: 0.7, shadowRadius: 10, elevation: 10 }
+    : { shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 5, elevation: 5 };
 
-  if (faceDown) {
+  const inner = (
+    <Animated.View style={[{ position: "relative" }, animStyle]}>
+      {/* Glow behind card */}
+      {(isSelected || isPlayable) && (
+        <Animated.View style={[styles.glowAura, {
+          width: sobj.w + 10, height: sobj.h + 10,
+          borderRadius: sobj.corner + 3,
+          top: -5, left: -5,
+          backgroundColor: isSelected ? Colors.gold + "33" : "#4ade8022",
+          shadowColor: isSelected ? Colors.gold : "#4ade80",
+          shadowOpacity: 0.9, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, elevation: 0,
+        }, glowStyle]} />
+      )}
+
+      <View style={[styles.cardWrap, { width: sobj.w, height: sobj.h, borderRadius: sobj.corner, ...shadowEl }]}>
+        {faceDown ? <CardBack sobj={sobj} /> : <CardFront card={card} sobj={sobj} />}
+      </View>
+
+      {/* Playable indicator */}
+      {isPlayable && !isSelected && (
+        <View style={[styles.playableIndicator, { left: sobj.w * 0.2, right: sobj.w * 0.2 }]} />
+      )}
+    </Animated.View>
+  );
+
+  if (onPress) {
     return (
-      <Animated.View style={[styles.card, { width: s.w, height: s.h }, animStyle]}>
-        <View style={[styles.cardBack, { borderRadius: s.corner }]}>
-          <View style={styles.backPattern}>
-            {Array.from({ length: 6 }).map((_, i) =>
-              Array.from({ length: 4 }).map((__, j) => (
-                <Text
-                  key={`${i}-${j}`}
-                  style={[styles.backDot, { color: Colors.gold, fontSize: 8 }]}
-                >
-                  ◆
-                </Text>
-              ))
-            )}
-          </View>
-          <View style={styles.backBorder} />
-        </View>
-      </Animated.View>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => { sc.value = withSpring(0.93, { damping: 14 }); }}
+        onPressOut={() => { sc.value = withSpring(isSelected ? 1.07 : 1, { damping: 14 }); }}
+        disabled={!onPress}
+      >
+        {inner}
+      </Pressable>
     );
   }
-
-  const isEight = card.rank === "8";
-
-  return (
-    <Pressable
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      disabled={!onPress}
-    >
-      <Animated.View
-        style={[
-          styles.card,
-          { width: s.w, height: s.h, borderRadius: s.corner },
-          isPlayable && styles.cardPlayable,
-          isSelected && styles.cardSelected,
-          isEight && styles.cardEight,
-          animStyle,
-        ]}
-      >
-        <View style={[styles.cardInner, { borderRadius: s.corner - 1 }]}>
-          <View style={styles.cardCornerTL}>
-            <Text style={[styles.rankText, { fontSize: s.rank, color }]}>
-              {card.rank}
-            </Text>
-            <Text style={[styles.suitCorner, { fontSize: s.rank - 2, color }]}>
-              {sym}
-            </Text>
-          </View>
-          <View style={styles.cardCenter}>
-            <Text style={[styles.centerSuit, { fontSize: s.suit + 6, color }]}>
-              {sym}
-            </Text>
-            {isEight && (
-              <Text style={[styles.eightLabel, { fontSize: s.rank - 2 }]}>
-                LOCO
-              </Text>
-            )}
-          </View>
-          <View style={styles.cardCornerBR}>
-            <Text
-              style={[styles.rankText, { fontSize: s.rank, color, transform: [{ rotate: "180deg" }] }]}
-            >
-              {card.rank}
-            </Text>
-            <Text
-              style={[styles.suitCorner, { fontSize: s.rank - 2, color, transform: [{ rotate: "180deg" }] }]}
-            >
-              {sym}
-            </Text>
-          </View>
-        </View>
-        {isPlayable && <View style={styles.glowOverlay} />}
-      </Animated.View>
-    </Pressable>
-  );
+  return inner;
 }
 
 const styles = StyleSheet.create({
-  card: {
-    shadowColor: "#000",
+  cardWrap: {
+    overflow: "hidden",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 6,
   },
-  cardBack: {
+  cardFace: {
     flex: 1,
-    backgroundColor: "#1a3a6a",
-    overflow: "hidden",
-    borderWidth: 1.5,
-    borderColor: Colors.gold,
-  },
-  backPattern: {
-    flex: 1,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 4,
-    gap: 2,
-  },
-  backDot: {
-    opacity: 0.4,
-  },
-  backBorder: {
-    position: "absolute",
-    top: 4,
-    left: 4,
-    right: 4,
-    bottom: 4,
     borderWidth: 1,
-    borderColor: "rgba(212,175,55,0.4)",
-    borderRadius: 4,
   },
-  cardInner: {
-    flex: 1,
-    backgroundColor: Colors.cardWhite,
-    overflow: "hidden",
-    borderWidth: 1.5,
-    borderColor: "rgba(0,0,0,0.15)",
-  },
-  cardPlayable: {
-    shadowColor: Colors.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  cardSelected: {
-    shadowColor: Colors.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 12,
-  },
-  cardEight: {
-    shadowColor: Colors.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-  },
-  cardCornerTL: {
-    position: "absolute",
-    top: 3,
-    left: 4,
+  cornerTL: {
+    position: "absolute", top: 4, left: 5,
     alignItems: "center",
   },
-  cardCornerBR: {
-    position: "absolute",
-    bottom: 3,
-    right: 4,
+  cornerBR: {
+    position: "absolute", bottom: 4, right: 5,
     alignItems: "center",
   },
-  rankText: {
+  rankTxt: {
     fontWeight: "900",
-    lineHeight: 18,
+    lineHeight: 16,
+    letterSpacing: -0.5,
   },
-  suitCorner: {
-    lineHeight: 12,
+  suitTxt: {
+    lineHeight: 13,
+    marginTop: -1,
   },
-  cardCenter: {
+  cardCenterArea: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    gap: 3,
   },
-  centerSuit: {
-    lineHeight: undefined,
+  centerSuitText: {
+    fontWeight: "700",
   },
-  eightLabel: {
+  eightBadge: {
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  eightSym: {
+    color: "#fff",
     fontWeight: "900",
-    color: Colors.gold,
-    letterSpacing: 1,
-    marginTop: 2,
   },
-  glowOverlay: {
+  eightNum: {
+    fontWeight: "900",
+    letterSpacing: -1,
+    marginTop: 1,
+  },
+  innerFrame: {
+    position: "absolute", top: 2, left: 2, right: 2, bottom: 2,
+    borderWidth: 0.5, borderColor: "rgba(0,0,0,0.06)",
+  },
+  backPatternWrap: {
+    position: "absolute", top: 5, left: 4, right: 4, bottom: 5,
+    overflow: "hidden", opacity: 0.18,
+    alignItems: "center", justifyContent: "center", gap: 3,
+  },
+  backPatternRow: { flexDirection: "row", gap: 4 },
+  backDot: { color: Colors.gold },
+  backCenterWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
+  backEmblemCircle: {
+    backgroundColor: Colors.gold + "22",
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: Colors.gold + "66",
+  },
+  backEmblemText: { color: Colors.gold, fontWeight: "900" },
+  backInnerBorder: {
+    position: "absolute", top: 3, left: 3, right: 3, bottom: 3,
+    borderWidth: 1, borderColor: Colors.gold + "55",
+  },
+  glowAura: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(212,175,55,0.08)",
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: Colors.gold,
+    zIndex: -1,
+  },
+  playableIndicator: {
+    position: "absolute", bottom: -6, height: 3, borderRadius: 2,
+    backgroundColor: "#4ade80",
+    shadowColor: "#4ade80", shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9, shadowRadius: 5, elevation: 5,
   },
 });

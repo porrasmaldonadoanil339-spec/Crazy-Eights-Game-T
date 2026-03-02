@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -15,18 +15,47 @@ import {
   Nunito_900ExtraBold,
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
+import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic } from "@/lib/audioManager";
 
 SplashScreen.preventAutoHideAsync();
 
+function AudioManager() {
+  const segments = useSegments();
+  const isFirstRun = useRef(true);
+
+  useEffect(() => {
+    initAudio().then(() => {
+      preloadSounds().catch(() => {});
+      startMenuMusic().catch(() => {});
+    });
+    return () => { stopMusic().catch(() => {}); };
+  }, []);
+
+  useEffect(() => {
+    if (isFirstRun.current) { isFirstRun.current = false; return; }
+    const inGame = segments.includes("game");
+    if (inGame) {
+      startGameMusic().catch(() => {});
+    } else {
+      startMenuMusic().catch(() => {});
+    }
+  }, [segments.join(",")]);
+
+  return null;
+}
+
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="game" options={{ animation: "slide_from_bottom" }} />
-      <Stack.Screen name="tutorial" options={{ animation: "slide_from_bottom" }} />
-      <Stack.Screen name="rules" options={{ animation: "slide_from_right" }} />
-      <Stack.Screen name="+not-found" />
-    </Stack>
+    <>
+      <AudioManager />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="game" options={{ animation: "slide_from_bottom" }} />
+        <Stack.Screen name="tutorial" options={{ animation: "slide_from_bottom" }} />
+        <Stack.Screen name="rules" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+    </>
   );
 }
 

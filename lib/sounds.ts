@@ -1,6 +1,3 @@
-import * as Haptics from "expo-haptics";
-import { Platform } from "react-native";
-
 export type SoundEvent =
   | "card_play"
   | "card_draw"
@@ -15,54 +12,31 @@ export type SoundEvent =
   | "error"
   | "turn_change";
 
-async function safeHaptic(fn: () => Promise<void>) {
-  try {
-    if (Platform.OS !== "web") {
-      await fn();
-    }
-  } catch {}
-}
+import {
+  playCardFlip,
+  playCardDraw,
+  playCardWild,
+  playShuffle,
+  playWin,
+  playLose,
+  playButton,
+  playError,
+  playAchievement,
+} from "@/lib/audioManager";
 
 export async function playSound(event: SoundEvent) {
   switch (event) {
-    case "card_play":
-      await safeHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
-      break;
-    case "card_draw":
-      await safeHaptic(() => Haptics.selectionAsync());
-      break;
-    case "card_wild":
-      await safeHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
-      break;
-    case "card_deal":
-      await safeHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
-      break;
-    case "shuffle":
-      await safeHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));
-      break;
-    case "win":
-      await safeHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
-      break;
-    case "lose":
-      await safeHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
-      break;
-    case "button_press":
-      await safeHaptic(() => Haptics.selectionAsync());
-      break;
-    case "achievement":
-      await safeHaptic(async () => {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 150);
-      });
-      break;
-    case "purchase":
-      await safeHaptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
-      break;
-    case "error":
-      await safeHaptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning));
-      break;
-    case "turn_change":
-      await safeHaptic(() => Haptics.selectionAsync());
-      break;
+    case "card_play":   return playCardFlip();
+    case "card_draw":   return playCardDraw();
+    case "card_wild":   return playCardWild();
+    case "card_deal":   return playCardFlip();
+    case "shuffle":     return playShuffle();
+    case "win":         return playWin();
+    case "lose":        return playLose();
+    case "button_press": return playButton();
+    case "achievement": return playAchievement();
+    case "purchase":    return playCardWild();
+    case "error":       return playError();
+    case "turn_change": return playButton();
   }
 }
