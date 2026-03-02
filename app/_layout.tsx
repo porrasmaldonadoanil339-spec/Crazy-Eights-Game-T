@@ -12,7 +12,7 @@ import {
   useFonts,
   Nunito_400Regular,
   Nunito_700Bold,
-  Nunito_900ExtraBold,
+  Nunito_800ExtraBold as Nunito_900ExtraBold_Asset,
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
 import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, syncSettings } from "@/lib/audioManager";
@@ -31,7 +31,7 @@ function AudioManager() {
       syncSettings(profile.musicEnabled, profile.sfxEnabled);
       preloadSounds().catch(() => {});
       
-      const inGame = segments.includes("game");
+      const inGame = (segments as string[]).includes("game");
       if (inGame) {
         startGameMusic().catch(() => {});
       } else {
@@ -44,7 +44,7 @@ function AudioManager() {
   useEffect(() => {
     if (!isLoaded) return;
     if (isFirstRun.current) { isFirstRun.current = false; return; }
-    const inGame = segments.includes("game");
+    const inGame = (segments as string[]).includes("game");
     if (inGame) {
       startGameMusic().catch(() => {});
     } else {
@@ -76,7 +76,7 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_700Bold,
-    Nunito_900ExtraBold,
+    Nunito_900ExtraBold: Nunito_900ExtraBold_Asset,
   });
 
   useEffect(() => {

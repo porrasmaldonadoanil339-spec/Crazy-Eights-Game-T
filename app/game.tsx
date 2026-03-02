@@ -677,7 +677,7 @@ export default function GameScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => { playButton().catch(() => {}); router.back(); }} style={styles.backBtn}>
+        <Pressable onPress={() => { playSound("button_press").catch(() => {}); router.back(); }} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={Colors.gold} />
         </Pressable>
         <View style={styles.headerCenter}>

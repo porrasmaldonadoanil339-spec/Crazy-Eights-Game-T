@@ -39,6 +39,12 @@ const DEMO_STATE = {
   message: "",
   consecutiveDraws: 0,
   difficulty: "normal",
+  pendingDraw: 0,
+  pendingDrawType: null as "two" | "seven" | null,
+  pendingDrawSuit: null as "hearts" | "diamonds" | "clubs" | "spades" | null,
+  jActive: false,
+  jSuit: null as "hearts" | "diamonds" | "clubs" | "spades" | null,
+  direction: 1 as 1 | -1,
 };
 
 interface Step {

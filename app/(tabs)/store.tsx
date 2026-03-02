@@ -147,7 +147,7 @@ function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boole
         </View>
         {item.category === "card_back" ? (
           <LinearGradient
-            colors={item.backColors ?? [item.previewColor, item.previewColor + "88"]}
+            colors={(item.backColors ?? [item.previewColor, item.previewColor + "88"]) as [string, string]}
             style={styles.cardPreview}
           >
             <Text style={[styles.cardPreviewDot, { color: item.backAccent ?? Colors.gold }]}>◆</Text>
