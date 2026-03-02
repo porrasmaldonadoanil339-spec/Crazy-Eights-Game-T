@@ -1,0 +1,378 @@
+import React, { useState } from "react";
+import {
+  View, Text, StyleSheet, ScrollView, Pressable,
+  TextInput, Modal, Platform,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "@/constants/colors";
+import { useProfile } from "@/context/ProfileContext";
+import { STORE_ITEMS } from "@/lib/storeItems";
+import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS } from "@/lib/battlePass";
+import { playSound } from "@/lib/sounds";
+import { GAME_MODES } from "@/lib/gameModes";
+
+const AVATAR_ITEMS = STORE_ITEMS.filter((i) => i.category === "avatar");
+const TITLE_ITEMS = STORE_ITEMS.filter((i) => i.category === "title");
+
+function EditNameModal({
+  visible, currentName, onSave, onClose,
+}: { visible: boolean; currentName: string; onSave: (n: string) => void; onClose: () => void }) {
+  const [name, setName] = useState(currentName);
+  return (
+    <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
+      <View style={styles.modalBg}>
+        <View style={styles.editModal}>
+          <Text style={styles.editTitle}>Cambiar nombre</Text>
+          <TextInput
+            style={styles.nameInput}
+            value={name}
+            onChangeText={setName}
+            maxLength={16}
+            autoFocus
+            placeholderTextColor={Colors.textDim}
+            placeholder="Tu nombre..."
+          />
+          <View style={styles.editBtns}>
+            <Pressable onPress={onClose} style={styles.editBtnCancel}>
+              <Text style={styles.editBtnCancelText}>Cancelar</Text>
+            </Pressable>
+            <Pressable onPress={() => { onSave(name); onClose(); }} style={styles.editBtnSave}>
+              <Text style={styles.editBtnSaveText}>Guardar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function AvatarPickerModal({
+  visible, ownedItems, currentId, onSelect, onClose,
+}: { visible: boolean; ownedItems: string[]; currentId: string; onSelect: (id: string) => void; onClose: () => void }) {
+  return (
+    <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
+      <Pressable style={styles.modalBg} onPress={onClose}>
+        <View style={styles.pickerModal}>
+          <View style={styles.pickerHeader}>
+            <Text style={styles.pickerTitle}>Elegir Avatar</Text>
+            <Pressable onPress={onClose}><Ionicons name="close" size={22} color={Colors.textMuted} /></Pressable>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.avatarRow}>
+            {AVATAR_ITEMS.map((item) => {
+              const owned = ownedItems.includes(item.id);
+              const selected = item.id === currentId;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => { if (owned) { onSelect(item.id); onClose(); } }}
+                  style={[styles.avatarOption, selected && styles.avatarOptionSelected, !owned && styles.avatarOptionLocked]}
+                >
+                  <View style={[styles.avatarIconWrap, { backgroundColor: item.previewColor + "44" }]}>
+                    <Ionicons name={item.preview as any} size={24} color={owned ? item.previewColor : Colors.textDim} />
+                  </View>
+                  <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{item.name}</Text>
+                  {!owned && <Ionicons name="lock-closed" size={12} color={Colors.textDim} style={{ marginTop: 2 }} />}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
+function StatRow({ label, value }: { label: string; value: string | number }) {
+  return (
+    <View style={styles.statRow}>
+      <Text style={styles.statRowLabel}>{label}</Text>
+      <Text style={styles.statRowValue}>{value}</Text>
+    </View>
+  );
+}
+
+export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
+  const { profile, level, xpProgress, updateName, updateAvatar, updateTitle } = useProfile();
+  const [showEditName, setShowEditName] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showTitlePicker, setShowTitlePicker] = useState(false);
+
+  const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
+  const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
+
+  const avatarItem = STORE_ITEMS.find((i) => i.id === profile.avatarId);
+  const titleItem = STORE_ITEMS.find((i) => i.id === profile.titleId);
+  const cardBackItem = STORE_ITEMS.find((i) => i.id === profile.cardBackId);
+
+  const handleSaveName = async (name: string) => {
+    await playSound("button_press");
+    updateName(name);
+  };
+
+  const winRate = profile.stats.totalGames > 0
+    ? Math.round((profile.stats.totalWins / profile.stats.totalGames) * 100) : 0;
+
+  return (
+    <View style={[styles.container, { paddingTop: topPad }]}>
+      <LinearGradient colors={["#061209", "#0a1a0f", "#0d2418"]} style={StyleSheet.absoluteFill} />
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        <Text style={styles.screenTitle}>PERFIL</Text>
+
+        {/* Avatar + name card */}
+        <LinearGradient
+          colors={[Colors.gold + "18", Colors.surface]}
+          style={styles.profileCard}
+        >
+          <Pressable onPress={() => setShowAvatarPicker(true)} style={styles.avatarBig}>
+            <LinearGradient
+              colors={[avatarItem?.previewColor ?? Colors.surface, (avatarItem?.previewColor ?? Colors.surface) + "88"]}
+              style={styles.avatarGradient}
+            >
+              <Ionicons name={(avatarItem?.preview ?? "person") as any} size={40} color="#fff" />
+            </LinearGradient>
+            <View style={styles.avatarEditBadge}>
+              <Ionicons name="pencil" size={10} color={Colors.background} />
+            </View>
+          </Pressable>
+
+          <View style={styles.profileDetails}>
+            <Pressable onPress={() => setShowEditName(true)} style={styles.nameRow}>
+              <Text style={styles.profileName}>{profile.name}</Text>
+              <Ionicons name="pencil" size={14} color={Colors.gold} />
+            </Pressable>
+
+            <Pressable onPress={() => setShowTitlePicker(true)} style={styles.titleBadge}>
+              <Text style={styles.titleText}>{titleItem?.name ?? "Novato"}</Text>
+              <Ionicons name="chevron-down" size={12} color={Colors.gold} />
+            </Pressable>
+
+            <View style={styles.levelSection}>
+              <Text style={styles.levelNum}>Nivel {level}</Text>
+              <View style={styles.xpBarBig}>
+                <View style={[styles.xpFill, { width: `${xpPct * 100}%` }]} />
+              </View>
+              <Text style={styles.xpNums}>{xpProgress.current} / {xpProgress.needed} XP</Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Coins + card back */}
+        <View style={styles.resourceRow}>
+          <View style={styles.resourceCard}>
+            <Ionicons name="cash" size={20} color={Colors.gold} />
+            <Text style={styles.resourceVal}>{profile.coins}</Text>
+            <Text style={styles.resourceLbl}>Monedas</Text>
+          </View>
+          <View style={styles.resourceCard}>
+            <Ionicons name="star" size={20} color={Colors.gold} />
+            <Text style={styles.resourceVal}>{profile.totalXp}</Text>
+            <Text style={styles.resourceLbl}>XP Total</Text>
+          </View>
+          <Pressable style={styles.resourceCard}>
+            <View style={[styles.miniCard, { backgroundColor: cardBackItem?.previewColor ?? "#1A3A6A" }]}>
+              <Text style={{ color: Colors.gold, fontSize: 10 }}>◆</Text>
+            </View>
+            <Text style={styles.resourceVal} numberOfLines={1}>{cardBackItem?.name ?? "Clásico"}</Text>
+            <Text style={styles.resourceLbl}>Dorso</Text>
+          </Pressable>
+        </View>
+
+        {/* Stats */}
+        <Text style={styles.sectionLabel}>Estadísticas Generales</Text>
+        <View style={styles.statsBlock}>
+          <StatRow label="Partidas jugadas" value={profile.stats.totalGames} />
+          <StatRow label="Victorias" value={profile.stats.totalWins} />
+          <StatRow label="Derrotas" value={profile.stats.totalLosses} />
+          <StatRow label="Win Rate" value={`${winRate}%`} />
+          <StatRow label="Racha actual" value={`${profile.stats.dailyStreak} días`} />
+          <StatRow label="Ochos jugados" value={profile.stats.totalEightsPlayed} />
+          <StatRow label="Cartas robadas" value={profile.stats.totalCardsDrawn} />
+          <StatRow label="Victorias perfectas" value={profile.stats.perfectWins} />
+          <StatRow label="Comebacks" value={profile.stats.comebackWins} />
+          <StatRow label="Torneos ganados" value={profile.stats.tournamentsWon} />
+          <StatRow label="Victorias cooperativas" value={profile.stats.coopWins} />
+          <StatRow label="Desafíos completados" value={profile.stats.challengesCompleted} />
+        </View>
+
+        <Text style={styles.sectionLabel}>Por Modo</Text>
+        <View style={styles.statsBlock}>
+          {GAME_MODES.map((mode) => {
+            const wins = profile.stats.winsByMode[mode.id] ?? 0;
+            const games = profile.stats.gamesByMode[mode.id] ?? 0;
+            return (
+              <View key={mode.id} style={styles.modeStatRow}>
+                <View style={[styles.modeIconSm, { backgroundColor: mode.color + "33" }]}>
+                  <Ionicons name={mode.icon as any} size={14} color={mode.color} />
+                </View>
+                <Text style={styles.modeStatName}>{mode.name}</Text>
+                <Text style={styles.modeStatVal}>{wins}/{games}</Text>
+              </View>
+            );
+          })}
+        </View>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      <EditNameModal
+        visible={showEditName}
+        currentName={profile.name}
+        onSave={handleSaveName}
+        onClose={() => setShowEditName(false)}
+      />
+      <AvatarPickerModal
+        visible={showAvatarPicker}
+        ownedItems={profile.ownedItems}
+        currentId={profile.avatarId}
+        onSelect={updateAvatar}
+        onClose={() => setShowAvatarPicker(false)}
+      />
+      <Modal transparent animationType="slide" visible={showTitlePicker} onRequestClose={() => setShowTitlePicker(false)}>
+        <Pressable style={styles.modalBg} onPress={() => setShowTitlePicker(false)}>
+          <View style={styles.pickerModal}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>Elegir Título</Text>
+              <Pressable onPress={() => setShowTitlePicker(false)}>
+                <Ionicons name="close" size={22} color={Colors.textMuted} />
+              </Pressable>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.avatarRow}>
+              {TITLE_ITEMS.map((item) => {
+                const owned = profile.ownedItems.includes(item.id);
+                const selected = item.id === profile.titleId;
+                return (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => { if (owned) { updateTitle(item.id); setShowTitlePicker(false); } }}
+                    style={[styles.avatarOption, selected && styles.avatarOptionSelected, !owned && styles.avatarOptionLocked]}
+                  >
+                    <View style={[styles.avatarIconWrap, { backgroundColor: item.previewColor + "33" }]}>
+                      <Ionicons name={item.preview as any} size={20} color={owned ? item.previewColor : Colors.textDim} />
+                    </View>
+                    <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{item.name}</Text>
+                    {!owned && <View style={styles.priceBadge}><Ionicons name="cash" size={9} color={Colors.gold} /><Text style={styles.priceText}>{item.price}</Text></View>}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
+  scroll: { paddingHorizontal: 16, paddingBottom: 24 },
+  screenTitle: {
+    fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: Colors.gold,
+    letterSpacing: 4, marginBottom: 16,
+  },
+  profileCard: {
+    borderRadius: 18, padding: 16, flexDirection: "row", gap: 16,
+    alignItems: "center", borderWidth: 1, borderColor: Colors.border, marginBottom: 12,
+  },
+  avatarBig: { position: "relative" },
+  avatarGradient: {
+    width: 76, height: 76, borderRadius: 38,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 2.5, borderColor: Colors.gold,
+  },
+  avatarEditBadge: {
+    position: "absolute", bottom: 0, right: 0,
+    backgroundColor: Colors.gold, width: 22, height: 22, borderRadius: 11,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: Colors.background,
+  },
+  profileDetails: { flex: 1, gap: 6 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  profileName: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: Colors.text },
+  titleBadge: {
+    flexDirection: "row", alignItems: "center", gap: 4, alignSelf: "flex-start",
+    backgroundColor: Colors.gold + "22", paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 8, borderWidth: 1, borderColor: Colors.gold + "44",
+  },
+  titleText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.gold },
+  levelSection: { gap: 3 },
+  levelNum: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textMuted },
+  xpBarBig: { height: 6, backgroundColor: Colors.border, borderRadius: 3 },
+  xpFill: { height: "100%", backgroundColor: Colors.gold, borderRadius: 3 },
+  xpNums: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim },
+  resourceRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
+  resourceCard: {
+    flex: 1, backgroundColor: Colors.surface, borderRadius: 14,
+    padding: 12, alignItems: "center", gap: 4,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  resourceVal: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold, textAlign: "center" },
+  resourceLbl: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textMuted },
+  miniCard: {
+    width: 24, height: 34, borderRadius: 4,
+    alignItems: "center", justifyContent: "center",
+  },
+  sectionLabel: {
+    fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textMuted,
+    letterSpacing: 2, textTransform: "uppercase", marginBottom: 10, marginTop: 4,
+  },
+  statsBlock: {
+    backgroundColor: Colors.surface, borderRadius: 14,
+    borderWidth: 1, borderColor: Colors.border, overflow: "hidden", marginBottom: 16,
+  },
+  statRow: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.border,
+  },
+  statRowLabel: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted },
+  statRowValue: { fontFamily: "Nunito_700Bold", fontSize: 13, color: Colors.text },
+  modeStatRow: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.border,
+  },
+  modeIconSm: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  modeStatName: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, flex: 1 },
+  modeStatVal: { fontFamily: "Nunito_700Bold", fontSize: 13, color: Colors.gold },
+  modalBg: { flex: 1, backgroundColor: Colors.overlay, justifyContent: "center", alignItems: "center" },
+  editModal: {
+    backgroundColor: Colors.surface, borderRadius: 18, padding: 20,
+    width: 300, borderWidth: 1, borderColor: Colors.border,
+  },
+  editTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold, marginBottom: 12 },
+  nameInput: {
+    backgroundColor: Colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+    fontFamily: "Nunito_700Bold", fontSize: 16, color: Colors.text,
+    borderWidth: 1, borderColor: Colors.border, marginBottom: 12,
+  },
+  editBtns: { flexDirection: "row", gap: 10 },
+  editBtnCancel: {
+    flex: 1, padding: 12, borderRadius: 10, alignItems: "center",
+    backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
+  },
+  editBtnCancelText: { fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.textMuted },
+  editBtnSave: {
+    flex: 1, padding: 12, borderRadius: 10, alignItems: "center", backgroundColor: Colors.gold,
+  },
+  editBtnSaveText: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "#1a0a00" },
+  pickerModal: {
+    backgroundColor: Colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 20, borderWidth: 1, borderColor: Colors.border,
+  },
+  pickerHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  pickerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold },
+  avatarRow: { paddingVertical: 4, gap: 10, paddingBottom: 20 },
+  avatarOption: {
+    width: 90, backgroundColor: Colors.card, borderRadius: 12, padding: 10,
+    alignItems: "center", gap: 6, borderWidth: 1, borderColor: Colors.border,
+  },
+  avatarOptionSelected: { borderColor: Colors.gold, backgroundColor: Colors.gold + "22" },
+  avatarOptionLocked: { opacity: 0.6 },
+  avatarIconWrap: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center" },
+  avatarOptionName: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.text, textAlign: "center" },
+  priceBadge: { flexDirection: "row", alignItems: "center", gap: 2 },
+  priceText: { fontFamily: "Nunito_700Bold", fontSize: 9, color: Colors.gold },
+});

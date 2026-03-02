@@ -7,16 +7,23 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { GameProvider } from "@/context/GameContext";
-import { useFonts, Nunito_400Regular, Nunito_700Bold, Nunito_900ExtraBold } from "@expo-google-fonts/nunito";
+import { ProfileProvider } from "@/context/ProfileContext";
+import {
+  useFonts,
+  Nunito_400Regular,
+  Nunito_700Bold,
+  Nunito_900ExtraBold,
+} from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
 
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
-      <Stack.Screen name="index" options={{ animation: "fade" }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="game" options={{ animation: "slide_from_bottom" }} />
+      <Stack.Screen name="tutorial" options={{ animation: "slide_from_bottom" }} />
       <Stack.Screen name="rules" options={{ animation: "slide_from_right" }} />
       <Stack.Screen name="+not-found" />
     </Stack>
@@ -43,10 +50,12 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <KeyboardProvider>
-            <GameProvider>
-              <StatusBar style="light" />
-              <RootLayoutNav />
-            </GameProvider>
+            <ProfileProvider>
+              <GameProvider>
+                <StatusBar style="light" />
+                <RootLayoutNav />
+              </GameProvider>
+            </ProfileProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>
       </QueryClientProvider>

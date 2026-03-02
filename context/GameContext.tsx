@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  ReactNode,
+} from "react";
 import {
   GameState,
   Card,
@@ -9,72 +15,88 @@ import {
   playerDraw,
   aiTurn,
   chooseSuit,
+  getPlayableCards,
 } from "@/lib/gameEngine";
+import type { GameModeId, Difficulty } from "@/lib/gameModes";
+import { getModeById, getDifficultyById } from "@/lib/gameModes";
 
-interface Stats {
-  wins: number;
-  losses: number;
-  gamesPlayed: number;
+export interface GameSession {
+  mode: GameModeId;
+  difficulty: Difficulty;
+  tournamentRound: number;
+  tournamentScores: [number, number];
+  gameStartTime: number;
+  cardsDrawnThisGame: number;
+  eightsPlayedThisGame: number;
+  maxHandSizeReached: number;
 }
 
 interface GameContextValue {
   gameState: GameState | null;
-  stats: Stats;
-  startGame: () => void;
+  session: GameSession | null;
+  startGame: (mode: GameModeId, difficulty: Difficulty) => void;
   handlePlayCard: (card: Card, chosenSuit?: Suit) => void;
   handleDraw: () => void;
   handleChooseSuit: (suit: Suit) => void;
   runAiTurn: () => void;
   selectedCard: Card | null;
   setSelectedCard: (card: Card | null) => void;
-  loadStats: () => void;
+  dealAnimationDone: boolean;
+  setDealAnimationDone: (done: boolean) => void;
+  startNextTournamentRound: () => void;
+  getGameResult: () => "player_wins" | "ai_wins" | "draw" | null;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [gameState, setGameState] = useState<GameState | null>(null);
+  const [session, setSession] = useState<GameSession | null>(null);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
-  const [stats, setStats] = useState<Stats>({ wins: 0, losses: 0, gamesPlayed: 0 });
+  const [dealAnimationDone, setDealAnimationDone] = useState(false);
 
-  const loadStats = useCallback(async () => {
-    try {
-      const raw = await AsyncStorage.getItem("ocho_stats");
-      if (raw) setStats(JSON.parse(raw));
-    } catch {}
-  }, []);
-
-  const saveStats = useCallback(async (newStats: Stats) => {
-    try {
-      await AsyncStorage.setItem("ocho_stats", JSON.stringify(newStats));
-    } catch {}
-  }, []);
-
-  const startGame = useCallback(() => {
+  const startGame = useCallback((mode: GameModeId, difficulty: Difficulty) => {
+    const modeConfig = getModeById(mode);
+    const newState = initGame(modeConfig.cardsPerPlayer, difficulty);
     setSelectedCard(null);
-    setGameState(initGame());
+    setDealAnimationDone(false);
+    setGameState(newState);
+    setSession({
+      mode,
+      difficulty,
+      tournamentRound: 1,
+      tournamentScores: [0, 0],
+      gameStartTime: Date.now(),
+      cardsDrawnThisGame: 0,
+      eightsPlayedThisGame: 0,
+      maxHandSizeReached: modeConfig.cardsPerPlayer,
+    });
   }, []);
 
   const handlePlayCard = useCallback((card: Card, chosenSuit?: Suit) => {
     setGameState((prev) => {
       if (!prev) return prev;
       const next = playCard(prev, card, chosenSuit);
-      if (next.phase === "player_wins") {
-        setStats((s) => {
-          const updated = { ...s, wins: s.wins + 1, gamesPlayed: s.gamesPlayed + 1 };
-          saveStats(updated);
-          return updated;
-        });
-      }
       return next;
     });
+    setSession((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        eightsPlayedThisGame: card.rank === "8" ? prev.eightsPlayedThisGame + 1 : prev.eightsPlayedThisGame,
+      };
+    });
     setSelectedCard(null);
-  }, [saveStats]);
+  }, []);
 
   const handleDraw = useCallback(() => {
     setGameState((prev) => {
       if (!prev) return prev;
       return playerDraw(prev);
+    });
+    setSession((prev) => {
+      if (!prev) return prev;
+      return { ...prev, cardsDrawnThisGame: prev.cardsDrawnThisGame + 1 };
     });
     setSelectedCard(null);
   }, []);
@@ -89,23 +111,42 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const runAiTurn = useCallback(() => {
     setGameState((prev) => {
       if (!prev) return prev;
-      const next = aiTurn(prev);
-      if (next.phase === "ai_wins") {
-        setStats((s) => {
-          const updated = { ...s, losses: s.losses + 1, gamesPlayed: s.gamesPlayed + 1 };
-          saveStats(updated);
-          return updated;
-        });
-      }
-      return next;
+      const difficulty = session?.difficulty ?? "normal";
+      return aiTurn(prev, difficulty);
     });
-  }, [saveStats]);
+  }, [session?.difficulty]);
+
+  const startNextTournamentRound = useCallback(() => {
+    setSession((prev) => {
+      if (!prev) return prev;
+      const modeConfig = getModeById(prev.mode);
+      const newState = initGame(modeConfig.cardsPerPlayer, prev.difficulty);
+      setDealAnimationDone(false);
+      setGameState(newState);
+      return {
+        ...prev,
+        tournamentRound: prev.tournamentRound + 1,
+        gameStartTime: Date.now(),
+        cardsDrawnThisGame: 0,
+        eightsPlayedThisGame: 0,
+      };
+    });
+    setSelectedCard(null);
+  }, []);
+
+  const getGameResult = useCallback((): "player_wins" | "ai_wins" | "draw" | null => {
+    if (!gameState) return null;
+    if (gameState.phase === "player_wins") return "player_wins";
+    if (gameState.phase === "ai_wins") return "ai_wins";
+    if (gameState.phase === "draw") return "draw";
+    return null;
+  }, [gameState]);
 
   return (
     <GameContext.Provider
       value={{
         gameState,
-        stats,
+        session,
         startGame,
         handlePlayCard,
         handleDraw,
@@ -113,7 +154,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
         runAiTurn,
         selectedCard,
         setSelectedCard,
-        loadStats,
+        dealAnimationDone,
+        setDealAnimationDone,
+        startNextTournamentRound,
+        getGameResult,
       }}
     >
       {children}

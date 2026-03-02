@@ -1,0 +1,108 @@
+# Ocho Locos — replit.md
+
+## Overview
+
+**Ocho Locos** is a mobile card game app — a Spanish-language version of the classic "Crazy Eights" card game. It is built with **Expo (React Native)** for the mobile frontend and **Express.js** for the backend server. The app supports multiple game modes, an in-game store, player profiles, achievements, and a battle pass progression system. All game logic runs fully on-device; the backend currently serves as an API scaffold and static asset server.
+
+The app targets iOS, Android, and Web (via Expo + React Native Web). Dark casino-themed UI: felt-green (#0a1a0f) background, gold (#D4AF37) accents, Nunito fonts.
+
+---
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
+
+---
+
+## System Architecture
+
+### Frontend (Expo / React Native)
+- **Routing**: Expo Router (file-based). Root layout at `app/_layout.tsx`, tabs at `app/(tabs)/`
+- **State**: React Context for profile + game state, AsyncStorage for persistence
+- **Styling**: `StyleSheet` only, no external CSS/styled-components
+- **Fonts**: Nunito (400Regular, 700Bold, 900ExtraBold) from `@expo-google-fonts/nunito`
+- **Storage key**: `"ocho_profile_v2"` in AsyncStorage
+
+### Backend (Express.js)
+- Runs on port 5000
+- Minimal API scaffold + serves `server/templates/landing-page.html`
+- No database currently needed (all game data stored on-device)
+
+---
+
+## Project Structure
+
+```
+app/
+  _layout.tsx           ← Root layout with all providers (Query, Gesture, Keyboard, Profile, Game)
+  (tabs)/
+    _layout.tsx         ← Tab bar (Jugar / Logros / Tienda / Perfil)
+    index.tsx           ← Play screen: mode selection, stats, quick start
+    achievements.tsx    ← Achievements + Battle Pass screens (tabbed)
+    store.tsx           ← Item shop (card backs, avatars, titles)
+    profile.tsx         ← Player profile, stats, avatar/title picker
+  game.tsx              ← Main game screen with deal animation + gameplay
+  tutorial.tsx          ← Interactive step-by-step tutorial (8 steps)
+  rules.tsx             ← Static rules reference
+
+components/
+  PlayingCard.tsx       ← Card component (faceUp/faceDown, sizes sm/md/lg)
+  DealAnimation.tsx     ← Shuffle + deal animation overlay (Reanimated)
+  ErrorBoundary.tsx     ← Error boundary with reload
+
+context/
+  ProfileContext.tsx    ← Player profile, coins, XP, stats, achievements progress
+  GameContext.tsx       ← Game state machine, session tracking
+
+lib/
+  gameEngine.ts         ← Core game logic (deck, hands, play/draw/AI turns)
+  gameModes.ts          ← 6 modes × 4 difficulties config
+  achievements.ts       ← 18 achievements definitions
+  storeItems.ts         ← 15+ store items (card backs, avatars, titles)
+  battlePass.ts         ← 10-tier battle pass, XP level helpers
+  sounds.ts             ← Haptic feedback events (wraps expo-haptics)
+  query-client.ts       ← React Query client + API URL helper
+
+constants/
+  colors.ts             ← Design tokens (Colors.gold, Colors.background, etc.)
+```
+
+---
+
+## Game Modes
+
+| Mode        | Cards | Notes                             |
+|-------------|-------|-----------------------------------|
+| Clásico     | 8     | Standard game with difficulty     |
+| Relámpago   | 5     | Fast mode                         |
+| Torneo      | 8     | Best of 3 rounds                  |
+| Cooperativo | 7     | 2v2 (simulated ally)              |
+| Desafíos    | 7     | Daily/weekly challenges           |
+| Práctica    | 7     | No penalty, hints enabled         |
+
+## Difficulties: Easy / Normal / Intermediate / Hard
+- AI strategy: random (easy) → optimal suit matching (hard)
+- Coin multipliers: 0.8x → 1.0x → 1.3x → 1.7x
+
+---
+
+## Key Design Decisions
+
+- Game phase starts as "playing" (not "dealing") — deal animation is purely visual overlay
+- `DealAnimation` runs on top and calls `onComplete` when done, then `setDealAnimationDone(true)`
+- AI turn runs with 900–1400ms delay to feel natural
+- Tournament mode: 3 rounds, best of 2 wins
+- Profile saved to AsyncStorage after every update
+- `RARITY_COLORS_MAP` is defined locally in each screen that needs it (common/rare/epic/legendary)
+
+---
+
+## Workflows
+
+- **Start Backend**: `npm run server:dev` — Express on port 5000
+- **Start Frontend**: `npm run expo:dev` — Expo Metro on port 8081
+
+## Deploy
+
+Backend + static site on port 5000. Mobile app via Expo Go (scan QR) or web build.
