@@ -20,6 +20,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
 import { playButton, syncSettings } from "@/lib/audioManager";
 import { playSound } from "@/lib/sounds";
+import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName } from "@/lib/achTranslations";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 const { width: SW } = Dimensions.get("window");
@@ -75,12 +76,13 @@ function StarRating({ stars, max = 5 }: { stars: number; max?: number }) {
   );
 }
 
-function DifficultyModal({ visible, onClose, onSelect, modeName }: {
-  visible: boolean; onClose: () => void; onSelect: (d: Difficulty) => void; modeName: string;
+function DifficultyModal({ visible, onClose, onSelect, modeName, lang = "es" }: {
+  visible: boolean; onClose: () => void; onSelect: (d: Difficulty) => void; modeName: string; lang?: "es" | "en" | "pt";
 }) {
   const RARITY_COLORS: Record<Difficulty, string> = {
     easy: "#95A5A6", normal: "#2196F3", intermediate: "#27AE60", hard: "#E74C3C", expert: "#A855F7",
   };
+  const subtitle = lang === "en" ? "Select difficulty" : lang === "pt" ? "Selecione a dificuldade" : "Selecciona la dificultad";
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.modalBg} onPress={onClose}>
@@ -88,7 +90,7 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
           <LinearGradient colors={["#1a2f1a", Colors.surface]} style={styles.diffModalGrad}>
             <View style={styles.diffModalHandle} />
             <Text style={styles.diffTitle}>{modeName}</Text>
-            <Text style={styles.diffSub}>Selecciona la dificultad</Text>
+            <Text style={styles.diffSub}>{subtitle}</Text>
             <View style={styles.diffGrid}>
               {DIFFICULTIES.map((d) => (
                 <Pressable
@@ -102,7 +104,7 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
                     style={styles.diffOptionGrad}
                   >
                     <StarRating stars={d.stars} />
-                    <Text style={[styles.diffName, { color: RARITY_COLORS[d.id] }]}>{d.name}</Text>
+                    <Text style={[styles.diffName, { color: RARITY_COLORS[d.id] }]}>{getDiffName(d.id, lang) || d.name}</Text>
                     <View style={styles.diffReward}>
                       <Ionicons name="cash" size={10} color={Colors.gold} />
                       <Text style={styles.diffRewardText}>x{d.coinMultiplier}</Text>
@@ -212,6 +214,7 @@ export default function PlayScreen() {
   const T = useT();
   const theme = useTheme();
   const isDark = theme.isDark;
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
   const swipeHandlers = useSwipeTabs(0);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
@@ -369,8 +372,8 @@ export default function PlayScreen() {
                   <View style={[styles.modeIconWrap, { backgroundColor: mode.color + "25" }]}>
                     <Ionicons name={mode.icon as any} size={24} color={mode.color} />
                   </View>
-                  <Text style={[styles.modeName, { color: mode.color }]}>{mode.name}</Text>
-                  <Text style={styles.modeDesc} numberOfLines={2}>{mode.description}</Text>
+                  <Text style={[styles.modeName, { color: mode.color }]}>{getModeName(mode.id, lang) || mode.name}</Text>
+                  <Text style={styles.modeDesc} numberOfLines={2}>{getModeDesc(mode.id, lang) || mode.description}</Text>
                   <View style={styles.modeFooter}>
                     <View style={styles.modeReward}>
                       <Ionicons name="cash" size={11} color={Colors.gold} />
@@ -471,7 +474,8 @@ export default function PlayScreen() {
         visible={showDiffModal}
         onClose={() => setShowDiffModal(false)}
         onSelect={handleDifficultySelect}
-        modeName={selectedModeConfig?.name ?? ""}
+        modeName={selectedModeConfig ? (getModeName(selectedModeConfig.id, lang) || selectedModeConfig.name) : ""}
+        lang={lang}
       />
 
       <DailyRewardModal

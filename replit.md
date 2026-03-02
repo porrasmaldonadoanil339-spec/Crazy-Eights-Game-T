@@ -25,7 +25,8 @@ No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
 - **Fonts**: Nunito (400Regular, 700Bold, 900ExtraBold) from `@expo-google-fonts/nunito`
 - **Storage key**: `"ocho_profile_v3"` in AsyncStorage
 - **i18n**: `lib/i18n.ts` with ES/EN/PT keys; `hooks/useT.ts` hook reads language from ProfileContext
-- **Theme**: `hooks/useTheme.ts` returns `DarkColors` or `LightColors` from `constants/colors.ts` based on `profile.darkMode`
+- **achTranslations**: `lib/achTranslations.ts` — all 114 achievement titles+descriptions, 8 emote labels, 6 mode names+descriptions, 5 difficulty names+descriptions in ES/EN/PT; exports: `achTitle()`, `achDesc()`, `emoteLabel()`, `modeName()`, `modeDesc()`, `diffName()`, `diffDesc()`
+- **Theme**: `hooks/useTheme.ts` returns `DarkColors` or `LightColors` from `constants/colors.ts` based on `profile.darkMode`; achievements.tsx and profile.tsx now use inline theme overrides for full light-mode support
 
 ### Backend (Express.js)
 - Runs on port 5000

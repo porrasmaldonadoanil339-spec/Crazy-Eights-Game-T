@@ -5,31 +5,33 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { playSound } from "@/lib/sounds";
+import { useProfile } from "@/context/ProfileContext";
+import { emoteLabel } from "@/lib/achTranslations";
 
 export interface Emote {
   id: string;
-  label: string;
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
 }
 
 export const EMOTES: Emote[] = [
-  { id: "gg",       label: "Buena jugada",    icon: "thumbs-up",      color: "#27AE60" },
-  { id: "draw2",    label: "Toma ese +2",      icon: "flame",           color: "#E74C3C" },
-  { id: "close",    label: "Casi pierdo",      icon: "heart-half",      color: "#E67E22" },
-  { id: "draw",     label: "Te tocó robar",    icon: "layers",          color: "#9B59B6" },
-  { id: "no",       label: "No puede ser",     icon: "close-circle",    color: "#E74C3C" },
-  { id: "win",      label: "Te voy a ganar",   icon: "trophy",          color: "#D4AF37" },
-  { id: "luck",     label: "Qué suerte",       icon: "star",            color: "#F1C40F" },
-  { id: "expert",   label: "Modo Experto",     icon: "timer",           color: "#A855F7" },
+  { id: "gg",       icon: "thumbs-up",      color: "#27AE60" },
+  { id: "draw2",    icon: "flame",           color: "#E74C3C" },
+  { id: "close",    icon: "heart-half",      color: "#E67E22" },
+  { id: "draw",     icon: "layers",          color: "#9B59B6" },
+  { id: "no",       icon: "close-circle",    color: "#E74C3C" },
+  { id: "win",      icon: "trophy",          color: "#D4AF37" },
+  { id: "luck",     icon: "star",            color: "#F1C40F" },
+  { id: "expert",   icon: "timer",           color: "#A855F7" },
 ];
 
 interface EmoteBubbleProps {
   emote: Emote | null;
   side: "player" | "cpu";
+  lang?: "es" | "en" | "pt";
 }
 
-export function EmoteBubble({ emote, side }: EmoteBubbleProps) {
+export function EmoteBubble({ emote, side, lang = "es" }: EmoteBubbleProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
 
@@ -48,6 +50,8 @@ export function EmoteBubble({ emote, side }: EmoteBubbleProps) {
 
   if (!emote) return null;
 
+  const label = emoteLabel(emote.id, lang);
+
   return (
     <Animated.View
       style={[
@@ -57,7 +61,7 @@ export function EmoteBubble({ emote, side }: EmoteBubbleProps) {
       ]}
     >
       <Ionicons name={emote.icon} size={14} color={emote.color} />
-      <Text style={[styles.bubbleText, { color: emote.color }]}>{emote.label}</Text>
+      <Text style={[styles.bubbleText, { color: emote.color }]}>{label}</Text>
     </Animated.View>
   );
 }
@@ -69,8 +73,12 @@ interface EmotePanelProps {
 
 export function EmotePanel({ onSendEmote, lastEmoteTime }: EmotePanelProps) {
   const [open, setOpen] = useState(false);
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
   const COOLDOWN_MS = 5000;
   const canSend = Date.now() - lastEmoteTime > COOLDOWN_MS;
+
+  const panelTitle = lang === "en" ? "React" : lang === "pt" ? "Reagir" : "Reacción";
 
   const handleEmote = (emote: Emote) => {
     if (!canSend) return;
@@ -92,7 +100,7 @@ export function EmotePanel({ onSendEmote, lastEmoteTime }: EmotePanelProps) {
       <Modal transparent animationType="fade" visible={open} onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.modalBg} onPress={() => setOpen(false)}>
           <View style={styles.panel}>
-            <Text style={styles.panelTitle}>Reacción</Text>
+            <Text style={styles.panelTitle}>{panelTitle}</Text>
             <View style={styles.grid}>
               {EMOTES.map((emote) => (
                 <Pressable
@@ -103,7 +111,7 @@ export function EmotePanel({ onSendEmote, lastEmoteTime }: EmotePanelProps) {
                   <View style={[styles.emoteIconWrap, { backgroundColor: emote.color + "22" }]}>
                     <Ionicons name={emote.icon} size={22} color={emote.color} />
                   </View>
-                  <Text style={styles.emoteLabel}>{emote.label}</Text>
+                  <Text style={styles.emoteLabel}>{emoteLabel(emote.id, lang)}</Text>
                 </Pressable>
               ))}
             </View>

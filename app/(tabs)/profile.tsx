@@ -171,11 +171,11 @@ function FramePickerModal({
   );
 }
 
-function StatRow({ label, value }: { label: string; value: string | number }) {
+function StatRow({ label, value, textColor, textMuted }: { label: string; value: string | number; textColor?: string; textMuted?: string }) {
   return (
     <View style={styles.statRow}>
-      <Text style={styles.statRowLabel}>{label}</Text>
-      <Text style={styles.statRowValue}>{value}</Text>
+      <Text style={[styles.statRowLabel, textMuted ? { color: textMuted } : {}]}>{label}</Text>
+      <Text style={[styles.statRowValue, textColor ? { color: textColor } : {}]}>{value}</Text>
     </View>
   );
 }
@@ -308,79 +308,79 @@ export default function ProfileScreen() {
 
           <View style={styles.profileDetails}>
             <Pressable onPress={() => setShowEditName(true)} style={styles.nameRow}>
-              <Text style={styles.profileName}>{profile.name}</Text>
-              <Ionicons name="pencil" size={14} color={Colors.gold} />
+              <Text style={[styles.profileName, { color: textColor }]}>{profile.name}</Text>
+              <Ionicons name="pencil" size={14} color={themeGold} />
             </Pressable>
 
-            <Pressable onPress={() => setShowTitlePicker(true)} style={styles.titleBadge}>
-              <Text style={styles.titleText}>{titleItem?.name ?? "Novato"}</Text>
-              <Ionicons name="chevron-down" size={12} color={Colors.gold} />
+            <Pressable onPress={() => setShowTitlePicker(true)} style={[styles.titleBadge, { backgroundColor: themeGold + "22", borderColor: themeGold + "44" }]}>
+              <Text style={[styles.titleText, { color: themeGold }]}>{titleItem?.name ?? "Novato"}</Text>
+              <Ionicons name="chevron-down" size={12} color={themeGold} />
             </Pressable>
 
             <View style={styles.levelSection}>
-              <Text style={[styles.levelNum, { color: textColor }]}>{T("level")} {level}</Text>
-              <View style={styles.xpBarBig}>
-                <View style={[styles.xpFill, { width: `${xpPct * 100}%` }]} />
+              <Text style={[styles.levelNum, { color: textMuted }]}>{T("level")} {level}</Text>
+              <View style={[styles.xpBarBig, { backgroundColor: isDark ? Colors.border : "#aacfa0" }]}>
+                <View style={[styles.xpFill, { width: `${xpPct * 100}%`, backgroundColor: themeGold }]} />
               </View>
-              <Text style={styles.xpNums}>{xpProgress.current} / {xpProgress.needed} XP</Text>
+              <Text style={[styles.xpNums, { color: textMuted }]}>{xpProgress.current} / {xpProgress.needed} XP</Text>
             </View>
           </View>
         </LinearGradient>
 
         {/* Coins + card back */}
         <View style={styles.resourceRow}>
-          <View style={styles.resourceCard}>
-            <Ionicons name="cash" size={20} color={Colors.gold} />
-            <Text style={styles.resourceVal}>{profile.coins}</Text>
-            <Text style={styles.resourceLbl}>Monedas</Text>
+          <View style={[styles.resourceCard, { backgroundColor: surfaceColor, borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+            <Ionicons name="cash" size={20} color={themeGold} />
+            <Text style={[styles.resourceVal, { color: themeGold }]}>{profile.coins}</Text>
+            <Text style={[styles.resourceLbl, { color: textMuted }]}>{T("coins")}</Text>
           </View>
-          <View style={styles.resourceCard}>
-            <Ionicons name="star" size={20} color={Colors.gold} />
-            <Text style={styles.resourceVal}>{profile.totalXp}</Text>
-            <Text style={styles.resourceLbl}>XP Total</Text>
+          <View style={[styles.resourceCard, { backgroundColor: surfaceColor, borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+            <Ionicons name="star" size={20} color={themeGold} />
+            <Text style={[styles.resourceVal, { color: themeGold }]}>{profile.totalXp}</Text>
+            <Text style={[styles.resourceLbl, { color: textMuted }]}>XP Total</Text>
           </View>
-          <View style={styles.resourceCard}>
+          <View style={[styles.resourceCard, { backgroundColor: surfaceColor, borderColor: isDark ? Colors.border : "#aacfa0" }]}>
             <View style={[styles.miniCard, { backgroundColor: cardBackItem?.previewColor ?? "#1A3A6A" }]}>
               <Text style={{ color: Colors.gold, fontSize: 10 }}>◆</Text>
             </View>
-            <Text style={styles.resourceVal} numberOfLines={1}>{cardBackItem?.name ?? "Clásico"}</Text>
-            <Text style={styles.resourceLbl}>Dorso</Text>
+            <Text style={[styles.resourceVal, { color: themeGold, fontSize: 12 }]} numberOfLines={1}>{cardBackItem?.name ?? "Clásico"}</Text>
+            <Text style={[styles.resourceLbl, { color: textMuted }]}>{T("cardBackLabel")}</Text>
           </View>
         </View>
 
         {/* Stats */}
         <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("generalStats")}</Text>
-        <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc" }]}>
-          <StatRow label={T("gamesPlayed")} value={profile.stats.totalGames} />
-          <StatRow label={T("wins")} value={profile.stats.totalWins} />
-          <StatRow label={T("losses")} value={profile.stats.totalLosses} />
-          <StatRow label={T("winRate")} value={`${winRate}%`} />
-          <StatRow label={T("streak")} value={`${profile.stats.dailyStreak} ${T("days")}`} />
-          <StatRow label={T("eightsPlayed")} value={profile.stats.totalEightsPlayed} />
-          <StatRow label={T("cardsDrawn")} value={profile.stats.totalCardsDrawn} />
-          <StatRow label={T("perfectWins")} value={profile.stats.perfectWins} />
-          <StatRow label={T("comebacks")} value={profile.stats.comebackWins} />
-          <StatRow label={T("tournamentsWon")} value={profile.stats.tournamentsWon} />
-          <StatRow label={T("coopWins")} value={profile.stats.coopWins} />
-          <StatRow label={T("challengesCompleted")} value={profile.stats.challengesCompleted} />
-          <StatRow label={T("localMultiWins")} value={profile.stats.localMultiWins ?? 0} />
-          <StatRow label={T("localMultiGames")} value={profile.stats.localMultiGames ?? 0} />
-          <StatRow label={T("onlineMultiWins")} value={profile.stats.onlineMultiWins ?? 0} />
-          <StatRow label={T("onlineMultiGames")} value={profile.stats.onlineMultiGames ?? 0} />
+        <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+          <StatRow label={T("gamesPlayed")} value={profile.stats.totalGames} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("wins")} value={profile.stats.totalWins} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("losses")} value={profile.stats.totalLosses} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("winRate")} value={`${winRate}%`} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("streak")} value={`${profile.stats.dailyStreak} ${T("days")}`} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("eightsPlayed")} value={profile.stats.totalEightsPlayed} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("cardsDrawn")} value={profile.stats.totalCardsDrawn} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("perfectWins")} value={profile.stats.perfectWins} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("comebacks")} value={profile.stats.comebackWins} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("tournamentsWon")} value={profile.stats.tournamentsWon} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("coopWins")} value={profile.stats.coopWins} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("challengesCompleted")} value={profile.stats.challengesCompleted} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("localMultiWins")} value={profile.stats.localMultiWins ?? 0} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("localMultiGames")} value={profile.stats.localMultiGames ?? 0} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("onlineMultiWins")} value={profile.stats.onlineMultiWins ?? 0} textColor={textColor} textMuted={textMuted} />
+          <StatRow label={T("onlineMultiGames")} value={profile.stats.onlineMultiGames ?? 0} textColor={textColor} textMuted={textMuted} />
         </View>
 
         <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("byMode")}</Text>
-        <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc" }]}>
+        <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}>
           {GAME_MODES.map((mode) => {
             const wins = profile.stats.winsByMode[mode.id] ?? 0;
             const games = profile.stats.gamesByMode[mode.id] ?? 0;
             return (
-              <View key={mode.id} style={styles.modeStatRow}>
+              <View key={mode.id} style={[styles.modeStatRow, { borderBottomColor: isDark ? Colors.border : "#aacfa0" }]}>
                 <View style={[styles.modeIconSm, { backgroundColor: mode.color + "33" }]}>
                   <Ionicons name={mode.icon as any} size={14} color={mode.color} />
                 </View>
-                <Text style={styles.modeStatName}>{mode.name}</Text>
-                <Text style={styles.modeStatVal}>{wins}/{games}</Text>
+                <Text style={[styles.modeStatName, { color: textMuted }]}>{mode.name}</Text>
+                <Text style={[styles.modeStatVal, { color: themeGold }]}>{wins}/{games}</Text>
               </View>
             );
           })}
