@@ -30,6 +30,10 @@ export interface PlayerStats {
   tournamentsWon: number;
   coopWins: number;
   fastestLightningWin: number;
+  localMultiWins: number;
+  localMultiGames: number;
+  onlineMultiWins: number;
+  onlineMultiGames: number;
 }
 
 export interface AchievementProgress {
@@ -80,7 +84,8 @@ export interface PlayerProfile {
   musicEnabled: boolean;
   sfxEnabled: boolean;
   vibrationEnabled: boolean;
-  language: "es" | "en";
+  language: "es" | "en" | "pt";
+  darkMode: boolean;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -100,6 +105,10 @@ const DEFAULT_STATS: PlayerStats = {
   tournamentsWon: 0,
   coopWins: 0,
   fastestLightningWin: 999999,
+  localMultiWins: 0,
+  localMultiGames: 0,
+  onlineMultiWins: 0,
+  onlineMultiGames: 0,
 };
 
 const DEFAULT_PROFILE: PlayerProfile = {
@@ -128,6 +137,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   sfxEnabled: true,
   vibrationEnabled: true,
   language: "es",
+  darkMode: true,
 };
 
 interface ProfileContextValue {
@@ -162,7 +172,7 @@ interface ProfileContextValue {
   claimDailyReward: () => DailyReward | null;
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
-  updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" }) => void;
+  updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt"; darkMode?: boolean }) => void;
   level: number;
   xpProgress: { current: number; needed: number; level: number };
   battlePassTier: number;
@@ -344,7 +354,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return reward;
   }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, update]);
 
-  const updateSettings = useCallback((settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" }) => {
+  const updateSettings = useCallback((settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt"; darkMode?: boolean }) => {
     update((p) => ({ ...p, ...settings }));
   }, [update]);
 

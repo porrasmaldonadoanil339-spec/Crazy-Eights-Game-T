@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
+import { useT } from "@/hooks/useT";
 import { PlayingCard } from "@/components/PlayingCard";
 import {
   MultiGameState, Card, Suit,
@@ -63,6 +64,7 @@ function LobbyScreen({
   phase: "searching" | "found" | "countdown";
   countdown: number;
 }) {
+  const T = useT();
   const pulse = useSharedValue(1);
   useEffect(() => {
     if (phase === "found" || phase === "countdown") {
@@ -81,16 +83,16 @@ function LobbyScreen({
         {phase === "searching" && (
           <>
             <LobbySpinner />
-            <Text style={lobbyStyles.searchLabel}>BUSCANDO PARTIDA...</Text>
-            <Text style={lobbyStyles.searchSub}>{joinedCount + 1}/{playerCount} jugadores</Text>
+            <Text style={lobbyStyles.searchLabel}>{T("searching").toUpperCase()}</Text>
+            <Text style={lobbyStyles.searchSub}>{joinedCount + 1}/{playerCount} {T("players")}</Text>
           </>
         )}
         {phase === "found" && (
-          <Animated.Text style={[lobbyStyles.foundLabel, pulseStyle]}>¡PARTIDA ENCONTRADA!</Animated.Text>
+          <Animated.Text style={[lobbyStyles.foundLabel, pulseStyle]}>{T("matchFound")}</Animated.Text>
         )}
         {phase === "countdown" && (
           <View style={lobbyStyles.countdownWrap}>
-            <Text style={lobbyStyles.countdownLabel}>COMIENZA EN</Text>
+            <Text style={lobbyStyles.countdownLabel}>{T("startsIn")}</Text>
             <Animated.Text style={[lobbyStyles.countdown, pulseStyle]}>{countdown}</Animated.Text>
           </View>
         )}
@@ -104,7 +106,7 @@ function LobbyScreen({
             </View>
             <View style={lobbyStyles.slotInfo}>
               <Text style={[lobbyStyles.slotName, { color: Colors.gold }]}>{humanName}</Text>
-              <Text style={lobbyStyles.slotSub}>Nivel 1 · Tú</Text>
+              <Text style={lobbyStyles.slotSub}>{T("level")} 1 · {T("you")}</Text>
             </View>
             <View style={lobbyStyles.onlineDot} />
           </Animated.View>
@@ -121,7 +123,7 @@ function LobbyScreen({
               </View>
               <View style={lobbyStyles.slotInfo}>
                 <Text style={[lobbyStyles.slotName, { color: cpu.avatarColor }]}>{cpu.name}</Text>
-                <Text style={lobbyStyles.slotSub}>Nivel {cpu.level} · {cpu.wr}% WR</Text>
+                <Text style={lobbyStyles.slotSub}>{T("level")} {cpu.level} · {cpu.wr}% WR</Text>
               </View>
               <View style={[lobbyStyles.onlineDot, { backgroundColor: "#2ecc71" }]} />
             </Animated.View>
@@ -134,8 +136,8 @@ function LobbyScreen({
                 <LobbySpinner />
               </View>
               <View style={lobbyStyles.slotInfo}>
-                <Text style={lobbyStyles.slotName}>Buscando...</Text>
-                <Text style={lobbyStyles.slotSub}>Conectando</Text>
+                <Text style={lobbyStyles.slotName}>{T("searchingOnline")}</Text>
+                <Text style={lobbyStyles.slotSub}>{T("connecting")}</Text>
               </View>
               <View style={[lobbyStyles.onlineDot, { backgroundColor: "#888" }]} />
             </View>
@@ -266,9 +268,10 @@ function DirectionArrow({ direction }: { direction: 1 | -1 }) {
 
 // ─── Suit picker ──────────────────────────────────────────────────────────
 function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
+  const T = useT();
   return (
     <View style={gameStyles.suitOverlay}>
-      <Text style={gameStyles.suitTitle}>Elige el palo</Text>
+      <Text style={gameStyles.suitTitle}>{T("chooseSuit")}</Text>
       <View style={gameStyles.suitGrid}>
         {SUITS.map(s => (
           <Pressable key={s} onPress={() => onChoose(s)} style={gameStyles.suitBtn}>
@@ -285,6 +288,7 @@ function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
 function ResultOverlay({ isWin, winnerName, winnerColor, onClose }: {
   isWin: boolean; winnerName: string; winnerColor: string; onClose: () => void;
 }) {
+  const T = useT();
   return (
     <View style={gameStyles.resultOverlay}>
       <LinearGradient
@@ -293,17 +297,17 @@ function ResultOverlay({ isWin, winnerName, winnerColor, onClose }: {
       />
       <Ionicons name={isWin ? "trophy" : "close-circle"} size={72} color={isWin ? Colors.gold : Colors.red} />
       <Text style={[gameStyles.resultTitle, { color: isWin ? Colors.gold : Colors.red }]}>
-        {isWin ? "¡GANASTE!" : "DERROTA"}
+        {isWin ? T("youWon") : T("defeat")}
       </Text>
       {!isWin && (
-        <Text style={[gameStyles.resultSub, { color: winnerColor }]}>{winnerName} ganó</Text>
+        <Text style={[gameStyles.resultSub, { color: winnerColor }]}>{winnerName} {T("wonSuffix")}</Text>
       )}
       <Pressable style={gameStyles.resultBtn} onPress={onClose}>
         <LinearGradient
           colors={isWin ? [Colors.gold, Colors.gold + "bb"] : [Colors.red, Colors.red + "bb"]}
           style={gameStyles.resultBtnGrad}
         >
-          <Text style={gameStyles.resultBtnText}>VOLVER AL MENÚ</Text>
+          <Text style={gameStyles.resultBtnText}>{T("returnMenu")}</Text>
         </LinearGradient>
       </Pressable>
     </View>
@@ -316,6 +320,7 @@ export default function OnlineGameScreen() {
   const { width: SW, height: SH } = useWindowDimensions();
   const params = useLocalSearchParams<{ count?: string }>();
   const { profile } = useProfile();
+  const T = useT();
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom + 4;
@@ -392,7 +397,7 @@ export default function OnlineGameScreen() {
 
     if (gameState.phase === "playing" && !cpuThinking.current) {
       cpuThinking.current = true;
-      const delay = 1000 + Math.random() * 1200;
+      const delay = 900 + Math.random() * 800;
       const t = setTimeout(() => {
         cpuThinking.current = false;
         setGameState(prev => {
@@ -400,9 +405,12 @@ export default function OnlineGameScreen() {
           return cpuPlayMulti(prev);
         });
       }, delay);
-      return () => clearTimeout(t);
+      return () => {
+        clearTimeout(t);
+        cpuThinking.current = false;
+      };
     }
-  }, [gameState, lobbyPhase]);
+  }, [gameState?.currentPlayerIndex, gameState?.phase, lobbyPhase]);
 
   // ─── Player card interactions ────────────────────────────────────────────
   const isPlaying = gameState?.phase === "playing" && gameState?.currentPlayerIndex === 0;
@@ -501,7 +509,7 @@ export default function OnlineGameScreen() {
             <View style={gameStyles.onlinePillDot} />
             <Text style={gameStyles.onlinePillText}>ONLINE</Text>
           </View>
-          <Text style={gameStyles.headerTitle}>{playerCount} Jugadores</Text>
+          <Text style={gameStyles.headerTitle}>{playerCount} {T("players")}</Text>
         </View>
         <View style={gameStyles.deckBadge}>
           <Ionicons name="layers-outline" size={12} color={Colors.textDim} />
@@ -539,7 +547,7 @@ export default function OnlineGameScreen() {
               {isPlaying && (
                 <View style={[gameStyles.drawLabel, { backgroundColor: gs.pendingDraw > 0 ? Colors.red : "#4A90E2" }]}>
                   <Text style={gameStyles.drawLabelText}>
-                    {gs.pendingDraw > 0 ? `+${gs.pendingDraw}` : "ROBAR"}
+                    {gs.pendingDraw > 0 ? `+${gs.pendingDraw}` : T("drawCard")}
                   </Text>
                 </View>
               )}
@@ -586,16 +594,16 @@ export default function OnlineGameScreen() {
               <Ionicons name="person" size={14} color={Colors.gold} />
             </View>
             <Text style={gameStyles.playerName} numberOfLines={1}>
-              {humanName} · {currentHand.length} cartas
+              {humanName} · {currentHand.length} {T("cards")}
             </Text>
             {isPlaying && playableCount > 0 && (
               <View style={gameStyles.playableBadge}>
-                <Text style={gameStyles.playableText}>{playableCount} jugables</Text>
+                <Text style={gameStyles.playableText}>{playableCount} {T("playableCountPlural")}</Text>
               </View>
             )}
             {!isPlaying && gs.currentPlayerIndex !== 0 && (
               <View style={gameStyles.waitingBadge}>
-                <Text style={gameStyles.waitingText}>Esperando...</Text>
+                <Text style={gameStyles.waitingText}>{T("waiting")}</Text>
               </View>
             )}
           </View>
@@ -627,8 +635,8 @@ export default function OnlineGameScreen() {
           {selectedCard && isPlaying && (
             <Text style={gameStyles.selectedHint}>
               {(selectedCard.rank === "8" || (selectedCard.rank === "Joker" && gs.pendingDraw === 0))
-                ? "Toca de nuevo → elegir palo"
-                : "Toca de nuevo para jugar"}
+                ? T("tapAgainChooseSuit")
+                : T("tapAgainPlay")}
             </Text>
           )}
         </View>

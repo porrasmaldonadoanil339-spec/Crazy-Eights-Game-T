@@ -4,6 +4,7 @@ import {
   TextInput, Modal, Platform, Alert, Image,
 } from "react-native";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
+import { useT } from "@/hooks/useT";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -23,11 +24,12 @@ function EditNameModal({
   visible, currentName, onSave, onClose,
 }: { visible: boolean; currentName: string; onSave: (n: string) => void; onClose: () => void }) {
   const [name, setName] = useState(currentName);
+  const T = useT();
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
       <View style={styles.modalBg}>
         <View style={styles.editModal}>
-          <Text style={styles.editTitle}>Cambiar nombre</Text>
+          <Text style={styles.editTitle}>{T("editName")}</Text>
           <TextInput
             style={styles.nameInput}
             value={name}
@@ -35,14 +37,14 @@ function EditNameModal({
             maxLength={16}
             autoFocus
             placeholderTextColor={Colors.textDim}
-            placeholder="Tu nombre..."
+            placeholder={T("yourName")}
           />
           <View style={styles.editBtns}>
             <Pressable onPress={onClose} style={styles.editBtnCancel}>
-              <Text style={styles.editBtnCancelText}>Cancelar</Text>
+              <Text style={styles.editBtnCancelText}>{T("cancel")}</Text>
             </Pressable>
             <Pressable onPress={() => { onSave(name); onClose(); }} style={styles.editBtnSave}>
-              <Text style={styles.editBtnSaveText}>Guardar</Text>
+              <Text style={styles.editBtnSaveText}>{T("save")}</Text>
             </Pressable>
           </View>
         </View>
@@ -186,6 +188,7 @@ export default function ProfileScreen() {
   const [showTitlePicker, setShowTitlePicker] = useState(false);
   const [showFramePicker, setShowFramePicker] = useState(false);
 
+  const T = useT();
   const swipeHandlers = useSwipeTabs(3);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
@@ -262,16 +265,25 @@ export default function ProfileScreen() {
     setShowAvatarPicker(false);
   };
 
+  const isDark = profile.darkMode !== false;
+  const bgColors: [string, string, string] = isDark
+    ? ["#061209", "#0a1a0f", "#0d2418"]
+    : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
+  const textColor = isDark ? "#EEE8D5" : "#0d2b0d";
+  const textMuted = isDark ? "rgba(238,232,213,0.5)" : "rgba(13,43,13,0.55)";
+  const surfaceColor = isDark ? Colors.surface : "#c4ddb8";
+  const themeGold = isDark ? Colors.gold : "#A07800";
+
   return (
     <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
-      <LinearGradient colors={["#061209", "#0a1a0f", "#0d2418"]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <Text style={styles.screenTitle}>PERFIL</Text>
+        <Text style={[styles.screenTitle, { color: themeGold }]}>{T("profile")}</Text>
 
         {/* Avatar + name card */}
         <LinearGradient
-          colors={[Colors.gold + "18", Colors.surface]}
+          colors={[themeGold + "22", surfaceColor]}
           style={styles.profileCard}
         >
           <View style={styles.avatarCol}>
@@ -306,7 +318,7 @@ export default function ProfileScreen() {
             </Pressable>
 
             <View style={styles.levelSection}>
-              <Text style={styles.levelNum}>Nivel {level}</Text>
+              <Text style={[styles.levelNum, { color: textColor }]}>{T("level")} {level}</Text>
               <View style={styles.xpBarBig}>
                 <View style={[styles.xpFill, { width: `${xpPct * 100}%` }]} />
               </View>
@@ -337,24 +349,28 @@ export default function ProfileScreen() {
         </View>
 
         {/* Stats */}
-        <Text style={styles.sectionLabel}>Estadísticas Generales</Text>
-        <View style={styles.statsBlock}>
-          <StatRow label="Partidas jugadas" value={profile.stats.totalGames} />
-          <StatRow label="Victorias" value={profile.stats.totalWins} />
-          <StatRow label="Derrotas" value={profile.stats.totalLosses} />
-          <StatRow label="Win Rate" value={`${winRate}%`} />
-          <StatRow label="Racha actual" value={`${profile.stats.dailyStreak} días`} />
-          <StatRow label="Ochos jugados" value={profile.stats.totalEightsPlayed} />
-          <StatRow label="Cartas robadas" value={profile.stats.totalCardsDrawn} />
-          <StatRow label="Victorias perfectas" value={profile.stats.perfectWins} />
-          <StatRow label="Comebacks" value={profile.stats.comebackWins} />
-          <StatRow label="Torneos ganados" value={profile.stats.tournamentsWon} />
-          <StatRow label="Victorias cooperativas" value={profile.stats.coopWins} />
-          <StatRow label="Desafíos completados" value={profile.stats.challengesCompleted} />
+        <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("generalStats")}</Text>
+        <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc" }]}>
+          <StatRow label={T("gamesPlayed")} value={profile.stats.totalGames} />
+          <StatRow label={T("wins")} value={profile.stats.totalWins} />
+          <StatRow label={T("losses")} value={profile.stats.totalLosses} />
+          <StatRow label={T("winRate")} value={`${winRate}%`} />
+          <StatRow label={T("streak")} value={`${profile.stats.dailyStreak} ${T("days")}`} />
+          <StatRow label={T("eightsPlayed")} value={profile.stats.totalEightsPlayed} />
+          <StatRow label={T("cardsDrawn")} value={profile.stats.totalCardsDrawn} />
+          <StatRow label={T("perfectWins")} value={profile.stats.perfectWins} />
+          <StatRow label={T("comebacks")} value={profile.stats.comebackWins} />
+          <StatRow label={T("tournamentsWon")} value={profile.stats.tournamentsWon} />
+          <StatRow label={T("coopWins")} value={profile.stats.coopWins} />
+          <StatRow label={T("challengesCompleted")} value={profile.stats.challengesCompleted} />
+          <StatRow label={T("localMultiWins")} value={profile.stats.localMultiWins ?? 0} />
+          <StatRow label={T("localMultiGames")} value={profile.stats.localMultiGames ?? 0} />
+          <StatRow label={T("onlineMultiWins")} value={profile.stats.onlineMultiWins ?? 0} />
+          <StatRow label={T("onlineMultiGames")} value={profile.stats.onlineMultiGames ?? 0} />
         </View>
 
-        <Text style={styles.sectionLabel}>Por Modo</Text>
-        <View style={styles.statsBlock}>
+        <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("byMode")}</Text>
+        <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc" }]}>
           {GAME_MODES.map((mode) => {
             const wins = profile.stats.winsByMode[mode.id] ?? 0;
             const games = profile.stats.gamesByMode[mode.id] ?? 0;

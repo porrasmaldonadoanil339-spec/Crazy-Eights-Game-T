@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
+import { useT } from "@/hooks/useT";
 import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
 import { PlayingCard } from "@/components/PlayingCard";
@@ -21,9 +22,7 @@ import { getModeById, getDifficultyById } from "@/lib/gameModes";
 import { AVATARS } from "@/lib/storeItems";
 import type { Card } from "@/lib/gameEngine";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
-import {
-  playCardFlip, playCardDraw, playCardWild, playWin, playLose, playError, playButton,
-} from "@/lib/audioManager";
+import { playSound } from "@/lib/sounds";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
@@ -96,6 +95,7 @@ const timerStyles = StyleSheet.create({
 
 // ─── Pending draw indicator ────────────────────────────────────────────────────
 function PendingDrawBanner({ count, type }: { count: number; type: "two" | "seven" | null }) {
+  const T = useT();
   const blink = useSharedValue(1);
   useEffect(() => {
     blink.value = withRepeat(
@@ -103,12 +103,13 @@ function PendingDrawBanner({ count, type }: { count: number; type: "two" | "seve
     );
   }, []);
   const s = useAnimatedStyle(() => ({ opacity: blink.value }));
+  const msg = type === "two"
+    ? T("drawNCards2").replace("{n}", String(count))
+    : T("drawNCards7").replace("{n}", String(count));
   return (
     <Animated.View style={[pendStyles.wrap, s]}>
       <Ionicons name="alert-circle" size={14} color="#E74C3C" />
-      <Text style={pendStyles.text}>
-        Roba <Text style={pendStyles.num}>{count}</Text> cartas{type === "two" ? " (defiéndete con 2 o As)" : " (defiéndete con 7)"}
-      </Text>
+      <Text style={pendStyles.text}>{msg}</Text>
     </Animated.View>
   );
 }
@@ -126,13 +127,14 @@ const pendStyles = StyleSheet.create({
 function SuitPicker({ visible, onSelect, isJoker }: {
   visible: boolean; onSelect: (s: Suit) => void; isJoker?: boolean;
 }) {
+  const T = useT();
   return (
     <Modal transparent animationType="fade" visible={visible}>
       <View style={styles.suitOverlay}>
         <View style={styles.suitModal}>
           <LinearGradient colors={["#1a2e1a", Colors.surface]} style={styles.suitGrad}>
-            <Text style={styles.suitTitle}>{isJoker ? "¡Comodín!" : "Elige un palo"}</Text>
-            <Text style={styles.suitSub}>{isJoker ? "El comodín cambia el palo activo" : "El 8 Loco cambia el palo activo"}</Text>
+            <Text style={styles.suitTitle}>{isJoker ? T("joker") : T("chooseSuit")}</Text>
+            <Text style={styles.suitSub}>{isJoker ? T("jokerDesc") : T("chooseSuitSub8")}</Text>
             <View style={styles.suitGrid}>
               {SUITS.map((suit) => (
                 <Pressable key={suit} onPress={() => onSelect(suit)} style={({ pressed }) => [styles.suitOption, pressed && styles.suitOptionPressed]}>
@@ -152,6 +154,7 @@ function SuitPicker({ visible, onSelect, isJoker }: {
 function TournamentModal({ scores, round, onContinue, onQuit }: {
   scores: [number, number]; round: number; onContinue: () => void; onQuit: () => void;
 }) {
+  const T = useT();
   const isOver = scores[0] >= 2 || scores[1] >= 2;
   const playerWon = scores[0] >= 2;
   return (
@@ -159,17 +162,17 @@ function TournamentModal({ scores, round, onContinue, onQuit }: {
       <View style={styles.endModal}>
         <LinearGradient colors={isOver && playerWon ? ["#1a2e1a", Colors.surface] : ["#1a1a2e", Colors.surface]} style={styles.endGrad}>
           <Ionicons name="trophy" size={44} color={Colors.gold} />
-          <Text style={styles.endTitle}>{isOver ? (playerWon ? "¡CAMPEÓN!" : "DERROTA") : `RONDA ${round - 1}`}</Text>
+          <Text style={styles.endTitle}>{isOver ? (playerWon ? T("champion") : T("defeat")) : `${T("round")} ${round - 1}`}</Text>
           <View style={styles.tScoreRow}>
-            <View style={styles.tScoreTeam}><Text style={styles.tScoreLbl}>TÚ</Text><Text style={styles.tScoreNum}>{scores[0]}</Text></View>
+            <View style={styles.tScoreTeam}><Text style={styles.tScoreLbl}>{T("you")}</Text><Text style={styles.tScoreNum}>{scores[0]}</Text></View>
             <Text style={styles.tScoreSep}>VS</Text>
-            <View style={styles.tScoreTeam}><Text style={styles.tScoreLbl}>CPU</Text><Text style={styles.tScoreNum}>{scores[1]}</Text></View>
+            <View style={styles.tScoreTeam}><Text style={styles.tScoreLbl}>{T("cpu")}</Text><Text style={styles.tScoreNum}>{scores[1]}</Text></View>
           </View>
-          {!isOver && <Text style={styles.endSub}>Primera en 2 rondas gana el torneo</Text>}
+          {!isOver && <Text style={styles.endSub}>{T("firstToWinRounds")}</Text>}
           <View style={styles.endBtns}>
-            {!isOver && <Pressable onPress={onContinue} style={styles.btnPrimary}><Text style={styles.btnPrimaryTxt}>Siguiente ronda</Text></Pressable>}
+            {!isOver && <Pressable onPress={onContinue} style={styles.btnPrimary}><Text style={styles.btnPrimaryTxt}>{T("continueRound")}</Text></Pressable>}
             <Pressable onPress={onQuit} style={[styles.btnSecondary, isOver && { flex: 1 }]}>
-              <Text style={styles.btnSecondaryTxt}>{isOver ? "Volver al menú" : "Abandonar"}</Text>
+              <Text style={styles.btnSecondaryTxt}>{isOver ? T("returnMenu") : T("abandon")}</Text>
             </Pressable>
           </View>
         </LinearGradient>
@@ -201,6 +204,7 @@ const LOSE_MESSAGES = [
 function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
 }) {
+  const T = useT();
   const isWin = phase === "player_wins";
   const isDraw = phase === "draw";
 
@@ -217,8 +221,8 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
     glowOp.value = withTiming(1, { duration: 600 });
     titleY.value = withDelay(200, withSpring(0, { damping: 14 }));
     titleOp.value = withDelay(200, withTiming(1, { duration: 400 }));
-    if (isWin) playWin().catch(() => {});
-    else playLose().catch(() => {});
+    if (isWin) playSound("win").catch(() => {});
+    else playSound("lose").catch(() => {});
   }, []);
 
   const cardStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
@@ -268,13 +272,13 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
           {/* Title */}
           <Animated.View style={[{ alignItems: "center", gap: 4 }, titleStyle]}>
             <Text style={[styles.endLabel, { color: accentColor + "CC" }]}>
-              {isWin ? "RESULTADO" : isDraw ? "RESULTADO" : "RESULTADO"}
+              {T("result")}
             </Text>
             <Text style={[styles.endTitle, { color: accentColor }]}>
-              {isWin ? "¡VICTORIA!" : isDraw ? "EMPATE" : "DERROTA"}
+              {isWin ? T("victory") : isDraw ? T("draw") : T("defeat")}
             </Text>
             <Text style={styles.endSub}>
-              {isWin ? winMsg : isDraw ? "Muy parejo — ¡ambos lo dieron todo!" : loseMsg}
+              {isWin ? winMsg : isDraw ? T("drawMsg") : loseMsg}
             </Text>
           </Animated.View>
 
@@ -284,20 +288,20 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
           {/* Rewards */}
           {(coinsEarned > 0 || xpEarned > 0) && (
             <View style={styles.rewardSection}>
-              <Text style={styles.rewardLabel}>RECOMPENSAS</Text>
+              <Text style={styles.rewardLabel}>{T("rewards")}</Text>
               <View style={styles.rewardRow}>
                 {coinsEarned > 0 && (
                   <View style={[styles.rewardChip, { backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "55" }]}>
                     <Ionicons name="cash" size={16} color={Colors.gold} />
                     <Text style={[styles.rewardChipVal, { color: Colors.gold }]}>+{coinsEarned}</Text>
-                    <Text style={styles.rewardChipSub}>monedas</Text>
+                    <Text style={styles.rewardChipSub}>{T("coins")}</Text>
                   </View>
                 )}
                 {xpEarned > 0 && (
                   <View style={[styles.rewardChipXP, { backgroundColor: "#9B59B622", borderColor: "#9B59B655" }]}>
                     <Ionicons name="star" size={14} color="#A855F7" />
                     <Text style={[styles.rewardChipVal, { color: "#A855F7" }]}>+{xpEarned}</Text>
-                    <Text style={styles.rewardChipSub}>XP</Text>
+                    <Text style={styles.rewardChipSub}>{T("xp")}</Text>
                   </View>
                 )}
               </View>
@@ -311,14 +315,14 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
               style={({ pressed }) => [styles.btnPrimary, { backgroundColor: accentColor, opacity: pressed ? 0.85 : 1 }]}
             >
               <Ionicons name="refresh" size={16} color="#1a0a00" />
-              <Text style={styles.btnPrimaryTxt}>Jugar de nuevo</Text>
+              <Text style={styles.btnPrimaryTxt}>{T("playAgain")}</Text>
             </Pressable>
             <Pressable
               onPress={onHome}
               style={({ pressed }) => [styles.btnSecondary, pressed && { opacity: 0.7 }]}
             >
               <Ionicons name="home" size={14} color={accentColor} />
-              <Text style={[styles.btnSecondaryTxt, { color: accentColor }]}>Menú principal</Text>
+              <Text style={[styles.btnSecondaryTxt, { color: accentColor }]}>{T("mainMenu")}</Text>
             </Pressable>
           </View>
 
@@ -332,6 +336,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
 function AiHand({ count, isThinking, cpuProfile }: {
   count: number; isThinking: boolean; cpuProfile: CpuProfile | null;
 }) {
+  const T = useT();
   const pulse = useSharedValue(1);
   useEffect(() => {
     if (isThinking) {
@@ -359,7 +364,7 @@ function AiHand({ count, isThinking, cpuProfile }: {
           </Text>
         </View>
         <View style={[styles.turnDot, { backgroundColor: isThinking ? Colors.gold : "rgba(255,255,255,0.1)" }]} />
-        {isThinking && <Text style={styles.thinkingText}>pensando...</Text>}
+        {isThinking && <Text style={styles.thinkingText}>{T("thinking")}</Text>}
       </View>
 
       <Animated.View style={[styles.aiHandRow, pStyle]}>
@@ -417,6 +422,7 @@ export default function GameScreen() {
     startNextTournamentRound, startGame, getGameResult,
   } = useGame();
   const { profile, level, recordGameResult, updateAchievementProgress } = useProfile();
+  const T = useT();
 
   const aiThinking = useRef(false);
   const resultRecorded = useRef(false);
@@ -480,7 +486,7 @@ export default function GameScreen() {
       if (countdown <= 0) {
         if (timerRef.current) clearInterval(timerRef.current);
         // Auto draw on timeout
-        playCardDraw().catch(() => {});
+        playSound("card_draw").catch(() => {});
         handleDraw();
       }
     }, 1000);
@@ -623,20 +629,20 @@ export default function GameScreen() {
   const handleCardPress = async (card: Card) => {
     if (!isPlayerTurn) return;
     if (!canPlay(card, gameState)) {
-      await playError().catch(() => {});
+      await playSound("error").catch(() => {});
       return;
     }
     if (selectedCard?.id === card.id) {
       const needsSuitPick = card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0);
       if (needsSuitPick) {
-        await playCardWild().catch(() => {});
+        await playSound("card_wild").catch(() => {});
         setSuitPickerVisible(true);
       } else {
-        await playCardFlip().catch(() => {});
+        await playSound("card_play").catch(() => {});
         handlePlayCard(card);
       }
     } else {
-      await playCardDraw().catch(() => {});
+      await playSound("card_draw").catch(() => {});
       setSelectedCard(card);
     }
   };
@@ -651,7 +657,7 @@ export default function GameScreen() {
 
   const handleDrawPress = async () => {
     if (!isPlayerTurn) return;
-    await playCardDraw().catch(() => {});
+    await playSound("card_draw").catch(() => {});
     handleDraw();
   };
 
@@ -716,7 +722,7 @@ export default function GameScreen() {
           <Text style={styles.suitIndicatorName}>{suitName(gameState.currentSuit)}</Text>
           {gameState.jActive && gameState.jSuit && (
             <View style={styles.jActiveBadge}>
-              <Text style={styles.jActiveTxt}>J activa</Text>
+              <Text style={styles.jActiveTxt}>{T("jActive")}</Text>
             </View>
           )}
         </View>
@@ -724,7 +730,7 @@ export default function GameScreen() {
         {/* Message */}
         <Animated.View style={[styles.messageBubble, msgStyle]}>
           <Text style={styles.messageText} numberOfLines={2}>
-            {dealAnimationDone ? gameState.message : "Repartiendo cartas..."}
+            {dealAnimationDone ? gameState.message : T("dealingCards")}
           </Text>
         </Animated.View>
 
@@ -749,7 +755,7 @@ export default function GameScreen() {
               {isPlayerTurn && (playableCount === 0 || gameState.pendingDraw > 0) && (
                 <LinearGradient colors={[Colors.gold, Colors.goldLight]} style={styles.drawLabel}>
                   <Text style={styles.drawLabelText}>
-                    {gameState.pendingDraw > 0 ? `+${gameState.pendingDraw}` : "ROBAR"}
+                    {gameState.pendingDraw > 0 ? `+${gameState.pendingDraw}` : T("drawCard")}
                   </Text>
                 </LinearGradient>
               )}
@@ -796,10 +802,10 @@ export default function GameScreen() {
         <View style={styles.turnLabelRow}>
           <View style={[styles.turnDot, { backgroundColor: isPlayerTurn ? Colors.gold : "transparent" }]} />
           <Text style={[styles.turnLabel, isPlayerTurn && styles.activeTurn]}>
-            Tú · {gameState.playerHand.length} cartas
+            {T("you")} · {gameState.playerHand.length} {T("cards")}
           </Text>
           {isPlayerTurn && playableCount > 0 && (
-            <Text style={styles.playableHint}>{playableCount} jugable{playableCount !== 1 ? "s" : ""}</Text>
+            <Text style={styles.playableHint}>{playableCount} {playableCount !== 1 ? T("playableCountPlural") : T("playableCount")}</Text>
           )}
           <View style={{ marginLeft: "auto" }}>
             <EmotePanel onSendEmote={handleSendEmote} lastEmoteTime={lastPlayerEmoteTime} />

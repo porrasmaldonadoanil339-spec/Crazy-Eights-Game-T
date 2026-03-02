@@ -11,6 +11,7 @@ import { Colors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS } from "@/lib/storeItems";
 import { playSound } from "@/lib/sounds";
+import { useT } from "@/hooks/useT";
 
 const RARITY_COLORS_MAP: Record<string, string> = {
   common: "#95A5A6",
@@ -19,24 +20,30 @@ const RARITY_COLORS_MAP: Record<string, string> = {
   legendary: "#D4AF37",
 };
 
-const RARITY_LABELS: Record<string, string> = {
-  common: "COMÚN",
-  rare: "RARO",
-  epic: "ÉPICO",
-  legendary: "LEGENDARIO",
-};
+function useRarityLabel() {
+  const T = useT();
+  return (rarity: string) => {
+    if (rarity === "common") return T("rarityCommon").toUpperCase();
+    if (rarity === "rare") return T("rarityRare").toUpperCase();
+    if (rarity === "epic") return T("rarityEpic").toUpperCase();
+    if (rarity === "legendary") return T("rarityLegendary").toUpperCase();
+    return rarity.toUpperCase();
+  };
+}
 
-const CATEGORIES: { id: StoreItemCategory; label: string; icon: string; count: number }[] = [
-  { id: "card_back", label: "Dorsos",   icon: "card",          count: CARD_BACKS.length },
-  { id: "avatar",    label: "Avatares", icon: "person-circle", count: AVATARS.length },
-  { id: "frame",     label: "Marcos",   icon: "ellipse",       count: AVATAR_FRAMES.length },
-  { id: "title",     label: "Títulos",  icon: "ribbon",        count: TITLES.length },
-  { id: "effect",    label: "Efectos",  icon: "sparkles",      count: EFFECTS.length },
+const CATEGORIES: { id: StoreItemCategory; icon: string; count: number }[] = [
+  { id: "card_back", icon: "card",          count: CARD_BACKS.length },
+  { id: "avatar",    icon: "person-circle", count: AVATARS.length },
+  { id: "frame",     icon: "ellipse",       count: AVATAR_FRAMES.length },
+  { id: "title",     icon: "ribbon",        count: TITLES.length },
+  { id: "effect",    icon: "sparkles",      count: EFFECTS.length },
 ];
 
 function ConfirmModal({
   item, visible, onConfirm, onCancel,
 }: { item: StoreItem | null; visible: boolean; onConfirm: () => void; onCancel: () => void }) {
+  const T = useT();
+  const rarityLabel = useRarityLabel();
   if (!item) return null;
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
   return (
@@ -48,22 +55,22 @@ function ConfirmModal({
             <Ionicons name={item.preview as any} size={32} color={item.previewColor} />
           </View>
           <View style={[styles.rarityBadge, { backgroundColor: rarityColor + "22" }]}>
-            <Text style={[styles.rarityBadgeText, { color: rarityColor }]}>{RARITY_LABELS[item.rarity]}</Text>
+            <Text style={[styles.rarityBadgeText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
           </View>
           <Text style={styles.confirmName}>{item.name}</Text>
           <Text style={styles.confirmDesc}>{item.description}</Text>
           <View style={styles.priceRow}>
             <Ionicons name="cash" size={18} color={Colors.gold} />
-            <Text style={styles.priceText}>{item.price} monedas</Text>
+            <Text style={styles.priceText}>{item.price} {T("coins")}</Text>
           </View>
           <View style={styles.confirmBtns}>
             <Pressable onPress={onCancel} style={styles.cancelBtn}>
-              <Text style={styles.cancelText}>Cancelar</Text>
+              <Text style={styles.cancelText}>{T("cancel")}</Text>
             </Pressable>
             <Pressable onPress={onConfirm} style={styles.buyBtn}>
               <LinearGradient colors={[Colors.goldLight, Colors.gold]} style={styles.buyBtnGrad}>
                 <Ionicons name="bag-check" size={16} color="#1a0a00" />
-                <Text style={styles.buyBtnText}>Comprar</Text>
+                <Text style={styles.buyBtnText}>{T("buy")}</Text>
               </LinearGradient>
             </Pressable>
           </View>
@@ -74,6 +81,8 @@ function ConfirmModal({
 }
 
 function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean; onPress: () => void }) {
+  const T = useT();
+  const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
   return (
     <Pressable
@@ -93,7 +102,7 @@ function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean;
           <View style={styles.effectTopRow}>
             <Text style={styles.effectName}>{item.name}</Text>
             <View style={[styles.effectRarityBadge, { backgroundColor: rarityColor + "22" }]}>
-              <Text style={[styles.effectRarityText, { color: rarityColor }]}>{RARITY_LABELS[item.rarity]}</Text>
+              <Text style={[styles.effectRarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
             </View>
           </View>
           <Text style={styles.effectDesc}>{item.description}</Text>
@@ -101,10 +110,10 @@ function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean;
             {owned ? (
               <View style={styles.ownedBadge}>
                 <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
-                <Text style={styles.ownedText}>Obtenido</Text>
+                <Text style={styles.ownedText}>{T("obtained")}</Text>
               </View>
             ) : item.isDefault ? (
-              <Text style={styles.freeText}>Gratis</Text>
+              <Text style={styles.freeText}>{T("free")}</Text>
             ) : (
               <View style={styles.priceRowSm}>
                 <Ionicons name="cash" size={12} color={Colors.gold} />
@@ -119,6 +128,8 @@ function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean;
 }
 
 function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boolean; onPress: () => void }) {
+  const T = useT();
+  const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
   return (
     <Pressable
@@ -132,7 +143,7 @@ function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boole
     >
       <LinearGradient colors={[rarityColor + "18", "transparent"]} style={styles.itemGrad}>
         <View style={[styles.rarityBadgeSmall]}>
-          <Text style={[styles.rarityText, { color: rarityColor }]}>{RARITY_LABELS[item.rarity]}</Text>
+          <Text style={[styles.rarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
         </View>
         {item.category === "card_back" ? (
           <LinearGradient
@@ -161,10 +172,10 @@ function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boole
           {owned ? (
             <View style={styles.ownedBadge}>
               <Ionicons name="checkmark-circle" size={13} color={Colors.success} />
-              <Text style={styles.ownedText}>Obtenido</Text>
+              <Text style={styles.ownedText}>{T("obtained")}</Text>
             </View>
           ) : item.isDefault ? (
-            <Text style={styles.freeText}>Gratis</Text>
+            <Text style={styles.freeText}>{T("free")}</Text>
           ) : (
             <View style={styles.priceRowSm}>
               <Ionicons name="cash" size={12} color={Colors.gold} />
@@ -185,11 +196,26 @@ export default function StoreScreen() {
   const [toast, setToast] = useState<string | null>(null);
   const catScrollRef = useRef<ScrollView>(null);
 
+  const T = useT();
   const swipeHandlers = useSwipeTabs(2);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
   const items = STORE_ITEMS.filter((i) => i.category === category);
   const isEffects = category === "effect";
+
+  const isDark = profile.darkMode !== false;
+  const bgColors: [string, string, string] = isDark
+    ? ["#061209", "#0a1a0f", "#0d2418"]
+    : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
+  const themeGold = isDark ? Colors.gold : "#A07800";
+
+  const CATEGORY_LABELS: Record<StoreItemCategory, string> = {
+    card_back: T("categoryCardBacks"),
+    avatar: T("categoryAvatars"),
+    frame: T("categoryFrames"),
+    title: T("categoryTitles"),
+    effect: T("categoryEffects"),
+  };
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -201,7 +227,7 @@ export default function StoreScreen() {
     setConfirmItem(null);
     if (profile.coins < confirmItem.price) {
       await playSound("error");
-      showToast("Monedas insuficientes");
+      showToast(T("insufficientCoins"));
       return;
     }
     const success = buyItem(confirmItem);
@@ -211,7 +237,7 @@ export default function StoreScreen() {
       if (confirmItem.category === "avatar") updateAvatar(confirmItem.id);
       if (confirmItem.category === "title") updateTitle(confirmItem.id);
       if (confirmItem.category === "frame") updateFrame(confirmItem.id);
-      showToast(`¡${confirmItem.name} obtenido!`);
+      showToast(`${confirmItem.name} ${T("obtainedItem")}!`);
     }
   };
 
@@ -219,16 +245,16 @@ export default function StoreScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
-      <LinearGradient colors={["#061209", "#0a1a0f", "#0d2418"]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
         <View>
-          <Text style={styles.screenTitle}>TIENDA</Text>
-          <Text style={styles.screenSub}>{ownedCount}/{items.length} en esta categoría</Text>
+          <Text style={[styles.screenTitle, { color: themeGold }]}>{T("store")}</Text>
+          <Text style={styles.screenSub}>{ownedCount}/{items.length} {T("inCategory")}</Text>
         </View>
         <View style={styles.coinsBig}>
-          <Ionicons name="cash" size={18} color={Colors.gold} />
-          <Text style={styles.coinsNum}>{profile.coins}</Text>
+          <Ionicons name="cash" size={18} color={themeGold} />
+          <Text style={[styles.coinsNum, { color: themeGold }]}>{profile.coins}</Text>
         </View>
       </View>
 
@@ -236,6 +262,7 @@ export default function StoreScreen() {
         ref={catScrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.catScrollView}
         contentContainerStyle={styles.catRow}
       >
         {CATEGORIES.map((cat) => (
@@ -244,8 +271,8 @@ export default function StoreScreen() {
             onPress={() => setCategory(cat.id)}
             style={[styles.catBtn, category === cat.id && styles.catBtnActive]}
           >
-            <Ionicons name={cat.icon as any} size={15} color={category === cat.id ? Colors.gold : Colors.textMuted} />
-            <Text style={[styles.catLabel, category === cat.id && styles.catLabelActive]}>{cat.label}</Text>
+            <Ionicons name={cat.icon as any} size={15} color={category === cat.id ? themeGold : Colors.textMuted} />
+            <Text style={[styles.catLabel, category === cat.id && styles.catLabelActive]}>{CATEGORY_LABELS[cat.id]}</Text>
             <View style={[styles.catCount, category === cat.id && styles.catCountActive]}>
               <Text style={[styles.catCountText, category === cat.id && { color: Colors.gold }]}>{cat.count}</Text>
             </View>
@@ -312,11 +339,13 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.gold + "44",
   },
   coinsNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold },
-  catRow: { paddingHorizontal: 16, gap: 8, marginBottom: 14, flexDirection: "row" },
+  catScrollView: { flexShrink: 0, flexGrow: 0, marginBottom: 10 },
+  catRow: { paddingHorizontal: 16, paddingVertical: 6, gap: 8, flexDirection: "row", alignItems: "center" },
   catBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,
-    paddingVertical: 9, paddingHorizontal: 12, borderRadius: 14,
-    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border,
+    paddingVertical: 10, paddingHorizontal: 14, borderRadius: 20,
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border,
+    minHeight: 40,
   },
   catBtnActive: { borderColor: Colors.gold, backgroundColor: Colors.gold + "22" },
   catLabel: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textMuted },

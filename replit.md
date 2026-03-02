@@ -2,9 +2,9 @@
 
 ## Overview
 
-**Ocho Locos** is a mobile card game app — a Spanish-language version of the classic "Crazy Eights" card game. It is built with **Expo (React Native)** for the mobile frontend and **Express.js** for the backend server. The app supports multiple game modes, an in-game store, player profiles, achievements, and a battle pass progression system. All game logic runs fully on-device; the backend currently serves as an API scaffold and static asset server.
+**Ocho Locos** is a mobile card game app — a Spanish-language version of the classic "Crazy Eights" card game. Built with **Expo (React Native)** for the mobile frontend and **Express.js** for the backend. The app supports 6 game modes, local + online multiplayer, a store with 350 items (70 per category), 100+ achievements, a 100-tier battle pass, daily rewards, emote system, avatar frames, profile photos, 3-language switcher (ES/EN/PT-BR), swipe tab navigation, and light/dark mode. All game logic runs fully on-device; the backend serves as API scaffold + static asset server.
 
-The app targets iOS, Android, and Web (via Expo + React Native Web). Dark casino-themed UI: felt-green (#0a1a0f) background, gold (#D4AF37) accents, Nunito fonts.
+Targets iOS, Android, and Web (via Expo + React Native Web). Dark casino-themed UI: felt-green (`#0a1a0f`) background, gold (`#D4AF37`) accents, Nunito fonts.
 
 ---
 
@@ -12,6 +12,7 @@ The app targets iOS, Android, and Web (via Expo + React Native Web). Dark casino
 
 Preferred communication style: Simple, everyday language.
 No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
+"OCHO LOCOS" brand name NEVER translates.
 
 ---
 
@@ -23,6 +24,8 @@ No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
 - **Styling**: `StyleSheet` only, no external CSS/styled-components
 - **Fonts**: Nunito (400Regular, 700Bold, 900ExtraBold) from `@expo-google-fonts/nunito`
 - **Storage key**: `"ocho_profile_v3"` in AsyncStorage
+- **i18n**: `lib/i18n.ts` with ES/EN/PT keys; `hooks/useT.ts` hook reads language from ProfileContext
+- **Theme**: `hooks/useTheme.ts` returns `DarkColors` or `LightColors` from `constants/colors.ts` based on `profile.darkMode`
 
 ### Backend (Express.js)
 - Runs on port 5000
@@ -35,48 +38,53 @@ No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
 
 ```
 app/
-  _layout.tsx           ← Root layout with all providers (Query, Gesture, Keyboard, Profile, Game)
+  _layout.tsx           ← Root layout (providers: Query, Gesture, Keyboard, Profile, Game; AudioManager)
   (tabs)/
     _layout.tsx         ← Tab bar (Jugar / Logros / Tienda / Perfil)
-    index.tsx           ← Play screen: mode selection, stats, quick start
-    achievements.tsx    ← Achievements + Battle Pass screens (tabbed)
-    store.tsx           ← Item shop (card backs, avatars, titles)
-    profile.tsx         ← Player profile, stats, avatar/title picker
-  game.tsx              ← Main game screen with deal animation + gameplay
+    index.tsx           ← Play screen: mode selection, stats, quick start (fully i18n + light/dark)
+    achievements.tsx    ← Achievements + Battle Pass screens (100 achievements, 100-tier BP)
+    store.tsx           ← Item shop (70 items × 5 categories; rarity labels translated)
+    profile.tsx         ← Player profile, stats, avatar/title picker (multiplayer stats included)
+  game.tsx              ← Main game screen with deal animation + gameplay (fully i18n)
+  game-multi.tsx        ← Local multiplayer game (pass-device flow; fully i18n)
+  game-online.tsx       ← Online multiplayer (simulated lobby + game; fully i18n)
   tutorial.tsx          ← Interactive step-by-step tutorial (8 steps)
   rules.tsx             ← Static rules reference
+  settings.tsx          ← Settings (audio, language ES/EN/PT, dark/light mode toggle, reset)
 
 components/
   PlayingCard.tsx       ← Card component (faceUp/faceDown, sizes sm/md/lg)
   DealAnimation.tsx     ← Shuffle + deal animation overlay (Reanimated)
+  AvatarDisplay.tsx     ← Avatar icon or photo with gradient frame ring
   ErrorBoundary.tsx     ← Error boundary with reload
 
 context/
-  ProfileContext.tsx    ← Player profile, coins, XP, stats, achievements progress
+  ProfileContext.tsx    ← Player profile, coins, XP, stats (incl. localMulti/onlineMulti), achievements progress
   GameContext.tsx       ← Game state machine, session tracking
 
 lib/
   gameEngine.ts         ← Core game logic (deck, hands, play/draw/AI turns, special cards 2/3/7/10/J/Joker)
   gameModes.ts          ← 6 modes × 5 difficulties (easy/normal/intermediate/hard/expert)
-  achievements.ts       ← 45 achievements definitions with RARITY_COLORS export
-  storeItems.ts         ← 38 store items (11 card backs, 14 avatars, 13 titles)
-  battlePass.ts         ← 40-tier battle pass, XP/level helpers
+  achievements.ts       ← 114 achievement definitions (common/rare/epic/legendary)
+  storeItems.ts         ← 350 store items (70 each: card backs, avatars, frames, titles, effects)
+  battlePass.ts         ← 100-tier battle pass, XP/level helpers (XP_FOR_LEVEL, getPlayerLevel, etc.)
   cpuProfiles.ts        ← 12 CPU player profiles with avatar/name/level/title
   audioManager.ts       ← Audio system using expo-audio: music + SFX + haptics
-  sounds.ts             ← SoundEvent dispatcher (wraps audioManager)
+  sounds.ts             ← SoundEvent dispatcher with 18 events (wraps audioManager)
+  i18n.ts               ← All UI translations (ES/EN/PT) — 260+ keys
   query-client.ts       ← React Query client + API URL helper
 
-app/
-  settings.tsx          ← Settings screen (music/sfx toggles, game info)
+hooks/
+  useT.ts               ← Translation hook; reads profile.language from context
+  useTheme.ts           ← Returns DarkColors or LightColors based on profile.darkMode
+  useSwipeTabs.ts       ← Swipe gesture handlers for tab navigation
 
+constants/
+  colors.ts             ← DarkColors + LightColors (both exported); Colors = DarkColors (legacy)
 
 assets/sounds/
   card-flip.wav, card-draw.wav, shuffle.wav, win.wav, lose.wav, button.wav, wild.wav
   menu-music.wav (8-bar jazz loop), game-music.wav (tense minor loop)
-  All generated by scripts/generate-audio.js using WAV PCM synthesis
-
-constants/
-  colors.ts             ← Design tokens (Colors.gold, Colors.background, etc.)
 ```
 
 ---
@@ -106,67 +114,104 @@ constants/
 - J: Repeat turn with same suit; CPU must play jSuit or 8/Joker
 - Joker (rank 14): Wild like 8, or adds 5 to pendingDraw stack
 
+---
+
+## i18n System
+
+- **3 languages**: Spanish (es), English (en), Portuguese Brazil (pt)
+- **lib/i18n.ts**: 260+ translation keys, all 3 languages per key
+- **hooks/useT.ts**: `useT()` hook returns `T(key)` function reading profile.language
+- **Applied to**: All tabs, game screens, modals, settings, store, achievements, profile, multiplayer
+- **"OCHO LOCOS"** brand name NEVER translates in any language
+
+---
+
+## Light/Dark Mode
+
+- **constants/colors.ts**: `DarkColors` (casino felt dark) + `LightColors` (light green felt)
+- **hooks/useTheme.ts**: returns correct palette based on `profile.darkMode !== false`
+- **Toggle**: Settings screen → Display section → Dark Mode toggle
+- **Applied to**: index.tsx, store.tsx, settings.tsx, game-online.tsx, game-multi.tsx
+
+---
+
+## Store System
+
+- 5 categories: card_back, avatar, frame, title, effect
+- **70 items per category = 350 total**
+- Rarities: common / rare / epic / legendary
+- Rarity labels fully translated (COMÚN/COMMON/COMUM etc.)
+- Item "Obtained/Obtenido/Obtido" and "Free/Gratis/Grátis" labels translated
+- Purchase modal: price, cancel, buy button all translated
+- Category bar: horizontal ScrollView with `flexShrink: 0` to prevent clipping
+
+---
+
+## Battle Pass
+
+- **100 tiers** with progressive XP requirements (Tier 1 = 0 XP, Tier 100 = 8,603,000 XP)
+- Rewards: coins, card backs, avatars, frames, titles, effects
+- Claimable from Achievements tab → Battle Pass sub-tab
+- `getCurrentBattlePassTier(totalXp)` utility in battlePass.ts
+
+---
+
+## Achievements
+
+- **114 achievement definitions** across rarities: common / rare / epic / legendary / hidden
+- Categories: wins, modes, special cards, hands, coins, streaks, store, difficulty, social, multiplayer, XP, battle pass, language, theme, gameplay specifics
+- Coin + XP rewards per achievement
+
+---
+
+## Audio System
+
+- `initAudio()` + `preloadSounds()` called in `_layout.tsx` AudioManager component
+- Music switches route-based via `useSegments`: menuMusic ↔ gameMusic
+- Settings sync via `syncSettings(musicEnabled, sfxEnabled)`
+- SFX: card_play, card_draw, card_wild, card_deal, shuffle, win, lose, button_press, achievement, purchase, error, turn_change, daily_reward, level_up, battle_pass_unlock, purchase_success, notification
+- All audio calls wrapped in safe() try/catch; web audio autoplay gracefully handled
+
+---
+
+## Profile Stats
+
+- `localMultiWins`, `localMultiGames`, `onlineMultiWins`, `onlineMultiGames` tracked in PlayerStats
+- Profile screen shows multiplayer stats under BY MODE section
+
+---
+
 ## Daily Rewards
+
 - 7-day rotating cycle stored in ProfileContext
 - Claimed once per day; modal auto-shows 1.5s after home screen loads
 - `canClaimDailyReward` and `todaysDailyReward` exposed from useProfile()
 
-## Avatar System
-- `AvatarDisplay` component (components/AvatarDisplay.tsx): shared component showing avatar icon or photo with gradient frame ring
-- Profile photo: ImagePicker (camera + gallery); stored as `photoUri` in PlayerProfile; displayed via `<Image>` in AvatarDisplay
-- Avatar frames: 8 AVATAR_FRAMES in storeItems.ts (frame_gold default, silver/emerald/crimson/ocean/fire/galaxy/diamond)
-- Frame selection: tap "Marco" badge in profile screen; buy in Store → Marcos category
-- `selectedFrameId` and `photoUri` stored in PlayerProfile; `updateFrame()` and `updatePhotoUri()` in ProfileContext
+---
 
-## Local Multiplayer Mode
-- Home screen "MULTIJUGADOR" section → "Local" card (green) → setup modal (bottom sheet)
-- Choose 2, 3, or 4 players, optionally enter names for each
-- Navigates to `/game-multi` with player names as JSON params
-- **Round table layout**: oval green felt table in center; players around it (top, left/right, bottom)
-  - 2 players: top + bottom
-  - 3 players: top-left + top-right + bottom  
-  - 4 players: left + top + right + bottom
-- Pass-device UI: dark overlay with "TURNO DE [Name]" + pulsing "MOSTRAR MIS CARTAS" button
-- Face-down card fans for opponents, face-up scrollable hand for current player
-- Rotating direction arrow (↻/↺) on table to visualize play direction
-- Skip/reverse visual indicators at affected player positions
-- All special card rules apply: 3=skip (skipped player highlighted), 10=reverse (arrow flips), etc.
-- Engine: `lib/multiplayerEngine.ts` — `cpuPlayMulti()` for AI opponents in online mode
+## Multiplayer
 
-## Online Multiplayer Mode (Simulated)
-- Home screen "MULTIJUGADOR" section → "Online" card (blue, pulsing EN VIVO dot) → setup modal
-- Choose 2-4 players; rivals are AI opponents presented as real online players
-- **Lobby screen**: "Buscando partida..." spinner → players join sequentially with flag emojis → countdown 3-2-1 → game
-- CPU profiles: CarlosMX 🇲🇽, LucíaAR 🇦🇷, DiegoVE 🇻🇪, SofíaCO 🇨🇴, etc. (10 profiles in pool, random pick)
-- Each CPU has: flag emoji, level, win rate, unique avatar color
-- **Same round table layout** as local (oval table, players around edges, direction arrow)
-- Blue-themed table (dark navy) vs green-themed local table
-- CPU auto-plays: useEffect watches currentPlayerIndex, triggers cpuPlayMulti() after 1-2s delay
-- "..." thinking indicator shown when CPU is deciding
-- Green online status dots for all CPU players
-- Result screen: "¡GANASTE!" (gold) or "DERROTA" (red) with winner name
-- Engine routes: `/game-online` with `count` param
+### Local Multiplayer
+- 2-4 players, pass-device UI with dark overlay between turns
+- Oval table layout; face-down fans for opponents, face-up scrollable hand for current player
+- Engine: `lib/multiplayerEngine.ts`
 
-## Emote System (in-game reactions)
-- 8 emotes: "Buena jugada", "Toma ese +2", "Casi pierdo", "Te tocó robar", "No puede ser", "Te voy a ganar", "Qué suerte", "Modo Experto"
-- EmotePanel component (components/EmotePanel.tsx): smiley button near player turn label; opens grid modal
-- Anti-spam: 5-second cooldown between player emotes
-- EmoteBubble: animated fade-in/out bubble above avatar showing icon + label text
-- AI auto-emotes: CPU sends "Toma ese +2" when causing pendingDraw increase, "Te voy a ganar" when down to 1 card, "Qué suerte" when drawing many cards
+### Online Multiplayer (Simulated)
+- Lobby: searching → players join → countdown → game
+- CPU profiles act as real online rivals (flag emoji, level, win rate)
+- Blue navy-themed table; CPU auto-plays after 1-2s delay
+- Result overlay: translated "¡GANASTE!/YOU WON!/VOCÊ GANHOU!" or "DERROTA/DEFEAT"
 
 ---
 
 ## Key Design Decisions
 
-- Game phase starts as "playing" (not "dealing") — deal animation is purely visual overlay
-- `DealAnimation` runs on top and calls `onComplete` when done, then `setDealAnimationDone(true)`
+- `RARITY_COLORS_MAP` defined locally in screens; rarity labels via `useRarityLabel()` hook in store.tsx
+- Audio: expo-audio (not expo-av): `createAudioPlayer()` for SFX, `player.loop = true` for BGM
+- Profile saved to AsyncStorage after every update
+- Game phase starts as "playing" — deal animation is purely visual overlay
 - AI turn runs with 800–1400ms delay to feel natural
 - Tournament mode: 3 rounds, best of 2 wins
-- Profile saved to AsyncStorage after every update
-- `RARITY_COLORS_MAP` is defined locally in each screen that needs it (common/rare/epic/legendary)
-- Audio: `initAudio()` + `preloadSounds()` called on app start; music switches route-based via `useSegments` in `_layout.tsx` (`AudioManager` component). All audio calls wrapped in try/catch (`safe()` helper)
-- expo-audio (not expo-av): uses `createAudioPlayer()` for SFX, `player.loop = true` + `player.play()` for BGM
-- Web audio autoplay: browser may block music until first user interaction — safe() handles gracefully
 
 ---
 

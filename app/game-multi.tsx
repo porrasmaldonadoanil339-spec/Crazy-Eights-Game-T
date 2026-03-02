@@ -12,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
+import { useT } from "@/hooks/useT";
 import { PlayingCard } from "@/components/PlayingCard";
 import {
   MultiGameState, Card, Suit,
@@ -108,9 +109,10 @@ function DirectionArrow({ direction }: { direction: 1 | -1 }) {
 
 // ─── Suit picker ──────────────────────────────────────────────────────────
 function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
+  const T = useT();
   return (
     <View style={styles.suitOverlay}>
-      <Text style={styles.suitTitle}>Elige el palo</Text>
+      <Text style={styles.suitTitle}>{T("chooseSuit")}</Text>
       <View style={styles.suitGrid}>
         {SUITS.map(s => (
           <Pressable key={s} onPress={() => onChoose(s)} style={styles.suitBtn}>
@@ -127,6 +129,7 @@ function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
 function PassDeviceOverlay({ playerName, playerColor, message, onReady }: {
   playerName: string; playerColor: string; message: string; onReady: () => void;
 }) {
+  const T = useT();
   const pulse = useSharedValue(0.96);
   useEffect(() => {
     pulse.value = withRepeat(withSequence(
@@ -143,15 +146,15 @@ function PassDeviceOverlay({ playerName, playerColor, message, onReady }: {
         <View style={[styles.passAvatarRing, { borderColor: playerColor }]}>
           <Ionicons name="person" size={40} color={playerColor} />
         </View>
-        <Text style={styles.passTurnLabel}>TURNO DE</Text>
+        <Text style={styles.passTurnLabel}>{T("turnOf")}</Text>
         <Text style={[styles.passPlayerName, { color: playerColor }]} numberOfLines={1}>{playerName}</Text>
         {message ? <Text style={styles.passMessage} numberOfLines={2}>{message}</Text> : null}
-        <Text style={styles.passInstruction}>Pasa el dispositivo a {playerName}</Text>
+        <Text style={styles.passInstruction}>{T("passDevice")} {playerName}</Text>
         <Animated.View style={btnStyle}>
           <Pressable style={[styles.passBtn, { borderColor: playerColor }]} onPress={onReady}>
             <LinearGradient colors={[playerColor + "30", playerColor + "10"]} style={styles.passBtnInner}>
               <Ionicons name="eye-outline" size={20} color={playerColor} />
-              <Text style={[styles.passBtnText, { color: playerColor }]}>MOSTRAR MIS CARTAS</Text>
+              <Text style={[styles.passBtnText, { color: playerColor }]}>{T("showMyCards")}</Text>
             </LinearGradient>
           </Pressable>
         </Animated.View>
@@ -164,16 +167,17 @@ function PassDeviceOverlay({ playerName, playerColor, message, onReady }: {
 function WinOverlay({ winnerName, winnerColor, onClose }: {
   winnerName: string; winnerColor: string; onClose: () => void;
 }) {
+  const T = useT();
   return (
     <View style={styles.winOverlay}>
       <LinearGradient colors={["#010805", "#020d06"]} style={StyleSheet.absoluteFill} />
       <View style={styles.winContent}>
         <Ionicons name="trophy" size={72} color={winnerColor} />
-        <Text style={[styles.winSubtitle, { color: winnerColor, opacity: 0.7 }]}>¡GANADOR!</Text>
+        <Text style={[styles.winSubtitle, { color: winnerColor, opacity: 0.7 }]}>{T("winner")}</Text>
         <Text style={[styles.winName, { color: winnerColor }]} numberOfLines={2}>{winnerName}</Text>
         <Pressable style={styles.winBtn} onPress={onClose}>
           <LinearGradient colors={[Colors.gold, Colors.gold + "bb"]} style={styles.winBtnGrad}>
-            <Text style={styles.winBtnText}>VOLVER AL MENÚ</Text>
+            <Text style={styles.winBtnText}>{T("returnMenu")}</Text>
           </LinearGradient>
         </Pressable>
       </View>
@@ -186,6 +190,7 @@ export default function MultiGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
   const params = useLocalSearchParams<{ names?: string; count?: string }>();
+  const T = useT();
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom + 4;
@@ -203,7 +208,7 @@ export default function MultiGameScreen() {
       catch {}
     }
     const count = parseInt(params.count ?? "2", 10);
-    return Array.from({ length: count }, (_, i) => `Jugador ${i + 1}`);
+    return Array.from({ length: count }, (_, i) => `${T("player")} ${i + 1}`);
   }, []);
 
   const [gameState, setGameState] = useState<MultiGameState>(() => initMultiGame(playerNames));
@@ -313,7 +318,7 @@ export default function MultiGameScreen() {
         </Pressable>
         <View style={styles.headerMid}>
           <Ionicons name="people" size={12} color={Colors.textMuted} />
-          <Text style={styles.headerTitle}>{playerCount} Jugadores · Local</Text>
+          <Text style={styles.headerTitle}>{playerCount} {T("players")} · {T("local")}</Text>
         </View>
         <View style={styles.deckBadge}>
           <Ionicons name="layers-outline" size={12} color={Colors.textDim} />
@@ -354,7 +359,7 @@ export default function MultiGameScreen() {
               {isPlaying && (
                 <View style={[styles.drawLabel, { backgroundColor: gameState.pendingDraw > 0 ? Colors.red : Colors.gold }]}>
                   <Text style={styles.drawLabelText}>
-                    {gameState.pendingDraw > 0 ? `+${gameState.pendingDraw}` : "ROBAR"}
+                    {gameState.pendingDraw > 0 ? `+${gameState.pendingDraw}` : T("drawCard")}
                   </Text>
                 </View>
               )}
@@ -398,7 +403,7 @@ export default function MultiGameScreen() {
           <View style={styles.playerLabel}>
             <View style={[styles.playerDot, { backgroundColor: currentColor }]} />
             <Text style={[styles.playerName, { color: currentColor }]} numberOfLines={1}>
-              {playerNames[pidx]} · {currentHand.length} cartas
+              {playerNames[pidx]} · {currentHand.length} {T("cards")}
             </Text>
             {isPlaying && gameState.pendingDraw > 0 && (
               <View style={[styles.pendingBadge, { backgroundColor: Colors.red + "22", borderColor: Colors.red + "66" }]}>

@@ -4,6 +4,7 @@ import {
   Modal, Platform, Dimensions, TextInput,
 } from "react-native";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
+import { useT } from "@/hooks/useT";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -13,10 +14,12 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
+import { useTheme } from "@/hooks/useTheme";
 import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
-import { playButton } from "@/lib/audioManager";
+import { playButton, syncSettings } from "@/lib/audioManager";
+import { playSound } from "@/lib/sounds";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 const { width: SW } = Dimensions.get("window");
@@ -206,6 +209,9 @@ export default function PlayScreen() {
   const [onlinePlayerCount, setOnlinePlayerCount] = useState(2);
   const [multiPlayerNames, setMultiPlayerNames] = useState(["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4"]);
 
+  const T = useT();
+  const theme = useTheme();
+  const isDark = theme.isDark;
   const swipeHandlers = useSwipeTabs(0);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
@@ -240,6 +246,7 @@ export default function PlayScreen() {
 
   const handleClaimDaily = () => {
     claimDailyReward();
+    playSound("daily_reward").catch(() => {});
     setShowDailyModal(false);
   };
 
@@ -258,10 +265,14 @@ export default function PlayScreen() {
 
   const selectedModeConfig = selectedMode ? GAME_MODES.find((m) => m.id === selectedMode) : null;
 
+  const bgGradient: [string, string, string, string, string] = isDark
+    ? ["#041008", "#071510", "#0a1a0f", "#071510", "#041008"]
+    : ["#d4edd0", "#dff2da", "#e8f5e2", "#dff2da", "#d4edd0"];
+
   return (
-    <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
+    <View style={[styles.container, { paddingTop: topPad, backgroundColor: theme.background }]} {...swipeHandlers}>
       <LinearGradient
-        colors={["#041008", "#071510", "#0a1a0f", "#071510", "#041008"]}
+        colors={bgGradient}
         locations={[0, 0.2, 0.5, 0.8, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -274,7 +285,7 @@ export default function PlayScreen() {
         {/* Profile bar — clickable to go to profile */}
         <Pressable
           onPress={() => { playButton().catch(() => {}); router.push("/(tabs)/profile"); }}
-          style={({ pressed }) => [styles.profileBar, pressed && styles.profileBarPressed]}
+          style={({ pressed }) => [styles.profileBar, { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)" }, pressed && styles.profileBarPressed]}
         >
           <AvatarDisplay
             avatarId={profile.avatarId}
@@ -284,15 +295,17 @@ export default function PlayScreen() {
             iconSize={18}
           />
           <View style={styles.profileBarInfo}>
-            <Text style={styles.profileBarName} numberOfLines={1}>{profile.name}</Text>
+            <Text style={[styles.profileBarName, { color: theme.text }]} numberOfLines={1}>{profile.name}</Text>
             <View style={styles.xpMini}>
-              <Text style={styles.levelTag}>Nv.{level}</Text>
-              <View style={styles.xpBarMini}><View style={[styles.xpFillMini, { width: `${xpPct * 100}%` }]} /></View>
+              <Text style={[styles.levelTag, { color: theme.textMuted }]}>Nv.{level}</Text>
+              <View style={[styles.xpBarMini, { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)" }]}>
+                <View style={[styles.xpFillMini, { width: `${xpPct * 100}%`, backgroundColor: theme.gold }]} />
+              </View>
             </View>
           </View>
           <View style={styles.coinsBadge}>
-            <Ionicons name="cash" size={13} color={Colors.gold} />
-            <Text style={styles.coinsNum}>{profile.coins}</Text>
+            <Ionicons name="cash" size={13} color={theme.gold} />
+            <Text style={[styles.coinsNum, { color: theme.gold }]}>{profile.coins}</Text>
           </View>
           {canClaimDailyReward && (
             <View style={styles.dailyDot}>
@@ -304,7 +317,7 @@ export default function PlayScreen() {
             style={styles.settingsBtn}
             hitSlop={8}
           >
-            <Ionicons name="settings-outline" size={17} color={Colors.textMuted} />
+            <Ionicons name="settings-outline" size={17} color={theme.textMuted} />
           </Pressable>
         </Pressable>
 
@@ -312,25 +325,25 @@ export default function PlayScreen() {
         {canClaimDailyReward && (
           <Pressable
             onPress={() => setShowDailyModal(true)}
-            style={styles.dailyBanner}
+            style={[styles.dailyBanner, { backgroundColor: isDark ? "rgba(212,175,55,0.12)" : "rgba(160,120,0,0.12)" }]}
           >
-            <Ionicons name="gift" size={16} color="#D4AF37" />
-            <Text style={styles.dailyBannerText}>¡Tu recompensa diaria está lista!</Text>
-            <Ionicons name="chevron-forward" size={14} color="#D4AF37" />
+            <Ionicons name="gift" size={16} color={theme.gold} />
+            <Text style={[styles.dailyBannerText, { color: theme.gold }]}>{T("dailyRewardReady")}</Text>
+            <Ionicons name="chevron-forward" size={14} color={theme.gold} />
           </Pressable>
         )}
 
         <PokerTitle />
 
         <View style={styles.suitDivider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerSuit}>♦</Text>
-          <View style={styles.dividerLine} />
+          <View style={[styles.dividerLine, { backgroundColor: isDark ? "rgba(212,175,55,0.25)" : "rgba(120,80,0,0.2)" }]} />
+          <Text style={[styles.dividerSuit, { color: isDark ? Colors.gold : "#A07800" }]}>♦</Text>
+          <View style={[styles.dividerLine, { backgroundColor: isDark ? "rgba(212,175,55,0.25)" : "rgba(120,80,0,0.2)" }]} />
         </View>
 
         <View style={styles.sectionHeader}>
-          <Ionicons name="game-controller" size={14} color={Colors.textMuted} />
-          <Text style={styles.sectionLabel}>MODOS DE JUEGO</Text>
+          <Ionicons name="game-controller" size={14} color={theme.textMuted} />
+          <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>{T("gameModes")}</Text>
         </View>
 
         <View style={styles.modesGrid}>
@@ -350,7 +363,7 @@ export default function PlayScreen() {
                 >
                   {mode.isNew && (
                     <LinearGradient colors={[Colors.red, "#a01a15"]} style={styles.newBadge}>
-                      <Text style={styles.newBadgeText}>NUEVO</Text>
+                      <Text style={styles.newBadgeText}>{T("newBadge")}</Text>
                     </LinearGradient>
                   )}
                   <View style={[styles.modeIconWrap, { backgroundColor: mode.color + "25" }]}>
@@ -378,8 +391,8 @@ export default function PlayScreen() {
 
         {/* Multiplayer section */}
         <View style={styles.sectionHeader}>
-          <Ionicons name="people" size={14} color={Colors.textMuted} />
-          <Text style={styles.sectionLabel}>MULTIJUGADOR</Text>
+          <Ionicons name="people" size={14} color={theme.textMuted} />
+          <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>{T("multiplayer")}</Text>
         </View>
         <View style={styles.multiRow}>
           {/* Local */}
@@ -391,11 +404,11 @@ export default function PlayScreen() {
               <View style={[styles.multiCardIcon, { borderColor: "#2ECC7155" }]}>
                 <Ionicons name="phone-portrait" size={22} color="#2ECC71" />
               </View>
-              <Text style={[styles.multiCardTitle, { color: "#2ECC71" }]}>Local</Text>
-              <Text style={styles.multiCardDesc}>Pasa el dispositivo entre amigos</Text>
+              <Text style={[styles.multiCardTitle, { color: "#2ECC71" }]}>{T("multiLocal")}</Text>
+              <Text style={styles.multiCardDesc}>{T("multiLocalDesc")}</Text>
               <View style={[styles.multiCardBadge, { backgroundColor: "#2ECC7122", borderColor: "#2ECC7144" }]}>
                 <Ionicons name="people" size={10} color="#2ECC71" />
-                <Text style={[styles.multiCardBadgeText, { color: "#2ECC71" }]}>2 – 4 jugadores</Text>
+                <Text style={[styles.multiCardBadgeText, { color: "#2ECC71" }]}>2 – 4 {T("players")}</Text>
               </View>
             </LinearGradient>
           </Pressable>
@@ -410,16 +423,16 @@ export default function PlayScreen() {
                 <Ionicons name="globe" size={22} color="#4A90E2" />
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                <Text style={[styles.multiCardTitle, { color: "#4A90E2" }]}>Online</Text>
+                <Text style={[styles.multiCardTitle, { color: "#4A90E2" }]}>{T("multiOnline")}</Text>
                 <View style={styles.onlineDotPill}>
                   <View style={styles.onlineDotSmall} />
-                  <Text style={styles.onlineDotText}>EN VIVO</Text>
+                  <Text style={styles.onlineDotText}>{T("multiOnlineDesc")}</Text>
                 </View>
               </View>
-              <Text style={styles.multiCardDesc}>Juega vs rivales de todo el mundo</Text>
+              <Text style={styles.multiCardDesc}>{T("multiOnlineDesc2")}</Text>
               <View style={[styles.multiCardBadge, { backgroundColor: "#4A90E222", borderColor: "#4A90E244" }]}>
                 <Ionicons name="wifi" size={10} color="#4A90E2" />
-                <Text style={[styles.multiCardBadgeText, { color: "#4A90E2" }]}>2 – 4 jugadores</Text>
+                <Text style={[styles.multiCardBadgeText, { color: "#4A90E2" }]}>2 – 4 {T("players")}</Text>
               </View>
             </LinearGradient>
           </Pressable>
@@ -439,7 +452,7 @@ export default function PlayScreen() {
             style={styles.quickBtn}
           >
             <Ionicons name="book-outline" size={18} color={Colors.textMuted} />
-            <Text style={styles.quickBtnText}>Reglas</Text>
+            <Text style={styles.quickBtnText}>{T("rules")}</Text>
           </Pressable>
           {profile.stats.totalGames > 0 && (
             <View style={styles.statChip}>
@@ -474,7 +487,7 @@ export default function PlayScreen() {
             <View style={styles.multiModalHeader}>
               <View style={styles.onlineDotPill}>
                 <View style={styles.onlineDotSmall} />
-                <Text style={[styles.onlineDotText, { fontSize: 10 }]}>EN VIVO</Text>
+                <Text style={[styles.onlineDotText, { fontSize: 10 }]}>{T("multiOnlineDesc")}</Text>
               </View>
               <Text style={[styles.multiModalTitle, { color: "#4A90E2", flex: 1 }]}>Online</Text>
               <Pressable onPress={() => setShowOnlineModal(false)} style={styles.multiModalClose}>
@@ -482,7 +495,7 @@ export default function PlayScreen() {
               </Pressable>
             </View>
 
-            <Text style={styles.multiModalSectionLabel}>NÚMERO DE JUGADORES</Text>
+            <Text style={styles.multiModalSectionLabel}>{T("howManyPlayersLocal")}</Text>
             <View style={styles.multiCountRow}>
               {[2, 3, 4].map(n => (
                 <Pressable
@@ -498,14 +511,14 @@ export default function PlayScreen() {
               ))}
             </View>
 
-            <Text style={[styles.multiModalSectionLabel, { marginTop: 8 }]}>RIVALES</Text>
+            <Text style={[styles.multiModalSectionLabel, { marginTop: 8 }]}>{T("rivals")}</Text>
             <View style={{ gap: 6 }}>
               {Array.from({ length: onlinePlayerCount - 1 }).map((_, i) => (
                 <View key={i} style={[styles.multiNameRow, { borderColor: "#4A90E222" }]}>
                   <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#4A90E2" }} />
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.multiNameInput, { color: Colors.textMuted, paddingVertical: 8 }]}>
-                      Rival #{i + 1} — Buscando en línea...
+                      #{i + 1} — {T("searchingOnline")}
                     </Text>
                   </View>
                   <View style={styles.onlineDotSmall} />
@@ -516,13 +529,11 @@ export default function PlayScreen() {
             <Pressable onPress={handleStartOnline} style={styles.multiStartBtn}>
               <LinearGradient colors={["#1a3a7a", "#4A90E2"]} style={styles.multiStartBtnGrad}>
                 <Ionicons name="search" size={18} color="#fff" />
-                <Text style={styles.multiStartBtnText}>BUSCAR PARTIDA</Text>
+                <Text style={styles.multiStartBtnText}>{T("searchMatch")}</Text>
               </LinearGradient>
             </Pressable>
 
-            <Text style={styles.multiModalHint}>
-              Los rivales son oponentes inteligentes que simulan jugadores reales en línea.
-            </Text>
+            <Text style={styles.multiModalHint}>{T("onlineRivals")}</Text>
           </LinearGradient>
         </View>
       </Modal>
@@ -532,13 +543,13 @@ export default function PlayScreen() {
           <LinearGradient colors={["#0a1a2e", "#0d2244"]} style={styles.multiModalBox}>
             <View style={styles.multiModalHeader}>
               <Ionicons name="people" size={22} color="#63B3ED" />
-              <Text style={styles.multiModalTitle}>Multijugador Local</Text>
+              <Text style={styles.multiModalTitle}>{T("multiLocal")}</Text>
               <Pressable onPress={() => setShowMultiModal(false)} style={styles.multiModalClose}>
                 <Ionicons name="close" size={20} color={Colors.textMuted} />
               </Pressable>
             </View>
 
-            <Text style={styles.multiModalSectionLabel}>NÚMERO DE JUGADORES</Text>
+            <Text style={styles.multiModalSectionLabel}>{T("howManyPlayersLocal")}</Text>
             <View style={styles.multiCountRow}>
               {[2, 3, 4].map(n => (
                 <Pressable
@@ -556,7 +567,7 @@ export default function PlayScreen() {
               ))}
             </View>
 
-            <Text style={[styles.multiModalSectionLabel, { marginTop: 12 }]}>NOMBRES (opcional)</Text>
+            <Text style={[styles.multiModalSectionLabel, { marginTop: 12 }]}>{T("namesOptional")}</Text>
             {Array.from({ length: multiPlayerCount }).map((_, i) => {
               const colors = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
               const c = colors[i % colors.length];
@@ -582,13 +593,11 @@ export default function PlayScreen() {
             <Pressable onPress={handleStartMulti} style={styles.multiStartBtn}>
               <LinearGradient colors={["#2B6CB0", "#63B3ED"]} style={styles.multiStartBtnGrad}>
                 <Ionicons name="play" size={18} color="#fff" />
-                <Text style={styles.multiStartBtnText}>COMENZAR PARTIDA</Text>
+                <Text style={styles.multiStartBtnText}>{T("startMatch")}</Text>
               </LinearGradient>
             </Pressable>
 
-            <Text style={styles.multiModalHint}>
-              Cada jugador verá sus cartas en su turno. El dispositivo se pasa entre jugadores.
-            </Text>
+            <Text style={styles.multiModalHint}>{T("passDeviceHint")}</Text>
           </LinearGradient>
         </View>
       </Modal>

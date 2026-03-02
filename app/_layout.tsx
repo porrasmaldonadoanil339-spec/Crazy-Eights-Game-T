@@ -15,23 +15,34 @@ import {
   Nunito_900ExtraBold,
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
-import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic } from "@/lib/audioManager";
+import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, syncSettings } from "@/lib/audioManager";
+import { useProfile } from "@/context/ProfileContext";
 
 SplashScreen.preventAutoHideAsync();
 
 function AudioManager() {
   const segments = useSegments();
   const isFirstRun = useRef(true);
+  const { profile, isLoaded } = useProfile();
 
   useEffect(() => {
+    if (!isLoaded) return;
     initAudio().then(() => {
+      syncSettings(profile.musicEnabled, profile.sfxEnabled);
       preloadSounds().catch(() => {});
-      startMenuMusic().catch(() => {});
+      
+      const inGame = segments.includes("game");
+      if (inGame) {
+        startGameMusic().catch(() => {});
+      } else {
+        startMenuMusic().catch(() => {});
+      }
     });
     return () => { stopMusic().catch(() => {}); };
-  }, []);
+  }, [isLoaded]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     if (isFirstRun.current) { isFirstRun.current = false; return; }
     const inGame = segments.includes("game");
     if (inGame) {
@@ -39,7 +50,7 @@ function AudioManager() {
     } else {
       startMenuMusic().catch(() => {});
     }
-  }, [segments.join(",")]);
+  }, [segments.join(","), isLoaded]);
 
   return null;
 }

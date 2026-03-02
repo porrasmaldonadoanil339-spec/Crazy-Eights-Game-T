@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
 } from "react-native";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
+import { useT } from "@/hooks/useT";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -48,20 +49,27 @@ export default function AchievementsScreen() {
     showToast(`Recompensa nivel ${tier} reclamada`);
   };
 
+  const T = useT();
   const swipeHandlers = useSwipeTabs(1);
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
   const unlockedCount = profile.achievementProgress.filter((a) => a.unlocked).length;
   const claimableCount = profile.achievementProgress.filter((a) => a.unlocked && !a.claimedReward).length;
 
+  const isDark = profile.darkMode !== false;
+  const bgColors: [string, string, string] = isDark
+    ? ["#061209", "#0a1a0f", "#0d2418"]
+    : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
+  const themeGold = isDark ? Colors.gold : "#A07800";
+
   return (
     <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
-      <LinearGradient colors={["#061209", "#0a1a0f", "#0d2418"]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
-        <Text style={styles.screenTitle}>LOGROS</Text>
+        <Text style={[styles.screenTitle, { color: themeGold }]}>{T("achievements")}</Text>
         <View style={styles.counterBadge}>
-          <Ionicons name="trophy" size={14} color={Colors.gold} />
-          <Text style={styles.counterText}>{unlockedCount}/{ACHIEVEMENTS.length}</Text>
+          <Ionicons name="trophy" size={14} color={themeGold} />
+          <Text style={[styles.counterText, { color: themeGold }]}>{unlockedCount}/{ACHIEVEMENTS.length}</Text>
         </View>
       </View>
 
@@ -70,17 +78,17 @@ export default function AchievementsScreen() {
           onPress={() => setActiveTab("achievements")}
           style={[styles.tabBtn, activeTab === "achievements" && styles.tabBtnActive]}
         >
-          <Ionicons name="medal" size={16} color={activeTab === "achievements" ? Colors.gold : Colors.textMuted} />
+          <Ionicons name="medal" size={16} color={activeTab === "achievements" ? themeGold : Colors.textMuted} />
           <Text style={[styles.tabLabel, activeTab === "achievements" && styles.tabLabelActive]}>
-            Logros {claimableCount > 0 && `(${claimableCount})`}
+            {T("achievements")} {claimableCount > 0 && `(${claimableCount})`}
           </Text>
         </Pressable>
         <Pressable
           onPress={() => setActiveTab("battlepass")}
           style={[styles.tabBtn, activeTab === "battlepass" && styles.tabBtnActive]}
         >
-          <Ionicons name="star" size={16} color={activeTab === "battlepass" ? Colors.gold : Colors.textMuted} />
-          <Text style={[styles.tabLabel, activeTab === "battlepass" && styles.tabLabelActive]}>Pase de Batalla</Text>
+          <Ionicons name="star" size={16} color={activeTab === "battlepass" ? themeGold : Colors.textMuted} />
+          <Text style={[styles.tabLabel, activeTab === "battlepass" && styles.tabLabelActive]}>{T("battlePass")}</Text>
         </Pressable>
       </View>
 
@@ -133,7 +141,7 @@ export default function AchievementsScreen() {
                             onPress={() => handleClaimAchievement(ach.id)}
                             style={({ pressed }) => [styles.claimBtn, pressed && { opacity: 0.85 }]}
                           >
-                            <Text style={styles.claimText}>Reclamar</Text>
+                            <Text style={styles.claimText}>{T("claim")}</Text>
                           </Pressable>
                         )}
                         {claimed && (

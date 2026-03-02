@@ -93,6 +93,27 @@ export const BATTLE_PASS_TIERS: BattlePassTier[] = [
   { tier: 78, xpRequired: 3598000,rewardType: "frame",   rewardValue: "frame_divine",        rewardLabel: "Marco: Divino",               icon: "ellipse",          iconColor: "#FFEEAA" },
   { tier: 79, xpRequired: 3773000,rewardType: "avatar",  rewardValue: "avatar_chaos",        rewardLabel: "Avatar: El Caos",             icon: "infinite",         iconColor: "#A855F7" },
   { tier: 80, xpRequired: 3953000,rewardType: "title",   rewardValue: "title_alpha",         rewardLabel: "Título: El Alfa",             icon: "flash",            iconColor: "#FF4400" },
+  // ─── Tiers 81-100: Ultimate & Exclusive rewards ──────────────────────────────
+  { tier: 81, xpRequired: 4138000,rewardType: "coins",   rewardValue: 4000,                 rewardLabel: "4000 Monedas",                icon: "cash",             iconColor: "#F1C40F" },
+  { tier: 82, xpRequired: 4328000,rewardType: "frame",   rewardValue: "frame_emerald_gold",  rewardLabel: "Marco: Esmeralda y Oro",      icon: "ellipse",          iconColor: "#0E6655" },
+  { tier: 83, xpRequired: 4523000,rewardType: "avatar",  rewardValue: "avatar_valkyrie",     rewardLabel: "Avatar: Valquiria",           icon: "person",           iconColor: "#F1C40F" },
+  { tier: 84, xpRequired: 4723000,rewardType: "effect",  rewardValue: "effect_holy",         rewardLabel: "Efecto: Sagrado",             icon: "sunny",            iconColor: "#FFEEAA" },
+  { tier: 85, xpRequired: 4928000,rewardType: "coins",   rewardValue: 6000,                 rewardLabel: "¡6000 Monedas!",              icon: "diamond",          iconColor: "#A855F7" },
+  { tier: 86, xpRequired: 5138000,rewardType: "item",    rewardValue: "back_starlight",      rewardLabel: "Dorso: Luz Estelar",          icon: "card",             iconColor: "#B8DDEF" },
+  { tier: 87, xpRequired: 5353000,rewardType: "title",   rewardValue: "title_omega",         rewardLabel: "Título: El Omega",            icon: "infinite",         iconColor: "#FF4400" },
+  { tier: 88, xpRequired: 5573000,rewardType: "frame",   rewardValue: "frame_diamond",       rewardLabel: "Marco: Diamante",             icon: "ellipse",          iconColor: "#00D4FF" },
+  { tier: 89, xpRequired: 5798000,rewardType: "avatar",  rewardValue: "avatar_emperor",      rewardLabel: "Avatar: Emperador",           icon: "ribbon",           iconColor: "#D4AF37" },
+  { tier: 90, xpRequired: 6028000,rewardType: "effect",  rewardValue: "effect_darkness",     rewardLabel: "Efecto: Oscuridad",           icon: "moon",             iconColor: "#4A235A" },
+  { tier: 91, xpRequired: 6263000,rewardType: "coins",   rewardValue: 8000,                 rewardLabel: "¡8000 Monedas!",              icon: "cash",             iconColor: "#FFD700" },
+  { tier: 92, xpRequired: 6503000,rewardType: "item",    rewardValue: "back_nebula",         rewardLabel: "Dorso: Nebulosa",             icon: "card",             iconColor: "#A855F7" },
+  { tier: 93, xpRequired: 6748000,rewardType: "title",   rewardValue: "title_transcendent",  rewardLabel: "Título: Trascendente",        icon: "sparkles",         iconColor: "#FFFFFF" },
+  { tier: 94, xpRequired: 6998000,rewardType: "frame",   rewardValue: "frame_rainbow",       rewardLabel: "Marco: Arcoíris",             icon: "ellipse",          iconColor: "#FF00FF" },
+  { tier: 95, xpRequired: 7253000,rewardType: "avatar",  rewardValue: "avatar_god_of_war",   rewardLabel: "Avatar: Dios de la Guerra",   icon: "flash",            iconColor: "#C0392B" },
+  { tier: 96, xpRequired: 7513000,rewardType: "coins",   rewardValue: 10000,                rewardLabel: "¡¡10,000 Monedas!!",          icon: "diamond",          iconColor: "#FFD700" },
+  { tier: 97, xpRequired: 7778000,rewardType: "effect",  rewardValue: "effect_supernova",    rewardLabel: "Efecto: Supernova",           icon: "sunny",            iconColor: "#FF8800" },
+  { tier: 98, xpRequired: 8048000,rewardType: "item",    rewardValue: "back_celestial",      rewardLabel: "Dorso: Celestial",            icon: "card",             iconColor: "#FFEEAA" },
+  { tier: 99, xpRequired: 8323000,rewardType: "title",   rewardValue: "title_ocho_locos_king",rewardLabel: "Título: Rey de Ocho Locos",    icon: "trophy",           iconColor: "#D4AF37" },
+  { tier: 100,xpRequired: 8603000,rewardType: "effect",  rewardValue: "effect_ultimate",     rewardLabel: "Efecto: El Último",           icon: "infinite",         iconColor: "#FFFFFF" },
 ];
 
 export const XP_FOR_LEVEL = (level: number) => Math.floor(60 * Math.pow(level, 1.5));

@@ -31,8 +31,23 @@ export type AchievementId =
   | "cards_played_100" | "cards_played_500" | "cards_played_1000"
   // Session streaks
   | "win_3_streak" | "win_5_streak" | "win_10_streak"
+  // Multiplier wins/stats
+  | "multi_win_5" | "multi_win_10" | "online_win_5" | "online_win_10"
+  // Language & Themes
+  | "portuguese_player" | "polyglot" | "theme_changer" | "dark_side" | "light_bringer"
+  // Store & Collection expansion
+  | "collector_items50" | "collector_items70" | "avatar_collector" | "frame_collector"
+  // Gameplay specifics
+  | "fast_draw" | "no_thinking" | "strategic_win" | "wild_frenzy" | "j_spam" | "seven_trap"
+  | "draw_20_total" | "win_with_one_card_left" | "epic_comeback"
+  // Level & XP expansion
+  | "level_50" | "level_100" | "xp_100000"
+  // Social & Others
+  | "emote_master" | "silent_player" | "sound_lover" | "session_30m" | "session_1h"
+  | "early_bird" | "night_owl" | "weekend_warrior"
+  | "lucky_seven" | "crazy_eights_5" | "joker_madness"
   // Expert challenges
-  | "expert_10" | "expert_timeout_survive";
+  | "expert_10" | "expert_timeout_survive" | "expert_god";
 
 export interface Achievement {
   id: AchievementId;
@@ -139,6 +154,50 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: "win_3_streak",     title: "Racha Caliente",            description: "Gana 3 partidas seguidas.",                     icon: "flame",            iconColor: "#E67E22", target: 3,    coinsReward: 30,   xpReward: 75,   rarity: "common" },
   { id: "win_5_streak",     title: "Imparable",                 description: "Gana 5 partidas seguidas.",                     icon: "flash",            iconColor: "#E74C3C", target: 5,    coinsReward: 80,   xpReward: 200,  rarity: "rare" },
   { id: "win_10_streak",    title: "Invicto",                   description: "Gana 10 partidas seguidas.",                    icon: "trophy",           iconColor: "#D4AF37", target: 10,   coinsReward: 200,  xpReward: 500,  rarity: "legendary", hidden: true },
+  // ─── Multiplayer Expansion ───────────────────────────────────────
+  { id: "multi_win_5",      title: "Dominio Local",             description: "Gana 5 partidas multijugador local.",           icon: "people",           iconColor: "#2196F3", target: 5,    coinsReward: 50,   xpReward: 150,  rarity: "rare" },
+  { id: "multi_win_10",     title: "Rey de la Mesa",            description: "Gana 10 partidas multijugador local.",          icon: "ribbon",           iconColor: "#9B59B6", target: 10,   coinsReward: 100,  xpReward: 300,  rarity: "epic" },
+  { id: "online_win_5",     title: "Pro Online",                description: "Gana 5 partidas online.",                        icon: "globe",            iconColor: "#E74C3C", target: 5,    coinsReward: 80,   xpReward: 200,  rarity: "rare" },
+  { id: "online_win_10",    title: "Leyenda de la Red",         description: "Gana 10 partidas online.",                       icon: "diamond",          iconColor: "#A855F7", target: 10,   coinsReward: 200,  xpReward: 500,  rarity: "legendary" },
+  // ─── Language & Themes ──────────────────────────────────────────
+  { id: "portuguese_player",title: "Tudo Bem!",                 description: "Juega en Portugués.",                            icon: "language",         iconColor: "#27AE60", target: 1,    coinsReward: 20,   xpReward: 50,   rarity: "common" },
+  { id: "polyglot",         title: "Políglota",                 description: "Cambia el idioma 5 veces.",                      icon: "repeat",           iconColor: "#1A8FC1", target: 5,    coinsReward: 30,   xpReward: 80,   rarity: "rare" },
+  { id: "theme_changer",    title: "Decorador",                 description: "Cambia el tema visual.",                         icon: "color-palette",    iconColor: "#9B59B6", target: 1,    coinsReward: 20,   xpReward: 50,   rarity: "common" },
+  { id: "dark_side",        title: "Lado Oscuro",               description: "Juega 10 partidas en modo oscuro.",              icon: "moon",             iconColor: "#4A90E2", target: 10,   coinsReward: 40,   xpReward: 100,  rarity: "rare" },
+  { id: "light_bringer",    title: "Portador de Luz",           description: "Juega 10 partidas en modo claro.",               icon: "sunny",            iconColor: "#FFD700", target: 10,   coinsReward: 40,   xpReward: 100,  rarity: "rare" },
+  // ─── Store & Collection expansion ───────────────────────────────
+  { id: "collector_items50",title: "Magnate de la Tienda",      description: "Posee 50 artículos de la tienda.",                icon: "cart",             iconColor: "#D4AF37", target: 50,   coinsReward: 600,  xpReward: 1500, rarity: "epic" },
+  { id: "collector_items70",title: "Colección Completa",        description: "Posee 70 artículos de la tienda.",                icon: "trophy",           iconColor: "#A855F7", target: 70,   coinsReward: 1500, xpReward: 4000, rarity: "legendary" },
+  { id: "avatar_collector", title: "Mil Caras",                 description: "Posee 20 avatares diferentes.",                   icon: "person-circle",    iconColor: "#1A8FC1", target: 20,   coinsReward: 100,  xpReward: 250,  rarity: "rare" },
+  { id: "frame_collector",  title: "Enmarcador Pro",            description: "Posee 15 marcos diferentes.",                     icon: "square",           iconColor: "#9B59B6", target: 15,   coinsReward: 80,   xpReward: 200,  rarity: "rare" },
+  // ─── Gameplay Specifics ──────────────────────────────────────────
+  { id: "fast_draw",        title: "Mano Rápida",               description: "Roba una carta en menos de 1 segundo.",          icon: "flash",            iconColor: "#FF6B00", target: 1,    coinsReward: 15,   xpReward: 40,   rarity: "common" },
+  { id: "no_thinking",      title: "Pura Intuición",            description: "Gana una partida sin usar sugerencias.",         icon: "bulb",             iconColor: "#27AE60", target: 1,    coinsReward: 50,   xpReward: 120,  rarity: "rare" },
+  { id: "strategic_win",    title: "Estratega",                 description: "Guarda una carta especial para el final y gana.", icon: "star",             iconColor: "#D4AF37", target: 1,    coinsReward: 60,   xpReward: 150,  rarity: "epic" },
+  { id: "wild_frenzy",      title: "Frenesí Loco",              description: "Juega 3 ochos locos en una sola partida.",        icon: "infinite",         iconColor: "#A855F7", target: 1,    coinsReward: 45,   xpReward: 110,  rarity: "epic" },
+  { id: "j_spam",           title: "Bloqueador",                description: "Juega 5 Jotas en una sola partida.",              icon: "hand-left",        iconColor: "#E74C3C", target: 1,    coinsReward: 40,   xpReward: 100,  rarity: "rare" },
+  { id: "seven_trap",       title: "Trampa del 7",              description: "Haz que un oponente robe 10 cartas seguidas.",   icon: "layers",           iconColor: "#FF4400", target: 1,    coinsReward: 100,  xpReward: 250,  rarity: "legendary", hidden: true },
+  { id: "draw_20_total",    title: "Aspiradora de Cartas",      description: "Roba 20 cartas en una sola partida.",            icon: "nuclear",          iconColor: "#95A5A6", target: 1,    coinsReward: 30,   xpReward: 70,   rarity: "rare", hidden: true },
+  { id: "win_with_one_card_left", title: "Al Límite",           description: "Gana cuando el CPU solo tiene 1 carta.",         icon: "alert-circle",     iconColor: "#E67E22", target: 1,    coinsReward: 35,   xpReward: 90,   rarity: "rare" },
+  { id: "epic_comeback",    title: "Remontada Legendaria",      description: "Gana después de tener 15+ cartas más que el rival.", icon: "trending-up",      iconColor: "#A855F7", target: 1,    coinsReward: 150,  xpReward: 400,  rarity: "legendary" },
+  // ─── Level & XP expansion ───────────────────────────────────────
+  { id: "level_50",         title: "Veterano de Oro",           description: "Alcanza el nivel 50.",                           icon: "shield",           iconColor: "#D4AF37", target: 50,   coinsReward: 500,  xpReward: 0,    rarity: "epic" },
+  { id: "level_100",        title: "Maestro Supremo",           description: "Alcanza el nivel 100.",                          icon: "trophy",           iconColor: "#A855F7", target: 100,  coinsReward: 2000, xpReward: 0,    rarity: "legendary" },
+  { id: "xp_100000",        title: "Acumulador de Saber",       description: "Gana 100000 XP en total.",                      icon: "star",             iconColor: "#FFD700", target: 100000, coinsReward: 1000, xpReward: 0,   rarity: "legendary" },
+  // ─── Social & Others ────────────────────────────────────────────
+  { id: "emote_master",     title: "Expresivo",                 description: "Usa 50 emotes en partidas.",                     icon: "happy",            iconColor: "#F1C40F", target: 50,   coinsReward: 40,   xpReward: 100,  rarity: "common" },
+  { id: "silent_player",    title: "Silencioso",                description: "Gana 5 partidas sin usar emotes.",               icon: "volume-mute",      iconColor: "#95A5A6", target: 5,    coinsReward: 30,   xpReward: 80,   rarity: "rare" },
+  { id: "sound_lover",      title: "Melómano",                  description: "Escucha música por más de 30 minutos.",          icon: "musical-notes",    iconColor: "#FF4400", target: 1,    coinsReward: 25,   xpReward: 60,   rarity: "common" },
+  { id: "session_30m",      title: "Sesión Intensa",            description: "Juega por 30 minutos seguidos.",                 icon: "time",             iconColor: "#1A8FC1", target: 1,    coinsReward: 40,   xpReward: 100,  rarity: "rare" },
+  { id: "session_1h",       title: "Maratón Real",              description: "Juega por 1 hora seguida.",                      icon: "stopwatch",        iconColor: "#E74C3C", target: 1,    coinsReward: 100,  xpReward: 250,  rarity: "epic" },
+  { id: "early_bird",       title: "Madrugador",                description: "Gana una partida antes de las 8 AM.",            icon: "sunny",            iconColor: "#FFD700", target: 1,    coinsReward: 20,   xpReward: 50,   rarity: "common" },
+  { id: "night_owl",        title: "Búho Nocturno",             description: "Gana una partida después de la medianoche.",     icon: "moon",             iconColor: "#4A90E2", target: 1,    coinsReward: 20,   xpReward: 50,   rarity: "common" },
+  { id: "weekend_warrior",  title: "Guerrero del Finde",        description: "Gana 10 partidas en un solo fin de semana.",      icon: "calendar",         iconColor: "#E67E22", target: 10,   coinsReward: 70,   xpReward: 180,  rarity: "rare" },
+  { id: "lucky_seven",      title: "Siete de la Suerte",        description: "Juega un 7 para ganar la partida.",              icon: "star",             iconColor: "#FFD700", target: 1,    coinsReward: 50,   xpReward: 120,  rarity: "rare", hidden: true },
+  { id: "crazy_eights_5",   title: "Locura de Ochos",           description: "Juega 5 ochos en una partida.",                  icon: "infinite",         iconColor: "#A855F7", target: 1,    coinsReward: 100,  xpReward: 250,  rarity: "epic" },
+  { id: "joker_madness",    title: "Caos del Comodín",          description: "Gana una partida donde se jugaron 4 comodines.", icon: "star-half",        iconColor: "#FF6B00", target: 1,    coinsReward: 80,   xpReward: 200,  rarity: "epic" },
+  // ─── Expert Expansion ───────────────────────────────────────────
+  { id: "expert_god",       title: "Dios del Tiempo",           description: "Gana 50 partidas en modo Experto.",              icon: "timer",            iconColor: "#000000", target: 50,   coinsReward: 2000, xpReward: 5000, rarity: "legendary" },
 ];
 
 export const RARITY_COLORS = {

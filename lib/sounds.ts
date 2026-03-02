@@ -10,7 +10,12 @@ export type SoundEvent =
   | "achievement"
   | "purchase"
   | "error"
-  | "turn_change";
+  | "turn_change"
+  | "daily_reward"
+  | "level_up"
+  | "battle_pass_unlock"
+  | "purchase_success"
+  | "notification";
 
 import {
   playCardFlip,
@@ -38,5 +43,10 @@ export async function playSound(event: SoundEvent) {
     case "purchase":    return playCardWild();
     case "error":       return playError();
     case "turn_change": return playButton();
+    case "daily_reward": return playWin();
+    case "level_up":     return playAchievement();
+    case "battle_pass_unlock": return playAchievement();
+    case "purchase_success": return playCardWild();
+    case "notification": return playButton();
   }
 }

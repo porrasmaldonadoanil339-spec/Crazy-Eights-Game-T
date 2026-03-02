@@ -157,8 +157,20 @@ export async function playAchievement() {
 
 export function setMuted(muted: boolean) {
   isMuted = muted;
-  if (muted) pauseMusic();
-  else resumeMusic();
+  if (muted) {
+    pauseMusic();
+  } else {
+    // Only resume if we were in a context where music should play
+    // But for simplicity, we just resume whatever was there
+    resumeMusic();
+  }
+}
+
+export function syncSettings(musicEnabled: boolean, sfxEnabled: boolean) {
+  isMuted = !sfxEnabled;
+  if (!musicEnabled) {
+    stopMusic();
+  }
 }
 
 export function getMuted() { return isMuted; }
