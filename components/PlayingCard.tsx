@@ -52,7 +52,7 @@ function CardFront({ card, sobj }: { card: Card; sobj: typeof SIZES.md }) {
           >
             <Text style={[styles.eightSym, { fontSize: sobj.ss - 2 }]}>★</Text>
           </LinearGradient>
-          <Text style={[styles.eightNum, { fontSize: sobj.rs - 2, color: "#D4AF37" }]}>COMODÍN</Text>
+          <Text style={[styles.eightNum, { fontSize: sobj.rs - 2, color: "#D4AF37" }]}>JOKER</Text>
         </View>
         <View style={styles.cornerBR}>
           <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: "#A855F7", transform: [{ rotate: "180deg" }] }]}>★</Text>

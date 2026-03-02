@@ -1,5 +1,5 @@
 export type StoreItemId = string;
-export type StoreItemCategory = "card_back" | "avatar" | "effect" | "title";
+export type StoreItemCategory = "card_back" | "avatar" | "effect" | "title" | "frame";
 
 export interface StoreItem {
   id: StoreItemId;
@@ -144,7 +144,74 @@ export const TITLES: StoreItem[] = [
   { id: "title_god",         category: "title", name: "El Dios",           description: "Trasciende el juego mismo.",         price: 500, preview: "diamond",      previewColor: "#D4AF37", rarity: "legendary" },
 ];
 
-export const STORE_ITEMS: StoreItem[] = [...CARD_BACKS, ...AVATARS, ...TITLES];
+export const AVATAR_FRAMES: StoreItem[] = [
+  {
+    id: "frame_gold",
+    category: "frame",
+    name: "Marco Dorado",
+    description: "Brilla como un campeón.",
+    price: 0, preview: "ellipse", previewColor: "#D4AF37", rarity: "common", isDefault: true,
+    backColors: ["#D4AF37", "#B8860B"],
+  },
+  {
+    id: "frame_silver",
+    category: "frame",
+    name: "Marco Plateado",
+    description: "Elegancia clásica y discreta.",
+    price: 40, preview: "ellipse", previewColor: "#C0C0C0", rarity: "common",
+    backColors: ["#C0C0C0", "#909090"],
+  },
+  {
+    id: "frame_emerald",
+    category: "frame",
+    name: "Marco Esmeralda",
+    description: "Verde brillante del jugador natural.",
+    price: 70, preview: "ellipse", previewColor: "#27AE60", rarity: "rare",
+    backColors: ["#27AE60", "#1A7A3C"],
+  },
+  {
+    id: "frame_crimson",
+    category: "frame",
+    name: "Marco Carmesí",
+    description: "Rojo ardiente. Señal de peligro.",
+    price: 80, preview: "ellipse", previewColor: "#C0392B", rarity: "rare",
+    backColors: ["#C0392B", "#8B0000"],
+  },
+  {
+    id: "frame_ocean",
+    category: "frame",
+    name: "Marco Océano",
+    description: "Profundo y misterioso como el mar.",
+    price: 90, preview: "ellipse", previewColor: "#006994", rarity: "rare",
+    backColors: ["#0083B0", "#00B4DB"],
+  },
+  {
+    id: "frame_fire",
+    category: "frame",
+    name: "Marco Fuego",
+    description: "Ardiente y dominante.",
+    price: 150, preview: "ellipse", previewColor: "#E67E22", rarity: "epic",
+    backColors: ["#FF4500", "#FF8C00"],
+  },
+  {
+    id: "frame_galaxy",
+    category: "frame",
+    name: "Marco Galaxia",
+    description: "El cosmos en tu avatar.",
+    price: 200, preview: "ellipse", previewColor: "#A855F7", rarity: "epic",
+    backColors: ["#6B21A8", "#A855F7"],
+  },
+  {
+    id: "frame_diamond",
+    category: "frame",
+    name: "Marco Diamante",
+    description: "El más raro y brillante de todos.",
+    price: 320, preview: "ellipse", previewColor: "#4FC3F7", rarity: "legendary",
+    backColors: ["#00B4DB", "#A855F7"],
+  },
+];
+
+export const STORE_ITEMS: StoreItem[] = [...CARD_BACKS, ...AVATARS, ...TITLES, ...AVATAR_FRAMES];
 
 export function getItemsByCategory(category: StoreItemCategory): StoreItem[] {
   return STORE_ITEMS.filter((i) => i.category === category);

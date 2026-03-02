@@ -21,6 +21,7 @@ const RARITY_COLORS_MAP: Record<string, string> = {
 const CATEGORIES: { id: StoreItemCategory; label: string; icon: string }[] = [
   { id: "card_back", label: "Dorsos", icon: "card" },
   { id: "avatar", label: "Avatares", icon: "person-circle" },
+  { id: "frame", label: "Marcos", icon: "ellipse" },
   { id: "title", label: "Títulos", icon: "ribbon" },
 ];
 
@@ -106,7 +107,7 @@ function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boole
 
 export default function StoreScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, buyItem, updateCardBack, updateAvatar, updateTitle } = useProfile();
+  const { profile, buyItem, updateCardBack, updateAvatar, updateTitle, updateFrame } = useProfile();
   const [category, setCategory] = useState<StoreItemCategory>("card_back");
   const [confirmItem, setConfirmItem] = useState<StoreItem | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -133,6 +134,7 @@ export default function StoreScreen() {
       if (confirmItem.category === "card_back") updateCardBack(confirmItem.id);
       if (confirmItem.category === "avatar") updateAvatar(confirmItem.id);
       if (confirmItem.category === "title") updateTitle(confirmItem.id);
+      if (confirmItem.category === "frame") updateFrame(confirmItem.id);
       showToast(`¡${confirmItem.name} obtenido!`);
     }
   };

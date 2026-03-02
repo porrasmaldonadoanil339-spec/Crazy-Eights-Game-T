@@ -1,20 +1,21 @@
 import React, { useState } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
-  TextInput, Modal, Platform,
+  TextInput, Modal, Platform, Alert, Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { Colors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
-import { STORE_ITEMS } from "@/lib/storeItems";
+import { STORE_ITEMS, AVATARS, AVATAR_FRAMES } from "@/lib/storeItems";
 import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS } from "@/lib/battlePass";
 import { playSound } from "@/lib/sounds";
 import { GAME_MODES } from "@/lib/gameModes";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 
-const AVATAR_ITEMS = STORE_ITEMS.filter((i) => i.category === "avatar");
 const TITLE_ITEMS = STORE_ITEMS.filter((i) => i.category === "title");
 
 function EditNameModal({
@@ -50,8 +51,15 @@ function EditNameModal({
 }
 
 function AvatarPickerModal({
-  visible, ownedItems, currentId, onSelect, onClose,
-}: { visible: boolean; ownedItems: string[]; currentId: string; onSelect: (id: string) => void; onClose: () => void }) {
+  visible, ownedItems, currentId, photoUri, onSelect, onTakePhoto, onPickPhoto, onClearPhoto, onClose,
+}: {
+  visible: boolean; ownedItems: string[]; currentId: string; photoUri: string;
+  onSelect: (id: string) => void;
+  onTakePhoto: () => void;
+  onPickPhoto: () => void;
+  onClearPhoto: () => void;
+  onClose: () => void;
+}) {
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.modalBg} onPress={onClose}>
@@ -60,10 +68,31 @@ function AvatarPickerModal({
             <Text style={styles.pickerTitle}>Elegir Avatar</Text>
             <Pressable onPress={onClose}><Ionicons name="close" size={22} color={Colors.textMuted} /></Pressable>
           </View>
+
+          {/* Photo options */}
+          <View style={styles.photoRow}>
+            <Pressable style={styles.photoBtn} onPress={onTakePhoto}>
+              <Ionicons name="camera" size={20} color={Colors.gold} />
+              <Text style={styles.photoBtnText}>Cámara</Text>
+            </Pressable>
+            <Pressable style={styles.photoBtn} onPress={onPickPhoto}>
+              <Ionicons name="images" size={20} color={Colors.gold} />
+              <Text style={styles.photoBtnText}>Galería</Text>
+            </Pressable>
+            {photoUri ? (
+              <Pressable style={[styles.photoBtn, styles.photoBtnDanger]} onPress={onClearPhoto}>
+                <Ionicons name="trash" size={20} color="#E74C3C" />
+                <Text style={[styles.photoBtnText, { color: "#E74C3C" }]}>Quitar foto</Text>
+              </Pressable>
+            ) : null}
+          </View>
+
+          <Text style={styles.orDivider}>— o elige un avatar —</Text>
+
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.avatarRow}>
-            {AVATAR_ITEMS.map((item) => {
+            {AVATARS.map((item) => {
               const owned = ownedItems.includes(item.id);
-              const selected = item.id === currentId;
+              const selected = item.id === currentId && !photoUri;
               return (
                 <Pressable
                   key={item.id}
@@ -85,6 +114,60 @@ function AvatarPickerModal({
   );
 }
 
+function FramePickerModal({
+  visible, ownedItems, currentId, onSelect, onClose,
+}: {
+  visible: boolean; ownedItems: string[]; currentId: string;
+  onSelect: (id: string) => void; onClose: () => void;
+}) {
+  return (
+    <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
+      <Pressable style={styles.modalBg} onPress={onClose}>
+        <View style={styles.pickerModal}>
+          <View style={styles.pickerHeader}>
+            <Text style={styles.pickerTitle}>Marco de Avatar</Text>
+            <Pressable onPress={onClose}><Ionicons name="close" size={22} color={Colors.textMuted} /></Pressable>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.avatarRow}>
+            {AVATAR_FRAMES.map((item) => {
+              const owned = ownedItems.includes(item.id);
+              const selected = item.id === currentId;
+              const frameColors = (item.backColors ?? ["#D4AF37", "#B8860B"]) as [string, string];
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => { if (owned) { onSelect(item.id); onClose(); } }}
+                  style={[styles.avatarOption, selected && styles.avatarOptionSelected, !owned && styles.avatarOptionLocked]}
+                >
+                  <LinearGradient
+                    colors={frameColors}
+                    style={styles.framePreview}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  >
+                    <View style={styles.frameInner} />
+                  </LinearGradient>
+                  <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{item.name}</Text>
+                  {!owned && (
+                    <View style={styles.priceBadge}>
+                      <Ionicons name="cash" size={9} color={Colors.gold} />
+                      <Text style={styles.priceText}>{item.price}</Text>
+                    </View>
+                  )}
+                  <View style={[styles.rarityDot, {
+                    backgroundColor: item.rarity === "legendary" ? "#D4AF37" :
+                      item.rarity === "epic" ? "#9B59B6" :
+                      item.rarity === "rare" ? "#2196F3" : "#95A5A6",
+                  }]} />
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
 function StatRow({ label, value }: { label: string; value: string | number }) {
   return (
     <View style={styles.statRow}>
@@ -96,17 +179,18 @@ function StatRow({ label, value }: { label: string; value: string | number }) {
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, level, xpProgress, updateName, updateAvatar, updateTitle } = useProfile();
+  const { profile, level, xpProgress, updateName, updateAvatar, updateTitle, updateFrame, updatePhotoUri } = useProfile();
   const [showEditName, setShowEditName] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showTitlePicker, setShowTitlePicker] = useState(false);
+  const [showFramePicker, setShowFramePicker] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
 
-  const avatarItem = STORE_ITEMS.find((i) => i.id === profile.avatarId);
   const titleItem = STORE_ITEMS.find((i) => i.id === profile.titleId);
   const cardBackItem = STORE_ITEMS.find((i) => i.id === profile.cardBackId);
+  const frameItem = AVATAR_FRAMES.find((f) => f.id === profile.selectedFrameId);
 
   const handleSaveName = async (name: string) => {
     await playSound("button_press");
@@ -115,6 +199,66 @@ export default function ProfileScreen() {
 
   const winRate = profile.stats.totalGames > 0
     ? Math.round((profile.stats.totalWins / profile.stats.totalGames) * 100) : 0;
+
+  const handleTakePhoto = async () => {
+    if (Platform.OS === "web") {
+      Alert.alert("No disponible", "La cámara no está disponible en la versión web.");
+      return;
+    }
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("Permiso denegado", "Necesitamos acceso a la cámara para tomar tu foto.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) {
+      updatePhotoUri(result.assets[0].uri);
+      setShowAvatarPicker(false);
+    }
+  };
+
+  const handlePickPhoto = async () => {
+    if (Platform.OS === "web") {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = (e: any) => {
+        const file = e.target.files[0];
+        if (file) {
+          const url = URL.createObjectURL(file);
+          updatePhotoUri(url);
+          setShowAvatarPicker(false);
+        }
+      };
+      input.click();
+      return;
+    }
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("Permiso denegado", "Necesitamos acceso a tu galería para elegir una foto.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) {
+      updatePhotoUri(result.assets[0].uri);
+      setShowAvatarPicker(false);
+    }
+  };
+
+  const handleClearPhoto = () => {
+    updatePhotoUri("");
+    setShowAvatarPicker(false);
+  };
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
@@ -128,17 +272,25 @@ export default function ProfileScreen() {
           colors={[Colors.gold + "18", Colors.surface]}
           style={styles.profileCard}
         >
-          <Pressable onPress={() => setShowAvatarPicker(true)} style={styles.avatarBig}>
-            <LinearGradient
-              colors={[avatarItem?.previewColor ?? Colors.surface, (avatarItem?.previewColor ?? Colors.surface) + "88"]}
-              style={styles.avatarGradient}
-            >
-              <Ionicons name={(avatarItem?.preview ?? "person") as any} size={40} color="#fff" />
-            </LinearGradient>
-            <View style={styles.avatarEditBadge}>
-              <Ionicons name="pencil" size={10} color={Colors.background} />
-            </View>
-          </Pressable>
+          <View style={styles.avatarCol}>
+            <Pressable onPress={() => setShowAvatarPicker(true)} style={styles.avatarBig}>
+              <AvatarDisplay
+                avatarId={profile.avatarId}
+                frameId={profile.selectedFrameId}
+                photoUri={profile.photoUri}
+                size={76}
+              />
+              <View style={styles.avatarEditBadge}>
+                <Ionicons name="camera" size={10} color={Colors.background} />
+              </View>
+            </Pressable>
+            <Pressable onPress={() => setShowFramePicker(true)} style={styles.frameBadge}>
+              <Ionicons name="ellipse" size={10} color={frameItem?.previewColor ?? Colors.gold} />
+              <Text style={[styles.frameBadgeText, { color: frameItem?.previewColor ?? Colors.gold }]}>
+                {frameItem?.name ?? "Marco"}
+              </Text>
+            </Pressable>
+          </View>
 
           <View style={styles.profileDetails}>
             <Pressable onPress={() => setShowEditName(true)} style={styles.nameRow}>
@@ -173,13 +325,13 @@ export default function ProfileScreen() {
             <Text style={styles.resourceVal}>{profile.totalXp}</Text>
             <Text style={styles.resourceLbl}>XP Total</Text>
           </View>
-          <Pressable style={styles.resourceCard}>
+          <View style={styles.resourceCard}>
             <View style={[styles.miniCard, { backgroundColor: cardBackItem?.previewColor ?? "#1A3A6A" }]}>
               <Text style={{ color: Colors.gold, fontSize: 10 }}>◆</Text>
             </View>
             <Text style={styles.resourceVal} numberOfLines={1}>{cardBackItem?.name ?? "Clásico"}</Text>
             <Text style={styles.resourceLbl}>Dorso</Text>
-          </Pressable>
+          </View>
         </View>
 
         {/* Stats */}
@@ -229,8 +381,19 @@ export default function ProfileScreen() {
         visible={showAvatarPicker}
         ownedItems={profile.ownedItems}
         currentId={profile.avatarId}
+        photoUri={profile.photoUri}
         onSelect={updateAvatar}
+        onTakePhoto={handleTakePhoto}
+        onPickPhoto={handlePickPhoto}
+        onClearPhoto={handleClearPhoto}
         onClose={() => setShowAvatarPicker(false)}
+      />
+      <FramePickerModal
+        visible={showFramePicker}
+        ownedItems={profile.ownedItems}
+        currentId={profile.selectedFrameId}
+        onSelect={updateFrame}
+        onClose={() => setShowFramePicker(false)}
       />
       <Modal transparent animationType="slide" visible={showTitlePicker} onRequestClose={() => setShowTitlePicker(false)}>
         <Pressable style={styles.modalBg} onPress={() => setShowTitlePicker(false)}>
@@ -278,18 +441,20 @@ const styles = StyleSheet.create({
     borderRadius: 18, padding: 16, flexDirection: "row", gap: 16,
     alignItems: "center", borderWidth: 1, borderColor: Colors.border, marginBottom: 12,
   },
+  avatarCol: { alignItems: "center", gap: 6 },
   avatarBig: { position: "relative" },
-  avatarGradient: {
-    width: 76, height: 76, borderRadius: 38,
-    alignItems: "center", justifyContent: "center",
-    borderWidth: 2.5, borderColor: Colors.gold,
-  },
   avatarEditBadge: {
     position: "absolute", bottom: 0, right: 0,
     backgroundColor: Colors.gold, width: 22, height: 22, borderRadius: 11,
     alignItems: "center", justifyContent: "center",
     borderWidth: 2, borderColor: Colors.background,
   },
+  frameBadge: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    backgroundColor: Colors.card, paddingHorizontal: 7, paddingVertical: 3,
+    borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
+  },
+  frameBadgeText: { fontFamily: "Nunito_700Bold", fontSize: 9 },
   profileDetails: { flex: 1, gap: 6 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   profileName: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: Colors.text },
@@ -360,10 +525,21 @@ const styles = StyleSheet.create({
   editBtnSaveText: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "#1a0a00" },
   pickerModal: {
     backgroundColor: Colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, borderWidth: 1, borderColor: Colors.border,
+    padding: 20, borderWidth: 1, borderColor: Colors.border, alignSelf: "stretch",
   },
   pickerHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   pickerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold },
+  photoRow: { flexDirection: "row", gap: 10, marginBottom: 14 },
+  photoBtn: {
+    flex: 1, backgroundColor: Colors.card, borderRadius: 12, padding: 12,
+    alignItems: "center", gap: 6, borderWidth: 1, borderColor: Colors.gold + "44",
+  },
+  photoBtnDanger: { borderColor: "#E74C3C44" },
+  photoBtnText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.gold },
+  orDivider: {
+    fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textDim,
+    textAlign: "center", marginBottom: 12,
+  },
   avatarRow: { paddingVertical: 4, gap: 10, paddingBottom: 20 },
   avatarOption: {
     width: 90, backgroundColor: Colors.card, borderRadius: 12, padding: 10,
@@ -375,4 +551,14 @@ const styles = StyleSheet.create({
   avatarOptionName: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.text, textAlign: "center" },
   priceBadge: { flexDirection: "row", alignItems: "center", gap: 2 },
   priceText: { fontFamily: "Nunito_700Bold", fontSize: 9, color: Colors.gold },
+  framePreview: {
+    width: 44, height: 44, borderRadius: 22,
+    alignItems: "center", justifyContent: "center",
+  },
+  frameInner: {
+    width: 34, height: 34, borderRadius: 17, backgroundColor: Colors.background,
+  },
+  rarityDot: {
+    width: 6, height: 6, borderRadius: 3,
+  },
 });

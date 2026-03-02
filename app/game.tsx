@@ -24,41 +24,50 @@ import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import {
   playCardFlip, playCardDraw, playCardWild, playWin, playLose, playError, playButton,
 } from "@/lib/audioManager";
+import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const { width: SW } = Dimensions.get("window");
 
 // ─── Particle confetti for win ───────────────────────────────────────────────
+const PARTICLE_SYMS = ["♠","♥","♦","♣"];
+function WinParticle({ index, total }: { index: number; total: number }) {
+  const x = useSharedValue(SW * 0.5);
+  const y = useSharedValue(300);
+  const op = useSharedValue(0);
+  const sc = useSharedValue(0);
+  useEffect(() => {
+    const angle = (index / total) * Math.PI * 2;
+    const dist = 80 + Math.random() * 100;
+    const tx = SW * 0.5 + Math.cos(angle) * dist;
+    const ty = 300 + Math.sin(angle) * dist - 120;
+    op.value = withTiming(1, { duration: 100 });
+    sc.value = withSpring(1.2, { damping: 10 });
+    x.value = withTiming(tx, { duration: 700, easing: Easing.out(Easing.quad) });
+    y.value = withTiming(ty, { duration: 700, easing: Easing.out(Easing.quad) });
+    setTimeout(() => { op.value = withTiming(0, { duration: 300 }); }, 600);
+  }, []);
+  const s = useAnimatedStyle(() => ({
+    position: "absolute", left: x.value - 6, top: y.value - 6,
+    opacity: op.value, transform: [{ scale: sc.value }],
+  }));
+  const isRed = index % 4 === 1 || index % 4 === 2;
+  return (
+    <Animated.Text style={[s, { fontSize: 14, color: isRed ? "#C0392B" : Colors.gold }]}>
+      {PARTICLE_SYMS[index % 4]}
+    </Animated.Text>
+  );
+}
+
 function WinParticles() {
-  const particles = Array.from({ length: 14 }).map((_, i) => {
-    const x = useSharedValue(SW * 0.5);
-    const y = useSharedValue(300);
-    const op = useSharedValue(0);
-    const sc = useSharedValue(0);
-    useEffect(() => {
-      const angle = (i / 14) * Math.PI * 2;
-      const dist = 80 + Math.random() * 100;
-      const tx = SW * 0.5 + Math.cos(angle) * dist;
-      const ty = 300 + Math.sin(angle) * dist - 120;
-      op.value = withTiming(1, { duration: 100 });
-      sc.value = withSpring(1.2, { damping: 10 });
-      x.value = withTiming(tx, { duration: 700, easing: Easing.out(Easing.quad) });
-      y.value = withTiming(ty, { duration: 700, easing: Easing.out(Easing.quad) });
-      setTimeout(() => { op.value = withTiming(0, { duration: 300 }); }, 600);
-    }, []);
-    const s = useAnimatedStyle(() => ({
-      position: "absolute", left: x.value - 6, top: y.value - 6,
-      opacity: op.value, transform: [{ scale: sc.value }],
-    }));
-    const syms = ["♠","♥","♦","♣"];
-    const isRed = i % 4 === 1 || i % 4 === 2;
-    return (
-      <Animated.Text key={i} style={[s, { fontSize: 14, color: isRed ? "#C0392B" : Colors.gold }]}>
-        {syms[i % 4]}
-      </Animated.Text>
-    );
-  });
-  return <View style={StyleSheet.absoluteFill} pointerEvents="none">{particles}</View>;
+  const total = 14;
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {Array.from({ length: total }).map((_, i) => (
+        <WinParticle key={i} index={i} total={total} />
+      ))}
+    </View>
+  );
 }
 
 // ─── Expert timer bar ──────────────────────────────────────────────────────────
@@ -340,6 +349,11 @@ export default function GameScreen() {
   const [endXp, setEndXp] = useState(0);
   const [isAiThinkingVis, setIsAiThinkingVis] = useState(false);
   const [expertTimer, setExpertTimer] = useState(8);
+  const [playerEmote, setPlayerEmote] = useState<Emote | null>(null);
+  const [cpuEmote, setCpuEmote] = useState<Emote | null>(null);
+  const [lastPlayerEmoteTime, setLastPlayerEmoteTime] = useState(0);
+  const prevAiHandCount = useRef<number>(0);
+  const prevPendingDraw = useRef<number>(0);
   const msgOpacity = useSharedValue(1);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -390,6 +404,45 @@ export default function GameScreen() {
     }, 1000);
     return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
   }, [gameState?.currentPlayer, gameState?.phase, isExpert, dealAnimationDone, gameState?.message]);
+
+  // AI emote logic — reacts to game events
+  useEffect(() => {
+    if (!gameState || !dealAnimationDone) return;
+    const pendingDraw = gameState.pendingDraw;
+    const aiCount = gameState.aiHand.length;
+    let emote: Emote | null = null;
+
+    // CPU caused a big pendingDraw
+    if (pendingDraw > prevPendingDraw.current && gameState.currentPlayer === "player") {
+      emote = EMOTES.find(e => e.id === "draw2") ?? null;
+    }
+    // CPU is down to 1 card
+    else if (aiCount === 1 && prevAiHandCount.current > 1) {
+      emote = EMOTES.find(e => e.id === "win") ?? null;
+    }
+    // CPU drew a lot of cards
+    else if (aiCount > prevAiHandCount.current + 2) {
+      emote = EMOTES.find(e => e.id === "luck") ?? null;
+    }
+
+    if (emote) {
+      const timeoutId = setTimeout(() => {
+        setCpuEmote(emote);
+        setTimeout(() => setCpuEmote(null), 2500);
+      }, 600);
+      prevPendingDraw.current = pendingDraw;
+      prevAiHandCount.current = aiCount;
+    } else {
+      prevPendingDraw.current = pendingDraw;
+      prevAiHandCount.current = aiCount;
+    }
+  }, [gameState?.pendingDraw, gameState?.aiHand?.length, gameState?.currentPlayer, dealAnimationDone]);
+
+  const handleSendEmote = (emote: Emote) => {
+    setPlayerEmote(emote);
+    setLastPlayerEmoteTime(Date.now());
+    setTimeout(() => setPlayerEmote(null), 2500);
+  };
 
   // AI turn trigger
   useEffect(() => {
@@ -562,8 +615,11 @@ export default function GameScreen() {
         <ExpertTimerBar seconds={expertTimer} total={timerTotal} />
       )}
 
-      {/* AI section */}
-      <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={cpuProfile} />
+      {/* AI section with CPU emote */}
+      <View style={styles.aiSectionWrapper}>
+        <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={cpuProfile} />
+        <EmoteBubble emote={cpuEmote} side="cpu" />
+      </View>
 
       {/* Table center */}
       <View style={styles.tableCenter}>
@@ -663,7 +719,12 @@ export default function GameScreen() {
           {isPlayerTurn && playableCount > 0 && (
             <Text style={styles.playableHint}>{playableCount} jugable{playableCount !== 1 ? "s" : ""}</Text>
           )}
+          <View style={{ marginLeft: "auto" }}>
+            <EmotePanel onSendEmote={handleSendEmote} lastEmoteTime={lastPlayerEmoteTime} />
+          </View>
         </View>
+        {/* Player emote bubble */}
+        <EmoteBubble emote={playerEmote} side="player" />
 
         <ScrollView
           horizontal showsHorizontalScrollIndicator={false}
@@ -765,6 +826,7 @@ const styles = StyleSheet.create({
 
   // CPU Profile
   aiSection: { alignItems: "center", paddingBottom: 6, gap: 6 },
+  aiSectionWrapper: { position: "relative", alignItems: "center" },
   cpuProfileRow: {
     flexDirection: "row", alignItems: "center", gap: 8,
     backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 12,

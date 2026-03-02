@@ -63,6 +63,8 @@ export interface PlayerProfile {
   avatarId: string;
   titleId: string;
   cardBackId: string;
+  selectedFrameId: string;
+  photoUri: string;
   selectedEffect: string;
   bio: string;
   coins: number;
@@ -103,11 +105,13 @@ const DEFAULT_PROFILE: PlayerProfile = {
   avatarId: "avatar_knight",
   titleId: "title_novice",
   cardBackId: "back_default",
+  selectedFrameId: "frame_gold",
+  photoUri: "",
   selectedEffect: "none",
   bio: "",
   coins: 50,
   totalXp: 0,
-  ownedItems: ["back_default", "avatar_knight", "title_novice"],
+  ownedItems: ["back_default", "avatar_knight", "title_novice", "frame_gold"],
   achievementProgress: ACHIEVEMENTS.map((a) => ({
     id: a.id,
     progress: 0,
@@ -130,6 +134,8 @@ interface ProfileContextValue {
   updateAvatar: (avatarId: string) => void;
   updateTitle: (titleId: string) => void;
   updateCardBack: (cardBackId: string) => void;
+  updateFrame: (frameId: string) => void;
+  updatePhotoUri: (uri: string) => void;
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
   addXp: (amount: number) => void;
@@ -185,6 +191,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             dailyRewardIndex: saved.dailyRewardIndex ?? 0,
             musicEnabled: saved.musicEnabled ?? true,
             sfxEnabled: saved.sfxEnabled ?? true,
+            selectedFrameId: saved.selectedFrameId ?? "frame_gold",
+            photoUri: saved.photoUri ?? "",
           };
           setProfile(merged);
         }
@@ -223,6 +231,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const updateCardBack = useCallback((cardBackId: string) => {
     update((p) => ({ ...p, cardBackId }));
+  }, [update]);
+
+  const updateFrame = useCallback((frameId: string) => {
+    update((p) => ({ ...p, selectedFrameId: frameId }));
+  }, [update]);
+
+  const updatePhotoUri = useCallback((uri: string) => {
+    update((p) => ({ ...p, photoUri: uri }));
   }, [update]);
 
   const addCoins = useCallback((amount: number) => {
@@ -414,6 +430,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         updateAvatar,
         updateTitle,
         updateCardBack,
+        updateFrame,
+        updatePhotoUri,
         addCoins,
         spendCoins,
         addXp,

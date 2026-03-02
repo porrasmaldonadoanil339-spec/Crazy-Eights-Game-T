@@ -16,7 +16,7 @@ import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
 import { playButton } from "@/lib/audioManager";
-import { AVATARS } from "@/lib/storeItems";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -201,7 +201,6 @@ export default function PlayScreen() {
   const [showDailyModal, setShowDailyModal] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
-  const avatarItem = AVATARS.find((i) => i.id === profile.avatarId);
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
 
   // Show daily reward on mount if available
@@ -257,9 +256,13 @@ export default function PlayScreen() {
           onPress={() => { playButton().catch(() => {}); router.push("/(tabs)/profile"); }}
           style={({ pressed }) => [styles.profileBar, pressed && styles.profileBarPressed]}
         >
-          <View style={[styles.avatarSmall, { backgroundColor: avatarItem?.previewColor ?? Colors.surface }]}>
-            <Ionicons name={(avatarItem?.preview ?? "person") as any} size={14} color="#fff" />
-          </View>
+          <AvatarDisplay
+            avatarId={profile.avatarId}
+            frameId={profile.selectedFrameId}
+            photoUri={profile.photoUri}
+            size={36}
+            iconSize={18}
+          />
           <View style={styles.profileBarInfo}>
             <Text style={styles.profileBarName} numberOfLines={1}>{profile.name}</Text>
             <View style={styles.xpMini}>

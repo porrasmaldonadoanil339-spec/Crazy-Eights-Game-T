@@ -111,6 +111,20 @@ constants/
 - Claimed once per day; modal auto-shows 1.5s after home screen loads
 - `canClaimDailyReward` and `todaysDailyReward` exposed from useProfile()
 
+## Avatar System
+- `AvatarDisplay` component (components/AvatarDisplay.tsx): shared component showing avatar icon or photo with gradient frame ring
+- Profile photo: ImagePicker (camera + gallery); stored as `photoUri` in PlayerProfile; displayed via `<Image>` in AvatarDisplay
+- Avatar frames: 8 AVATAR_FRAMES in storeItems.ts (frame_gold default, silver/emerald/crimson/ocean/fire/galaxy/diamond)
+- Frame selection: tap "Marco" badge in profile screen; buy in Store → Marcos category
+- `selectedFrameId` and `photoUri` stored in PlayerProfile; `updateFrame()` and `updatePhotoUri()` in ProfileContext
+
+## Emote System (in-game reactions)
+- 8 emotes: "Buena jugada", "Toma ese +2", "Casi pierdo", "Te tocó robar", "No puede ser", "Te voy a ganar", "Qué suerte", "Modo Experto"
+- EmotePanel component (components/EmotePanel.tsx): smiley button near player turn label; opens grid modal
+- Anti-spam: 5-second cooldown between player emotes
+- EmoteBubble: animated fade-in/out bubble above avatar showing icon + label text
+- AI auto-emotes: CPU sends "Toma ese +2" when causing pendingDraw increase, "Te voy a ganar" when down to 1 card, "Qué suerte" when drawing many cards
+
 ---
 
 ## Key Design Decisions
