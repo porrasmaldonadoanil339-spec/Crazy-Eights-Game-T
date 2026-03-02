@@ -39,6 +39,25 @@ export interface AchievementProgress {
   claimedReward: boolean;
 }
 
+export interface DailyReward {
+  day: number;
+  coins: number;
+  xp: number;
+  label: string;
+  icon: string;
+  iconColor: string;
+}
+
+export const DAILY_REWARDS: DailyReward[] = [
+  { day: 1, coins: 15,  xp: 30,  label: "15 monedas",         icon: "cash",      iconColor: "#F1C40F" },
+  { day: 2, coins: 20,  xp: 40,  label: "20 monedas",         icon: "cash",      iconColor: "#F1C40F" },
+  { day: 3, coins: 30,  xp: 60,  label: "30 monedas + XP",    icon: "star",      iconColor: "#D4AF37" },
+  { day: 4, coins: 25,  xp: 80,  label: "25 monedas + XP",    icon: "cash",      iconColor: "#F1C40F" },
+  { day: 5, coins: 40,  xp: 100, label: "40 monedas + XP",    icon: "gift",      iconColor: "#9B59B6" },
+  { day: 6, coins: 50,  xp: 120, label: "50 monedas",         icon: "cash",      iconColor: "#E67E22" },
+  { day: 7, coins: 100, xp: 250, label: "¡100 monedas! Gran recompensa", icon: "trophy", iconColor: "#D4AF37" },
+];
+
 export interface PlayerProfile {
   name: string;
   avatarId: string;
@@ -52,6 +71,12 @@ export interface PlayerProfile {
   achievementProgress: AchievementProgress[];
   claimedBattlePassTiers: number[];
   stats: PlayerStats;
+  // Daily rewards
+  lastDailyRewardDate: string;
+  dailyRewardIndex: number;
+  // Settings
+  musicEnabled: boolean;
+  sfxEnabled: boolean;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -91,6 +116,10 @@ const DEFAULT_PROFILE: PlayerProfile = {
   })),
   claimedBattlePassTiers: [1],
   stats: DEFAULT_STATS,
+  lastDailyRewardDate: "",
+  dailyRewardIndex: 0,
+  musicEnabled: true,
+  sfxEnabled: true,
 };
 
 interface ProfileContextValue {
@@ -120,13 +149,17 @@ interface ProfileContextValue {
   updateAchievementProgress: (id: AchievementId, amount: number) => void;
   claimBattlePassTier: (tier: number) => void;
   claimAchievementReward: (id: AchievementId) => void;
+  claimDailyReward: () => DailyReward | null;
+  canClaimDailyReward: boolean;
+  todaysDailyReward: DailyReward;
+  updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean }) => void;
   level: number;
   xpProgress: { current: number; needed: number; level: number };
   battlePassTier: number;
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
-const STORAGE_KEY = "ocho_profile_v2";
+const STORAGE_KEY = "ocho_profile_v3";
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<PlayerProfile>(DEFAULT_PROFILE);
@@ -138,7 +171,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const saved = JSON.parse(raw) as PlayerProfile;
-          // Merge to handle new achievements added after initial install
           const merged: PlayerProfile = {
             ...DEFAULT_PROFILE,
             ...saved,
@@ -149,6 +181,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             }),
             ownedItems: saved.ownedItems ?? DEFAULT_PROFILE.ownedItems,
             claimedBattlePassTiers: saved.claimedBattlePassTiers ?? [1],
+            lastDailyRewardDate: saved.lastDailyRewardDate ?? "",
+            dailyRewardIndex: saved.dailyRewardIndex ?? 0,
+            musicEnabled: saved.musicEnabled ?? true,
+            sfxEnabled: saved.sfxEnabled ?? true,
           };
           setProfile(merged);
         }
@@ -260,20 +296,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (p.claimedBattlePassTiers.includes(tier)) return p;
       const bpTier = BATTLE_PASS_TIERS.find((t) => t.tier === tier);
       if (!bpTier) return p;
-      let next = {
-        ...p,
-        claimedBattlePassTiers: [...p.claimedBattlePassTiers, tier],
-      };
+      let next = { ...p, claimedBattlePassTiers: [...p.claimedBattlePassTiers, tier] };
       if (bpTier.rewardType === "coins" && typeof bpTier.rewardValue === "number") {
         next = { ...next, coins: next.coins + bpTier.rewardValue };
       }
-      if (bpTier.rewardType === "item" || bpTier.rewardType === "avatar") {
-        const itemId = bpTier.rewardValue as string;
-        if (!next.ownedItems.includes(itemId)) {
-          next = { ...next, ownedItems: [...next.ownedItems, itemId] };
-        }
-      }
-      if (bpTier.rewardType === "title") {
+      if (["item", "avatar", "title"].includes(bpTier.rewardType)) {
         const itemId = bpTier.rewardValue as string;
         if (!next.ownedItems.includes(itemId)) {
           next = { ...next, ownedItems: [...next.ownedItems, itemId] };
@@ -281,6 +308,24 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
       return next;
     });
+  }, [update]);
+
+  const claimDailyReward = useCallback((): DailyReward | null => {
+    const today = new Date().toDateString();
+    if (profile.lastDailyRewardDate === today) return null;
+    const reward = DAILY_REWARDS[profile.dailyRewardIndex % DAILY_REWARDS.length];
+    update((p) => ({
+      ...p,
+      coins: p.coins + reward.coins,
+      totalXp: p.totalXp + reward.xp,
+      lastDailyRewardDate: today,
+      dailyRewardIndex: (p.dailyRewardIndex + 1) % DAILY_REWARDS.length,
+    }));
+    return reward;
+  }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, update]);
+
+  const updateSettings = useCallback((settings: { musicEnabled?: boolean; sfxEnabled?: boolean }) => {
+    update((p) => ({ ...p, ...settings }));
   }, [update]);
 
   const recordGameResult = useCallback((params: {
@@ -297,8 +342,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }) => {
     update((p) => {
       const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
       const isNewDay = p.stats.lastPlayedDate !== today;
-      const streak = isNewDay ? (p.stats.lastPlayedDate === new Date(Date.now() - 86400000).toDateString() ? p.stats.dailyStreak + 1 : 1) : p.stats.dailyStreak;
+      const streak = isNewDay
+        ? (p.stats.lastPlayedDate === yesterday ? p.stats.dailyStreak + 1 : 1)
+        : p.stats.dailyStreak;
 
       const newStats: PlayerStats = {
         ...p.stats,
@@ -323,9 +371,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         comebackWins: p.stats.comebackWins + (params.isComeback ? 1 : 0),
         dailyStreak: streak,
         lastPlayedDate: today,
-        challengesCompleted: params.mode === "challenge" && params.won ? p.stats.challengesCompleted + 1 : p.stats.challengesCompleted,
-        tournamentsWon: params.mode === "tournament" && params.won ? p.stats.tournamentsWon + 1 : p.stats.tournamentsWon,
-        coopWins: params.mode === "coop" && params.won ? p.stats.coopWins + 1 : p.stats.coopWins,
+        challengesCompleted: params.mode === "challenge" && params.won
+          ? p.stats.challengesCompleted + 1 : p.stats.challengesCompleted,
+        tournamentsWon: params.mode === "tournament" && params.won
+          ? p.stats.tournamentsWon + 1 : p.stats.tournamentsWon,
+        coopWins: params.mode === "coop" && params.won
+          ? p.stats.coopWins + 1 : p.stats.coopWins,
         fastestLightningWin: (params.mode === "lightning" && params.won && params.gameDurationMs)
           ? Math.min(p.stats.fastestLightningWin, params.gameDurationMs)
           : p.stats.fastestLightningWin,
@@ -339,6 +390,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       };
     });
   }, [update]);
+
+  const canClaimDailyReward = useMemo(() => {
+    const today = new Date().toDateString();
+    return profile.lastDailyRewardDate !== today;
+  }, [profile.lastDailyRewardDate]);
+
+  const todaysDailyReward = useMemo(() => {
+    return DAILY_REWARDS[profile.dailyRewardIndex % DAILY_REWARDS.length];
+  }, [profile.dailyRewardIndex]);
 
   const level = useMemo(() => getPlayerLevel(profile.totalXp), [profile.totalXp]);
   const xpProgress = useMemo(() => getXpProgress(profile.totalXp), [profile.totalXp]);
@@ -362,6 +422,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         updateAchievementProgress,
         claimBattlePassTier,
         claimAchievementReward,
+        claimDailyReward,
+        canClaimDailyReward,
+        todaysDailyReward,
+        updateSettings,
         level,
         xpProgress,
         battlePassTier,

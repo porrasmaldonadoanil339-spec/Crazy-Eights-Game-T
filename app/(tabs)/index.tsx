@@ -16,11 +16,10 @@ import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
 import { playButton } from "@/lib/audioManager";
-import { STORE_ITEMS } from "@/lib/storeItems";
+import { AVATARS } from "@/lib/storeItems";
 
 const { width: SW } = Dimensions.get("window");
 
-// Single floating suit element
 function FloatSuit({ suit, x, y, size, opacity, duration }: {
   suit: string; x: number; y: number; size: number; opacity: number; duration: number;
 }) {
@@ -62,11 +61,11 @@ function FloatingSuits() {
   );
 }
 
-function StarRating({ stars }: { stars: number }) {
+function StarRating({ stars, max = 5 }: { stars: number; max?: number }) {
   return (
     <View style={{ flexDirection: "row", gap: 2 }}>
-      {[1, 2, 3, 4].map((s) => (
-        <Ionicons key={s} name="star" size={10} color={s <= stars ? Colors.gold : Colors.textDim} />
+      {Array.from({ length: max }).map((_, s) => (
+        <Ionicons key={s} name="star" size={10} color={s < stars ? Colors.gold : Colors.textDim} />
       ))}
     </View>
   );
@@ -75,6 +74,9 @@ function StarRating({ stars }: { stars: number }) {
 function DifficultyModal({ visible, onClose, onSelect, modeName }: {
   visible: boolean; onClose: () => void; onSelect: (d: Difficulty) => void; modeName: string;
 }) {
+  const RARITY_COLORS: Record<Difficulty, string> = {
+    easy: "#95A5A6", normal: "#2196F3", intermediate: "#27AE60", hard: "#E74C3C", expert: "#A855F7",
+  };
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.modalBg} onPress={onClose}>
@@ -88,18 +90,25 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
                 <Pressable
                   key={d.id}
                   onPress={() => onSelect(d.id)}
-                  style={({ pressed }) => [styles.diffOption, pressed && styles.diffOptionPressed]}
+                  style={({ pressed }) => [styles.diffOption, pressed && styles.diffOptionPressed,
+                    { borderColor: RARITY_COLORS[d.id] + "55" }]}
                 >
                   <LinearGradient
-                    colors={["rgba(212,175,55,0.12)", "transparent"]}
+                    colors={[RARITY_COLORS[d.id] + "18", "transparent"]}
                     style={styles.diffOptionGrad}
                   >
                     <StarRating stars={d.stars} />
-                    <Text style={styles.diffName}>{d.name}</Text>
+                    <Text style={[styles.diffName, { color: RARITY_COLORS[d.id] }]}>{d.name}</Text>
                     <View style={styles.diffReward}>
-                      <Ionicons name="cash" size={11} color={Colors.gold} />
+                      <Ionicons name="cash" size={10} color={Colors.gold} />
                       <Text style={styles.diffRewardText}>x{d.coinMultiplier}</Text>
                     </View>
+                    {d.id === "expert" && (
+                      <View style={styles.expertBadge}>
+                        <Ionicons name="timer" size={9} color="#A855F7" />
+                        <Text style={styles.expertBadgeText}>8s</Text>
+                      </View>
+                    )}
                   </LinearGradient>
                 </Pressable>
               ))}
@@ -107,6 +116,51 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
           </LinearGradient>
         </View>
       </Pressable>
+    </Modal>
+  );
+}
+
+// Daily reward modal
+function DailyRewardModal({ visible, reward, onClaim }: {
+  visible: boolean;
+  reward: { coins: number; xp: number; label: string; icon: string; iconColor: string } | null;
+  onClaim: () => void;
+}) {
+  const sc = useSharedValue(0.7);
+  useEffect(() => {
+    if (visible) sc.value = withSpring(1, { damping: 12 });
+    else sc.value = 0.7;
+  }, [visible]);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  if (!reward) return null;
+  return (
+    <Modal transparent animationType="fade" visible={visible}>
+      <View style={styles.dailyOverlay}>
+        <Animated.View style={[styles.dailyModal, animStyle]}>
+          <LinearGradient colors={["#1a2e10", "#0a1a08"]} style={styles.dailyGrad}>
+            <Text style={styles.dailyTitle}>RECOMPENSA DIARIA</Text>
+            <View style={[styles.dailyIconWrap, { borderColor: reward.iconColor + "88" }]}>
+              <Ionicons name={reward.icon as any} size={42} color={reward.iconColor} />
+            </View>
+            <Text style={styles.dailyLabel}>{reward.label}</Text>
+            <View style={styles.dailyChips}>
+              <View style={styles.dailyChip}>
+                <Ionicons name="cash" size={14} color={Colors.gold} />
+                <Text style={styles.dailyChipText}>+{reward.coins}</Text>
+              </View>
+              <View style={styles.dailyChipXp}>
+                <Ionicons name="star" size={12} color={Colors.gold} />
+                <Text style={styles.dailyChipText}>+{reward.xp} XP</Text>
+              </View>
+            </View>
+            <Pressable onPress={onClaim} style={styles.dailyClaimBtn}>
+              <LinearGradient colors={[Colors.gold, Colors.goldLight]} style={styles.dailyClaimGrad}>
+                <Text style={styles.dailyClaimText}>RECLAMAR</Text>
+              </LinearGradient>
+            </Pressable>
+          </LinearGradient>
+        </Animated.View>
+      </View>
     </Modal>
   );
 }
@@ -121,10 +175,7 @@ function PokerTitle() {
       ), -1
     );
   }, []);
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowAnim.value,
-  }));
-
+  const glowStyle = useAnimatedStyle(() => ({ opacity: glowAnim.value }));
   return (
     <View style={styles.titleWrap}>
       <View style={styles.titleSuits}>
@@ -144,13 +195,22 @@ function PokerTitle() {
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
-  const { profile, level, xpProgress } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward } = useProfile();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
+  const [showDailyModal, setShowDailyModal] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
-  const avatarItem = STORE_ITEMS.find((i) => i.id === profile.avatarId);
+  const avatarItem = AVATARS.find((i) => i.id === profile.avatarId);
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
+
+  // Show daily reward on mount if available
+  useEffect(() => {
+    if (canClaimDailyReward) {
+      const timer = setTimeout(() => setShowDailyModal(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const handleModePress = async (modeId: GameModeId) => {
     await playButton().catch(() => {});
@@ -172,27 +232,31 @@ export default function PlayScreen() {
     router.push("/game");
   };
 
+  const handleClaimDaily = () => {
+    claimDailyReward();
+    setShowDailyModal(false);
+  };
+
   const selectedModeConfig = selectedMode ? GAME_MODES.find((m) => m.id === selectedMode) : null;
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
-      {/* Multi-layer felt background */}
       <LinearGradient
         colors={["#041008", "#071510", "#0a1a0f", "#071510", "#041008"]}
         locations={[0, 0.2, 0.5, 0.8, 1]}
         style={StyleSheet.absoluteFill}
       />
-      {/* Felt texture lines */}
       <View style={styles.feltTextureH1} />
       <View style={styles.feltTextureH2} />
       <View style={styles.feltTextureV1} />
-
-      {/* Floating card suits */}
       <FloatingSuits />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Profile bar */}
-        <View style={styles.profileBar}>
+        {/* Profile bar — clickable to go to profile */}
+        <Pressable
+          onPress={() => { playButton().catch(() => {}); router.push("/(tabs)/profile"); }}
+          style={({ pressed }) => [styles.profileBar, pressed && styles.profileBarPressed]}
+        >
           <View style={[styles.avatarSmall, { backgroundColor: avatarItem?.previewColor ?? Colors.surface }]}>
             <Ionicons name={(avatarItem?.preview ?? "person") as any} size={14} color="#fff" />
           </View>
@@ -204,28 +268,48 @@ export default function PlayScreen() {
             </View>
           </View>
           <View style={styles.coinsBadge}>
-            <Text style={styles.coinsSymbol}>$</Text>
+            <Ionicons name="cash" size={13} color={Colors.gold} />
             <Text style={styles.coinsNum}>{profile.coins}</Text>
           </View>
-        </View>
+          {canClaimDailyReward && (
+            <View style={styles.dailyDot}>
+              <View style={styles.dailyDotInner} />
+            </View>
+          )}
+          <Pressable
+            onPress={(e) => { e.stopPropagation(); playButton().catch(() => {}); router.push("/settings"); }}
+            style={styles.settingsBtn}
+            hitSlop={8}
+          >
+            <Ionicons name="settings-outline" size={17} color={Colors.textMuted} />
+          </Pressable>
+        </Pressable>
 
-        {/* Poker title */}
+        {/* Daily reward banner if available */}
+        {canClaimDailyReward && (
+          <Pressable
+            onPress={() => setShowDailyModal(true)}
+            style={styles.dailyBanner}
+          >
+            <Ionicons name="gift" size={16} color="#D4AF37" />
+            <Text style={styles.dailyBannerText}>¡Tu recompensa diaria está lista!</Text>
+            <Ionicons name="chevron-forward" size={14} color="#D4AF37" />
+          </Pressable>
+        )}
+
         <PokerTitle />
 
-        {/* Divider with suits */}
         <View style={styles.suitDivider}>
           <View style={styles.dividerLine} />
           <Text style={styles.dividerSuit}>♦</Text>
           <View style={styles.dividerLine} />
         </View>
 
-        {/* Mode selection header */}
         <View style={styles.sectionHeader}>
           <Ionicons name="game-controller" size={14} color={Colors.textMuted} />
           <Text style={styles.sectionLabel}>MODOS DE JUEGO</Text>
         </View>
 
-        {/* Game mode grid */}
         <View style={styles.modesGrid}>
           {GAME_MODES.map((mode) => {
             const wins = profile.stats.winsByMode[mode.id] ?? 0;
@@ -235,10 +319,7 @@ export default function PlayScreen() {
               <Pressable
                 key={mode.id}
                 onPress={() => handleModePress(mode.id)}
-                style={({ pressed }) => [
-                  styles.modeCard,
-                  pressed && styles.modeCardPressed,
-                ]}
+                style={({ pressed }) => [styles.modeCard, pressed && styles.modeCardPressed]}
               >
                 <LinearGradient
                   colors={[mode.color + "28", mode.color + "08", "transparent"]}
@@ -272,7 +353,7 @@ export default function PlayScreen() {
           })}
         </View>
 
-        {/* Quick actions row */}
+        {/* Quick actions */}
         <View style={styles.quickRow}>
           <Pressable
             onPress={async () => { await playButton().catch(() => {}); router.push("/tutorial"); }}
@@ -307,6 +388,12 @@ export default function PlayScreen() {
         onSelect={handleDifficultySelect}
         modeName={selectedModeConfig?.name ?? ""}
       />
+
+      <DailyRewardModal
+        visible={showDailyModal}
+        reward={canClaimDailyReward ? todaysDailyReward : null}
+        onClaim={handleClaimDaily}
+      />
     </View>
   );
 }
@@ -315,7 +402,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#041008" },
   scroll: { paddingHorizontal: 16 },
 
-  // Felt texture overlays
   feltTextureH1: { position: "absolute", left: 0, right: 0, top: "30%", height: 1, backgroundColor: "rgba(255,255,255,0.02)" },
   feltTextureH2: { position: "absolute", left: 0, right: 0, top: "65%", height: 1, backgroundColor: "rgba(255,255,255,0.02)" },
   feltTextureV1: { position: "absolute", top: 0, bottom: 0, left: "50%", width: 1, backgroundColor: "rgba(255,255,255,0.015)" },
@@ -324,8 +410,9 @@ const styles = StyleSheet.create({
   profileBar: {
     flexDirection: "row", alignItems: "center", gap: 10,
     backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 14,
-    padding: 10, borderWidth: 1, borderColor: "rgba(212,175,55,0.15)", marginBottom: 16,
+    padding: 10, borderWidth: 1, borderColor: "rgba(212,175,55,0.15)", marginBottom: 10,
   },
+  profileBarPressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
   avatarSmall: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
   profileBarInfo: { flex: 1 },
   profileBarName: { fontFamily: "Nunito_700Bold", fontSize: 13, color: Colors.text },
@@ -337,15 +424,33 @@ const styles = StyleSheet.create({
   xpBarMini: { flex: 1, height: 3, backgroundColor: Colors.border, borderRadius: 2 },
   xpFillMini: { height: "100%", backgroundColor: Colors.gold, borderRadius: 2 },
   coinsBadge: {
-    flexDirection: "row", alignItems: "center", gap: 3,
+    flexDirection: "row", alignItems: "center", gap: 4,
     backgroundColor: Colors.gold + "18", borderRadius: 10,
     paddingHorizontal: 8, paddingVertical: 5, borderWidth: 1, borderColor: Colors.gold + "40",
   },
-  coinsSymbol: { fontFamily: "Nunito_900ExtraBold", fontSize: 12, color: Colors.gold },
   coinsNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: Colors.gold },
+  settingsBtn: {
+    width: 30, height: 30, alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 15,
+  },
+  dailyDot: {
+    position: "absolute", top: 6, right: 54,
+    width: 14, height: 14, borderRadius: 7,
+    backgroundColor: "#E74C3C", alignItems: "center", justifyContent: "center",
+  },
+  dailyDotInner: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#fff" },
+
+  // Daily reward banner
+  dailyBanner: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: "rgba(212,175,55,0.1)", borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 10, marginBottom: 8,
+    borderWidth: 1, borderColor: "rgba(212,175,55,0.3)",
+  },
+  dailyBannerText: { fontFamily: "Nunito_700Bold", fontSize: 13, color: Colors.gold, flex: 1 },
 
   // Poker title
-  titleWrap: { alignItems: "center", paddingVertical: 12, gap: 4 },
+  titleWrap: { alignItems: "center", paddingVertical: 10, gap: 4 },
   titleSuits: { flexDirection: "row", gap: 12, marginBottom: 4 },
   suitRed: { fontSize: 22, color: "#C0392B", opacity: 0.8 },
   suitBlack: { fontSize: 22, color: Colors.textMuted, opacity: 0.8 },
@@ -360,7 +465,7 @@ const styles = StyleSheet.create({
   },
 
   // Divider
-  suitDivider: { flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10 },
+  suitDivider: { flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 8 },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
   dividerSuit: { fontSize: 14, color: Colors.gold + "60" },
 
@@ -373,7 +478,7 @@ const styles = StyleSheet.create({
   modeCard: { width: "47.5%", borderRadius: 16, overflow: "hidden" },
   modeCardPressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
   modeGrad: {
-    padding: 14, minHeight: 155, justifyContent: "space-between",
+    padding: 14, minHeight: 150, justifyContent: "space-between",
     borderWidth: 1.5, borderRadius: 16,
     backgroundColor: "rgba(255,255,255,0.02)",
   },
@@ -394,7 +499,7 @@ const styles = StyleSheet.create({
   modeWR: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim, flex: 1, textAlign: "right" },
 
   // Quick actions
-  quickRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 16 },
+  quickRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 14 },
   quickBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,
     backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 10,
@@ -419,11 +524,50 @@ const styles = StyleSheet.create({
   },
   diffTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: Colors.gold, marginBottom: 4 },
   diffSub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, marginBottom: 18 },
-  diffGrid: { flexDirection: "row", gap: 8 },
-  diffOption: { flex: 1, borderRadius: 14, overflow: "hidden", borderWidth: 1, borderColor: Colors.border },
+  diffGrid: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
+  diffOption: {
+    flex: 1, minWidth: "18%", borderRadius: 12, overflow: "hidden",
+    borderWidth: 1, borderColor: Colors.border,
+  },
   diffOptionPressed: { opacity: 0.75, transform: [{ scale: 0.96 }] },
-  diffOptionGrad: { padding: 12, alignItems: "center", gap: 6 },
-  diffName: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.text },
+  diffOptionGrad: { padding: 10, alignItems: "center", gap: 5 },
+  diffName: { fontFamily: "Nunito_700Bold", fontSize: 11 },
   diffReward: { flexDirection: "row", alignItems: "center", gap: 3 },
-  diffRewardText: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textMuted },
+  diffRewardText: { fontFamily: "Nunito_400Regular", fontSize: 9, color: Colors.textMuted },
+  expertBadge: {
+    flexDirection: "row", alignItems: "center", gap: 2,
+    backgroundColor: "rgba(168,85,247,0.2)", borderRadius: 5,
+    paddingHorizontal: 4, paddingVertical: 1,
+  },
+  expertBadgeText: { fontFamily: "Nunito_700Bold", fontSize: 8, color: "#A855F7" },
+
+  // Daily reward modal
+  dailyOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.85)", alignItems: "center", justifyContent: "center" },
+  dailyModal: { width: 300, borderRadius: 24, overflow: "hidden", borderWidth: 1.5, borderColor: Colors.gold + "44" },
+  dailyGrad: { padding: 28, alignItems: "center", gap: 12 },
+  dailyTitle: {
+    fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold,
+    letterSpacing: 2, textAlign: "center",
+  },
+  dailyIconWrap: {
+    width: 88, height: 88, borderRadius: 44,
+    backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center",
+    borderWidth: 2, marginVertical: 4,
+  },
+  dailyLabel: { fontFamily: "Nunito_700Bold", fontSize: 15, color: Colors.text, textAlign: "center" },
+  dailyChips: { flexDirection: "row", gap: 10 },
+  dailyChip: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    backgroundColor: Colors.gold + "20", borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1, borderColor: Colors.gold + "44",
+  },
+  dailyChipXp: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  dailyChipText: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: Colors.gold },
+  dailyClaimBtn: { width: "100%", borderRadius: 14, overflow: "hidden" },
+  dailyClaimGrad: { paddingVertical: 14, alignItems: "center" },
+  dailyClaimText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#1a0a00", letterSpacing: 1 },
 });

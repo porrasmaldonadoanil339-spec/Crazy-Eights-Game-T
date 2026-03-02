@@ -6,7 +6,7 @@ export type GameModeId =
   | "challenge"
   | "practice";
 
-export type Difficulty = "easy" | "normal" | "intermediate" | "hard";
+export type Difficulty = "easy" | "normal" | "intermediate" | "hard" | "expert";
 
 export interface GameModeConfig {
   id: GameModeId;
@@ -15,7 +15,7 @@ export interface GameModeConfig {
   description: string;
   cardsPerPlayer: number;
   icon: string;
-  iconLib: "Ionicons" | "MaterialCommunityIcons";
+  iconLib: "Ionicons";
   color: string;
   coinsReward: number;
   xpReward: number;
@@ -30,6 +30,8 @@ export interface DifficultyConfig {
   aiAccuracy: number;
   xpMultiplier: number;
   coinMultiplier: number;
+  hasTimer?: boolean;
+  timerSeconds?: number;
 }
 
 export const GAME_MODES: GameModeConfig[] = [
@@ -37,7 +39,7 @@ export const GAME_MODES: GameModeConfig[] = [
     id: "classic",
     name: "Clásico",
     nameShort: "Clásico",
-    description: "El juego tradicional con 8 cartas por jugador.",
+    description: "Reglas completas: 2, 3, 7, 8, 10, J y Comodín activos.",
     cardsPerPlayer: 8,
     icon: "card-outline",
     iconLib: "Ionicons",
@@ -50,7 +52,7 @@ export const GAME_MODES: GameModeConfig[] = [
     id: "lightning",
     name: "Relámpago",
     nameShort: "Rayo",
-    description: "Partidas rápidas con solo 5 cartas. ¡Velocidad al máximo!",
+    description: "5 cartas, partida rápida. ¡El primero en vaciar gana!",
     cardsPerPlayer: 5,
     icon: "flash",
     iconLib: "Ionicons",
@@ -76,35 +78,33 @@ export const GAME_MODES: GameModeConfig[] = [
     id: "coop",
     name: "Cooperativo",
     nameShort: "2v2",
-    description: "Tú + un aliado IA vs 2 CPUs. ¡Trabajo en equipo!",
+    description: "Aliado IA vs 2 CPUs. Coordínate para ganar.",
     cardsPerPlayer: 7,
     icon: "people",
     iconLib: "Ionicons",
     color: "#27AE60",
     coinsReward: 25,
     xpReward: 80,
-    isNew: true,
     hasDifficulty: true,
   },
   {
     id: "challenge",
     name: "Desafíos",
     nameShort: "Desafíos",
-    description: "Retos especiales diarios y semanales con recompensas únicas.",
+    description: "Retos diarios con reglas especiales y recompensas únicas.",
     cardsPerPlayer: 7,
     icon: "ribbon",
     iconLib: "Ionicons",
     color: "#9B59B6",
     coinsReward: 30,
     xpReward: 100,
-    isNew: true,
     hasDifficulty: false,
   },
   {
     id: "practice",
     name: "Práctica",
     nameShort: "Práctica",
-    description: "Aprende sin presión. Pistas ilimitadas y sin penalización.",
+    description: "Aprende sin presión. Pistas y sin penalización.",
     cardsPerPlayer: 7,
     icon: "school",
     iconLib: "Ionicons",
@@ -147,6 +147,16 @@ export const DIFFICULTIES: DifficultyConfig[] = [
     aiAccuracy: 1.0,
     xpMultiplier: 1.7,
     coinMultiplier: 1.7,
+  },
+  {
+    id: "expert",
+    name: "Experto",
+    stars: 5,
+    aiAccuracy: 1.0,
+    xpMultiplier: 2.5,
+    coinMultiplier: 2.5,
+    hasTimer: true,
+    timerSeconds: 8,
   },
 ];
 

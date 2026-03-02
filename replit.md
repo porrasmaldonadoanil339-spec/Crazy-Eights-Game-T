@@ -22,7 +22,7 @@ No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
 - **State**: React Context for profile + game state, AsyncStorage for persistence
 - **Styling**: `StyleSheet` only, no external CSS/styled-components
 - **Fonts**: Nunito (400Regular, 700Bold, 900ExtraBold) from `@expo-google-fonts/nunito`
-- **Storage key**: `"ocho_profile_v2"` in AsyncStorage
+- **Storage key**: `"ocho_profile_v3"` in AsyncStorage
 
 ### Backend (Express.js)
 - Runs on port 5000
@@ -56,14 +56,19 @@ context/
   GameContext.tsx       ← Game state machine, session tracking
 
 lib/
-  gameEngine.ts         ← Core game logic (deck, hands, play/draw/AI turns)
-  gameModes.ts          ← 6 modes × 4 difficulties config
-  achievements.ts       ← 18 achievements definitions
-  storeItems.ts         ← 15+ store items (card backs, avatars, titles)
-  battlePass.ts         ← 10-tier battle pass, XP level helpers
+  gameEngine.ts         ← Core game logic (deck, hands, play/draw/AI turns, special cards 2/3/7/10/J/Joker)
+  gameModes.ts          ← 6 modes × 5 difficulties (easy/normal/intermediate/hard/expert)
+  achievements.ts       ← 45 achievements definitions with RARITY_COLORS export
+  storeItems.ts         ← 38 store items (11 card backs, 14 avatars, 13 titles)
+  battlePass.ts         ← 40-tier battle pass, XP/level helpers
+  cpuProfiles.ts        ← 12 CPU player profiles with avatar/name/level/title
   audioManager.ts       ← Audio system using expo-audio: music + SFX + haptics
   sounds.ts             ← SoundEvent dispatcher (wraps audioManager)
   query-client.ts       ← React Query client + API URL helper
+
+app/
+  settings.tsx          ← Settings screen (music/sfx toggles, game info)
+
 
 assets/sounds/
   card-flip.wav, card-draw.wav, shuffle.wav, win.wav, lose.wav, button.wav, wild.wav
@@ -87,9 +92,24 @@ constants/
 | Desafíos    | 7     | Daily/weekly challenges           |
 | Práctica    | 7     | No penalty, hints enabled         |
 
-## Difficulties: Easy / Normal / Intermediate / Hard
-- AI strategy: random (easy) → optimal suit matching (hard)
-- Coin multipliers: 0.8x → 1.0x → 1.3x → 1.7x
+## Difficulties: Easy / Normal / Intermediate / Hard / Expert
+- Expert difficulty: 8-second countdown timer per player turn (auto-draws on expiry)
+- AI strategy: random (easy) → optimal suit matching (expert)
+- Coin multipliers: 0.8x → 1.0x → 1.3x → 1.7x → 2.0x
+
+## Special Cards (fully implemented in gameEngine.ts)
+- 2: Draw 2 accumulative; counter with 2/Ace/Joker
+- 3: Skip opponent's turn + extra turn
+- 7: Draw 2 accumulative; counter with 7/Joker
+- 8: Wild card; choose new active suit
+- 10: Reverse direction (extra turn in 2-player)
+- J: Repeat turn with same suit; CPU must play jSuit or 8/Joker
+- Joker (rank 14): Wild like 8, or adds 5 to pendingDraw stack
+
+## Daily Rewards
+- 7-day rotating cycle stored in ProfileContext
+- Claimed once per day; modal auto-shows 1.5s after home screen loads
+- `canClaimDailyReward` and `todaysDailyReward` exposed from useProfile()
 
 ---
 

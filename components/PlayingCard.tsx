@@ -27,10 +27,40 @@ const SIZES = {
 };
 
 function CardFront({ card, sobj }: { card: Card; sobj: typeof SIZES.md }) {
-  const color = suitColor(card.suit);
-  const sym = suitSymbol(card.suit);
-  const isRed = card.suit === "hearts" || card.suit === "diamonds";
+  const isJoker = card.rank === "Joker";
   const isEight = card.rank === "8";
+  const color = isJoker
+    ? (card.suit === "spades" || card.suit === "clubs" ? "#1a1a2e" : "#8B0000")
+    : suitColor(card.suit);
+  const sym = isJoker ? "★" : suitSymbol(card.suit);
+  const rankDisplay = isJoker ? "★" : card.rank;
+
+  if (isJoker) {
+    return (
+      <LinearGradient
+        colors={["#1a0a2e", "#2d1a4a", "#1a0a2e"]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        style={[styles.cardFace, { borderRadius: sobj.corner, borderColor: "#A855F7aa" }]}
+      >
+        <View style={styles.cornerTL}>
+          <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: "#A855F7" }]}>★</Text>
+        </View>
+        <View style={styles.cardCenterArea}>
+          <LinearGradient
+            colors={["#A855F7", "#7C3AED"]}
+            style={[styles.eightBadge, { width: sobj.ss + 10, height: sobj.ss + 10, borderRadius: (sobj.ss + 10) / 2 }]}
+          >
+            <Text style={[styles.eightSym, { fontSize: sobj.ss - 2 }]}>★</Text>
+          </LinearGradient>
+          <Text style={[styles.eightNum, { fontSize: sobj.rs - 2, color: "#D4AF37" }]}>COMODÍN</Text>
+        </View>
+        <View style={styles.cornerBR}>
+          <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: "#A855F7", transform: [{ rotate: "180deg" }] }]}>★</Text>
+        </View>
+        <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: "#A855F744" }]} />
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient
@@ -38,13 +68,11 @@ function CardFront({ card, sobj }: { card: Card; sobj: typeof SIZES.md }) {
       start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
       style={[styles.cardFace, { borderRadius: sobj.corner, borderColor: isEight ? Colors.gold + "aa" : "rgba(0,0,0,0.12)" }]}
     >
-      {/* Top-left rank + suit */}
       <View style={styles.cornerTL}>
-        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color }]}>{card.rank}</Text>
+        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color }]}>{rankDisplay}</Text>
         <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color }]}>{sym}</Text>
       </View>
 
-      {/* Center display */}
       <View style={styles.cardCenterArea}>
         {isEight ? (
           <LinearGradient
@@ -61,13 +89,11 @@ function CardFront({ card, sobj }: { card: Card; sobj: typeof SIZES.md }) {
         )}
       </View>
 
-      {/* Bottom-right (mirrored) */}
       <View style={styles.cornerBR}>
-        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color, transform: [{ rotate: "180deg" }] }]}>{card.rank}</Text>
+        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color, transform: [{ rotate: "180deg" }] }]}>{rankDisplay}</Text>
         <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color, transform: [{ rotate: "180deg" }] }]}>{sym}</Text>
       </View>
 
-      {/* Subtle inner frame */}
       <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2 }]} />
     </LinearGradient>
   );

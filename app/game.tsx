@@ -18,8 +18,9 @@ import { DealAnimation } from "@/components/DealAnimation";
 import type { Suit } from "@/lib/gameEngine";
 import { suitSymbol, suitName, suitColor, canPlay } from "@/lib/gameEngine";
 import { getModeById, getDifficultyById } from "@/lib/gameModes";
-import { STORE_ITEMS } from "@/lib/storeItems";
+import { AVATARS } from "@/lib/storeItems";
 import type { Card } from "@/lib/gameEngine";
+import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import {
   playCardFlip, playCardDraw, playCardWild, playWin, playLose, playError, playButton,
 } from "@/lib/audioManager";
@@ -49,26 +50,80 @@ function WinParticles() {
       position: "absolute", left: x.value - 6, top: y.value - 6,
       opacity: op.value, transform: [{ scale: sc.value }],
     }));
-    const colors = ["♠","♥","♦","♣"];
+    const syms = ["♠","♥","♦","♣"];
     const isRed = i % 4 === 1 || i % 4 === 2;
     return (
       <Animated.Text key={i} style={[s, { fontSize: 14, color: isRed ? "#C0392B" : Colors.gold }]}>
-        {colors[i % 4]}
+        {syms[i % 4]}
       </Animated.Text>
     );
   });
   return <View style={StyleSheet.absoluteFill} pointerEvents="none">{particles}</View>;
 }
 
+// ─── Expert timer bar ──────────────────────────────────────────────────────────
+function ExpertTimerBar({ seconds, total }: { seconds: number; total: number }) {
+  const pct = seconds / total;
+  const isRed = seconds <= 3;
+  return (
+    <View style={timerStyles.wrap}>
+      <View style={timerStyles.track}>
+        <View style={[timerStyles.fill, {
+          width: `${pct * 100}%`,
+          backgroundColor: isRed ? "#E74C3C" : "#D4AF37",
+        }]} />
+      </View>
+      <Text style={[timerStyles.label, isRed && timerStyles.labelRed]}>{seconds}s</Text>
+    </View>
+  );
+}
+const timerStyles = StyleSheet.create({
+  wrap: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16 },
+  track: { flex: 1, height: 6, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 3, overflow: "hidden" },
+  fill: { height: "100%", borderRadius: 3 },
+  label: { fontFamily: "Nunito_900ExtraBold", fontSize: 13, color: "#D4AF37", minWidth: 26 },
+  labelRed: { color: "#E74C3C" },
+});
+
+// ─── Pending draw indicator ────────────────────────────────────────────────────
+function PendingDrawBanner({ count, type }: { count: number; type: "two" | "seven" | null }) {
+  const blink = useSharedValue(1);
+  useEffect(() => {
+    blink.value = withRepeat(
+      withSequence(withTiming(0.4, { duration: 350 }), withTiming(1, { duration: 350 })), -1
+    );
+  }, []);
+  const s = useAnimatedStyle(() => ({ opacity: blink.value }));
+  return (
+    <Animated.View style={[pendStyles.wrap, s]}>
+      <Ionicons name="alert-circle" size={14} color="#E74C3C" />
+      <Text style={pendStyles.text}>
+        Roba <Text style={pendStyles.num}>{count}</Text> cartas{type === "two" ? " (defiéndete con 2 o As)" : " (defiéndete con 7)"}
+      </Text>
+    </Animated.View>
+  );
+}
+const pendStyles = StyleSheet.create({
+  wrap: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: "rgba(231,76,60,0.15)", borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: "#E74C3C55",
+  },
+  text: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#E74C3C" },
+  num: { fontFamily: "Nunito_900ExtraBold" },
+});
+
 // ─── Suit picker ─────────────────────────────────────────────────────────────
-function SuitPicker({ visible, onSelect }: { visible: boolean; onSelect: (s: Suit) => void }) {
+function SuitPicker({ visible, onSelect, isJoker }: {
+  visible: boolean; onSelect: (s: Suit) => void; isJoker?: boolean;
+}) {
   return (
     <Modal transparent animationType="fade" visible={visible}>
       <View style={styles.suitOverlay}>
         <View style={styles.suitModal}>
           <LinearGradient colors={["#1a2e1a", Colors.surface]} style={styles.suitGrad}>
-            <Text style={styles.suitTitle}>Elige un palo</Text>
-            <Text style={styles.suitSub}>El 8 Loco cambia el palo activo</Text>
+            <Text style={styles.suitTitle}>{isJoker ? "¡Comodín!" : "Elige un palo"}</Text>
+            <Text style={styles.suitSub}>{isJoker ? "El comodín cambia el palo activo" : "El 8 Loco cambia el palo activo"}</Text>
             <View style={styles.suitGrid}>
               {SUITS.map((suit) => (
                 <Pressable key={suit} onPress={() => onSelect(suit)} style={({ pressed }) => [styles.suitOption, pressed && styles.suitOptionPressed]}>
@@ -122,16 +177,13 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
   const isDraw = phase === "draw";
   const sc = useSharedValue(0.7);
   const [showParticles, setShowParticles] = useState(isWin);
-
   useEffect(() => {
     sc.value = withSpring(1, { damping: 12 });
     if (isWin) playWin().catch(() => {});
     else playLose().catch(() => {});
     if (!isWin) setShowParticles(false);
   }, []);
-
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
-
   return (
     <View style={styles.endOverlay}>
       {showParticles && <WinParticles />}
@@ -140,7 +192,6 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
           colors={isWin ? ["#122212", Colors.surface] : isDraw ? ["#181822", Colors.surface] : ["#221212", Colors.surface]}
           style={styles.endGrad}
         >
-          {/* Icon */}
           <View style={[styles.endIconWrap, { borderColor: isWin ? Colors.gold : isDraw ? Colors.blue : Colors.red }]}>
             {isWin ? (
               <Text style={styles.endIconText}>🏆</Text>
@@ -150,20 +201,17 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
               <Text style={styles.endIconText}>💀</Text>
             )}
           </View>
-
           <Text style={[styles.endTitle, { color: isWin ? Colors.gold : isDraw ? Colors.blue : Colors.red }]}>
             {isWin ? "¡GANASTE!" : isDraw ? "EMPATE" : "PERDISTE"}
           </Text>
           <Text style={styles.endSub}>
-            {isWin ? "¡Excelente jugada, campeón!" : isDraw ? "Muy parejo, inténtalo de nuevo" : "El CPU fue más rápido esta vez"}
+            {isWin ? "¡Excelente jugada, campeón!" : isDraw ? "Muy parejo — inténtalo de nuevo" : "El CPU fue más rápido esta vez"}
           </Text>
-
-          {/* Rewards */}
           {(coinsEarned > 0 || xpEarned > 0) && (
             <View style={styles.rewardRow}>
               {coinsEarned > 0 && (
                 <View style={styles.rewardChip}>
-                  <Text style={styles.rewardChipIcon}>$</Text>
+                  <Ionicons name="cash" size={14} color={Colors.gold} />
                   <Text style={styles.rewardChipVal}>+{coinsEarned}</Text>
                 </View>
               )}
@@ -175,7 +223,6 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
               )}
             </View>
           )}
-
           <View style={styles.endBtns}>
             <Pressable onPress={onRestart} style={styles.btnPrimary}>
               <Text style={styles.btnPrimaryTxt}>Jugar de nuevo</Text>
@@ -191,7 +238,9 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
 }
 
 // ─── AI hand display ──────────────────────────────────────────────────────────
-function AiHand({ count, isThinking }: { count: number; isThinking: boolean }) {
+function AiHand({ count, isThinking, cpuProfile }: {
+  count: number; isThinking: boolean; cpuProfile: CpuProfile | null;
+}) {
   const pulse = useSharedValue(1);
   useEffect(() => {
     if (isThinking) {
@@ -203,30 +252,68 @@ function AiHand({ count, isThinking }: { count: number; isThinking: boolean }) {
     }
   }, [isThinking]);
   const pStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
+  const avatarItem = AVATARS.find(a => a.id === cpuProfile?.avatarId);
 
   return (
-    <Animated.View style={[styles.aiHandRow, pStyle]}>
-      {Array.from({ length: Math.min(count, 12) }).map((_, i) => (
-        <View key={i} style={[styles.aiCard, {
-          marginLeft: i === 0 ? 0 : -24,
-          zIndex: i,
-          transform: [{ rotate: `${(i - Math.min(count, 12) / 2) * 4}deg` }],
-        }]}>
-          <LinearGradient colors={["#1E4080", "#0a1832"]} style={styles.aiCardInner}>
-            <View style={styles.aiCardPattern}>
-              {[0,1,2].map(r => (
-                <View key={r} style={{ flexDirection: "row", gap: 2 }}>
-                  {[0,1,2].map(c => <Text key={c} style={{ fontSize: 5, color: Colors.gold, opacity: 0.3 }}>◆</Text>)}
-                </View>
-              ))}
-            </View>
-          </LinearGradient>
+    <View style={styles.aiSection}>
+      {/* CPU Profile row */}
+      <View style={styles.cpuProfileRow}>
+        <View style={[styles.cpuAvatar, { backgroundColor: cpuProfile?.avatarColor ?? "#2C3E50" }]}>
+          <Ionicons name={(avatarItem?.preview ?? cpuProfile?.avatarIcon ?? "person") as any} size={13} color="#fff" />
         </View>
-      ))}
-      <View style={styles.aiCountBadge}>
-        <Text style={styles.aiCountText}>{count}</Text>
+        <View style={styles.cpuProfileInfo}>
+          <Text style={styles.cpuName} numberOfLines={1}>{cpuProfile?.name ?? "CPU"}</Text>
+          <Text style={styles.cpuMeta} numberOfLines={1}>
+            Nv.{cpuProfile?.level ?? "?"} · {cpuProfile?.titleId?.replace("title_", "").replace("_", " ") ?? "Jugador"}
+          </Text>
+        </View>
+        <View style={[styles.turnDot, { backgroundColor: isThinking ? Colors.gold : "rgba(255,255,255,0.1)" }]} />
+        {isThinking && <Text style={styles.thinkingText}>pensando...</Text>}
       </View>
-    </Animated.View>
+
+      <Animated.View style={[styles.aiHandRow, pStyle]}>
+        {Array.from({ length: Math.min(count, 12) }).map((_, i) => (
+          <View key={i} style={[styles.aiCard, {
+            marginLeft: i === 0 ? 0 : -24,
+            zIndex: i,
+            transform: [{ rotate: `${(i - Math.min(count, 12) / 2) * 4}deg` }],
+          }]}>
+            <LinearGradient colors={["#1E4080", "#0a1832"]} style={styles.aiCardInner}>
+              <View style={styles.aiCardPattern}>
+                {[0,1,2].map(r => (
+                  <View key={r} style={{ flexDirection: "row", gap: 2 }}>
+                    {[0,1,2].map(c => <Text key={c} style={{ fontSize: 5, color: Colors.gold, opacity: 0.3 }}>◆</Text>)}
+                  </View>
+                ))}
+              </View>
+            </LinearGradient>
+          </View>
+        ))}
+        <View style={styles.aiCountBadge}>
+          <Text style={styles.aiCountText}>{count}</Text>
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
+// ─── Player profile bar ───────────────────────────────────────────────────────
+function PlayerProfileBar({ name, avatarId, titleId, level }: {
+  name: string; avatarId: string; titleId: string; level: number;
+}) {
+  const avatarItem = AVATARS.find(a => a.id === avatarId);
+  const titleName = titleId.replace("title_", "").replace(/_/g, " ");
+  return (
+    <View style={styles.playerProfileRow}>
+      <View style={[styles.playerAvatar, { backgroundColor: avatarItem?.previewColor ?? "#2a4a2a" }]}>
+        <Ionicons name={(avatarItem?.preview ?? "person") as any} size={13} color="#fff" />
+      </View>
+      <View style={styles.playerProfileInfo}>
+        <Text style={styles.playerProfileName} numberOfLines={1}>{name}</Text>
+        <Text style={styles.playerProfileMeta} numberOfLines={1}>Nv.{level} · {titleName}</Text>
+      </View>
+      <View style={styles.playerTurnDot} />
+    </View>
   );
 }
 
@@ -238,11 +325,13 @@ export default function GameScreen() {
     runAiTurn, selectedCard, setSelectedCard, dealAnimationDone, setDealAnimationDone,
     startNextTournamentRound, startGame, getGameResult,
   } = useGame();
-  const { recordGameResult, updateAchievementProgress } = useProfile();
+  const { profile, level, recordGameResult, updateAchievementProgress } = useProfile();
 
   const aiThinking = useRef(false);
   const resultRecorded = useRef(false);
   const gameStartTimeRef = useRef<number>(Date.now());
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [cpuProfile, setCpuProfile] = useState<CpuProfile | null>(null);
   const [suitPickerVisible, setSuitPickerVisible] = useState(false);
   const [showTournamentModal, setShowTournamentModal] = useState(false);
   const [tournamentScores, setTournamentScores] = useState<[number, number]>([0, 0]);
@@ -250,10 +339,19 @@ export default function GameScreen() {
   const [endCoins, setEndCoins] = useState(0);
   const [endXp, setEndXp] = useState(0);
   const [isAiThinkingVis, setIsAiThinkingVis] = useState(false);
+  const [expertTimer, setExpertTimer] = useState(8);
   const msgOpacity = useSharedValue(1);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom + 4;
+  const isExpert = session?.difficulty === "expert";
+  const timerTotal = 8;
+
+  // Pick CPU profile on mount
+  useEffect(() => {
+    const seed = Math.floor(Date.now() / 1000) % 12;
+    setCpuProfile(getRandomCpuProfile(seed));
+  }, []);
 
   useEffect(() => {
     if (!dealAnimationDone) {
@@ -263,11 +361,41 @@ export default function GameScreen() {
     }
   }, [dealAnimationDone]);
 
+  // Expert timer
+  useEffect(() => {
+    if (!isExpert || !dealAnimationDone) {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      setExpertTimer(timerTotal);
+      return;
+    }
+    const isPlayerTurn = gameState?.currentPlayer === "player" && gameState?.phase === "playing";
+    if (!isPlayerTurn) {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      setExpertTimer(timerTotal);
+      return;
+    }
+    // Start countdown
+    let countdown = timerTotal;
+    setExpertTimer(timerTotal);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      countdown--;
+      setExpertTimer(countdown);
+      if (countdown <= 0) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        // Auto draw on timeout
+        playCardDraw().catch(() => {});
+        handleDraw();
+      }
+    }, 1000);
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
+  }, [gameState?.currentPlayer, gameState?.phase, isExpert, dealAnimationDone, gameState?.message]);
+
+  // AI turn trigger
   useEffect(() => {
     if (!gameState || !dealAnimationDone) return;
     if (gameState.phase !== "playing") return;
     msgOpacity.value = withSequence(withTiming(0.2, { duration: 80 }), withTiming(1, { duration: 200 }));
-
     if (gameState.currentPlayer === "ai" && !aiThinking.current) {
       aiThinking.current = true;
       setIsAiThinkingVis(true);
@@ -280,11 +408,13 @@ export default function GameScreen() {
     }
   }, [gameState?.currentPlayer, gameState?.message, dealAnimationDone]);
 
+  // Game result handling
   useEffect(() => {
     if (!gameState || !session || resultRecorded.current) return;
     const result = getGameResult();
     if (!result) return;
     resultRecorded.current = true;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
     const won = result === "player_wins";
     const modeConfig = getModeById(session.mode);
@@ -315,17 +445,26 @@ export default function GameScreen() {
       updateAchievementProgress("win_5", 1);
       updateAchievementProgress("win_25", 1);
       updateAchievementProgress("win_100", 1);
+      updateAchievementProgress("win_500", 1);
+      if (session.difficulty === "expert") updateAchievementProgress("expert_survivor", 1);
+      if (session.difficulty === "expert") updateAchievementProgress("expert_win", 1);
+      if (session.difficulty === "hard" || session.difficulty === "expert") updateAchievementProgress("hard_win", 1);
       if (session.mode === "lightning") updateAchievementProgress("lightning_king", 1);
       if (session.mode === "tournament") updateAchievementProgress("tournament_champ", 1);
       if (session.mode === "coop") updateAchievementProgress("coop_hero", 1);
       if (session.mode === "challenge") updateAchievementProgress("challenge_master", 1);
       if (isPerfect) updateAchievementProgress("perfect_hand", 1);
       if (isComeback) updateAchievementProgress("comeback_king", 1);
+      if (session.mode === "lightning" && duration < 120000) updateAchievementProgress("speed_demon", 1);
+      if (duration > 600000) updateAchievementProgress("marathon_man", 1);
     }
     if (session.eightsPlayedThisGame > 0) {
       updateAchievementProgress("eight_wizard", 1);
       updateAchievementProgress("eight_10", session.eightsPlayedThisGame);
+      updateAchievementProgress("eight_50", session.eightsPlayedThisGame);
     }
+    updateAchievementProgress("marathon_session", 1);
+    updateAchievementProgress("practice_grad", session.mode === "practice" ? 1 : 0);
   }, [gameState?.phase]);
 
   const msgStyle = useAnimatedStyle(() => ({ opacity: msgOpacity.value }));
@@ -353,7 +492,8 @@ export default function GameScreen() {
       return;
     }
     if (selectedCard?.id === card.id) {
-      if (card.rank === "8") {
+      const needsSuitPick = card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0);
+      if (needsSuitPick) {
         await playCardWild().catch(() => {});
         setSuitPickerVisible(true);
       } else {
@@ -370,6 +510,7 @@ export default function GameScreen() {
     setSuitPickerVisible(false);
     if (selectedCard) {
       handlePlayCard(selectedCard, suit);
+      setSelectedCard(null);
     }
   };
 
@@ -381,6 +522,7 @@ export default function GameScreen() {
 
   const currentSuitColor = suitColor(gameState.currentSuit);
   const currentSuitSym = suitSymbol(gameState.currentSuit);
+  const isJokerSelected = selectedCard?.rank === "Joker";
 
   return (
     <View style={[styles.container, { paddingTop: topPad, paddingBottom: botPad }]}>
@@ -390,7 +532,6 @@ export default function GameScreen() {
         locations={[0, 0.25, 0.5, 0.75, 1]}
         style={StyleSheet.absoluteFill}
       />
-      {/* Table oval border glow */}
       <View style={styles.tableGlowBorder} />
 
       {/* Header */}
@@ -398,42 +539,48 @@ export default function GameScreen() {
         <Pressable onPress={() => { playButton().catch(() => {}); router.back(); }} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={Colors.gold} />
         </Pressable>
-
         <View style={styles.headerCenter}>
           {modeConfig && (
             <View style={[styles.modePill, { borderColor: modeConfig.color + "44" }]}>
               <Ionicons name={modeConfig.icon as any} size={11} color={modeConfig.color} />
               <Text style={[styles.modeLabel, { color: modeConfig.color }]}>{modeConfig.name}</Text>
+              {isExpert && <Ionicons name="timer" size={10} color="#E74C3C" style={{ marginLeft: 2 }} />}
             </View>
           )}
           {session?.mode === "tournament" && (
             <Text style={styles.tournamentScore}>{tournamentScores[0]} — {tournamentScores[1]}</Text>
           )}
         </View>
-
         <View style={styles.deckInfo}>
           <Ionicons name="layers" size={13} color={Colors.textDim} />
           <Text style={styles.deckCount}>{gameState.drawPile.length}</Text>
         </View>
       </View>
 
+      {/* Expert timer */}
+      {isExpert && isPlayerTurn && dealAnimationDone && (
+        <ExpertTimerBar seconds={expertTimer} total={timerTotal} />
+      )}
+
       {/* AI section */}
-      <View style={styles.aiSection}>
-        <View style={styles.turnLabelRow}>
-          <View style={[styles.turnDot, { backgroundColor: gameState.currentPlayer === "ai" && dealAnimationDone ? Colors.gold : "transparent" }]} />
-          <Text style={[styles.turnLabel, gameState.currentPlayer === "ai" && dealAnimationDone && styles.activeTurn]}>
-            CPU{isAiThinkingVis ? " · pensando..." : " · " + gameState.aiHand.length + " cartas"}
-          </Text>
-        </View>
-        <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} />
-      </View>
+      <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={cpuProfile} />
 
       {/* Table center */}
       <View style={styles.tableCenter}>
+        {/* Pending draw alert */}
+        {gameState.pendingDraw > 0 && isPlayerTurn && (
+          <PendingDrawBanner count={gameState.pendingDraw} type={gameState.pendingDrawType} />
+        )}
+
         {/* Current suit indicator */}
         <View style={[styles.suitIndicator, { borderColor: currentSuitColor + "55" }]}>
           <Text style={[styles.suitIndicatorSym, { color: currentSuitColor }]}>{currentSuitSym}</Text>
           <Text style={styles.suitIndicatorName}>{suitName(gameState.currentSuit)}</Text>
+          {gameState.jActive && gameState.jSuit && (
+            <View style={styles.jActiveBadge}>
+              <Text style={styles.jActiveTxt}>J activa</Text>
+            </View>
+          )}
         </View>
 
         {/* Message */}
@@ -451,7 +598,6 @@ export default function GameScreen() {
               {[3,2,1,0].map(i => (
                 <View key={i} style={[styles.deckCardAbs, {
                   top: -i * 1.5, left: i * 1.5, zIndex: 4 - i,
-                  shadowOpacity: 0.3 - i * 0.05,
                 }]}>
                   <LinearGradient colors={["#1E4080", "#0e2248"]} style={styles.deckCardInner}>
                     <View style={styles.deckPattern}>
@@ -462,9 +608,11 @@ export default function GameScreen() {
                   </LinearGradient>
                 </View>
               ))}
-              {isPlayerTurn && playableCount === 0 && (
+              {isPlayerTurn && (playableCount === 0 || gameState.pendingDraw > 0) && (
                 <LinearGradient colors={[Colors.gold, Colors.goldLight]} style={styles.drawLabel}>
-                  <Text style={styles.drawLabelText}>ROBAR</Text>
+                  <Text style={styles.drawLabelText}>
+                    {gameState.pendingDraw > 0 ? `+${gameState.pendingDraw}` : "ROBAR"}
+                  </Text>
                 </LinearGradient>
               )}
             </View>
@@ -486,7 +634,13 @@ export default function GameScreen() {
         {selectedCard && isPlayerTurn && (
           <View style={styles.selectedHint}>
             <Text style={styles.selectedHintText}>
-              {selectedCard.rank === "8" ? "♦ 8 Loco · toca de nuevo para elegir palo" : "Toca la carta de nuevo para jugarla"}
+              {selectedCard.rank === "8"
+                ? "8 Loco · toca de nuevo para elegir palo"
+                : selectedCard.rank === "Joker" && gameState.pendingDraw === 0
+                  ? "Comodín · toca de nuevo para elegir palo"
+                  : selectedCard.rank === "Joker" && gameState.pendingDraw > 0
+                    ? `Comodín · añade 5 al stack (${gameState.pendingDraw + 5} total)`
+                    : "Toca la carta de nuevo para jugarla"}
             </Text>
           </View>
         )}
@@ -494,6 +648,13 @@ export default function GameScreen() {
 
       {/* Player section */}
       <View style={styles.playerSection}>
+        {/* Player profile */}
+        <PlayerProfileBar
+          name={profile.name}
+          avatarId={profile.avatarId}
+          titleId={profile.titleId}
+          level={level}
+        />
         <View style={styles.turnLabelRow}>
           <View style={[styles.turnDot, { backgroundColor: isPlayerTurn ? Colors.gold : "transparent" }]} />
           <Text style={[styles.turnLabel, isPlayerTurn && styles.activeTurn]}>
@@ -543,7 +704,11 @@ export default function GameScreen() {
         />
       )}
 
-      <SuitPicker visible={suitPickerVisible} onSelect={handleSuitSelect} />
+      <SuitPicker
+        visible={suitPickerVisible}
+        onSelect={handleSuitSelect}
+        isJoker={isJokerSelected}
+      />
 
       {isGameOver && !showTournamentModal && session?.mode !== "tournament" && (
         <EndModal
@@ -575,7 +740,7 @@ const CARD_BACK_H = 104;
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#061510" },
   tableGlowBorder: {
-    position: "absolute", top: "20%", left: 12, right: 12, bottom: "15%",
+    position: "absolute", top: "18%", left: 12, right: 12, bottom: "14%",
     borderRadius: 120, borderWidth: 1, borderColor: "rgba(212,175,55,0.08)",
   },
   header: {
@@ -598,8 +763,23 @@ const styles = StyleSheet.create({
   },
   deckCount: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textMuted },
 
-  // AI section
-  aiSection: { alignItems: "center", paddingBottom: 8, gap: 6 },
+  // CPU Profile
+  aiSection: { alignItems: "center", paddingBottom: 6, gap: 6 },
+  cpuProfileRow: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 12,
+    paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: "rgba(255,255,255,0.06)",
+    maxWidth: 260,
+  },
+  cpuAvatar: {
+    width: 28, height: 28, borderRadius: 14,
+    alignItems: "center", justifyContent: "center",
+  },
+  cpuProfileInfo: { flex: 1 },
+  cpuName: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.text },
+  cpuMeta: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textMuted },
+  thinkingText: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.gold, fontStyle: "italic" },
+
   turnLabelRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   turnDot: { width: 7, height: 7, borderRadius: 4, borderWidth: 1, borderColor: Colors.gold + "40" },
   turnLabel: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textMuted },
@@ -622,7 +802,7 @@ const styles = StyleSheet.create({
   aiCountText: { fontFamily: "Nunito_900ExtraBold", fontSize: 11, color: "#fff" },
 
   // Table center
-  tableCenter: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10 },
+  tableCenter: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
   suitIndicator: {
     flexDirection: "row", alignItems: "center", gap: 5,
     backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 20,
@@ -630,6 +810,11 @@ const styles = StyleSheet.create({
   },
   suitIndicatorSym: { fontSize: 20, fontWeight: "900" },
   suitIndicatorName: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted },
+  jActiveBadge: {
+    backgroundColor: "rgba(39,174,96,0.2)", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
+    borderWidth: 1, borderColor: "#27AE60",
+  },
+  jActiveTxt: { fontFamily: "Nunito_700Bold", fontSize: 9, color: "#27AE60" },
   messageBubble: {
     backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 6,
@@ -661,6 +846,22 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   selectedHintText: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.gold + "cc", textAlign: "center" },
+
+  // Player profile
+  playerProfileRow: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 12,
+    paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: "rgba(212,175,55,0.15)",
+    maxWidth: 260, alignSelf: "center",
+  },
+  playerAvatar: {
+    width: 28, height: 28, borderRadius: 14,
+    alignItems: "center", justifyContent: "center",
+  },
+  playerProfileInfo: { flex: 1 },
+  playerProfileName: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.text },
+  playerProfileMeta: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textMuted },
+  playerTurnDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#27AE60" },
 
   // Player hand
   playerSection: { paddingBottom: 6, gap: 5, alignItems: "center" },
@@ -706,7 +907,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 20,
     paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: Colors.border,
   },
-  rewardChipIcon: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: Colors.gold },
   rewardChipVal: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: Colors.gold },
   tScoreRow: { flexDirection: "row", alignItems: "center", gap: 16, marginVertical: 6 },
   tScoreTeam: { alignItems: "center", gap: 4 },
