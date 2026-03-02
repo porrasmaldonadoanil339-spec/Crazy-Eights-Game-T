@@ -118,6 +118,18 @@ constants/
 - Frame selection: tap "Marco" badge in profile screen; buy in Store → Marcos category
 - `selectedFrameId` and `photoUri` stored in PlayerProfile; `updateFrame()` and `updatePhotoUri()` in ProfileContext
 
+## Local Multiplayer Mode
+- "Multijugador Local" banner on home screen → setup modal (bottom sheet)
+- Choose 2, 3, or 4 players and optionally enter names
+- Navigates to `/game-multi` with player names encoded as JSON params
+- Pass-device UI: dark "TURNO DE [Name]" overlay between turns; tap "MOSTRAR MIS CARTAS" to reveal hand
+- Opponents shown as face-down card fans with count badges; colored by player (gold/green/red/purple)
+- 4-player layout: side opponents rendered vertically with SideOpponent component
+- Card size: "md" for 2-player, "sm" for 3-4 player for comfortable display
+- All special card rules apply: 3=skip next, 10=reverse (stay in 2-player), 2/7=pending draw stacks, J, 8, Joker
+- Win overlay announces the winner by name with trophy icon
+- Engine: `lib/multiplayerEngine.ts` — self-contained, no AI logic
+
 ## Emote System (in-game reactions)
 - 8 emotes: "Buena jugada", "Toma ese +2", "Casi pierdo", "Te tocó robar", "No puede ser", "Te voy a ganar", "Qué suerte", "Modo Experto"
 - EmotePanel component (components/EmotePanel.tsx): smiley button near player turn label; opens grid modal

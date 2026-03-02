@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView,
-  Modal, Platform, Dimensions,
+  Modal, Platform, Dimensions, TextInput,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -199,6 +199,9 @@ export default function PlayScreen() {
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
+  const [showMultiModal, setShowMultiModal] = useState(false);
+  const [multiPlayerCount, setMultiPlayerCount] = useState(2);
+  const [multiPlayerNames, setMultiPlayerNames] = useState(["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4"]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
@@ -234,6 +237,13 @@ export default function PlayScreen() {
   const handleClaimDaily = () => {
     claimDailyReward();
     setShowDailyModal(false);
+  };
+
+  const handleStartMulti = async () => {
+    await playButton().catch(() => {});
+    const names = multiPlayerNames.slice(0, multiPlayerCount).map((n, i) => n.trim() || `Jugador ${i + 1}`);
+    setShowMultiModal(false);
+    router.push({ pathname: "/game-multi", params: { names: JSON.stringify(names), count: String(multiPlayerCount) } });
   };
 
   const selectedModeConfig = selectedMode ? GAME_MODES.find((m) => m.id === selectedMode) : null;
@@ -356,6 +366,34 @@ export default function PlayScreen() {
           })}
         </View>
 
+        {/* Multiplayer banner */}
+        <Pressable
+          onPress={() => { playButton().catch(() => {}); setShowMultiModal(true); }}
+          style={({ pressed }) => ({ opacity: pressed ? 0.86 : 1, transform: [{ scale: pressed ? 0.98 : 1 }], marginBottom: 10 })}
+        >
+          <LinearGradient
+            colors={["#1E3A5F", "#2C5282", "#1E3A5F"]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={styles.multiBanner}
+          >
+            <View style={styles.multiBannerLeft}>
+              <View style={styles.multiBannerIconWrap}>
+                <Ionicons name="people" size={26} color="#63B3ED" />
+              </View>
+              <View style={{ gap: 2 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={styles.multiBannerTitle}>Multijugador Local</Text>
+                  <LinearGradient colors={["#63B3ED", "#4299E1"]} style={styles.multiBannerBadge}>
+                    <Text style={styles.multiBannerBadgeText}>2–4</Text>
+                  </LinearGradient>
+                </View>
+                <Text style={styles.multiBannerDesc}>Juega con amigos en el mismo dispositivo</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#63B3ED" />
+          </LinearGradient>
+        </Pressable>
+
         {/* Quick actions */}
         <View style={styles.quickRow}>
           <Pressable
@@ -397,6 +435,72 @@ export default function PlayScreen() {
         reward={canClaimDailyReward ? todaysDailyReward : null}
         onClaim={handleClaimDaily}
       />
+
+      <Modal visible={showMultiModal} transparent animationType="slide" onRequestClose={() => setShowMultiModal(false)}>
+        <View style={styles.multiModalOverlay}>
+          <LinearGradient colors={["#0a1a2e", "#0d2244"]} style={styles.multiModalBox}>
+            <View style={styles.multiModalHeader}>
+              <Ionicons name="people" size={22} color="#63B3ED" />
+              <Text style={styles.multiModalTitle}>Multijugador Local</Text>
+              <Pressable onPress={() => setShowMultiModal(false)} style={styles.multiModalClose}>
+                <Ionicons name="close" size={20} color={Colors.textMuted} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.multiModalSectionLabel}>NÚMERO DE JUGADORES</Text>
+            <View style={styles.multiCountRow}>
+              {[2, 3, 4].map(n => (
+                <Pressable
+                  key={n}
+                  onPress={() => setMultiPlayerCount(n)}
+                  style={[styles.multiCountBtn, multiPlayerCount === n && styles.multiCountBtnActive]}
+                >
+                  <Text style={[styles.multiCountBtnText, multiPlayerCount === n && styles.multiCountBtnTextActive]}>
+                    {n}
+                  </Text>
+                  <Text style={[styles.multiCountBtnSub, multiPlayerCount === n && { color: "#63B3ED" }]}>
+                    {n === 2 ? "1vs1" : n === 3 ? "3 amigos" : "4 amigos"}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={[styles.multiModalSectionLabel, { marginTop: 12 }]}>NOMBRES (opcional)</Text>
+            {Array.from({ length: multiPlayerCount }).map((_, i) => {
+              const colors = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
+              const c = colors[i % colors.length];
+              return (
+                <View key={i} style={styles.multiNameRow}>
+                  <View style={[styles.multiNameDot, { backgroundColor: c }]} />
+                  <TextInput
+                    style={styles.multiNameInput}
+                    value={multiPlayerNames[i]}
+                    onChangeText={t => setMultiPlayerNames(prev => {
+                      const n = [...prev];
+                      n[i] = t;
+                      return n;
+                    })}
+                    placeholder={`Jugador ${i + 1}`}
+                    placeholderTextColor={Colors.textDim}
+                    maxLength={16}
+                  />
+                </View>
+              );
+            })}
+
+            <Pressable onPress={handleStartMulti} style={styles.multiStartBtn}>
+              <LinearGradient colors={["#2B6CB0", "#63B3ED"]} style={styles.multiStartBtnGrad}>
+                <Ionicons name="play" size={18} color="#fff" />
+                <Text style={styles.multiStartBtnText}>COMENZAR PARTIDA</Text>
+              </LinearGradient>
+            </Pressable>
+
+            <Text style={styles.multiModalHint}>
+              Cada jugador verá sus cartas en su turno. El dispositivo se pasa entre jugadores.
+            </Text>
+          </LinearGradient>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -573,4 +677,76 @@ const styles = StyleSheet.create({
   dailyClaimBtn: { width: "100%", borderRadius: 14, overflow: "hidden" },
   dailyClaimGrad: { paddingVertical: 14, alignItems: "center" },
   dailyClaimText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#1a0a00", letterSpacing: 1 },
+
+  // Multiplayer banner
+  multiBanner: {
+    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    borderWidth: 1, borderColor: "#63B3ED33",
+  },
+  multiBannerLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
+  multiBannerIconWrap: {
+    width: 44, height: 44, borderRadius: 12,
+    backgroundColor: "#63B3ED22", alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: "#63B3ED44",
+  },
+  multiBannerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: "#63B3ED" },
+  multiBannerBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  multiBannerBadgeText: { fontFamily: "Nunito_900ExtraBold", fontSize: 9, color: "#fff" },
+  multiBannerDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted },
+
+  // Multiplayer modal
+  multiModalOverlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.75)",
+    justifyContent: "flex-end",
+  },
+  multiModalBox: {
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 36,
+    gap: 10,
+  },
+  multiModalHeader: {
+    flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4,
+  },
+  multiModalTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 17, color: "#63B3ED", flex: 1 },
+  multiModalClose: {
+    width: 30, height: 30, borderRadius: 15,
+    backgroundColor: "rgba(255,255,255,0.07)", alignItems: "center", justifyContent: "center",
+  },
+  multiModalSectionLabel: {
+    fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.textDim, letterSpacing: 2,
+  },
+  multiCountRow: { flexDirection: "row", gap: 10 },
+  multiCountBtn: {
+    flex: 1, borderRadius: 12, paddingVertical: 10, alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: Colors.border, gap: 2,
+  },
+  multiCountBtnActive: {
+    backgroundColor: "#63B3ED22", borderColor: "#63B3ED66",
+  },
+  multiCountBtnText: {
+    fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: Colors.textMuted,
+  },
+  multiCountBtnTextActive: { color: "#63B3ED" },
+  multiCountBtnSub: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim },
+  multiNameRow: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 2,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  multiNameDot: { width: 10, height: 10, borderRadius: 5 },
+  multiNameInput: {
+    flex: 1, fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.text,
+    paddingVertical: 10,
+  },
+  multiStartBtn: { marginTop: 8, borderRadius: 14, overflow: "hidden" },
+  multiStartBtnGrad: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 10, paddingVertical: 15,
+  },
+  multiStartBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#fff", letterSpacing: 1 },
+  multiModalHint: {
+    fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textDim, textAlign: "center", marginTop: 4,
+  },
 });

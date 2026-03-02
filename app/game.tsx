@@ -454,9 +454,9 @@ export default function GameScreen() {
       setIsAiThinkingVis(true);
       const delay = 800 + Math.random() * 600;
       setTimeout(() => {
-        runAiTurn();
         aiThinking.current = false;
         setIsAiThinkingVis(false);
+        runAiTurn();
       }, delay);
     }
   }, [gameState?.currentPlayer, gameState?.message, dealAnimationDone]);
