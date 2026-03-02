@@ -119,16 +119,33 @@ constants/
 - `selectedFrameId` and `photoUri` stored in PlayerProfile; `updateFrame()` and `updatePhotoUri()` in ProfileContext
 
 ## Local Multiplayer Mode
-- "Multijugador Local" banner on home screen → setup modal (bottom sheet)
-- Choose 2, 3, or 4 players and optionally enter names
-- Navigates to `/game-multi` with player names encoded as JSON params
-- Pass-device UI: dark "TURNO DE [Name]" overlay between turns; tap "MOSTRAR MIS CARTAS" to reveal hand
-- Opponents shown as face-down card fans with count badges; colored by player (gold/green/red/purple)
-- 4-player layout: side opponents rendered vertically with SideOpponent component
-- Card size: "md" for 2-player, "sm" for 3-4 player for comfortable display
-- All special card rules apply: 3=skip next, 10=reverse (stay in 2-player), 2/7=pending draw stacks, J, 8, Joker
-- Win overlay announces the winner by name with trophy icon
-- Engine: `lib/multiplayerEngine.ts` — self-contained, no AI logic
+- Home screen "MULTIJUGADOR" section → "Local" card (green) → setup modal (bottom sheet)
+- Choose 2, 3, or 4 players, optionally enter names for each
+- Navigates to `/game-multi` with player names as JSON params
+- **Round table layout**: oval green felt table in center; players around it (top, left/right, bottom)
+  - 2 players: top + bottom
+  - 3 players: top-left + top-right + bottom  
+  - 4 players: left + top + right + bottom
+- Pass-device UI: dark overlay with "TURNO DE [Name]" + pulsing "MOSTRAR MIS CARTAS" button
+- Face-down card fans for opponents, face-up scrollable hand for current player
+- Rotating direction arrow (↻/↺) on table to visualize play direction
+- Skip/reverse visual indicators at affected player positions
+- All special card rules apply: 3=skip (skipped player highlighted), 10=reverse (arrow flips), etc.
+- Engine: `lib/multiplayerEngine.ts` — `cpuPlayMulti()` for AI opponents in online mode
+
+## Online Multiplayer Mode (Simulated)
+- Home screen "MULTIJUGADOR" section → "Online" card (blue, pulsing EN VIVO dot) → setup modal
+- Choose 2-4 players; rivals are AI opponents presented as real online players
+- **Lobby screen**: "Buscando partida..." spinner → players join sequentially with flag emojis → countdown 3-2-1 → game
+- CPU profiles: CarlosMX 🇲🇽, LucíaAR 🇦🇷, DiegoVE 🇻🇪, SofíaCO 🇨🇴, etc. (10 profiles in pool, random pick)
+- Each CPU has: flag emoji, level, win rate, unique avatar color
+- **Same round table layout** as local (oval table, players around edges, direction arrow)
+- Blue-themed table (dark navy) vs green-themed local table
+- CPU auto-plays: useEffect watches currentPlayerIndex, triggers cpuPlayMulti() after 1-2s delay
+- "..." thinking indicator shown when CPU is deciding
+- Green online status dots for all CPU players
+- Result screen: "¡GANASTE!" (gold) or "DERROTA" (red) with winner name
+- Engine routes: `/game-online` with `count` param
 
 ## Emote System (in-game reactions)
 - 8 emotes: "Buena jugada", "Toma ese +2", "Casi pierdo", "Te tocó robar", "No puede ser", "Te voy a ganar", "Qué suerte", "Modo Experto"

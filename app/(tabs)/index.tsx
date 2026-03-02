@@ -200,7 +200,9 @@ export default function PlayScreen() {
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
   const [showMultiModal, setShowMultiModal] = useState(false);
+  const [showOnlineModal, setShowOnlineModal] = useState(false);
   const [multiPlayerCount, setMultiPlayerCount] = useState(2);
+  const [onlinePlayerCount, setOnlinePlayerCount] = useState(2);
   const [multiPlayerNames, setMultiPlayerNames] = useState(["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4"]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
@@ -244,6 +246,12 @@ export default function PlayScreen() {
     const names = multiPlayerNames.slice(0, multiPlayerCount).map((n, i) => n.trim() || `Jugador ${i + 1}`);
     setShowMultiModal(false);
     router.push({ pathname: "/game-multi", params: { names: JSON.stringify(names), count: String(multiPlayerCount) } });
+  };
+
+  const handleStartOnline = async () => {
+    await playButton().catch(() => {});
+    setShowOnlineModal(false);
+    router.push({ pathname: "/game-online", params: { count: String(onlinePlayerCount) } });
   };
 
   const selectedModeConfig = selectedMode ? GAME_MODES.find((m) => m.id === selectedMode) : null;
@@ -366,33 +374,54 @@ export default function PlayScreen() {
           })}
         </View>
 
-        {/* Multiplayer banner */}
-        <Pressable
-          onPress={() => { playButton().catch(() => {}); setShowMultiModal(true); }}
-          style={({ pressed }) => ({ opacity: pressed ? 0.86 : 1, transform: [{ scale: pressed ? 0.98 : 1 }], marginBottom: 10 })}
-        >
-          <LinearGradient
-            colors={["#1E3A5F", "#2C5282", "#1E3A5F"]}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-            style={styles.multiBanner}
+        {/* Multiplayer section */}
+        <View style={styles.sectionHeader}>
+          <Ionicons name="people" size={14} color={Colors.textMuted} />
+          <Text style={styles.sectionLabel}>MULTIJUGADOR</Text>
+        </View>
+        <View style={styles.multiRow}>
+          {/* Local */}
+          <Pressable
+            style={({ pressed }) => [styles.multiCard, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
+            onPress={() => { playButton().catch(() => {}); setShowMultiModal(true); }}
           >
-            <View style={styles.multiBannerLeft}>
-              <View style={styles.multiBannerIconWrap}>
-                <Ionicons name="people" size={26} color="#63B3ED" />
+            <LinearGradient colors={["#0a2216", "#0d2e1c"]} style={styles.multiCardGrad}>
+              <View style={[styles.multiCardIcon, { borderColor: "#2ECC7155" }]}>
+                <Ionicons name="phone-portrait" size={22} color="#2ECC71" />
               </View>
-              <View style={{ gap: 2 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Text style={styles.multiBannerTitle}>Multijugador Local</Text>
-                  <LinearGradient colors={["#63B3ED", "#4299E1"]} style={styles.multiBannerBadge}>
-                    <Text style={styles.multiBannerBadgeText}>2–4</Text>
-                  </LinearGradient>
+              <Text style={[styles.multiCardTitle, { color: "#2ECC71" }]}>Local</Text>
+              <Text style={styles.multiCardDesc}>Pasa el dispositivo entre amigos</Text>
+              <View style={[styles.multiCardBadge, { backgroundColor: "#2ECC7122", borderColor: "#2ECC7144" }]}>
+                <Ionicons name="people" size={10} color="#2ECC71" />
+                <Text style={[styles.multiCardBadgeText, { color: "#2ECC71" }]}>2 – 4 jugadores</Text>
+              </View>
+            </LinearGradient>
+          </Pressable>
+
+          {/* Online */}
+          <Pressable
+            style={({ pressed }) => [styles.multiCard, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
+            onPress={() => { playButton().catch(() => {}); setShowOnlineModal(true); }}
+          >
+            <LinearGradient colors={["#080f22", "#0a1430"]} style={styles.multiCardGrad}>
+              <View style={[styles.multiCardIcon, { borderColor: "#4A90E255" }]}>
+                <Ionicons name="globe" size={22} color="#4A90E2" />
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                <Text style={[styles.multiCardTitle, { color: "#4A90E2" }]}>Online</Text>
+                <View style={styles.onlineDotPill}>
+                  <View style={styles.onlineDotSmall} />
+                  <Text style={styles.onlineDotText}>EN VIVO</Text>
                 </View>
-                <Text style={styles.multiBannerDesc}>Juega con amigos en el mismo dispositivo</Text>
               </View>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#63B3ED" />
-          </LinearGradient>
-        </Pressable>
+              <Text style={styles.multiCardDesc}>Juega vs rivales de todo el mundo</Text>
+              <View style={[styles.multiCardBadge, { backgroundColor: "#4A90E222", borderColor: "#4A90E244" }]}>
+                <Ionicons name="wifi" size={10} color="#4A90E2" />
+                <Text style={[styles.multiCardBadgeText, { color: "#4A90E2" }]}>2 – 4 jugadores</Text>
+              </View>
+            </LinearGradient>
+          </Pressable>
+        </View>
 
         {/* Quick actions */}
         <View style={styles.quickRow}>
@@ -435,6 +464,66 @@ export default function PlayScreen() {
         reward={canClaimDailyReward ? todaysDailyReward : null}
         onClaim={handleClaimDaily}
       />
+
+      {/* Online modal */}
+      <Modal visible={showOnlineModal} transparent animationType="slide" onRequestClose={() => setShowOnlineModal(false)}>
+        <View style={styles.multiModalOverlay}>
+          <LinearGradient colors={["#060f22", "#0a1632"]} style={styles.multiModalBox}>
+            <View style={styles.multiModalHeader}>
+              <View style={styles.onlineDotPill}>
+                <View style={styles.onlineDotSmall} />
+                <Text style={[styles.onlineDotText, { fontSize: 10 }]}>EN VIVO</Text>
+              </View>
+              <Text style={[styles.multiModalTitle, { color: "#4A90E2", flex: 1 }]}>Online</Text>
+              <Pressable onPress={() => setShowOnlineModal(false)} style={styles.multiModalClose}>
+                <Ionicons name="close" size={20} color={Colors.textMuted} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.multiModalSectionLabel}>NÚMERO DE JUGADORES</Text>
+            <View style={styles.multiCountRow}>
+              {[2, 3, 4].map(n => (
+                <Pressable
+                  key={n}
+                  onPress={() => setOnlinePlayerCount(n)}
+                  style={[styles.multiCountBtn, onlinePlayerCount === n && { backgroundColor: "#4A90E222", borderColor: "#4A90E266" }]}
+                >
+                  <Text style={[styles.multiCountBtnText, onlinePlayerCount === n && { color: "#4A90E2" }]}>{n}</Text>
+                  <Text style={[styles.multiCountBtnSub, onlinePlayerCount === n && { color: "#4A90E2" }]}>
+                    {n === 2 ? "1 rival" : `${n - 1} rivales`}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={[styles.multiModalSectionLabel, { marginTop: 8 }]}>RIVALES</Text>
+            <View style={{ gap: 6 }}>
+              {Array.from({ length: onlinePlayerCount - 1 }).map((_, i) => (
+                <View key={i} style={[styles.multiNameRow, { borderColor: "#4A90E222" }]}>
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#4A90E2" }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.multiNameInput, { color: Colors.textMuted, paddingVertical: 8 }]}>
+                      Rival #{i + 1} — Buscando en línea...
+                    </Text>
+                  </View>
+                  <View style={styles.onlineDotSmall} />
+                </View>
+              ))}
+            </View>
+
+            <Pressable onPress={handleStartOnline} style={styles.multiStartBtn}>
+              <LinearGradient colors={["#1a3a7a", "#4A90E2"]} style={styles.multiStartBtnGrad}>
+                <Ionicons name="search" size={18} color="#fff" />
+                <Text style={styles.multiStartBtnText}>BUSCAR PARTIDA</Text>
+              </LinearGradient>
+            </Pressable>
+
+            <Text style={styles.multiModalHint}>
+              Los rivales son oponentes inteligentes que simulan jugadores reales en línea.
+            </Text>
+          </LinearGradient>
+        </View>
+      </Modal>
 
       <Modal visible={showMultiModal} transparent animationType="slide" onRequestClose={() => setShowMultiModal(false)}>
         <View style={styles.multiModalOverlay}>
@@ -678,22 +767,33 @@ const styles = StyleSheet.create({
   dailyClaimGrad: { paddingVertical: 14, alignItems: "center" },
   dailyClaimText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#1a0a00", letterSpacing: 1 },
 
-  // Multiplayer banner
-  multiBanner: {
-    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    borderWidth: 1, borderColor: "#63B3ED33",
+  // Multiplayer cards
+  multiRow: { flexDirection: "row", gap: 10, marginBottom: 10 },
+  multiCard: { flex: 1, borderRadius: 14, overflow: "hidden" },
+  multiCardGrad: {
+    padding: 14, gap: 6, borderWidth: 1, borderColor: "rgba(255,255,255,0.06)",
+    borderRadius: 14, minHeight: 140,
   },
-  multiBannerLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
-  multiBannerIconWrap: {
-    width: 44, height: 44, borderRadius: 12,
-    backgroundColor: "#63B3ED22", alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: "#63B3ED44",
+  multiCardIcon: {
+    width: 42, height: 42, borderRadius: 12, borderWidth: 1.5,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.04)",
   },
-  multiBannerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: "#63B3ED" },
-  multiBannerBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  multiBannerBadgeText: { fontFamily: "Nunito_900ExtraBold", fontSize: 9, color: "#fff" },
-  multiBannerDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted },
+  multiCardTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 16 },
+  multiCardDesc: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim, flex: 1 },
+  multiCardBadge: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1,
+    alignSelf: "flex-start",
+  },
+  multiCardBadgeText: { fontFamily: "Nunito_700Bold", fontSize: 9 },
+  onlineDotPill: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    backgroundColor: "#2ecc7118", borderRadius: 8,
+    paddingHorizontal: 6, paddingVertical: 2,
+  },
+  onlineDotSmall: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#2ecc71" },
+  onlineDotText: { fontFamily: "Nunito_900ExtraBold", fontSize: 8, color: "#2ecc71", letterSpacing: 1 },
 
   // Multiplayer modal
   multiModalOverlay: {
