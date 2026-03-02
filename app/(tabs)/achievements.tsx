@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
 } from "react-native";
+import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -47,12 +48,13 @@ export default function AchievementsScreen() {
     showToast(`Recompensa nivel ${tier} reclamada`);
   };
 
+  const swipeHandlers = useSwipeTabs(1);
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
   const unlockedCount = profile.achievementProgress.filter((a) => a.unlocked).length;
   const claimableCount = profile.achievementProgress.filter((a) => a.unlocked && !a.claimedReward).length;
 
   return (
-    <View style={[styles.container, { paddingTop: topPad }]}>
+    <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
       <LinearGradient colors={["#061209", "#0a1a0f", "#0d2418"]} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>

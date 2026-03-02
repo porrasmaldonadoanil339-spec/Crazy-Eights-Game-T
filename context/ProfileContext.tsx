@@ -79,6 +79,8 @@ export interface PlayerProfile {
   // Settings
   musicEnabled: boolean;
   sfxEnabled: boolean;
+  vibrationEnabled: boolean;
+  language: "es" | "en";
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -124,6 +126,8 @@ const DEFAULT_PROFILE: PlayerProfile = {
   dailyRewardIndex: 0,
   musicEnabled: true,
   sfxEnabled: true,
+  vibrationEnabled: true,
+  language: "es",
 };
 
 interface ProfileContextValue {
@@ -158,7 +162,7 @@ interface ProfileContextValue {
   claimDailyReward: () => DailyReward | null;
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
-  updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean }) => void;
+  updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" }) => void;
   level: number;
   xpProgress: { current: number; needed: number; level: number };
   battlePassTier: number;
@@ -340,7 +344,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return reward;
   }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, update]);
 
-  const updateSettings = useCallback((settings: { musicEnabled?: boolean; sfxEnabled?: boolean }) => {
+  const updateSettings = useCallback((settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" }) => {
     update((p) => ({ ...p, ...settings }));
   }, [update]);
 

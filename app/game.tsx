@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming,
-  withRepeat, Easing, runOnJS,
+  withRepeat, withDelay, Easing, runOnJS,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
@@ -178,68 +178,150 @@ function TournamentModal({ scores, round, onContinue, onQuit }: {
   );
 }
 
+// ─── Win messages pool ────────────────────────────────────────────────────────
+const WIN_MESSAGES = [
+  "¡Dominas la mesa como un campeón!",
+  "¡Nadie puede contigo hoy!",
+  "¡Las cartas son tuyas, maestro!",
+  "¡Brillante estrategia! ¡Impresionante!",
+  "¡El oponente ni supo lo que pasó!",
+  "¡Eso fue pura magia de cartas!",
+  "¡Eres imparable, sigue así!",
+];
+const LOSE_MESSAGES = [
+  "¡La próxima será tuya, no te rindas!",
+  "El CPU tuvo suerte… ¡hoy no te ganarán!",
+  "¡Cada derrota te hace más fuerte!",
+  "Un buen jugador aprende de cada partida.",
+  "¡Así no, inténtalo de nuevo!",
+  "El oponente estuvo listo hoy. ¡Tú serás el próximo!",
+];
+
 // ─── End modal ────────────────────────────────────────────────────────────────
 function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
 }) {
   const isWin = phase === "player_wins";
   const isDraw = phase === "draw";
-  const sc = useSharedValue(0.7);
-  const [showParticles, setShowParticles] = useState(isWin);
+
+  const sc = useSharedValue(0.6);
+  const glowOp = useSharedValue(0);
+  const titleY = useSharedValue(20);
+  const titleOp = useSharedValue(0);
+
+  const winMsg = WIN_MESSAGES[Math.floor(Math.random() * WIN_MESSAGES.length)];
+  const loseMsg = LOSE_MESSAGES[Math.floor(Math.random() * LOSE_MESSAGES.length)];
+
   useEffect(() => {
-    sc.value = withSpring(1, { damping: 12 });
+    sc.value = withSpring(1, { damping: 10, stiffness: 120 });
+    glowOp.value = withTiming(1, { duration: 600 });
+    titleY.value = withDelay(200, withSpring(0, { damping: 14 }));
+    titleOp.value = withDelay(200, withTiming(1, { duration: 400 }));
     if (isWin) playWin().catch(() => {});
     else playLose().catch(() => {});
-    if (!isWin) setShowParticles(false);
   }, []);
-  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+
+  const cardStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const glowStyle = useAnimatedStyle(() => ({ opacity: glowOp.value }));
+  const titleStyle = useAnimatedStyle(() => ({ opacity: titleOp.value, transform: [{ translateY: titleY.value }] }));
+
+  const bgColors: [string, string, string] = isWin
+    ? ["#0A1E0A", "#122212", "#0D1A0D"]
+    : isDraw
+    ? ["#0E0E1E", "#181822", "#0E0E1A"]
+    : ["#1E0A0A", "#221212", "#1A0D0D"];
+
+  const accentColor = isWin ? Colors.gold : isDraw ? Colors.blue : Colors.red;
+  const glowColor = isWin ? "#D4AF3744" : isDraw ? "#4A90E244" : "#C0392B44";
+
   return (
     <View style={styles.endOverlay}>
-      {showParticles && <WinParticles />}
-      <Animated.View style={[styles.endModal, animStyle]}>
-        <LinearGradient
-          colors={isWin ? ["#122212", Colors.surface] : isDraw ? ["#181822", Colors.surface] : ["#221212", Colors.surface]}
-          style={styles.endGrad}
-        >
-          <View style={[styles.endIconWrap, { borderColor: isWin ? Colors.gold : isDraw ? Colors.blue : Colors.red }]}>
-            {isWin ? (
-              <Text style={styles.endIconText}>🏆</Text>
-            ) : isDraw ? (
-              <Ionicons name="hand-left" size={40} color={Colors.blue} />
-            ) : (
-              <Text style={styles.endIconText}>💀</Text>
-            )}
+      {isWin && <WinParticles />}
+
+      {/* Background glow */}
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          glowStyle,
+          { alignItems: "center", justifyContent: "center" },
+        ]}
+        pointerEvents="none"
+      >
+        <View style={[styles.bgGlow, { backgroundColor: glowColor }]} />
+      </Animated.View>
+
+      <Animated.View style={[styles.endModal, { borderColor: accentColor + "55" }, cardStyle]}>
+        <LinearGradient colors={bgColors} style={styles.endGrad}>
+
+          {/* Icon with radial ring */}
+          <View style={[styles.endIconOuter, { borderColor: accentColor + "33", shadowColor: accentColor }]}>
+            <View style={[styles.endIconInner, { borderColor: accentColor + "88", backgroundColor: accentColor + "18" }]}>
+              {isWin
+                ? <Ionicons name="trophy" size={48} color={Colors.gold} />
+                : isDraw
+                ? <Ionicons name="hand-left" size={44} color={Colors.blue} />
+                : <Ionicons name="skull" size={44} color={Colors.red} />
+              }
+            </View>
           </View>
-          <Text style={[styles.endTitle, { color: isWin ? Colors.gold : isDraw ? Colors.blue : Colors.red }]}>
-            {isWin ? "¡GANASTE!" : isDraw ? "EMPATE" : "PERDISTE"}
-          </Text>
-          <Text style={styles.endSub}>
-            {isWin ? "¡Excelente jugada, campeón!" : isDraw ? "Muy parejo — inténtalo de nuevo" : "El CPU fue más rápido esta vez"}
-          </Text>
+
+          {/* Title */}
+          <Animated.View style={[{ alignItems: "center", gap: 4 }, titleStyle]}>
+            <Text style={[styles.endLabel, { color: accentColor + "CC" }]}>
+              {isWin ? "RESULTADO" : isDraw ? "RESULTADO" : "RESULTADO"}
+            </Text>
+            <Text style={[styles.endTitle, { color: accentColor }]}>
+              {isWin ? "¡VICTORIA!" : isDraw ? "EMPATE" : "DERROTA"}
+            </Text>
+            <Text style={styles.endSub}>
+              {isWin ? winMsg : isDraw ? "Muy parejo — ¡ambos lo dieron todo!" : loseMsg}
+            </Text>
+          </Animated.View>
+
+          {/* Divider */}
+          <View style={[styles.endDivider, { backgroundColor: accentColor + "22" }]} />
+
+          {/* Rewards */}
           {(coinsEarned > 0 || xpEarned > 0) && (
-            <View style={styles.rewardRow}>
-              {coinsEarned > 0 && (
-                <View style={styles.rewardChip}>
-                  <Ionicons name="cash" size={14} color={Colors.gold} />
-                  <Text style={styles.rewardChipVal}>+{coinsEarned}</Text>
-                </View>
-              )}
-              {xpEarned > 0 && (
-                <View style={styles.rewardChipXP}>
-                  <Ionicons name="star" size={12} color={Colors.gold} />
-                  <Text style={styles.rewardChipVal}>+{xpEarned} XP</Text>
-                </View>
-              )}
+            <View style={styles.rewardSection}>
+              <Text style={styles.rewardLabel}>RECOMPENSAS</Text>
+              <View style={styles.rewardRow}>
+                {coinsEarned > 0 && (
+                  <View style={[styles.rewardChip, { backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "55" }]}>
+                    <Ionicons name="cash" size={16} color={Colors.gold} />
+                    <Text style={[styles.rewardChipVal, { color: Colors.gold }]}>+{coinsEarned}</Text>
+                    <Text style={styles.rewardChipSub}>monedas</Text>
+                  </View>
+                )}
+                {xpEarned > 0 && (
+                  <View style={[styles.rewardChipXP, { backgroundColor: "#9B59B622", borderColor: "#9B59B655" }]}>
+                    <Ionicons name="star" size={14} color="#A855F7" />
+                    <Text style={[styles.rewardChipVal, { color: "#A855F7" }]}>+{xpEarned}</Text>
+                    <Text style={styles.rewardChipSub}>XP</Text>
+                  </View>
+                )}
+              </View>
             </View>
           )}
+
+          {/* Buttons */}
           <View style={styles.endBtns}>
-            <Pressable onPress={onRestart} style={styles.btnPrimary}>
+            <Pressable
+              onPress={onRestart}
+              style={({ pressed }) => [styles.btnPrimary, { backgroundColor: accentColor, opacity: pressed ? 0.85 : 1 }]}
+            >
+              <Ionicons name="refresh" size={16} color="#1a0a00" />
               <Text style={styles.btnPrimaryTxt}>Jugar de nuevo</Text>
             </Pressable>
-            <Pressable onPress={onHome} style={styles.btnSecondary}>
-              <Text style={styles.btnSecondaryTxt}>Menú principal</Text>
+            <Pressable
+              onPress={onHome}
+              style={({ pressed }) => [styles.btnSecondary, pressed && { opacity: 0.7 }]}
+            >
+              <Ionicons name="home" size={14} color={accentColor} />
+              <Text style={[styles.btnSecondaryTxt, { color: accentColor }]}>Menú principal</Text>
             </Pressable>
           </View>
+
         </LinearGradient>
       </Animated.View>
     </View>
@@ -947,40 +1029,53 @@ const styles = StyleSheet.create({
   suitLbl: { fontFamily: "Nunito_700Bold", fontSize: 13, color: Colors.text },
 
   // End/Tournament modals
-  endOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center" },
-  endModal: { width: 310, borderRadius: 24, overflow: "hidden", borderWidth: 1.5, borderColor: Colors.gold + "44" },
-  endGrad: { padding: 28, alignItems: "center", gap: 10 },
-  endIconWrap: {
-    width: 80, height: 80, borderRadius: 40,
-    backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center",
-    borderWidth: 2, marginBottom: 4,
+  endOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.92)", alignItems: "center", justifyContent: "center" },
+  bgGlow: { width: 280, height: 280, borderRadius: 140 },
+  endModal: { width: 320, borderRadius: 28, overflow: "hidden", borderWidth: 1.5 },
+  endGrad: { padding: 28, alignItems: "center", gap: 12 },
+  endIconOuter: {
+    width: 100, height: 100, borderRadius: 50,
+    borderWidth: 2, alignItems: "center", justifyContent: "center",
+    shadowOffset: { width: 0, height: 0 }, shadowRadius: 20, shadowOpacity: 0.6, elevation: 10,
   },
-  endIconText: { fontSize: 40 },
-  endTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 28, letterSpacing: 2 },
-  endSub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, textAlign: "center" },
-  rewardRow: { flexDirection: "row", gap: 10, marginTop: 4 },
+  endIconInner: {
+    width: 80, height: 80, borderRadius: 40,
+    borderWidth: 1.5, alignItems: "center", justifyContent: "center",
+  },
+  endLabel: { fontFamily: "Nunito_700Bold", fontSize: 10, letterSpacing: 3 },
+  endTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 32, letterSpacing: 3 },
+  endSub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, textAlign: "center", lineHeight: 19 },
+  endDivider: { width: "100%", height: 1 },
+  rewardSection: { width: "100%", gap: 8 },
+  rewardLabel: { fontFamily: "Nunito_700Bold", fontSize: 9, color: Colors.textDim, letterSpacing: 2, textAlign: "center" },
+  rewardRow: { flexDirection: "row", gap: 10, justifyContent: "center" },
   rewardChip: {
-    flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: Colors.gold + "20", borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: Colors.gold + "44",
+    flexDirection: "row", alignItems: "center", gap: 5,
+    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 8,
+    borderWidth: 1,
   },
   rewardChipXP: {
-    flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: Colors.border,
+    flexDirection: "row", alignItems: "center", gap: 5,
+    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 8,
+    borderWidth: 1,
   },
-  rewardChipVal: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: Colors.gold },
+  rewardChipVal: { fontFamily: "Nunito_900ExtraBold", fontSize: 16 },
+  rewardChipSub: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim },
   tScoreRow: { flexDirection: "row", alignItems: "center", gap: 16, marginVertical: 6 },
   tScoreTeam: { alignItems: "center", gap: 4 },
   tScoreLbl: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textMuted },
   tScoreNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 36, color: Colors.gold },
   tScoreSep: { fontFamily: "Nunito_700Bold", fontSize: 16, color: Colors.textDim },
   endBtns: { width: "100%", gap: 10, marginTop: 4 },
-  btnPrimary: { backgroundColor: Colors.gold, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
+  btnPrimary: {
+    borderRadius: 16, paddingVertical: 15, alignItems: "center",
+    flexDirection: "row", justifyContent: "center", gap: 8,
+  },
   btnPrimaryTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#1a0a00" },
   btnSecondary: {
-    borderRadius: 14, paddingVertical: 13, alignItems: "center",
+    borderRadius: 16, paddingVertical: 13, alignItems: "center",
     borderWidth: 1, borderColor: Colors.border, backgroundColor: "rgba(255,255,255,0.04)",
+    flexDirection: "row", justifyContent: "center", gap: 8,
   },
-  btnSecondaryTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.gold },
+  btnSecondaryTxt: { fontFamily: "Nunito_700Bold", fontSize: 14 },
 });

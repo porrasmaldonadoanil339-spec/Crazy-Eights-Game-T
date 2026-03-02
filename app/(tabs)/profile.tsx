@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable,
   TextInput, Modal, Platform, Alert, Image,
 } from "react-native";
+import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -185,6 +186,7 @@ export default function ProfileScreen() {
   const [showTitlePicker, setShowTitlePicker] = useState(false);
   const [showFramePicker, setShowFramePicker] = useState(false);
 
+  const swipeHandlers = useSwipeTabs(3);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
 
@@ -261,7 +263,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: topPad }]}>
+    <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
       <LinearGradient colors={["#061209", "#0a1a0f", "#0d2418"]} style={StyleSheet.absoluteFill} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>

@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, Pressable, ScrollView,
   Modal, Platform, Dimensions, TextInput,
 } from "react-native";
+import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -205,6 +206,7 @@ export default function PlayScreen() {
   const [onlinePlayerCount, setOnlinePlayerCount] = useState(2);
   const [multiPlayerNames, setMultiPlayerNames] = useState(["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4"]);
 
+  const swipeHandlers = useSwipeTabs(0);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
 
@@ -257,7 +259,7 @@ export default function PlayScreen() {
   const selectedModeConfig = selectedMode ? GAME_MODES.find((m) => m.id === selectedMode) : null;
 
   return (
-    <View style={[styles.container, { paddingTop: topPad }]}>
+    <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
       <LinearGradient
         colors={["#041008", "#071510", "#0a1a0f", "#071510", "#041008"]}
         locations={[0, 0.2, 0.5, 0.8, 1]}
