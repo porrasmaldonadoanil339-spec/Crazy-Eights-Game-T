@@ -12,34 +12,43 @@ export interface Emote {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
+  sound: string;
 }
 
 export const EMOTES: Emote[] = [
-  { id: "gg",       icon: "thumbs-up",      color: "#27AE60" },
-  { id: "draw2",    icon: "flame",           color: "#E74C3C" },
-  { id: "close",    icon: "heart-half",      color: "#E67E22" },
-  { id: "draw",     icon: "layers",          color: "#9B59B6" },
-  { id: "no",       icon: "close-circle",    color: "#E74C3C" },
-  { id: "win",      icon: "trophy",          color: "#D4AF37" },
-  { id: "luck",     icon: "star",            color: "#F1C40F" },
-  { id: "expert",   icon: "timer",           color: "#A855F7" },
+  { id: "gg",     icon: "thumbs-up",     color: "#27AE60", sound: "win" },
+  { id: "draw2",  icon: "flame",         color: "#E74C3C", sound: "card_wild" },
+  { id: "close",  icon: "heart-half",    color: "#E67E22", sound: "button_press" },
+  { id: "draw",   icon: "layers",        color: "#9B59B6", sound: "card_draw" },
+  { id: "no",     icon: "close-circle",  color: "#E74C3C", sound: "error" },
+  { id: "win",    icon: "trophy",        color: "#D4AF37", sound: "achievement" },
+  { id: "luck",   icon: "star",          color: "#F1C40F", sound: "card_flip" },
+  { id: "expert", icon: "timer",         color: "#A855F7", sound: "shuffle" },
 ];
 
 interface EmoteBubbleProps {
   emote: Emote | null;
   side: "player" | "cpu";
   lang?: "es" | "en" | "pt";
+  muted?: boolean;
 }
 
-export function EmoteBubble({ emote, side, lang = "es" }: EmoteBubbleProps) {
+export function EmoteBubble({ emote, side, lang = "es", muted = false }: EmoteBubbleProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
     if (!emote) return;
     opacity.setValue(1);
     translateY.setValue(0);
+    scale.setValue(0.7);
+
     Animated.sequence([
+      Animated.parallel([
+        Animated.spring(scale, { toValue: 1, damping: 10, stiffness: 150, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 150, useNativeDriver: true }),
+      ]),
       Animated.delay(1800),
       Animated.parallel([
         Animated.timing(opacity, { toValue: 0, duration: 400, useNativeDriver: true }),
@@ -48,7 +57,7 @@ export function EmoteBubble({ emote, side, lang = "es" }: EmoteBubbleProps) {
     ]).start();
   }, [emote]);
 
-  if (!emote) return null;
+  if (!emote || muted) return null;
 
   const label = emoteLabel(emote.id, lang);
 
@@ -57,10 +66,10 @@ export function EmoteBubble({ emote, side, lang = "es" }: EmoteBubbleProps) {
       style={[
         styles.bubble,
         side === "player" ? styles.bubblePlayer : styles.bubbleCpu,
-        { opacity, transform: [{ translateY }] },
+        { opacity, transform: [{ translateY }, { scale }] },
       ]}
     >
-      <Ionicons name={emote.icon} size={14} color={emote.color} />
+      <Ionicons name={emote.icon} size={16} color={emote.color} />
       <Text style={[styles.bubbleText, { color: emote.color }]}>{label}</Text>
     </Animated.View>
   );
@@ -82,7 +91,7 @@ export function EmotePanel({ onSendEmote, lastEmoteTime }: EmotePanelProps) {
 
   const handleEmote = (emote: Emote) => {
     if (!canSend) return;
-    playSound("button_press").catch(() => {});
+    playSound(emote.sound as any).catch(() => {});
     onSendEmote(emote);
     setOpen(false);
   };

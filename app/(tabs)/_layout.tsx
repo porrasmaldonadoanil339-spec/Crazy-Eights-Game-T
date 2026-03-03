@@ -5,6 +5,7 @@ import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import { useProfile } from "@/context/ProfileContext";
 import { useT } from "@/hooks/useT";
+import { playTabSwitch } from "@/lib/audioManager";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -15,6 +16,10 @@ export default function TabLayout() {
   const activeTint = isDark ? "#D4AF37" : "#A07800";
   const inactiveTint = isDark ? "rgba(238,232,213,0.45)" : "rgba(13,43,13,0.40)";
   const tabBg = isDark ? "rgba(4,16,8,0.97)" : "rgba(212,237,200,0.97)";
+
+  const tabPress = () => {
+    playTabSwitch().catch(() => {});
+  };
 
   return (
     <Tabs
@@ -52,6 +57,7 @@ export default function TabLayout() {
             <Ionicons name="game-controller" size={size} color={color} />
           ),
         }}
+        listeners={{ tabPress }}
       />
       <Tabs.Screen
         name="achievements"
@@ -61,6 +67,7 @@ export default function TabLayout() {
             <Ionicons name="star" size={size} color={color} />
           ),
         }}
+        listeners={{ tabPress }}
       />
       <Tabs.Screen
         name="store"
@@ -70,6 +77,7 @@ export default function TabLayout() {
             <Ionicons name="bag" size={size} color={color} />
           ),
         }}
+        listeners={{ tabPress }}
       />
       <Tabs.Screen
         name="profile"
@@ -79,6 +87,7 @@ export default function TabLayout() {
             <Ionicons name="person" size={size} color={color} />
           ),
         }}
+        listeners={{ tabPress }}
       />
     </Tabs>
   );

@@ -290,6 +290,17 @@ const translations = {
   adComplete: { es: "¡Anuncio completado!", en: "Ad complete!", pt: "Anúncio concluído!" },
   adSkipSoon: { es: "Podrás cerrar en", en: "You can close in", pt: "Você pode fechar em" },
   adClose: { es: "Cerrar y cobrar", en: "Close & collect", pt: "Fechar e coletar" },
+
+  // ─── Matchmaking ─────────────────────────────────────────────────────────
+  searchingRival: { es: "Buscando rival", en: "Finding opponent", pt: "Buscando rival" },
+  rivalFound: { es: "¡Rival encontrado!", en: "Opponent found!", pt: "Rival encontrado!" },
+
+  // ─── Level Up ────────────────────────────────────────────────────────────
+  levelUp: { es: "¡SUBISTE DE NIVEL!", en: "LEVEL UP!", pt: "SUBIU DE NÍVEL!" },
+
+  // ─── Mute Emotes ─────────────────────────────────────────────────────────
+  muteEmotes: { es: "Silenciar emotes", en: "Mute emotes", pt: "Silenciar emotes" },
+  unmuteEmotes: { es: "Activar emotes", en: "Unmute emotes", pt: "Ativar emotes" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

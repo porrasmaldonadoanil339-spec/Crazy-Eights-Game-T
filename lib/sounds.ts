@@ -42,6 +42,7 @@ import {
   playCoinEarn,
   playStreak,
   playMenuOpen,
+  playLevelUp,
 } from "@/lib/audioManager";
 
 export async function playSound(event: SoundEvent) {
@@ -61,7 +62,7 @@ export async function playSound(event: SoundEvent) {
     case "error":              return playError();
     case "turn_change":        return playTabSwitch();
     case "daily_reward":       return playWin();
-    case "level_up":           return playAchievement();
+    case "level_up":           return playLevelUp();
     case "battle_pass_unlock": return playAchievement();
     case "purchase_success":   return playCardWild();
     case "notification":       return playButton();

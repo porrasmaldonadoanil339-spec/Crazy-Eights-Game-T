@@ -16,6 +16,8 @@ import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
 import { PlayingCard } from "@/components/PlayingCard";
 import { DealAnimation } from "@/components/DealAnimation";
+import { MatchmakingScreen } from "@/components/MatchmakingScreen";
+import { LevelUpOverlay } from "@/components/LevelUpOverlay";
 import type { Suit } from "@/lib/gameEngine";
 import { suitSymbol, suitName, suitColor, canPlay } from "@/lib/gameEngine";
 import { getModeById, getDifficultyById } from "@/lib/gameModes";
@@ -443,6 +445,9 @@ export default function GameScreen() {
   const resultRecorded = useRef(false);
   const gameStartTimeRef = useRef<number>(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cpuEmoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const retryCount = useRef(0);
+  const prevLevel = useRef(level);
   const [cpuProfile, setCpuProfile] = useState<CpuProfile | null>(null);
   const [suitPickerVisible, setSuitPickerVisible] = useState(false);
   const [showTournamentModal, setShowTournamentModal] = useState(false);
@@ -455,6 +460,10 @@ export default function GameScreen() {
   const [playerEmote, setPlayerEmote] = useState<Emote | null>(null);
   const [cpuEmote, setCpuEmote] = useState<Emote | null>(null);
   const [lastPlayerEmoteTime, setLastPlayerEmoteTime] = useState(0);
+  const [muteCpuEmotes, setMuteCpuEmotes] = useState(false);
+  const [showMatchmaking, setShowMatchmaking] = useState(true);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [levelUpNum, setLevelUpNum] = useState(1);
   const prevAiHandCount = useRef<number>(0);
   const prevPendingDraw = useRef<number>(0);
   const msgOpacity = useSharedValue(1);
@@ -464,10 +473,14 @@ export default function GameScreen() {
   const isExpert = session?.difficulty === "expert";
   const timerTotal = 8;
 
-  // Pick CPU profile on mount
-  useEffect(() => {
-    const seed = Math.floor(Date.now() / 1000) % 12;
+  // Pick CPU profile — new seed each retry so opponent changes
+  const pickNewCpuProfile = () => {
+    const seed = (Math.floor(Date.now() / 1000) + retryCount.current * 37) % 347;
     setCpuProfile(getRandomCpuProfile(seed));
+  };
+
+  useEffect(() => {
+    pickNewCpuProfile();
   }, []);
 
   useEffect(() => {
@@ -475,8 +488,39 @@ export default function GameScreen() {
       aiThinking.current = false;
       resultRecorded.current = false;
       gameStartTimeRef.current = Date.now();
+      prevLevel.current = level;
     }
   }, [dealAnimationDone]);
+
+  // Detect level up after game result
+  useEffect(() => {
+    if (!resultRecorded.current) return;
+    if (level > prevLevel.current) {
+      setLevelUpNum(level);
+      setShowLevelUp(true);
+      prevLevel.current = level;
+    }
+  }, [level]);
+
+  // CPU random emote timer — fires quirky emotes during play
+  useEffect(() => {
+    if (!dealAnimationDone || !gameState || gameState.phase !== "playing") {
+      if (cpuEmoteTimerRef.current) { clearInterval(cpuEmoteTimerRef.current); cpuEmoteTimerRef.current = null; }
+      return;
+    }
+    const randomEmotes = ["luck", "win", "expert", "close"];
+    cpuEmoteTimerRef.current = setInterval(() => {
+      if (Math.random() < 0.3) {
+        const id = randomEmotes[Math.floor(Math.random() * randomEmotes.length)];
+        const emote = EMOTES.find(e => e.id === id) ?? null;
+        if (emote) {
+          setCpuEmote(emote);
+          setTimeout(() => setCpuEmote(null), 2500);
+        }
+      }
+    }, 15000 + Math.random() * 10000);
+    return () => { if (cpuEmoteTimerRef.current) { clearInterval(cpuEmoteTimerRef.current); cpuEmoteTimerRef.current = null; } };
+  }, [dealAnimationDone, gameState?.phase]);
 
   // Expert timer
   useEffect(() => {
@@ -707,9 +751,17 @@ export default function GameScreen() {
             <Text style={styles.tournamentScore}>{tournamentScores[0]} — {tournamentScores[1]}</Text>
           )}
         </View>
-        <View style={styles.deckInfo}>
-          <Ionicons name="layers" size={13} color={Colors.textDim} />
-          <Text style={styles.deckCount}>{gameState.drawPile.length}</Text>
+        <View style={styles.headerRight}>
+          <Pressable
+            onPress={() => { setMuteCpuEmotes(m => !m); playSound("button_press").catch(() => {}); }}
+            style={[styles.muteBtn, muteCpuEmotes && styles.muteBtnActive]}
+          >
+            <Ionicons name={muteCpuEmotes ? "volume-mute" : "volume-medium"} size={15} color={muteCpuEmotes ? Colors.textDim : Colors.gold} />
+          </Pressable>
+          <View style={styles.deckInfo}>
+            <Ionicons name="layers" size={13} color={Colors.textDim} />
+            <Text style={styles.deckCount}>{gameState.drawPile.length}</Text>
+          </View>
         </View>
       </View>
 
@@ -721,7 +773,7 @@ export default function GameScreen() {
       {/* AI section with CPU emote */}
       <View style={styles.aiSectionWrapper}>
         <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={cpuProfile} backColors={backColors} backAccent={backAccent} />
-        <EmoteBubble emote={cpuEmote} side="cpu" />
+        <EmoteBubble emote={cpuEmote} side="cpu" muted={muteCpuEmotes} />
       </View>
 
       {/* Table center */}
@@ -861,14 +913,34 @@ export default function GameScreen() {
         </ScrollView>
       </View>
 
-      {/* Deal animation */}
-      {!dealAnimationDone && (
+      {/* Deal animation — only shown after matchmaking */}
+      {!dealAnimationDone && !showMatchmaking && (
         <DealAnimation
           cardsPerPlayer={gameState.playerHand.length}
           playerCards={gameState.playerHand}
           onComplete={() => setDealAnimationDone(true)}
           backColors={backColors}
           backAccent={backAccent}
+        />
+      )}
+
+      {/* Matchmaking screen */}
+      {showMatchmaking && cpuProfile && (
+        <MatchmakingScreen
+          playerAvatarId={profile.avatarId}
+          playerFrameId={profile.selectedFrameId}
+          playerPhotoUri={profile.photoUri || undefined}
+          playerName={profile.name}
+          cpuProfile={cpuProfile}
+          onComplete={() => setShowMatchmaking(false)}
+        />
+      )}
+
+      {/* Level up overlay */}
+      {showLevelUp && (
+        <LevelUpOverlay
+          newLevel={levelUpNum}
+          onDone={() => setShowLevelUp(false)}
         />
       )}
 
@@ -884,6 +956,9 @@ export default function GameScreen() {
           coinsEarned={endCoins}
           xpEarned={endXp}
           onRestart={() => {
+            retryCount.current += 1;
+            pickNewCpuProfile();
+            setShowMatchmaking(true);
             if (session) startGame(session.mode, session.difficulty);
           }}
           onHome={() => router.back()}
@@ -924,6 +999,19 @@ const styles = StyleSheet.create({
   },
   modeLabel: { fontFamily: "Nunito_700Bold", fontSize: 11 },
   tournamentScore: { fontFamily: "Nunito_900ExtraBold", fontSize: 13, color: Colors.gold },
+  headerRight: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+  },
+  muteBtn: {
+    width: 32, height: 32, borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  muteBtnActive: {
+    backgroundColor: "rgba(255,255,255,0.02)",
+    borderColor: "rgba(255,255,255,0.04)",
+  },
   deckInfo: {
     flexDirection: "row", alignItems: "center", gap: 3,
     backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 8, paddingVertical: 5,
