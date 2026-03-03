@@ -295,8 +295,8 @@ function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
 }
 
 // ─── Win/Lose overlay ────────────────────────────────────────────────────
-function ResultOverlay({ isWin, winnerName, winnerColor, onClose }: {
-  isWin: boolean; winnerName: string; winnerColor: string; onClose: () => void;
+function ResultOverlay({ isWin, winnerName, winnerColor, onClose, onPlayAgain }: {
+  isWin: boolean; winnerName: string; winnerColor: string; onClose: () => void; onPlayAgain: () => void;
 }) {
   const T = useT();
   return (
@@ -312,12 +312,18 @@ function ResultOverlay({ isWin, winnerName, winnerColor, onClose }: {
       {!isWin && (
         <Text style={[gameStyles.resultSub, { color: winnerColor }]}>{winnerName} {T("wonSuffix")}</Text>
       )}
-      <Pressable style={gameStyles.resultBtn} onPress={onClose}>
+      <Pressable style={gameStyles.resultBtn} onPress={onPlayAgain}>
+        <LinearGradient colors={[Colors.gold, "#A07800"]} style={gameStyles.resultBtnGrad}>
+          <Ionicons name="refresh" size={16} color="#1a0a00" />
+          <Text style={gameStyles.resultBtnText}>{T("playAgain")}</Text>
+        </LinearGradient>
+      </Pressable>
+      <Pressable style={[gameStyles.resultBtn, { marginTop: 8 }]} onPress={onClose}>
         <LinearGradient
-          colors={isWin ? [Colors.gold, Colors.gold + "bb"] : [Colors.red, Colors.red + "bb"]}
+          colors={["#333", "#222"]}
           style={gameStyles.resultBtnGrad}
         >
-          <Text style={gameStyles.resultBtnText}>{T("returnMenu")}</Text>
+          <Text style={[gameStyles.resultBtnText, { color: "#ccc" }]}>{T("returnMenu")}</Text>
         </LinearGradient>
       </Pressable>
     </View>
@@ -346,11 +352,11 @@ export default function OnlineGameScreen() {
 
   const playerCount = Math.min(4, Math.max(2, parseInt(params.count ?? "2", 10)));
 
-  const cpuProfiles = React.useMemo(() => pickCpuProfiles(playerCount - 1), []);
+  const [currentCpuProfiles, setCurrentCpuProfiles] = useState<CpuProfile[]>(() => pickCpuProfiles(playerCount - 1));
   const humanName = profile.name || "Tú";
 
   // All player names: human is index 0, CPUs are 1..n
-  const allNames = [humanName, ...cpuProfiles.map(c => c.name)];
+  const allNames = [humanName, ...currentCpuProfiles.map(c => c.name)];
 
   // Lobby state
   const [lobbyPhase, setLobbyPhase] = useState<"searching" | "found" | "countdown" | "game" | "result">("searching");
@@ -443,7 +449,7 @@ export default function OnlineGameScreen() {
         cpuThinking.current = false;
       };
     }
-  }, [gameState?.currentPlayerIndex, gameState?.phase, lobbyPhase]);
+  }, [gameState?.turnId, gameState?.phase, lobbyPhase]);
 
   // ─── Player card interactions ────────────────────────────────────────────
   const isPlaying = gameState?.phase === "playing" && gameState?.currentPlayerIndex === 0;
@@ -482,6 +488,18 @@ export default function OnlineGameScreen() {
     setSelectedCard(null);
   }, [gameState, isPlaying]);
 
+  // ─── Play again with fresh opponent ─────────────────────────────────────
+  const handlePlayAgain = React.useCallback(() => {
+    const newProfiles = pickCpuProfiles(playerCount - 1);
+    setCurrentCpuProfiles(newProfiles);
+    const newNames = [humanName, ...newProfiles.map(c => c.name)];
+    const gs = initMultiGame(newNames);
+    gs.phase = "playing";
+    setGameState(gs);
+    setSelectedCard(null);
+    cpuThinking.current = false;
+  }, [playerCount, humanName]);
+
   // ─── CPU zones (opponents around table) ──────────────────────────────────
   const cpuZonePositions = React.useMemo(() => {
     if (playerCount === 2) {
@@ -515,7 +533,7 @@ export default function OnlineGameScreen() {
         <LobbyScreen
           playerCount={playerCount}
           humanName={humanName}
-          cpuProfiles={cpuProfiles}
+          cpuProfiles={currentCpuProfiles}
           joinedCount={joinedCount}
           phase={lobbyPhase as "searching" | "found" | "countdown"}
           countdown={countdown}
@@ -605,7 +623,7 @@ export default function OnlineGameScreen() {
 
         {/* ─── CPU opponents ─── */}
         {cpuZonePositions.map(cp => {
-          const cpu = cpuProfiles[cp.idx - 1];
+          const cpu = currentCpuProfiles[cp.idx - 1];
           const handCount = gs.hands[cp.idx]?.length ?? 0;
           const isCurrent = gs.currentPlayerIndex === cp.idx;
           const isSkipped = gs.lastSkipped === cp.idx;
@@ -732,6 +750,7 @@ export default function OnlineGameScreen() {
           winnerName={allNames[gs.winnerIndex]}
           winnerColor={PLAYER_COLORS[gs.winnerIndex % PLAYER_COLORS.length]}
           onClose={() => { playButton().catch(() => {}); router.back(); }}
+          onPlayAgain={handlePlayAgain}
         />
       )}
     </View>

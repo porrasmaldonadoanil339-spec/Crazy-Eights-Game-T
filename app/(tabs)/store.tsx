@@ -10,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/context/ProfileContext";
-import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS } from "@/lib/storeItems";
+import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS, localizeItem } from "@/lib/storeItems";
 import { playSound } from "@/lib/sounds";
 import { useT } from "@/hooks/useT";
 
@@ -206,7 +206,8 @@ export default function StoreScreen() {
   const swipeHandlers = useSwipeTabs(2);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
-  const items = STORE_ITEMS.filter((i) => i.category === category);
+  const lang = profile.language ?? "es";
+  const items = STORE_ITEMS.filter((i) => i.category === category).map((i) => localizeItem(i, lang));
   const isEffects = category === "effect";
 
   const isDark = profile.darkMode !== false;
@@ -352,7 +353,7 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.gold + "44",
   },
   coinsNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold },
-  catScrollView: { flexShrink: 0, flexGrow: 0, height: 60, marginBottom: 6 },
+  catScrollView: { flexShrink: 0, flexGrow: 0, height: 68, marginBottom: 6 },
   catRow: { paddingHorizontal: 16, paddingVertical: 6, gap: 8, flexDirection: "row", alignItems: "center" },
   catBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,

@@ -116,6 +116,32 @@ export const BATTLE_PASS_TIERS: BattlePassTier[] = [
   { tier: 100,xpRequired: 8603000,rewardType: "effect",  rewardValue: "effect_ultimate",     rewardLabel: "Efecto: El Último",           icon: "infinite",         iconColor: "#FFFFFF" },
 ];
 
+export function getBPRewardLabel(tier: BattlePassTier, lang: "es" | "en" | "pt"): string {
+  if (lang === "es") return tier.rewardLabel;
+
+  if (tier.rewardType === "coins") {
+    const n = typeof tier.rewardValue === "number" ? tier.rewardValue.toLocaleString() : tier.rewardValue;
+    const coinWord = lang === "pt" ? "Moedas" : "Coins";
+    const isSpecial = tier.rewardLabel.startsWith("¡");
+    return isSpecial ? `${n} ${coinWord}!` : `${n} ${coinWord}`;
+  }
+
+  const prefixMap: Record<string, { en: string; pt: string }> = {
+    title:  { en: "Title",  pt: "Título"  },
+    item:   { en: "Back",   pt: "Dorso"   },
+    avatar: { en: "Avatar", pt: "Avatar"  },
+    frame:  { en: "Frame",  pt: "Moldura" },
+    effect: { en: "Effect", pt: "Efeito"  },
+  };
+
+  const prefix = prefixMap[tier.rewardType];
+  if (!prefix) return tier.rewardLabel;
+
+  const parts = tier.rewardLabel.split(": ");
+  const namePart = parts.slice(1).join(": ") || String(tier.rewardValue);
+  return `${prefix[lang]}: ${namePart}`;
+}
+
 export const XP_FOR_LEVEL = (level: number) => Math.floor(60 * Math.pow(level, 1.5));
 
 export function getPlayerLevel(totalXp: number): number {

@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
-import { BATTLE_PASS_TIERS, getXpProgress } from "@/lib/battlePass";
+import { BATTLE_PASS_TIERS, getXpProgress, getBPRewardLabel } from "@/lib/battlePass";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";
 
@@ -220,7 +220,7 @@ export default function AchievementsScreen() {
                     <Ionicons name={tier.icon as any} size={20} color={reached ? tier.iconColor : theme.textDim} />
                   </View>
                   <View style={styles.bpTierContent}>
-                    <Text style={[styles.bpTierLabel, { color: reached ? theme.text : theme.textDim }]}>{tier.rewardLabel}</Text>
+                    <Text style={[styles.bpTierLabel, { color: reached ? theme.text : theme.textDim }]}>{getBPRewardLabel(tier, lang)}</Text>
                     <Text style={[styles.bpTierXp, { color: theme.textDim }]}>{tier.xpRequired} {xpRequiredLabel}</Text>
                   </View>
                   {canClaim && (

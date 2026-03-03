@@ -20,6 +20,7 @@ export interface GameState {
   message: string;
   consecutiveDraws: number;
   difficulty: string;
+  turnId: number;
   // Special card state
   pendingDraw: number;
   pendingDrawType: "two" | "seven" | null;
@@ -84,6 +85,7 @@ export function initGame(cardsPerPlayer: number = 7, difficulty: string = "norma
     message: "Tu turno — juega una carta",
     consecutiveDraws: 0,
     difficulty,
+    turnId: 0,
     pendingDraw: 0,
     pendingDrawType: null,
     pendingDrawSuit: null,
@@ -129,6 +131,7 @@ export function startPlaying(state: GameState): GameState {
 
 export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameState {
   const ns = deepClone(state);
+  ns.turnId = (ns.turnId ?? 0) + 1;
   ns.playerHand = ns.playerHand.filter((c) => c.id !== card.id);
   ns.discardPile.push(card);
   ns.consecutiveDraws = 0;
@@ -223,6 +226,7 @@ export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameS
 
 export function chooseSuit(state: GameState, suit: Suit): GameState {
   const ns = deepClone(state);
+  ns.turnId = (ns.turnId ?? 0) + 1;
   ns.currentSuit = suit;
   ns.phase = "playing";
   ns.currentPlayer = "ai";
@@ -232,6 +236,7 @@ export function chooseSuit(state: GameState, suit: Suit): GameState {
 
 export function playerDraw(state: GameState): GameState {
   let ns = deepClone(state);
+  ns.turnId = (ns.turnId ?? 0) + 1;
 
   // J is active: drawing clears it and passes turn
   if (ns.jActive) {
@@ -273,6 +278,7 @@ export function playerDraw(state: GameState): GameState {
 
 export function aiTurn(state: GameState, difficulty: string = "normal"): GameState {
   let ns = deepClone(state);
+  ns.turnId = (ns.turnId ?? 0) + 1;
 
   // Handle J active for AI
   if (ns.jActive && ns.jSuit) {

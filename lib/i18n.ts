@@ -262,6 +262,32 @@ const translations = {
   tapAgainChooseSuit: { es: "Toca de nuevo → elegir palo", en: "Tap again → choose suit", pt: "Toque novamente → escolher naipe" },
   tapAgainPlay: { es: "Toca de nuevo para jugar", en: "Tap again to play", pt: "Toque novamente para jogar" },
   yourName: { es: "Tu nombre...", en: "Your name...", pt: "Seu nome..." },
+
+  // ─── World Ranking ────────────────────────────────────────────────────────
+  worldRanking: { es: "RANKING MUNDIAL", en: "WORLD RANKING", pt: "RANKING MUNDIAL" },
+  myRank: { es: "Mi posición", en: "My Rank", pt: "Minha posição" },
+  allTime: { es: "Todo el tiempo", en: "All-Time", pt: "Geral" },
+  weekly: { es: "Semanal", en: "Weekly", pt: "Semanal" },
+  monthly: { es: "Mensual", en: "Monthly", pt: "Mensal" },
+  rankPlayers: { es: "jugadores", en: "players", pt: "jogadores" },
+  rankWins: { es: "VICTORIAS", en: "WINS", pt: "VITÓRIAS" },
+  rankScore: { es: "PUNTOS", en: "SCORE", pt: "PONTOS" },
+  rankLevel: { es: "NIV.", en: "LVL.", pt: "NÍV." },
+  youLabel: { es: "TÚ", en: "YOU", pt: "VOCÊ" },
+  rankTitle: { es: "Ranking", en: "Ranking", pt: "Ranking" },
+  viewRanking: { es: "Ranking Mundial", en: "World Ranking", pt: "Ranking Mundial" },
+
+  // ─── Watch Ads ────────────────────────────────────────────────────────────
+  earnCoins: { es: "GANAR MONEDAS", en: "EARN COINS", pt: "GANHAR MOEDAS" },
+  watchAd: { es: "Ver anuncio", en: "Watch Ad", pt: "Assistir anúncio" },
+  watchAdDesc: { es: "Mira un anuncio corto y gana", en: "Watch a short ad and earn", pt: "Assista a um anúncio curto e ganhe" },
+  adReward: { es: "+50 monedas por anuncio", en: "+50 coins per ad", pt: "+50 moedas por anúncio" },
+  adDailyLimit: { es: "Límite diario alcanzado (5/5)", en: "Daily limit reached (5/5)", pt: "Limite diário atingido (5/5)" },
+  adsToday: { es: "Anuncios hoy", en: "Ads today", pt: "Anúncios hoje" },
+  adWatching: { es: "Viendo anuncio…", en: "Watching ad…", pt: "Assistindo anúncio…" },
+  adComplete: { es: "¡Anuncio completado!", en: "Ad complete!", pt: "Anúncio concluído!" },
+  adSkipSoon: { es: "Podrás cerrar en", en: "You can close in", pt: "Você pode fechar em" },
+  adClose: { es: "Cerrar y cobrar", en: "Close & collect", pt: "Fechar e coletar" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

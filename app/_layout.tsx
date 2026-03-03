@@ -30,7 +30,6 @@ function AudioManager() {
     initAudio().then(() => {
       syncSettings(profile.musicEnabled, profile.sfxEnabled);
       preloadSounds().catch(() => {});
-      
       const inGame = (segments as string[]).includes("game");
       if (inGame) {
         startGameMusic().catch(() => {});
@@ -40,6 +39,11 @@ function AudioManager() {
     });
     return () => { stopMusic().catch(() => {}); };
   }, [isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    syncSettings(profile.musicEnabled, profile.sfxEnabled);
+  }, [profile.musicEnabled, profile.sfxEnabled, isLoaded]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -66,6 +70,7 @@ function RootLayoutNav() {
         <Stack.Screen name="game-online" options={{ animation: "slide_from_bottom" }} />
         <Stack.Screen name="tutorial" options={{ animation: "slide_from_bottom" }} />
         <Stack.Screen name="rules" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="ranking" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="+not-found" />
       </Stack>
     </>

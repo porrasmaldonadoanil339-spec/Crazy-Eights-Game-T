@@ -80,6 +80,9 @@ export interface PlayerProfile {
   // Daily rewards
   lastDailyRewardDate: string;
   dailyRewardIndex: number;
+  // Watch ads
+  adsWatchedToday: number;
+  lastAdsDate: string;
   // Settings
   musicEnabled: boolean;
   sfxEnabled: boolean;
@@ -133,6 +136,8 @@ const DEFAULT_PROFILE: PlayerProfile = {
   stats: DEFAULT_STATS,
   lastDailyRewardDate: "",
   dailyRewardIndex: 0,
+  adsWatchedToday: 0,
+  lastAdsDate: "",
   musicEnabled: true,
   sfxEnabled: true,
   vibrationEnabled: true,
@@ -173,6 +178,9 @@ interface ProfileContextValue {
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
   updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt"; darkMode?: boolean }) => void;
+  watchAd: () => boolean;
+  adsWatchedToday: number;
+  adDailyLimit: number;
   level: number;
   xpProgress: { current: number; needed: number; level: number };
   battlePassTier: number;
@@ -358,6 +366,30 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     update((p) => ({ ...p, ...settings }));
   }, [update]);
 
+  const AD_DAILY_LIMIT = 5;
+  const AD_COINS_REWARD = 50;
+  const watchAd = useCallback((): boolean => {
+    const today = new Date().toDateString();
+    let success = false;
+    update((p) => {
+      const watched = p.lastAdsDate === today ? (p.adsWatchedToday ?? 0) : 0;
+      if (watched >= AD_DAILY_LIMIT) return p;
+      success = true;
+      return {
+        ...p,
+        coins: p.coins + AD_COINS_REWARD,
+        adsWatchedToday: watched + 1,
+        lastAdsDate: today,
+      };
+    });
+    return success;
+  }, [update]);
+
+  const adsWatchedToday = useMemo(() => {
+    const today = new Date().toDateString();
+    return profile.lastAdsDate === today ? (profile.adsWatchedToday ?? 0) : 0;
+  }, [profile.lastAdsDate, profile.adsWatchedToday]);
+
   const recordGameResult = useCallback((params: {
     won: boolean;
     mode: GameModeId;
@@ -458,6 +490,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         canClaimDailyReward,
         todaysDailyReward,
         updateSettings,
+        watchAd,
+        adsWatchedToday,
+        adDailyLimit: AD_DAILY_LIMIT,
         level,
         xpProgress,
         battlePassTier,

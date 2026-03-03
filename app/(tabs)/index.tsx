@@ -202,7 +202,7 @@ function PokerTitle() {
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
-  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit } = useProfile();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
@@ -211,6 +211,9 @@ export default function PlayScreen() {
   const [multiPlayerCount, setMultiPlayerCount] = useState(2);
   const [onlinePlayerCount, setOnlinePlayerCount] = useState(2);
   const [multiPlayerNames, setMultiPlayerNames] = useState(["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4"]);
+  const [showAdModal, setShowAdModal] = useState(false);
+  const [adCountdown, setAdCountdown] = useState(5);
+  const [adComplete, setAdComplete] = useState(false);
 
   const T = useT();
   const theme = useTheme();
@@ -265,6 +268,28 @@ export default function PlayScreen() {
     await playButton().catch(() => {});
     setShowOnlineModal(false);
     router.push({ pathname: "/game-online", params: { count: String(onlinePlayerCount) } });
+  };
+
+  const handleOpenAd = () => {
+    if (adsWatchedToday >= adDailyLimit) return;
+    setAdCountdown(5);
+    setAdComplete(false);
+    setShowAdModal(true);
+    let count = 5;
+    const timer = setInterval(() => {
+      count -= 1;
+      setAdCountdown(count);
+      if (count <= 0) {
+        clearInterval(timer);
+        setAdComplete(true);
+      }
+    }, 1000);
+  };
+
+  const handleClaimAd = () => {
+    watchAd();
+    playSound("purchase").catch(() => {});
+    setShowAdModal(false);
   };
 
   const selectedModeConfig = selectedMode ? GAME_MODES.find((m) => m.id === selectedMode) : null;
@@ -442,6 +467,38 @@ export default function PlayScreen() {
           </Pressable>
         </View>
 
+        {/* Earn Coins / Watch Ads section */}
+        <View style={styles.sectionHeader}>
+          <Ionicons name="cash" size={14} color={theme.textMuted} />
+          <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>{T("earnCoins")}</Text>
+        </View>
+        <Pressable
+          onPress={handleOpenAd}
+          disabled={adsWatchedToday >= adDailyLimit}
+          style={({ pressed }) => [
+            styles.adBanner,
+            { backgroundColor: isDark ? "rgba(212,175,55,0.08)" : "rgba(160,120,0,0.08)", borderColor: isDark ? Colors.gold + "33" : "#A0780044" },
+            adsWatchedToday >= adDailyLimit && { opacity: 0.5 },
+            pressed && adsWatchedToday < adDailyLimit && { opacity: 0.8, transform: [{ scale: 0.98 }] },
+          ]}
+        >
+          <LinearGradient colors={adsWatchedToday >= adDailyLimit ? ["#33333322","#22222211"] : [Colors.gold + "18", Colors.gold + "08"]} style={StyleSheet.absoluteFill} />
+          <View style={[styles.adIconWrap, { backgroundColor: Colors.gold + "22" }]}>
+            <Ionicons name="play-circle" size={28} color={adsWatchedToday >= adDailyLimit ? Colors.textDim : Colors.gold} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.adTitle, { color: adsWatchedToday >= adDailyLimit ? Colors.textMuted : theme.gold }]}>
+              {adsWatchedToday >= adDailyLimit ? T("adDailyLimit") : T("watchAd")}
+            </Text>
+            <Text style={[styles.adDesc, { color: theme.textMuted }]}>
+              {T("watchAdDesc")} · {T("adReward")}
+            </Text>
+          </View>
+          <View style={styles.adCounter}>
+            <Text style={[styles.adCounterText, { color: theme.textMuted }]}>{adsWatchedToday}/{adDailyLimit}</Text>
+          </View>
+        </Pressable>
+
         {/* Quick actions */}
         <View style={styles.quickRow}>
           <Pressable
@@ -457,6 +514,13 @@ export default function PlayScreen() {
           >
             <Ionicons name="book-outline" size={18} color={Colors.textMuted} />
             <Text style={styles.quickBtnText}>{T("rules")}</Text>
+          </Pressable>
+          <Pressable
+            onPress={async () => { await playButton().catch(() => {}); router.push("/ranking"); }}
+            style={styles.quickBtn}
+          >
+            <Ionicons name="earth" size={18} color={Colors.textMuted} />
+            <Text style={styles.quickBtnText}>{T("viewRanking")}</Text>
           </Pressable>
           {profile.stats.totalGames > 0 && (
             <View style={styles.statChip}>
@@ -604,6 +668,47 @@ export default function PlayScreen() {
 
             <Text style={styles.multiModalHint}>{T("passDeviceHint")}</Text>
           </LinearGradient>
+        </View>
+      </Modal>
+
+      {/* Watch Ad Modal */}
+      <Modal visible={showAdModal} transparent animationType="fade" onRequestClose={() => !adComplete && setShowAdModal(false)}>
+        <View style={styles.adModalOverlay}>
+          <View style={[styles.adModalBox, { backgroundColor: isDark ? "#0d1a0f" : "#e8f5e2", borderColor: Colors.gold + "44" }]}>
+            <LinearGradient colors={[Colors.gold + "18", "transparent"]} style={StyleSheet.absoluteFill} />
+            <View style={styles.adModalIcon}>
+              <Ionicons name="play-circle" size={48} color={Colors.gold} />
+            </View>
+            <Text style={[styles.adModalTitle, { color: theme.gold }]}>
+              {adComplete ? "+50" : T("adWatching")}
+            </Text>
+            {!adComplete && (
+              <View style={styles.adCountdownWrap}>
+                <Text style={[styles.adCountdownNum, { color: theme.text }]}>{adCountdown}</Text>
+              </View>
+            )}
+            {adComplete && (
+              <>
+                <Text style={[styles.adModalSub, { color: theme.textMuted }]}>
+                  {T("adComplete")}
+                </Text>
+                <View style={styles.adRewardRow}>
+                  <Ionicons name="cash" size={20} color={Colors.gold} />
+                  <Text style={[styles.adRewardText, { color: theme.gold }]}>+50 {T("coins")}</Text>
+                </View>
+                <Pressable onPress={handleClaimAd} style={styles.adClaimBtn}>
+                  <LinearGradient colors={[Colors.goldLight, Colors.gold]} style={styles.adClaimGrad}>
+                    <Text style={styles.adClaimText}>{T("adClose")}</Text>
+                  </LinearGradient>
+                </Pressable>
+              </>
+            )}
+            {!adComplete && (
+              <Pressable onPress={() => setShowAdModal(false)} style={styles.adCancelBtn}>
+                <Text style={[styles.adCancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
+              </Pressable>
+            )}
+          </View>
         </View>
       </Modal>
     </View>
@@ -865,4 +970,44 @@ const styles = StyleSheet.create({
   multiModalHint: {
     fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textDim, textAlign: "center", marginTop: 4,
   },
+
+  // Watch Ads section
+  adBanner: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12,
+    marginBottom: 12, overflow: "hidden",
+  },
+  adIconWrap: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  adTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: Colors.gold, letterSpacing: 0.5 },
+  adDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted, marginTop: 2 },
+  adCounter: {
+    backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 10,
+    paddingHorizontal: 8, paddingVertical: 4, minWidth: 36, alignItems: "center",
+  },
+  adCounterText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textMuted },
+
+  // Watch Ad Modal
+  adModalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "center", alignItems: "center" },
+  adModalBox: {
+    width: 280, borderRadius: 20, borderWidth: 1, paddingVertical: 30, paddingHorizontal: 24,
+    alignItems: "center", gap: 12, overflow: "hidden",
+  },
+  adModalIcon: {
+    width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.gold + "22",
+    alignItems: "center", justifyContent: "center", marginBottom: 4,
+  },
+  adModalTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 32, color: Colors.gold },
+  adModalSub: { fontFamily: "Nunito_400Regular", fontSize: 13, textAlign: "center", color: Colors.textMuted },
+  adCountdownWrap: {
+    width: 64, height: 64, borderRadius: 32,
+    backgroundColor: Colors.gold + "22", alignItems: "center", justifyContent: "center",
+  },
+  adCountdownNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 28, color: Colors.text },
+  adRewardRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  adRewardText: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: Colors.gold },
+  adClaimBtn: { width: "100%", borderRadius: 12, overflow: "hidden", marginTop: 4 },
+  adClaimGrad: { paddingVertical: 13, alignItems: "center" },
+  adClaimText: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: "#1a0a00", letterSpacing: 1 },
+  adCancelBtn: { marginTop: 4 },
+  adCancelText: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted },
 });

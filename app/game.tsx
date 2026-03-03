@@ -562,7 +562,7 @@ export default function GameScreen() {
         runAiTurn();
       }, delay);
     }
-  }, [gameState?.currentPlayer, gameState?.message, dealAnimationDone]);
+  }, [gameState?.currentPlayer, gameState?.turnId, dealAnimationDone]);
 
   // Game result handling
   useEffect(() => {
@@ -835,7 +835,7 @@ export default function GameScreen() {
           contentContainerStyle={styles.handContainer}
           style={styles.handScroll}
         >
-          {gameState.playerHand.map((card, i) => {
+          {dealAnimationDone && gameState.playerHand.map((card, i) => {
             const playable = isPlayerTurn && canPlay(card, gameState);
             const selected = selectedCard?.id === card.id;
             const angle = (i - gameState.playerHand.length / 2) * 3;

@@ -15,6 +15,7 @@ export interface MultiGameState {
   winnerIndex: number | null;
   message: string;
   direction: 1 | -1;
+  turnId: number;
   pendingDraw: number;
   pendingDrawType: "two" | "seven" | null;
   pendingDrawSuit: Suit | null;
@@ -53,6 +54,7 @@ export function initMultiGame(playerNames: string[], cardsPerPlayer = 8): MultiG
     winnerIndex: null,
     message: `Turno de ${playerNames[0]}`,
     direction: 1,
+    turnId: 0,
     pendingDraw: 0,
     pendingDrawType: null,
     pendingDrawSuit: null,
@@ -126,11 +128,13 @@ export function multiConfirmTurn(state: MultiGameState): MultiGameState {
   const ns = clone(state);
   ns.phase = "playing";
   ns.lastSkipped = undefined;
+  ns.turnId = (ns.turnId ?? 0) + 1;
   return ns;
 }
 
 export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Suit): MultiGameState {
   let ns = clone(state);
+  ns.turnId = (ns.turnId ?? 0) + 1;
   const pidx = ns.currentPlayerIndex;
 
   ns.hands[pidx] = ns.hands[pidx].filter(c => c.id !== card.id);
@@ -208,8 +212,8 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
     ns.lastSkipped = skipped;
     if (ns.playerCount === 2) {
-      // In 2-player, player goes again
-      ns.phase = "playing";
+      ns.currentPlayerIndex = pidx;
+      ns.phase = "pass_device";
       ns.message = `3 → ${ns.playerNames[next]} pierde turno. ¡Juegas de nuevo!`;
     } else {
       ns.currentPlayerIndex = skipNext;
@@ -234,10 +238,11 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     ns.currentSuit = card.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
     if (ns.playerCount === 2) {
-      ns.phase = "playing";
+      ns.currentPlayerIndex = pidx;
+      ns.phase = "pass_device";
       ns.message = `10 → ¡Dirección invertida! Juegas de nuevo`;
     } else {
-      const newNext = nextPlayerIndex(ns); // recalculate with new direction
+      const newNext = nextPlayerIndex(ns);
       ns.currentPlayerIndex = newNext;
       ns.phase = "pass_device";
       ns.message = `10 → ¡Dirección invertida!`;
@@ -265,6 +270,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
 
 export function multiDraw(state: MultiGameState): MultiGameState {
   let ns = clone(state);
+  ns.turnId = (ns.turnId ?? 0) + 1;
   const pidx = ns.currentPlayerIndex;
 
   if (ns.jActive) {
@@ -309,6 +315,7 @@ export function multiDraw(state: MultiGameState): MultiGameState {
 
 export function multiChooseSuit(state: MultiGameState, suit: Suit): MultiGameState {
   const ns = clone(state);
+  ns.turnId = (ns.turnId ?? 0) + 1;
   ns.currentSuit = suit;
   const next = nextPlayerIndex(ns);
   ns.currentPlayerIndex = next;
@@ -317,9 +324,9 @@ export function multiChooseSuit(state: MultiGameState, suit: Suit): MultiGameSta
   return ns;
 }
 
-// CPU auto-play for online mode
 export function cpuPlayMulti(state: MultiGameState): MultiGameState {
   let ns = clone(state);
+  ns.turnId = (ns.turnId ?? 0) + 1;
   const pidx = ns.currentPlayerIndex;
   const hand = ns.hands[pidx];
 
@@ -329,7 +336,6 @@ export function cpuPlayMulti(state: MultiGameState): MultiGameState {
     return multiDraw(ns);
   }
 
-  // Priority: counter cards for pending draw
   if (ns.pendingDraw > 0) {
     const counters = playable.filter(c =>
       (ns.pendingDrawType === "two" && (c.rank === "2" || c.rank === "Joker" || c.rank === "A")) ||
@@ -340,7 +346,6 @@ export function cpuPlayMulti(state: MultiGameState): MultiGameState {
     }
   }
 
-  // Prefer special attack cards
   const specials = playable.filter(c => ["2", "3", "7", "10"].includes(c.rank));
   const wilds = playable.filter(c => c.rank === "8" || c.rank === "Joker");
   const normal = playable.filter(c => !["8", "Joker"].includes(c.rank));
@@ -349,7 +354,6 @@ export function cpuPlayMulti(state: MultiGameState): MultiGameState {
   if (specials.length > 0 && Math.random() > 0.4) {
     chosen = specials[Math.floor(Math.random() * specials.length)];
   } else if (normal.length > 0) {
-    // Pick card that matches best suit in hand
     const counts: Record<Suit, number> = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
     for (const c of hand) if (c.rank !== "Joker") counts[c.suit]++;
     const sorted = [...normal].sort((a, b) => counts[b.suit] - counts[a.suit]);
