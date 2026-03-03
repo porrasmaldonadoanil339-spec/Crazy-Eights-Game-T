@@ -232,14 +232,15 @@ export default function PlayScreen() {
   }, []);
 
   const handleModePress = async (modeId: GameModeId) => {
-    await playButton().catch(() => {});
     const mode = GAME_MODES.find((m) => m.id === modeId);
     if (!mode) return;
     if (!mode.hasDifficulty) {
+      await playSound("mode_select").catch(() => {});
       startGame(modeId, "normal");
       router.push("/game");
       return;
     }
+    await playSound("menu_open").catch(() => {});
     setSelectedMode(modeId);
     setShowDiffModal(true);
   };

@@ -259,6 +259,8 @@ const translations = {
   free: { es: "Gratis", en: "Free", pt: "Grátis" },
   obtained: { es: "Obtenido", en: "Obtained", pt: "Obtido" },
   obtainedItem: { es: "obtenido", en: "obtained", pt: "obtido" },
+  inUse: { es: "En uso", en: "In use", pt: "Em uso" },
+  equippedItem: { es: "equipado", en: "equipped", pt: "equipado" },
   tapAgainChooseSuit: { es: "Toca de nuevo → elegir palo", en: "Tap again → choose suit", pt: "Toque novamente → escolher naipe" },
   tapAgainPlay: { es: "Toca de nuevo para jugar", en: "Tap again to play", pt: "Toque novamente para jogar" },
   yourName: { es: "Tu nombre...", en: "Your name...", pt: "Seu nome..." },

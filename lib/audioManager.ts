@@ -5,11 +5,11 @@ import * as Haptics from "expo-haptics";
 const SOUNDS = {
   cardFlip: require("@/assets/sounds/card-flip.wav"),
   cardDraw: require("@/assets/sounds/card-draw.wav"),
-  shuffle: require("@/assets/sounds/shuffle.wav"),
-  win: require("@/assets/sounds/win.wav"),
-  lose: require("@/assets/sounds/lose.wav"),
-  button: require("@/assets/sounds/button.wav"),
-  wild: require("@/assets/sounds/wild.wav"),
+  shuffle:  require("@/assets/sounds/shuffle.wav"),
+  win:      require("@/assets/sounds/win.wav"),
+  lose:     require("@/assets/sounds/lose.wav"),
+  button:   require("@/assets/sounds/button.wav"),
+  wild:     require("@/assets/sounds/wild.wav"),
   menuMusic: require("@/assets/sounds/menu-music.wav"),
   gameMusic: require("@/assets/sounds/game-music.wav"),
 };
@@ -107,11 +107,11 @@ export function getCurrentTrack(): "menu" | "game" | null {
   return currentTrack;
 }
 
-async function playSfx(key: SoundKey) {
+async function playSfx(key: SoundKey, volume?: number) {
   if (isSfxMuted) return;
   await safe(async () => {
     const player = getOrCreateSfx(key);
-    player.volume = sfxVolume;
+    player.volume = volume ?? sfxVolume;
     player.seekTo(0);
     player.play();
   });
@@ -120,6 +120,8 @@ async function playSfx(key: SoundKey) {
 function haptic(fn: () => Promise<void>) {
   if (Platform.OS !== "web") safe(fn);
 }
+
+// ─── Core card sounds ────────────────────────────────────────────────────────
 
 export async function playCardFlip() {
   await playSfx("cardFlip");
@@ -152,21 +154,80 @@ export async function playLose() {
 }
 
 export async function playButton() {
-  await playSfx("button");
+  await playSfx("button", sfxVolume * 0.7);
   haptic(() => Haptics.selectionAsync());
 }
 
 export async function playError() {
+  await playSfx("button", sfxVolume * 0.5);
   haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning));
 }
 
 export async function playAchievement() {
-  await playSfx("win");
+  await playSfx("win", sfxVolume * 0.9);
   haptic(async () => {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 150);
   });
 }
+
+// ─── UI interaction sounds ───────────────────────────────────────────────────
+
+export async function playTabSwitch() {
+  await playSfx("button", sfxVolume * 0.5);
+  haptic(() => Haptics.selectionAsync());
+}
+
+export async function playSelect() {
+  await playSfx("cardFlip", sfxVolume * 0.6);
+  haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+}
+
+export async function playEquip() {
+  await playSfx("cardDraw", sfxVolume * 0.8);
+  haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+}
+
+export async function playMenuOpen() {
+  await playSfx("shuffle", sfxVolume * 0.4);
+  haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+}
+
+// ─── Reward & progression sounds ─────────────────────────────────────────────
+
+export async function playCoinEarn() {
+  await playSfx("wild", sfxVolume * 0.6);
+  haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+}
+
+export async function playStreak() {
+  await playSfx("win", sfxVolume * 0.7);
+  setTimeout(() => playSfx("button", sfxVolume * 0.5).catch(() => {}), 180);
+  haptic(async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 120);
+  });
+}
+
+export async function playDailyReward() {
+  await playSfx("win");
+  setTimeout(() => playSfx("wild", sfxVolume * 0.5).catch(() => {}), 250);
+  haptic(async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 200);
+  });
+}
+
+export async function playLevelUp() {
+  await playSfx("win");
+  setTimeout(() => playSfx("win", sfxVolume * 0.6).catch(() => {}), 300);
+  haptic(async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 300);
+  });
+}
+
+// ─── Settings ────────────────────────────────────────────────────────────────
 
 export function syncSettings(musicEnabled: boolean, sfxEnabled: boolean) {
   isMusicEnabled = musicEnabled;

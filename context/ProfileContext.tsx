@@ -154,6 +154,7 @@ interface ProfileContextValue {
   updateTitle: (titleId: string) => void;
   updateCardBack: (cardBackId: string) => void;
   updateFrame: (frameId: string) => void;
+  updateEffect: (effectId: string) => void;
   updatePhotoUri: (uri: string) => void;
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
@@ -257,6 +258,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const updateFrame = useCallback((frameId: string) => {
     update((p) => ({ ...p, selectedFrameId: frameId }));
+  }, [update]);
+
+  const updateEffect = useCallback((effectId: string) => {
+    update((p) => ({ ...p, selectedEffect: effectId }));
   }, [update]);
 
   const updatePhotoUri = useCallback((uri: string) => {
@@ -477,6 +482,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         updateTitle,
         updateCardBack,
         updateFrame,
+        updateEffect,
         updatePhotoUri,
         addCoins,
         spendCoins,

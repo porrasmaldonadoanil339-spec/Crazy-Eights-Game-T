@@ -83,7 +83,34 @@ function ConfirmModal({
   );
 }
 
-function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean; onPress: () => void }) {
+function EquipBadge({ isEquipped, onEquip, T }: { isEquipped: boolean; onEquip: () => void; T: (k: string) => string }) {
+  const theme = useTheme();
+  if (isEquipped) {
+    return (
+      <View style={[styles.equipActiveBadge, { backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "55" }]}>
+        <Ionicons name="checkmark-circle" size={12} color={Colors.gold} />
+        <Text style={[styles.equipActiveText, { color: Colors.gold }]}>{T("inUse")}</Text>
+      </View>
+    );
+  }
+  return (
+    <Pressable
+      onPress={onEquip}
+      style={({ pressed }) => [
+        styles.equipBtn,
+        { backgroundColor: theme.surface, borderColor: theme.gold + "66" },
+        pressed && { opacity: 0.7 },
+      ]}
+    >
+      <Ionicons name="checkmark" size={11} color={theme.gold} />
+      <Text style={[styles.equipBtnText, { color: theme.gold }]}>{T("equip")}</Text>
+    </Pressable>
+  );
+}
+
+function EffectCard({ item, owned, isEquipped, onPress, onEquip }: {
+  item: StoreItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void;
+}) {
   const T = useT();
   const theme = useTheme();
   const rarityLabel = useRarityLabel();
@@ -93,8 +120,8 @@ function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean;
       onPress={owned ? undefined : onPress}
       style={({ pressed }) => [
         styles.effectCard,
-        { borderColor: rarityColor + "55", backgroundColor: theme.surface },
-        owned && styles.effectCardOwned,
+        { borderColor: isEquipped ? Colors.gold + "88" : rarityColor + "55", backgroundColor: theme.surface },
+        isEquipped && styles.effectCardEquipped,
         pressed && !owned && { opacity: 0.85, transform: [{ scale: 0.97 }] },
       ]}
     >
@@ -112,10 +139,7 @@ function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean;
           <Text style={[styles.effectDesc, { color: theme.textMuted }]}>{item.description}</Text>
           <View style={styles.effectFooter}>
             {owned ? (
-              <View style={styles.ownedBadge}>
-                <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
-                <Text style={styles.ownedText}>{T("obtained")}</Text>
-              </View>
+              <EquipBadge isEquipped={isEquipped} onEquip={onEquip} T={T} />
             ) : item.isDefault ? (
               <Text style={styles.freeText}>{T("free")}</Text>
             ) : (
@@ -131,7 +155,9 @@ function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean;
   );
 }
 
-function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boolean; onPress: () => void }) {
+function StoreItemCard({ item, owned, isEquipped, onPress, onEquip }: {
+  item: StoreItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void;
+}) {
   const T = useT();
   const theme = useTheme();
   const rarityLabel = useRarityLabel();
@@ -141,8 +167,8 @@ function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boole
       onPress={owned ? undefined : onPress}
       style={({ pressed }) => [
         styles.itemCard,
-        { borderColor: rarityColor + "55", backgroundColor: theme.surface },
-        owned && styles.itemCardOwned,
+        { borderColor: isEquipped ? Colors.gold + "88" : rarityColor + "55", backgroundColor: theme.surface },
+        isEquipped && styles.itemCardEquipped,
         pressed && !owned && styles.itemCardPressed,
       ]}
     >
@@ -175,10 +201,7 @@ function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boole
         <Text style={[styles.itemDesc, { color: theme.textMuted }]} numberOfLines={2}>{item.description}</Text>
         <View style={styles.itemFooter}>
           {owned ? (
-            <View style={styles.ownedBadge}>
-              <Ionicons name="checkmark-circle" size={13} color={Colors.success} />
-              <Text style={styles.ownedText}>{T("obtained")}</Text>
-            </View>
+            <EquipBadge isEquipped={isEquipped} onEquip={onEquip} T={T} />
           ) : item.isDefault ? (
             <Text style={styles.freeText}>{T("free")}</Text>
           ) : (
@@ -195,7 +218,7 @@ function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boole
 
 export default function StoreScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, buyItem, updateCardBack, updateAvatar, updateTitle, updateFrame } = useProfile();
+  const { profile, buyItem, updateCardBack, updateAvatar, updateTitle, updateFrame, updateEffect } = useProfile();
   const [category, setCategory] = useState<StoreItemCategory>("card_back");
   const [confirmItem, setConfirmItem] = useState<StoreItem | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -229,6 +252,25 @@ export default function StoreScreen() {
     setTimeout(() => setToast(null), 2500);
   };
 
+  function getEquippedId(cat: StoreItemCategory): string {
+    if (cat === "card_back") return profile.cardBackId ?? "back_default";
+    if (cat === "avatar") return profile.avatarId ?? "avatar_knight";
+    if (cat === "title") return profile.titleId ?? "title_novice";
+    if (cat === "frame") return profile.selectedFrameId ?? "frame_gold";
+    if (cat === "effect") return profile.selectedEffect ?? "none";
+    return "";
+  }
+
+  function equipItem(item: StoreItem) {
+    playSound("equip").catch(() => {});
+    if (item.category === "card_back") updateCardBack(item.id);
+    else if (item.category === "avatar") updateAvatar(item.id);
+    else if (item.category === "title") updateTitle(item.id);
+    else if (item.category === "frame") updateFrame(item.id);
+    else if (item.category === "effect") updateEffect(item.id);
+    showToast(`${item.name} ${T("equippedItem")}!`);
+  }
+
   const handlePurchase = async () => {
     if (!confirmItem) return;
     setConfirmItem(null);
@@ -244,11 +286,13 @@ export default function StoreScreen() {
       if (confirmItem.category === "avatar") updateAvatar(confirmItem.id);
       if (confirmItem.category === "title") updateTitle(confirmItem.id);
       if (confirmItem.category === "frame") updateFrame(confirmItem.id);
+      if (confirmItem.category === "effect") updateEffect(confirmItem.id);
       showToast(`${confirmItem.name} ${T("obtainedItem")}!`);
     }
   };
 
-  const ownedCount = items.filter(i => profile.ownedItems.includes(i.id)).length;
+  const ownedCount = items.filter(i => profile.ownedItems.includes(i.id) || i.isDefault).length;
+  const equippedId = getEquippedId(category);
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
@@ -277,7 +321,7 @@ export default function StoreScreen() {
           return (
             <Pressable
               key={cat.id}
-              onPress={() => setCategory(cat.id)}
+              onPress={() => { setCategory(cat.id); playSound("tab").catch(() => {}); }}
               style={[
                 styles.catBtn,
                 { backgroundColor: theme.surface, borderColor: isActive ? themeGold : theme.border },
@@ -302,23 +346,33 @@ export default function StoreScreen() {
         ]}
       >
         {isEffects ? (
-          items.map((item) => (
-            <EffectCard
-              key={item.id}
-              item={item}
-              owned={profile.ownedItems.includes(item.id)}
-              onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
-            />
-          ))
+          items.map((item) => {
+            const owned = profile.ownedItems.includes(item.id) || !!item.isDefault;
+            return (
+              <EffectCard
+                key={item.id}
+                item={item}
+                owned={owned}
+                isEquipped={equippedId === item.id}
+                onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
+                onEquip={() => equipItem(item)}
+              />
+            );
+          })
         ) : (
-          items.map((item) => (
-            <StoreItemCard
-              key={item.id}
-              item={item}
-              owned={profile.ownedItems.includes(item.id)}
-              onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
-            />
-          ))
+          items.map((item) => {
+            const owned = profile.ownedItems.includes(item.id) || !!item.isDefault;
+            return (
+              <StoreItemCard
+                key={item.id}
+                item={item}
+                owned={owned}
+                isEquipped={equippedId === item.id}
+                onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
+                onEquip={() => equipItem(item)}
+              />
+            );
+          })
         )}
       </ScrollView>
 
@@ -376,7 +430,8 @@ const styles = StyleSheet.create({
     width: "47.5%", borderRadius: 16, overflow: "hidden",
     borderWidth: 1.5, backgroundColor: Colors.surface,
   },
-  itemCardOwned: { opacity: 0.75 },
+  itemCardEquipped: { borderWidth: 2 },
+  itemCardOwned: { opacity: 0.85 },
   itemCardPressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
   itemGrad: { padding: 12, minHeight: 170, justifyContent: "space-between" },
   rarityBadgeSmall: { alignSelf: "flex-start", marginBottom: 8 },
@@ -408,12 +463,25 @@ const styles = StyleSheet.create({
   freeText: { fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.textMuted },
   priceRowSm: { flexDirection: "row", alignItems: "center", gap: 3 },
   priceSmText: { fontFamily: "Nunito_900ExtraBold", fontSize: 13, color: Colors.gold },
+  equipBtn: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1,
+    alignSelf: "flex-start",
+  },
+  equipBtnText: { fontFamily: "Nunito_700Bold", fontSize: 10 },
+  equipActiveBadge: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, borderWidth: 1,
+    alignSelf: "flex-start",
+  },
+  equipActiveText: { fontFamily: "Nunito_700Bold", fontSize: 10 },
   // Effects card
   effectCard: {
     borderRadius: 16, overflow: "hidden", borderWidth: 1.5,
     backgroundColor: Colors.surface,
   },
-  effectCardOwned: { opacity: 0.75 },
+  effectCardEquipped: { borderWidth: 2 },
+  effectCardOwned: { opacity: 0.85 },
   effectGrad: { padding: 14, flexDirection: "row", alignItems: "center", gap: 14, minHeight: 80 },
   effectIconWrap: {
     width: 54, height: 54, borderRadius: 27, alignItems: "center", justifyContent: "center",

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import {
-  View, Text, StyleSheet, FlatList, Pressable, Platform,
+  View, Text, StyleSheet, FlatList, Pressable, Platform, Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,11 +23,13 @@ interface RankEntry {
   country: string;
   avatarIcon: string;
   avatarColor: string;
+  photoUrl?: string;
   isPlayer?: boolean;
 }
 
 const COUNTRIES = [
-  "MX","AR","BR","CO","CL","PE","VE","EC","BO","PY","UY","GT","HN","SV","CR","PA","CU","DO","ES","US"
+  "MX","AR","BR","CO","CL","PE","VE","EC","BO","PY","UY","GT","HN","SV","CR","PA","CU","DO","ES","US",
+  "PT","FR","DE","IT","JP","KR","CN","IN","NG","ZA","EG","MA","GH","KE","TZ","PH","ID","TR","PL","RU",
 ];
 
 function seededRand(seed: number): number {
@@ -41,7 +43,7 @@ function buildLeaderboard(
   playerWins: number,
   period: Period
 ): RankEntry[] {
-  const profiles = CPU_PROFILES.slice(0, 99);
+  const profiles = CPU_PROFILES;
   const multiplier = period === "alltime" ? 1 : period === "monthly" ? 0.12 : 0.03;
   const entries: RankEntry[] = profiles.map((p, i) => {
     const seed = i * 13 + (period === "weekly" ? 7777 : period === "monthly" ? 3333 : 1111);
@@ -56,6 +58,7 @@ function buildLeaderboard(
       country: COUNTRIES[Math.floor(seededRand(seed + 2) * COUNTRIES.length)],
       avatarIcon: p.avatarIcon,
       avatarColor: p.avatarColor,
+      photoUrl: p.photoUrl,
     };
   });
 
@@ -103,9 +106,16 @@ function RankRow({ entry, theme }: { entry: RankEntry; theme: any }) {
           </Text>
         )}
       </View>
-      <View style={[styles.avatarDot, { backgroundColor: entry.avatarColor + "33", borderColor: entry.avatarColor + "66" }]}>
-        <Ionicons name={entry.avatarIcon as any} size={14} color={entry.avatarColor} />
-      </View>
+      {entry.photoUrl && !entry.isPlayer ? (
+        <Image
+          source={{ uri: entry.photoUrl }}
+          style={[styles.avatarPhoto, { borderColor: entry.avatarColor + "66" }]}
+        />
+      ) : (
+        <View style={[styles.avatarDot, { backgroundColor: entry.avatarColor + "33", borderColor: entry.avatarColor + "66" }]}>
+          <Ionicons name={entry.avatarIcon as any} size={14} color={entry.avatarColor} />
+        </View>
+      )}
       <View style={styles.nameCol}>
         <Text style={[styles.entryName, { color: entry.isPlayer ? Colors.gold : theme.text }]} numberOfLines={1}>
           {entry.name}
@@ -158,7 +168,6 @@ export default function RankingScreen() {
     <View style={[styles.container, { paddingTop: topPad }]}>
       <LinearGradient colors={bgGrad} style={StyleSheet.absoluteFill} />
 
-      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="chevron-back" size={22} color={theme.gold} />
@@ -167,7 +176,7 @@ export default function RankingScreen() {
           <Text style={[styles.title, { color: theme.gold }]}>{T("worldRanking")}</Text>
           {playerEntry && (
             <Text style={[styles.myRankText, { color: theme.textMuted }]}>
-              {T("myRank")}: #{playerEntry.rank}
+              {T("myRank")}: #{playerEntry.rank} / {leaderboard.length}
             </Text>
           )}
         </View>
@@ -176,7 +185,6 @@ export default function RankingScreen() {
         </View>
       </View>
 
-      {/* Period tabs */}
       <View style={styles.tabRow}>
         {PERIODS.map((p) => (
           <Pressable
@@ -194,7 +202,6 @@ export default function RankingScreen() {
         ))}
       </View>
 
-      {/* Column headers */}
       <View style={[styles.colHeaders, { borderBottomColor: theme.border }]}>
         <Text style={[styles.colLabel, { width: 40 }]}>#</Text>
         <Text style={[styles.colLabel, { flex: 1 }]}>{T("player")}</Text>
@@ -207,7 +214,9 @@ export default function RankingScreen() {
         renderItem={({ item }) => <RankRow entry={item} theme={theme} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
-        initialScrollIndex={0}
+        initialNumToRender={30}
+        maxToRenderPerBatch={30}
+        windowSize={10}
       />
     </View>
   );
@@ -253,6 +262,9 @@ const styles = StyleSheet.create({
   avatarDot: {
     width: 30, height: 30, borderRadius: 15, borderWidth: 1,
     alignItems: "center", justifyContent: "center",
+  },
+  avatarPhoto: {
+    width: 30, height: 30, borderRadius: 15, borderWidth: 1,
   },
   nameCol: { flex: 1 },
   entryName: { fontFamily: "Nunito_700Bold", fontSize: 13 },
