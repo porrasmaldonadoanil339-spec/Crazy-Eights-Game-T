@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useProfile } from "@/context/ProfileContext";
-import { stopMusic, startMenuMusic, syncSettings } from "@/lib/audioManager";
+import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack } from "@/lib/audioManager";
 import { useT } from "@/hooks/useT";
 
 const LANGUAGES = [
@@ -38,8 +38,11 @@ export default function SettingsScreen() {
     const next = !profile.musicEnabled;
     updateSettings({ musicEnabled: next });
     syncSettings(next, profile.sfxEnabled);
-    if (!next) stopMusic().catch(() => {});
-    else startMenuMusic().catch(() => {});
+    if (!next) {
+      stopMusic().catch(() => {});
+    } else if (getCurrentTrack() === null) {
+      startMenuMusic().catch(() => {});
+    }
   };
 
   const toggleSfx = () => {

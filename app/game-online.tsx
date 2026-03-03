@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions,
+  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,6 +20,7 @@ import {
 } from "@/lib/multiplayerEngine";
 import { useProfile } from "@/context/ProfileContext";
 import { playCardFlip, playCardDraw, playButton, playWin } from "@/lib/audioManager";
+import { CARD_BACKS } from "@/lib/storeItems";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 
@@ -179,21 +180,28 @@ const lobbyStyles = StyleSheet.create({
 });
 
 // ─── Small face-down card ────────────────────────────────────────────────
-function FaceDownMini({ angle = 0 }: { angle?: number }) {
+function FaceDownMini({ angle = 0, backColors, backAccent }: {
+  angle?: number;
+  backColors?: [string, string, string];
+  backAccent?: string;
+}) {
+  const colors = backColors ?? ["#1E4080", "#0e2248", "#0a1832"] as [string, string, string];
+  const accent = backAccent ?? "#D4AF37";
   return (
     <View style={[gameStyles.faceDownMini, { transform: [{ rotate: `${angle}deg` }] }]}>
-      <LinearGradient colors={["#1E4080", "#0e2248"]} style={StyleSheet.absoluteFill}>
-        <Text style={gameStyles.faceDownDot}>◆</Text>
+      <LinearGradient colors={colors} style={StyleSheet.absoluteFill}>
+        <Text style={[gameStyles.faceDownDot, { color: accent }]}>◆</Text>
       </LinearGradient>
     </View>
   );
 }
 
 // ─── CPU opponent zone ────────────────────────────────────────────────────
-function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSkipped }: {
+function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSkipped, backColors, backAccent }: {
   handCount: number; profile: typeof CPU_POOL[0]; color: string;
   isThinking: boolean; isCurrent: boolean; side?: "left" | "right";
   isSkipped?: boolean;
+  backColors?: [string, string, string]; backAccent?: string;
 }) {
   const glow = useSharedValue(0);
   useEffect(() => {
@@ -236,7 +244,7 @@ function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSki
               ? [{ rotate: `${side === "left" ? 90 : -90}deg` }]
               : [{ rotate: `${(i - maxCards / 2) * 4}deg` }],
           }}>
-            <FaceDownMini />
+            <FaceDownMini backColors={backColors} backAccent={backAccent} />
           </View>
         ))}
       </View>
@@ -322,6 +330,10 @@ export default function OnlineGameScreen() {
   const { profile } = useProfile();
   const T = useT();
 
+  const cardBack = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
+  const backColors = (cardBack.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];
+  const backAccent = cardBack.backAccent ?? "#D4AF37";
+
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom + 4;
   const headerH = 50;
@@ -385,19 +397,38 @@ export default function OnlineGameScreen() {
     if (!gameState || lobbyPhase !== "game") return;
     if (gameState.phase === "game_over") return;
     const pidx = gameState.currentPlayerIndex;
-    if (pidx === 0) return; // Human's turn
 
     if (gameState.phase === "pass_device") {
-      // Auto-confirm for CPU (no pass-device needed)
+      // Auto-confirm pass_device for ALL players in online mode (no physical device passing)
       const t = setTimeout(() => {
         setGameState(prev => prev ? { ...prev, phase: "playing" } : prev);
-      }, 200);
+      }, 150);
+      return () => clearTimeout(t);
+    }
+
+    if (pidx === 0) return; // Human's turn for non-pass_device phases
+
+    if (gameState.phase === "choosing_suit") {
+      // CPU picks the suit it has the most of in its hand
+      const cpuHand = gameState.hands[pidx] ?? [];
+      const counts: Record<string, number> = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
+      for (const card of cpuHand) {
+        if (card.suit && card.suit in counts) counts[card.suit]++;
+      }
+      const sorted = (Object.entries(counts) as [Suit, number][]).sort(([, a], [, b]) => b - a);
+      const bestSuit = sorted[0]?.[0] ?? "spades";
+      const t = setTimeout(() => {
+        setGameState(prev => {
+          if (!prev || prev.currentPlayerIndex !== pidx) return prev;
+          return multiChooseSuit(prev, bestSuit as Suit);
+        });
+      }, 700);
       return () => clearTimeout(t);
     }
 
     if (gameState.phase === "playing" && !cpuThinking.current) {
       cpuThinking.current = true;
-      const delay = 900 + Math.random() * 800;
+      const delay = 800 + Math.random() * 700;
       const t = setTimeout(() => {
         cpuThinking.current = false;
         setGameState(prev => {
@@ -421,8 +452,12 @@ export default function OnlineGameScreen() {
     if (!gameState || !isPlaying) return;
     if (!multiCanPlay(card, gameState)) { playCardFlip().catch(() => {}); return; }
     if (selectedCard?.id === card.id) {
-      if (card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0)) return;
       playCardFlip().catch(() => {});
+      if (card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0)) {
+        // Play without suit to enter choosing_suit phase — SuitPicker will appear
+        setGameState(multiPlayCard(gameState, card));
+        return;
+      }
       setGameState(multiPlayCard(gameState, card));
       setSelectedCard(null);
     } else {
@@ -431,11 +466,12 @@ export default function OnlineGameScreen() {
   }, [gameState, isPlaying, selectedCard]);
 
   const handleChooseSuit = useCallback((suit: Suit) => {
-    if (!gameState || !selectedCard) return;
+    if (!gameState) return;
     playCardFlip().catch(() => {});
-    setGameState(multiPlayCard(gameState, selectedCard, suit));
+    // Card already played — just set the chosen suit via multiChooseSuit
+    setGameState(multiChooseSuit(gameState, suit));
     setSelectedCard(null);
-  }, [gameState, selectedCard]);
+  }, [gameState]);
 
   const handleDraw = useCallback(() => {
     if (!gameState || !isPlaying) return;
@@ -538,8 +574,8 @@ export default function OnlineGameScreen() {
               <View style={gameStyles.drawPileStack}>
                 {[2, 1, 0].map(i => (
                   <View key={i} style={[gameStyles.drawCardAbs, { top: -i * 1.5, left: i * 1.5, zIndex: 3 - i }]}>
-                    <LinearGradient colors={["#1E4080", "#0e2248"]} style={gameStyles.drawCardInner}>
-                      <Text style={gameStyles.drawCardDot}>◆</Text>
+                    <LinearGradient colors={backColors} style={gameStyles.drawCardInner}>
+                      <Text style={[gameStyles.drawCardDot, { color: backAccent }]}>◆</Text>
                     </LinearGradient>
                   </View>
                 ))}
@@ -582,6 +618,8 @@ export default function OnlineGameScreen() {
                 isCurrent={isCurrent}
                 side={side as "left" | "right" | undefined}
                 isSkipped={isSkipped}
+                backColors={backColors}
+                backAccent={backAccent}
               />
             </View>
           );
@@ -590,9 +628,13 @@ export default function OnlineGameScreen() {
         {/* ─── Human player hand ─── */}
         <View style={[gameStyles.playerZone, { top: tableCenterY + tableH / 2 + 10 }]}>
           <View style={gameStyles.playerLabel}>
-            <View style={gameStyles.humanAvatar}>
-              <Ionicons name="person" size={14} color={Colors.gold} />
-            </View>
+            {profile.photoUri ? (
+              <Image source={{ uri: profile.photoUri }} style={[gameStyles.humanAvatar, { borderRadius: 14 }]} />
+            ) : (
+              <View style={gameStyles.humanAvatar}>
+                <Ionicons name="person" size={14} color={Colors.gold} />
+              </View>
+            )}
             <Text style={gameStyles.playerName} numberOfLines={1}>
               {humanName} · {currentHand.length} {T("cards")}
             </Text>

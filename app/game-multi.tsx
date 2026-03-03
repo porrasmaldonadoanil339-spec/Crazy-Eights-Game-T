@@ -20,6 +20,8 @@ import {
   suitName, suitSymbol, suitColor, multiGetTopCard,
 } from "@/lib/multiplayerEngine";
 import { playCardFlip, playCardDraw, playButton } from "@/lib/audioManager";
+import { useProfile } from "@/context/ProfileContext";
+import { CARD_BACKS } from "@/lib/storeItems";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const PLAYER_COLORS = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
@@ -27,10 +29,14 @@ const PLAYER_ICONS: ("person" | "person-circle" | "happy" | "star")[] = ["person
 
 // ─── Small face-down card ────────────────────────────────────────────────
 function FaceDownMini({ angle = 0 }: { angle?: number }) {
+  const { profile } = useProfile();
+  const cardBack = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
+  const backColors = (cardBack.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];
+  const backAccent = cardBack.backAccent ?? "#D4AF37";
   return (
     <View style={[styles.faceDownMini, { transform: [{ rotate: `${angle}deg` }] }]}>
-      <LinearGradient colors={["#1E4080", "#0e2248"]} style={StyleSheet.absoluteFill}>
-        <Text style={styles.faceDownDot}>◆</Text>
+      <LinearGradient colors={backColors} style={StyleSheet.absoluteFill}>
+        <Text style={[styles.faceDownDot, { color: backAccent }]}>◆</Text>
       </LinearGradient>
     </View>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions,
+  View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions, Image,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,7 +19,7 @@ import { DealAnimation } from "@/components/DealAnimation";
 import type { Suit } from "@/lib/gameEngine";
 import { suitSymbol, suitName, suitColor, canPlay } from "@/lib/gameEngine";
 import { getModeById, getDifficultyById } from "@/lib/gameModes";
-import { AVATARS } from "@/lib/storeItems";
+import { AVATARS, CARD_BACKS } from "@/lib/storeItems";
 import type { Card } from "@/lib/gameEngine";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
@@ -333,8 +333,9 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
 }
 
 // ─── AI hand display ──────────────────────────────────────────────────────────
-function AiHand({ count, isThinking, cpuProfile }: {
+function AiHand({ count, isThinking, cpuProfile, backColors, backAccent }: {
   count: number; isThinking: boolean; cpuProfile: CpuProfile | null;
+  backColors: [string, string, string]; backAccent: string;
 }) {
   const T = useT();
   const pulse = useSharedValue(1);
@@ -348,19 +349,25 @@ function AiHand({ count, isThinking, cpuProfile }: {
     }
   }, [isThinking]);
   const pStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
-  const avatarItem = AVATARS.find(a => a.id === cpuProfile?.avatarId);
 
   return (
     <View style={styles.aiSection}>
       {/* CPU Profile row */}
       <View style={styles.cpuProfileRow}>
-        <View style={[styles.cpuAvatar, { backgroundColor: cpuProfile?.avatarColor ?? "#2C3E50" }]}>
-          <Ionicons name={(avatarItem?.preview ?? cpuProfile?.avatarIcon ?? "person") as any} size={13} color="#fff" />
-        </View>
+        {cpuProfile?.photoUrl ? (
+          <Image
+            source={{ uri: cpuProfile.photoUrl }}
+            style={[styles.cpuAvatar, { backgroundColor: cpuProfile.avatarColor }]}
+          />
+        ) : (
+          <View style={[styles.cpuAvatar, { backgroundColor: cpuProfile?.avatarColor ?? "#2C3E50" }]}>
+            <Ionicons name={(cpuProfile?.avatarIcon ?? "person") as any} size={13} color="#fff" />
+          </View>
+        )}
         <View style={styles.cpuProfileInfo}>
           <Text style={styles.cpuName} numberOfLines={1}>{cpuProfile?.name ?? "CPU"}</Text>
           <Text style={styles.cpuMeta} numberOfLines={1}>
-            Nv.{cpuProfile?.level ?? "?"} · {cpuProfile?.titleId?.replace("title_", "").replace("_", " ") ?? "Jugador"}
+            Nv.{cpuProfile?.level ?? "?"} · {cpuProfile?.titleId?.replace("title_", "").replace(/_/g, " ") ?? "CPU"}
           </Text>
         </View>
         <View style={[styles.turnDot, { backgroundColor: isThinking ? Colors.gold : "rgba(255,255,255,0.1)" }]} />
@@ -374,11 +381,11 @@ function AiHand({ count, isThinking, cpuProfile }: {
             zIndex: i,
             transform: [{ rotate: `${(i - Math.min(count, 12) / 2) * 4}deg` }],
           }]}>
-            <LinearGradient colors={["#1E4080", "#0a1832"]} style={styles.aiCardInner}>
+            <LinearGradient colors={backColors} style={styles.aiCardInner}>
               <View style={styles.aiCardPattern}>
                 {[0,1,2].map(r => (
                   <View key={r} style={{ flexDirection: "row", gap: 2 }}>
-                    {[0,1,2].map(c => <Text key={c} style={{ fontSize: 5, color: Colors.gold, opacity: 0.3 }}>◆</Text>)}
+                    {[0,1,2].map(c => <Text key={c} style={{ fontSize: 5, color: backAccent, opacity: 0.3 }}>◆</Text>)}
                   </View>
                 ))}
               </View>
@@ -394,16 +401,20 @@ function AiHand({ count, isThinking, cpuProfile }: {
 }
 
 // ─── Player profile bar ───────────────────────────────────────────────────────
-function PlayerProfileBar({ name, avatarId, titleId, level }: {
-  name: string; avatarId: string; titleId: string; level: number;
+function PlayerProfileBar({ name, avatarId, titleId, level, photoUri }: {
+  name: string; avatarId: string; titleId: string; level: number; photoUri?: string;
 }) {
   const avatarItem = AVATARS.find(a => a.id === avatarId);
   const titleName = titleId.replace("title_", "").replace(/_/g, " ");
   return (
     <View style={styles.playerProfileRow}>
-      <View style={[styles.playerAvatar, { backgroundColor: avatarItem?.previewColor ?? "#2a4a2a" }]}>
-        <Ionicons name={(avatarItem?.preview ?? "person") as any} size={13} color="#fff" />
-      </View>
+      {photoUri ? (
+        <Image source={{ uri: photoUri }} style={[styles.playerAvatar, { borderRadius: 16 }]} />
+      ) : (
+        <View style={[styles.playerAvatar, { backgroundColor: avatarItem?.previewColor ?? "#2a4a2a" }]}>
+          <Ionicons name={(avatarItem?.preview ?? "person") as any} size={13} color="#fff" />
+        </View>
+      )}
       <View style={styles.playerProfileInfo}>
         <Text style={styles.playerProfileName} numberOfLines={1}>{name}</Text>
         <Text style={styles.playerProfileMeta} numberOfLines={1}>Nv.{level} · {titleName}</Text>
@@ -423,6 +434,10 @@ export default function GameScreen() {
   } = useGame();
   const { profile, level, recordGameResult, updateAchievementProgress } = useProfile();
   const T = useT();
+
+  const cardBack = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
+  const backColors = (cardBack.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];
+  const backAccent = cardBack.backAccent ?? Colors.gold;
 
   const aiThinking = useRef(false);
   const resultRecorded = useRef(false);
@@ -705,7 +720,7 @@ export default function GameScreen() {
 
       {/* AI section with CPU emote */}
       <View style={styles.aiSectionWrapper}>
-        <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={cpuProfile} />
+        <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={cpuProfile} backColors={backColors} backAccent={backAccent} />
         <EmoteBubble emote={cpuEmote} side="cpu" />
       </View>
 
@@ -743,10 +758,10 @@ export default function GameScreen() {
                 <View key={i} style={[styles.deckCardAbs, {
                   top: -i * 1.5, left: i * 1.5, zIndex: 4 - i,
                 }]}>
-                  <LinearGradient colors={["#1E4080", "#0e2248"]} style={styles.deckCardInner}>
+                  <LinearGradient colors={backColors} style={styles.deckCardInner}>
                     <View style={styles.deckPattern}>
                       {[0,1].map(r=><View key={r} style={{flexDirection:"row",gap:3}}>
-                        {[0,1,2].map(c=><Text key={c} style={{fontSize:7,color:Colors.gold,opacity:0.25}}>◆</Text>)}
+                        {[0,1,2].map(c=><Text key={c} style={{fontSize:7,color:backAccent,opacity:0.25}}>◆</Text>)}
                       </View>)}
                     </View>
                   </LinearGradient>
@@ -798,6 +813,7 @@ export default function GameScreen() {
           avatarId={profile.avatarId}
           titleId={profile.titleId}
           level={level}
+          photoUri={profile.photoUri || undefined}
         />
         <View style={styles.turnLabelRow}>
           <View style={[styles.turnDot, { backgroundColor: isPlayerTurn ? Colors.gold : "transparent" }]} />

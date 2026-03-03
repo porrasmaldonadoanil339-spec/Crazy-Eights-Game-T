@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
+import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/context/ProfileContext";
 import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS } from "@/lib/storeItems";
 import { playSound } from "@/lib/sounds";
@@ -43,32 +44,34 @@ function ConfirmModal({
   item, visible, onConfirm, onCancel,
 }: { item: StoreItem | null; visible: boolean; onConfirm: () => void; onCancel: () => void }) {
   const T = useT();
+  const theme = useTheme();
   const rarityLabel = useRarityLabel();
   if (!item) return null;
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
+  const modalGrad = theme.isDark ? ["#0a1a0c","#061209"] as const : ["#e0f0d8","#cce4c4"] as const;
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onCancel}>
-      <View style={styles.modalBg}>
-        <View style={styles.confirmModal}>
-          <LinearGradient colors={["#0a1a0c","#061209"]} style={StyleSheet.absoluteFill} />
+      <View style={[styles.modalBg, { backgroundColor: theme.overlay }]}>
+        <View style={[styles.confirmModal, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <LinearGradient colors={modalGrad} style={StyleSheet.absoluteFill} />
           <View style={[styles.confirmIconWrap, { backgroundColor: item.previewColor + "33", borderColor: rarityColor + "66", borderWidth: 1.5 }]}>
             <Ionicons name={item.preview as any} size={32} color={item.previewColor} />
           </View>
           <View style={[styles.rarityBadge, { backgroundColor: rarityColor + "22" }]}>
             <Text style={[styles.rarityBadgeText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
           </View>
-          <Text style={styles.confirmName}>{item.name}</Text>
-          <Text style={styles.confirmDesc}>{item.description}</Text>
+          <Text style={[styles.confirmName, { color: theme.text }]}>{item.name}</Text>
+          <Text style={[styles.confirmDesc, { color: theme.textMuted }]}>{item.description}</Text>
           <View style={styles.priceRow}>
-            <Ionicons name="cash" size={18} color={Colors.gold} />
-            <Text style={styles.priceText}>{item.price} {T("coins")}</Text>
+            <Ionicons name="cash" size={18} color={theme.gold} />
+            <Text style={[styles.priceText, { color: theme.gold }]}>{item.price} {T("coins")}</Text>
           </View>
           <View style={styles.confirmBtns}>
-            <Pressable onPress={onCancel} style={styles.cancelBtn}>
-              <Text style={styles.cancelText}>{T("cancel")}</Text>
+            <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={[styles.cancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
             </Pressable>
             <Pressable onPress={onConfirm} style={styles.buyBtn}>
-              <LinearGradient colors={[Colors.goldLight, Colors.gold]} style={styles.buyBtnGrad}>
+              <LinearGradient colors={[theme.goldLight, theme.gold]} style={styles.buyBtnGrad}>
                 <Ionicons name="bag-check" size={16} color="#1a0a00" />
                 <Text style={styles.buyBtnText}>{T("buy")}</Text>
               </LinearGradient>
@@ -82,6 +85,7 @@ function ConfirmModal({
 
 function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean; onPress: () => void }) {
   const T = useT();
+  const theme = useTheme();
   const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
   return (
@@ -89,7 +93,7 @@ function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean;
       onPress={owned ? undefined : onPress}
       style={({ pressed }) => [
         styles.effectCard,
-        { borderColor: rarityColor + "55" },
+        { borderColor: rarityColor + "55", backgroundColor: theme.surface },
         owned && styles.effectCardOwned,
         pressed && !owned && { opacity: 0.85, transform: [{ scale: 0.97 }] },
       ]}
@@ -100,12 +104,12 @@ function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean;
         </View>
         <View style={{ flex: 1 }}>
           <View style={styles.effectTopRow}>
-            <Text style={styles.effectName}>{item.name}</Text>
+            <Text style={[styles.effectName, { color: theme.text }]}>{item.name}</Text>
             <View style={[styles.effectRarityBadge, { backgroundColor: rarityColor + "22" }]}>
               <Text style={[styles.effectRarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
             </View>
           </View>
-          <Text style={styles.effectDesc}>{item.description}</Text>
+          <Text style={[styles.effectDesc, { color: theme.textMuted }]}>{item.description}</Text>
           <View style={styles.effectFooter}>
             {owned ? (
               <View style={styles.ownedBadge}>
@@ -129,6 +133,7 @@ function EffectCard({ item, owned, onPress }: { item: StoreItem; owned: boolean;
 
 function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boolean; onPress: () => void }) {
   const T = useT();
+  const theme = useTheme();
   const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
   return (
@@ -136,7 +141,7 @@ function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boole
       onPress={owned ? undefined : onPress}
       style={({ pressed }) => [
         styles.itemCard,
-        { borderColor: rarityColor + "55" },
+        { borderColor: rarityColor + "55", backgroundColor: theme.surface },
         owned && styles.itemCardOwned,
         pressed && !owned && styles.itemCardPressed,
       ]}
@@ -166,8 +171,8 @@ function StoreItemCard({ item, owned, onPress }: { item: StoreItem; owned: boole
             <Ionicons name={item.preview as any} size={28} color={owned ? item.previewColor : item.previewColor + "aa"} />
           </View>
         )}
-        <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-        <Text style={styles.itemDesc} numberOfLines={2}>{item.description}</Text>
+        <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
+        <Text style={[styles.itemDesc, { color: theme.textMuted }]} numberOfLines={2}>{item.description}</Text>
         <View style={styles.itemFooter}>
           {owned ? (
             <View style={styles.ownedBadge}>
@@ -197,6 +202,7 @@ export default function StoreScreen() {
   const catScrollRef = useRef<ScrollView>(null);
 
   const T = useT();
+  const theme = useTheme();
   const swipeHandlers = useSwipeTabs(2);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -207,7 +213,7 @@ export default function StoreScreen() {
   const bgColors: [string, string, string] = isDark
     ? ["#061209", "#0a1a0f", "#0d2418"]
     : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
-  const themeGold = isDark ? Colors.gold : "#A07800";
+  const themeGold = theme.gold;
 
   const CATEGORY_LABELS: Record<StoreItemCategory, string> = {
     card_back: T("categoryCardBacks"),
@@ -265,19 +271,26 @@ export default function StoreScreen() {
         style={styles.catScrollView}
         contentContainerStyle={styles.catRow}
       >
-        {CATEGORIES.map((cat) => (
-          <Pressable
-            key={cat.id}
-            onPress={() => setCategory(cat.id)}
-            style={[styles.catBtn, category === cat.id && styles.catBtnActive]}
-          >
-            <Ionicons name={cat.icon as any} size={15} color={category === cat.id ? themeGold : Colors.textMuted} />
-            <Text style={[styles.catLabel, category === cat.id && styles.catLabelActive]}>{CATEGORY_LABELS[cat.id]}</Text>
-            <View style={[styles.catCount, category === cat.id && styles.catCountActive]}>
-              <Text style={[styles.catCountText, category === cat.id && { color: Colors.gold }]}>{cat.count}</Text>
-            </View>
-          </Pressable>
-        ))}
+        {CATEGORIES.map((cat) => {
+          const isActive = category === cat.id;
+          return (
+            <Pressable
+              key={cat.id}
+              onPress={() => setCategory(cat.id)}
+              style={[
+                styles.catBtn,
+                { backgroundColor: theme.surface, borderColor: isActive ? themeGold : theme.border },
+                isActive && { backgroundColor: themeGold + "22" },
+              ]}
+            >
+              <Ionicons name={cat.icon as any} size={15} color={isActive ? themeGold : theme.textMuted} />
+              <Text style={[styles.catLabel, { color: isActive ? themeGold : theme.textMuted }]}>{CATEGORY_LABELS[cat.id]}</Text>
+              <View style={[styles.catCount, isActive && { backgroundColor: themeGold + "33" }]}>
+                <Text style={[styles.catCountText, { color: isActive ? themeGold : theme.textDim }]}>{cat.count}</Text>
+              </View>
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       <ScrollView
@@ -339,7 +352,7 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.gold + "44",
   },
   coinsNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold },
-  catScrollView: { flexShrink: 0, flexGrow: 0, marginBottom: 10 },
+  catScrollView: { flexShrink: 0, flexGrow: 0, height: 60, marginBottom: 6 },
   catRow: { paddingHorizontal: 16, paddingVertical: 6, gap: 8, flexDirection: "row", alignItems: "center" },
   catBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,

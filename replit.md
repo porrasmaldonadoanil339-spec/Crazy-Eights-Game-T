@@ -159,7 +159,7 @@ assets/sounds/
 
 ## Achievements
 
-- **114 achievement definitions** across rarities: common / rare / epic / legendary / hidden
+- **116 achievement definitions** across rarities: common / rare / epic / legendary / hidden
 - Categories: wins, modes, special cards, hands, coins, streaks, store, difficulty, social, multiplayer, XP, battle pass, language, theme, gameplay specifics
 - Coin + XP rewards per achievement
 
@@ -201,6 +201,8 @@ assets/sounds/
 - Lobby: searching → players join → countdown → game
 - CPU profiles act as real online rivals (flag emoji, level, win rate)
 - Blue navy-themed table; CPU auto-plays after 1-2s delay
+- `pass_device` phase auto-confirmed for ALL players (no manual device passing in online mode)
+- 8/Joker cards: `multiPlayCard(gs, card)` → `choosing_suit` phase → SuitPicker → `multiChooseSuit(gs, suit)`
 - Result overlay: translated "¡GANASTE!/YOU WON!/VOCÊ GANHOU!" or "DERROTA/DEFEAT"
 
 ---

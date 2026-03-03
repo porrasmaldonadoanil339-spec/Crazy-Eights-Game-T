@@ -18,7 +18,9 @@ type SoundKey = keyof typeof SOUNDS;
 
 let bgPlayer: AudioPlayer | null = null;
 let sfxPlayers: Map<SoundKey, AudioPlayer> = new Map();
-let isMuted = false;
+let currentTrack: "menu" | "game" | null = null;
+let isMusicEnabled = true;
+let isSfxMuted = false;
 let musicVolume = 0.35;
 let sfxVolume = 0.85;
 let isInitialized = false;
@@ -30,9 +32,7 @@ async function safe(fn: () => Promise<void>) {
 export async function initAudio() {
   if (isInitialized) return;
   try {
-    await setAudioModeAsync({
-      playsInSilentMode: true,
-    });
+    await setAudioModeAsync({ playsInSilentMode: true });
     isInitialized = true;
   } catch {}
 }
@@ -54,34 +54,43 @@ export async function preloadSounds() {
 }
 
 export async function startMenuMusic() {
-  if (isMuted) return;
-  await stopMusic();
+  if (!isMusicEnabled) return;
+  if (currentTrack === "menu" && bgPlayer) return;
+  await _stopMusicInternal();
   await safe(async () => {
     bgPlayer = createAudioPlayer(SOUNDS.menuMusic);
     bgPlayer.volume = musicVolume;
     bgPlayer.loop = true;
     bgPlayer.play();
+    currentTrack = "menu";
   });
 }
 
 export async function startGameMusic() {
-  if (isMuted) return;
-  await stopMusic();
+  if (!isMusicEnabled) return;
+  if (currentTrack === "game" && bgPlayer) return;
+  await _stopMusicInternal();
   await safe(async () => {
     bgPlayer = createAudioPlayer(SOUNDS.gameMusic);
     bgPlayer.volume = musicVolume;
     bgPlayer.loop = true;
     bgPlayer.play();
+    currentTrack = "game";
   });
 }
 
-export async function stopMusic() {
+async function _stopMusicInternal() {
   if (!bgPlayer) return;
   await safe(async () => {
     bgPlayer!.pause();
     bgPlayer!.remove();
     bgPlayer = null;
+    currentTrack = null;
   });
+}
+
+export async function stopMusic() {
+  await _stopMusicInternal();
 }
 
 export async function pauseMusic() {
@@ -90,12 +99,16 @@ export async function pauseMusic() {
 }
 
 export async function resumeMusic() {
-  if (!bgPlayer || isMuted) return;
+  if (!bgPlayer || !isMusicEnabled) return;
   await safe(async () => bgPlayer!.play());
 }
 
+export function getCurrentTrack(): "menu" | "game" | null {
+  return currentTrack;
+}
+
 async function playSfx(key: SoundKey) {
-  if (isMuted) return;
+  if (isSfxMuted) return;
   await safe(async () => {
     const player = getOrCreateSfx(key);
     player.volume = sfxVolume;
@@ -155,33 +168,30 @@ export async function playAchievement() {
   });
 }
 
-export function setMuted(muted: boolean) {
-  isMuted = muted;
-  if (muted) {
-    pauseMusic();
-  } else {
-    // Only resume if we were in a context where music should play
-    // But for simplicity, we just resume whatever was there
-    resumeMusic();
-  }
-}
-
 export function syncSettings(musicEnabled: boolean, sfxEnabled: boolean) {
-  isMuted = !sfxEnabled;
-  if (!musicEnabled) {
-    stopMusic();
+  isMusicEnabled = musicEnabled;
+  isSfxMuted = !sfxEnabled;
+  if (!musicEnabled && bgPlayer) {
+    pauseMusic().catch(() => {});
+  } else if (musicEnabled && bgPlayer) {
+    resumeMusic().catch(() => {});
   }
 }
 
-export function getMuted() { return isMuted; }
+export function getMuted() { return isSfxMuted; }
+export function getMusicEnabled() { return isMusicEnabled; }
 
 export function setMusicVolume(vol: number) {
   musicVolume = Math.max(0, Math.min(1, vol));
   if (bgPlayer) safe(async () => { bgPlayer!.volume = musicVolume; });
 }
 
+export function setSfxVolume(vol: number) {
+  sfxVolume = Math.max(0, Math.min(1, vol));
+}
+
 export async function cleanupAudio() {
-  await stopMusic();
+  await _stopMusicInternal();
   for (const player of sfxPlayers.values()) {
     try { player.remove(); } catch {}
   }
