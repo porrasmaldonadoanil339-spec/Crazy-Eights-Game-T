@@ -48,7 +48,7 @@ app/
     profile.tsx         ← Player profile, stats, avatar/title picker (multiplayer stats included)
   game.tsx              ← Main game screen; DealAnimation receives player's backColors+backAccent
   game-multi.tsx        ← Local multiplayer game (pass-device flow; fully i18n)
-  game-online.tsx       ← Online multiplayer (simulated lobby + game; fully i18n)
+  game-online.tsx       ← Online multiplayer (simulated lobby + game; fully i18n; 100 CPU profiles with photos)
   tutorial.tsx          ← Interactive step-by-step tutorial (8 steps)
   rules.tsx             ← Static rules reference
   settings.tsx          ← Settings (audio, language ES/EN/PT, dark/light mode toggle, reset)

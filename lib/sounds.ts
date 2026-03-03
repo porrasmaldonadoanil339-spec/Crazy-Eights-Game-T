@@ -3,6 +3,7 @@ export type SoundEvent =
   | "card_draw"
   | "card_wild"
   | "card_deal"
+  | "card_flip"
   | "shuffle"
   | "win"
   | "lose"
@@ -35,6 +36,7 @@ export async function playSound(event: SoundEvent) {
     case "card_draw":   return playCardDraw();
     case "card_wild":   return playCardWild();
     case "card_deal":   return playCardFlip();
+    case "card_flip":   return playCardFlip();
     case "shuffle":     return playShuffle();
     case "win":         return playWin();
     case "lose":        return playLose();

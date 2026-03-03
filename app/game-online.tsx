@@ -21,26 +21,17 @@ import {
 import { useProfile } from "@/context/ProfileContext";
 import { playCardFlip, playCardDraw, playButton, playWin } from "@/lib/audioManager";
 import { CARD_BACKS } from "@/lib/storeItems";
+import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 
-// Fake CPU online profiles
-const CPU_POOL = [
-  { name: "CarlosMX", flag: "🇲🇽", level: 12, wr: 67, avatarColor: "#27AE60" },
-  { name: "LucíaAR", flag: "🇦🇷", level: 8,  wr: 52, avatarColor: "#E74C3C" },
-  { name: "DiegoVE", flag: "🇻🇪", level: 15, wr: 71, avatarColor: "#9B59B6" },
-  { name: "SofíaCO", flag: "🇨🇴", level: 6,  wr: 45, avatarColor: "#E67E22" },
-  { name: "MiguelCL", flag: "🇨🇱", level: 20, wr: 78, avatarColor: "#1A8FC1" },
-  { name: "ValeriaPE", flag: "🇵🇪", level: 10, wr: 60, avatarColor: "#27AE60" },
-  { name: "AndresEC", flag: "🇪🇨", level: 14, wr: 65, avatarColor: "#E74C3C" },
-  { name: "IsabelBO", flag: "🇧🇴", level: 7,  wr: 48, avatarColor: "#D4AF37" },
-  { name: "XavierUY", flag: "🇺🇾", level: 18, wr: 73, avatarColor: "#9B59B6" },
-  { name: "NataliaCR", flag: "🇨🇷", level: 11, wr: 58, avatarColor: "#E74C3C" },
-];
-
-function pickCpuProfiles(count: number) {
-  const shuffled = [...CPU_POOL].sort(() => Math.random() - 0.5);
+function pickCpuProfiles(count: number): CpuProfile[] {
+  const shuffled = [...CPU_PROFILES].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
+}
+
+function wrFromLevel(level: number) {
+  return Math.round(Math.min(88, 35 + level * 0.75));
 }
 
 const PLAYER_COLORS = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
@@ -60,7 +51,7 @@ function LobbyScreen({
 }: {
   playerCount: number;
   humanName: string;
-  cpuProfiles: typeof CPU_POOL;
+  cpuProfiles: CpuProfile[];
   joinedCount: number;
   phase: "searching" | "found" | "countdown";
   countdown: number;
@@ -116,15 +107,22 @@ function LobbyScreen({
           {cpuProfiles.slice(0, joinedCount).map((cpu, i) => (
             <Animated.View
               key={cpu.name}
-              entering={FadeInDown.delay(100).duration(500)}
+              entering={FadeInDown.delay(100 + i * 80).duration(500)}
               style={lobbyStyles.slot}
             >
               <View style={[lobbyStyles.slotAvatar, { borderColor: cpu.avatarColor }]}>
-                <Text style={lobbyStyles.slotFlag}>{cpu.flag}</Text>
+                {cpu.photoUrl ? (
+                  <Image
+                    source={{ uri: cpu.photoUrl }}
+                    style={{ width: 36, height: 36, borderRadius: 18 }}
+                  />
+                ) : (
+                  <Ionicons name={cpu.avatarIcon as any} size={20} color={cpu.avatarColor} />
+                )}
               </View>
               <View style={lobbyStyles.slotInfo}>
                 <Text style={[lobbyStyles.slotName, { color: cpu.avatarColor }]}>{cpu.name}</Text>
-                <Text style={lobbyStyles.slotSub}>{T("level")} {cpu.level} · {cpu.wr}% WR</Text>
+                <Text style={lobbyStyles.slotSub}>{T("level")} {cpu.level} · {wrFromLevel(cpu.level)}% WR</Text>
               </View>
               <View style={[lobbyStyles.onlineDot, { backgroundColor: "#2ecc71" }]} />
             </Animated.View>
@@ -198,7 +196,7 @@ function FaceDownMini({ angle = 0, backColors, backAccent }: {
 
 // ─── CPU opponent zone ────────────────────────────────────────────────────
 function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSkipped, backColors, backAccent }: {
-  handCount: number; profile: typeof CPU_POOL[0]; color: string;
+  handCount: number; profile: CpuProfile; color: string;
   isThinking: boolean; isCurrent: boolean; side?: "left" | "right";
   isSkipped?: boolean;
   backColors?: [string, string, string]; backAccent?: string;
@@ -224,7 +222,11 @@ function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSki
       {/* Avatar */}
       <View style={gameStyles.cpuAvatarRow}>
         <Animated.View style={[gameStyles.cpuAvatarRing, { borderColor: color }, isCurrent && glowStyle]}>
-          <Text style={gameStyles.cpuFlag}>{profile.flag}</Text>
+          {profile.photoUrl ? (
+            <Image source={{ uri: profile.photoUrl }} style={{ width: 28, height: 28, borderRadius: 14 }} />
+          ) : (
+            <Ionicons name={profile.avatarIcon as any} size={14} color={color} />
+          )}
         </Animated.View>
         <View style={{ gap: 1 }}>
           <Text style={[gameStyles.cpuName, { color }]} numberOfLines={1}>{profile.name}</Text>

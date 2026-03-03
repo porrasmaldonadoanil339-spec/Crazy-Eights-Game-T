@@ -147,13 +147,7 @@ export default function SettingsScreen() {
               </View>
               <View>
                 <Text style={[styles.rowLabel, { color: labelColor }]}>{T("music")}</Text>
-                <Text style={[styles.rowSub, { color: subColor }]}>
-                  {profile.language === "en"
-                    ? "Background music in menu & game"
-                    : profile.language === "pt"
-                    ? "Música de fundo no menu e no jogo"
-                    : "Música de fondo en menú y partida"}
-                </Text>
+                <Text style={[styles.rowSub, { color: subColor }]}>{T("musicDesc")}</Text>
               </View>
             </View>
             <Switch
@@ -173,13 +167,7 @@ export default function SettingsScreen() {
               </View>
               <View>
                 <Text style={[styles.rowLabel, { color: labelColor }]}>{T("soundEffects")}</Text>
-                <Text style={[styles.rowSub, { color: subColor }]}>
-                  {profile.language === "en"
-                    ? "Cards, wins, buttons"
-                    : profile.language === "pt"
-                    ? "Cartas, vitórias, botões"
-                    : "Cartas, victorias, botones"}
-                </Text>
+                <Text style={[styles.rowSub, { color: subColor }]}>{T("sfxDesc")}</Text>
               </View>
             </View>
             <Switch
@@ -199,13 +187,7 @@ export default function SettingsScreen() {
               </View>
               <View>
                 <Text style={[styles.rowLabel, { color: labelColor }]}>{T("vibration")}</Text>
-                <Text style={[styles.rowSub, { color: subColor }]}>
-                  {profile.language === "en"
-                    ? "Haptic feedback on plays & wins"
-                    : profile.language === "pt"
-                    ? "Feedback háptico em jogadas e vitórias"
-                    : "Feedback háptico en jugadas y victorias"}
-                </Text>
+                <Text style={[styles.rowSub, { color: subColor }]}>{T("vibrationDesc")}</Text>
               </View>
             </View>
             <Switch
@@ -243,24 +225,12 @@ export default function SettingsScreen() {
             <LinearGradient colors={["#D4AF3722", "#D4AF3705"]} style={styles.aboutGrad}>
               <Text style={styles.gameName}>OCHO LOCOS</Text>
               <Text style={[styles.gameVer, { color: subColor }]}>{T("version")} 3.0</Text>
-              <Text style={[styles.gameDesc, { color: isDark ? "#9AAA8C" : "#3a5a3a" }]}>
-                {profile.language === "en"
-                  ? "The most popular card game in Latin America, now with tournaments, 100+ achievements, 100-tier battle pass and online multiplayer."
-                  : profile.language === "pt"
-                  ? "O jogo de cartas mais popular da América Latina, agora com torneios, 100+ conquistas, passe de batalha de 100 níveis e multiplayer online."
-                  : "El juego de cartas más popular de América Latina, ahora con torneos, 100+ logros, pase de batalla de 100 niveles y multijugador online."}
-              </Text>
+              <Text style={[styles.gameDesc, { color: isDark ? "#9AAA8C" : "#3a5a3a" }]}>{T("gameDescAbout")}</Text>
             </LinearGradient>
           </View>
         </View>
 
-        <Text style={[styles.resetHint, { color: isDark ? "#445544" : "#6a8a6a" }]}>
-          {profile.language === "en"
-            ? "Data is saved locally on your device."
-            : profile.language === "pt"
-            ? "Os dados são salvos localmente no seu dispositivo."
-            : "Los datos se guardan localmente en tu dispositivo."}
-        </Text>
+        <Text style={[styles.resetHint, { color: isDark ? "#445544" : "#6a8a6a" }]}>{T("savedLocally")}</Text>
       </ScrollView>
 
       {/* Language Modal */}

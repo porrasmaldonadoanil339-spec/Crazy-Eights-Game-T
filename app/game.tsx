@@ -865,6 +865,7 @@ export default function GameScreen() {
       {!dealAnimationDone && (
         <DealAnimation
           cardsPerPlayer={gameState.playerHand.length}
+          playerCards={gameState.playerHand}
           onComplete={() => setDealAnimationDone(true)}
           backColors={backColors}
           backAccent={backAccent}
