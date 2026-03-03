@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -24,9 +25,11 @@ interface DealCardProps {
   target: "player" | "ai";
   dealIndex: number;
   onDone?: () => void;
+  backColors: [string, string, string];
+  backAccent: string;
 }
 
-function DealCard({ index, totalCards, target, dealIndex, onDone }: DealCardProps) {
+function DealCard({ index, totalCards, target, dealIndex, onDone, backColors, backAccent }: DealCardProps) {
   const x = useSharedValue(0);
   const y = useSharedValue(0);
   const opacity = useSharedValue(0);
@@ -35,9 +38,7 @@ function DealCard({ index, totalCards, target, dealIndex, onDone }: DealCardProp
 
   useEffect(() => {
     const delay = dealIndex * 180;
-    const targetX = target === "player"
-      ? (index - totalCards / 2) * (CARD_W * 0.7)
-      : (index - totalCards / 2) * (CARD_W * 0.7);
+    const targetX = (index - totalCards / 2) * (CARD_W * 0.7);
     const targetY = target === "player" ? SH * 0.28 : -SH * 0.28;
     const finalRotate = (index - totalCards / 2) * 6;
 
@@ -69,16 +70,32 @@ function DealCard({ index, totalCards, target, dealIndex, onDone }: DealCardProp
     ],
   }));
 
-  return <Animated.View style={[styles.dealCard, style]} />;
+  return (
+    <Animated.View style={[styles.dealCard, style]}>
+      <LinearGradient colors={backColors} style={styles.dealCardInner}>
+        <View style={[styles.dealCardCorner, { borderColor: backAccent + "55" }]}>
+          <View style={[styles.dealCardDiamond, { backgroundColor: backAccent + "88" }]} />
+        </View>
+        <View style={[styles.dealCardCenter, { borderColor: backAccent + "33" }]}>
+          <View style={[styles.dealCardCenterDot, { backgroundColor: backAccent + "44" }]} />
+        </View>
+        <View style={[styles.dealCardCornerBR, { borderColor: backAccent + "55" }]}>
+          <View style={[styles.dealCardDiamond, { backgroundColor: backAccent + "88" }]} />
+        </View>
+      </LinearGradient>
+    </Animated.View>
+  );
 }
 
 interface ShuffleCardProps {
   index: number;
   onShuffleDone: () => void;
   isLast: boolean;
+  backColors: [string, string, string];
+  backAccent: string;
 }
 
-function ShuffleCard({ index, onShuffleDone, isLast }: ShuffleCardProps) {
+function ShuffleCard({ index, onShuffleDone, isLast, backColors, backAccent }: ShuffleCardProps) {
   const x = useSharedValue(0);
   const y = useSharedValue(0);
   const rotate = useSharedValue((index - CARD_COUNT / 2) * 8);
@@ -127,15 +144,30 @@ function ShuffleCard({ index, onShuffleDone, isLast }: ShuffleCardProps) {
     ],
   }));
 
-  return <Animated.View style={[styles.dealCard, style]} />;
+  return (
+    <Animated.View style={[styles.dealCard, style]}>
+      <LinearGradient colors={backColors} style={styles.dealCardInner}>
+        <View style={[styles.dealCardCenter, { borderColor: backAccent + "33" }]}>
+          <View style={[styles.dealCardCenterDot, { backgroundColor: backAccent + "44" }]} />
+        </View>
+      </LinearGradient>
+    </Animated.View>
+  );
 }
 
 interface DealAnimationProps {
   cardsPerPlayer: number;
   onComplete: () => void;
+  backColors?: [string, string, string];
+  backAccent?: string;
 }
 
-export function DealAnimation({ cardsPerPlayer, onComplete }: DealAnimationProps) {
+export function DealAnimation({
+  cardsPerPlayer,
+  onComplete,
+  backColors = ["#1E4080", "#0e2248", "#0a1832"],
+  backAccent = "#D4AF37",
+}: DealAnimationProps) {
   const [phase, setPhase] = React.useState<"shuffle" | "deal" | "done">("shuffle");
   const overlayOpacity = useSharedValue(1);
   const calledRef = useRef(false);
@@ -176,6 +208,8 @@ export function DealAnimation({ cardsPerPlayer, onComplete }: DealAnimationProps
               index={i}
               isLast={i === CARD_COUNT - 1}
               onShuffleDone={handleShuffleDone}
+              backColors={backColors}
+              backAccent={backAccent}
             />
           ))}
         {phase === "deal" &&
@@ -187,6 +221,8 @@ export function DealAnimation({ cardsPerPlayer, onComplete }: DealAnimationProps
               target={item.target}
               dealIndex={item.dealIndex}
               onDone={i === dealItems.length - 1 ? handleDealDone : undefined}
+              backColors={backColors}
+              backAccent={backAccent}
             />
           ))}
       </View>
@@ -197,7 +233,7 @@ export function DealAnimation({ cardsPerPlayer, onComplete }: DealAnimationProps
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.85)",
+    backgroundColor: "rgba(0,0,0,0.88)",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 999,
@@ -213,13 +249,62 @@ const styles = StyleSheet.create({
     width: CARD_W,
     height: CARD_H,
     borderRadius: 8,
-    backgroundColor: "#1A3A6A",
-    borderWidth: 2,
-    borderColor: Colors.gold,
+    overflow: "hidden",
+    borderWidth: 1.5,
+    borderColor: Colors.gold + "66",
     shadowColor: Colors.gold,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  dealCardInner: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 4,
+  },
+  dealCardCorner: {
+    position: "absolute",
+    top: 4,
+    left: 4,
+    width: 14,
+    height: 14,
+    borderRadius: 3,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dealCardCornerBR: {
+    position: "absolute",
+    bottom: 4,
+    right: 4,
+    width: 14,
+    height: 14,
+    borderRadius: 3,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    transform: [{ rotate: "180deg" }],
+  },
+  dealCardDiamond: {
+    width: 6,
+    height: 6,
+    transform: [{ rotate: "45deg" }],
+    borderRadius: 1,
+  },
+  dealCardCenter: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dealCardCenterDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    transform: [{ rotate: "45deg" }],
   },
 });

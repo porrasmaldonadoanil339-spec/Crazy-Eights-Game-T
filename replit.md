@@ -41,12 +41,12 @@ No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
 app/
   _layout.tsx           ← Root layout (providers: Query, Gesture, Keyboard, Profile, Game; AudioManager)
   (tabs)/
-    _layout.tsx         ← Tab bar (Jugar / Logros / Tienda / Perfil)
+    _layout.tsx         ← Tab bar with useT() for runtime language switching (Jugar/Play/Jogar etc.)
     index.tsx           ← Play screen: mode selection, stats, quick start (fully i18n + light/dark)
     achievements.tsx    ← Achievements + Battle Pass screens (100 achievements, 100-tier BP)
     store.tsx           ← Item shop (70 items × 5 categories; rarity labels translated)
     profile.tsx         ← Player profile, stats, avatar/title picker (multiplayer stats included)
-  game.tsx              ← Main game screen with deal animation + gameplay (fully i18n)
+  game.tsx              ← Main game screen; DealAnimation receives player's backColors+backAccent
   game-multi.tsx        ← Local multiplayer game (pass-device flow; fully i18n)
   game-online.tsx       ← Online multiplayer (simulated lobby + game; fully i18n)
   tutorial.tsx          ← Interactive step-by-step tutorial (8 steps)

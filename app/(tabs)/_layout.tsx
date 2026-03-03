@@ -3,23 +3,31 @@ import { Platform, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/colors";
+import { useProfile } from "@/context/ProfileContext";
+import { useT } from "@/hooks/useT";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { profile } = useProfile();
+  const T = useT();
+
+  const isDark = profile.darkMode !== false;
+  const activeTint = isDark ? "#D4AF37" : "#A07800";
+  const inactiveTint = isDark ? "rgba(238,232,213,0.45)" : "rgba(13,43,13,0.40)";
+  const tabBg = isDark ? "rgba(4,16,8,0.97)" : "rgba(212,237,200,0.97)";
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.gold,
-        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarActiveTintColor: activeTint,
+        tabBarInactiveTintColor: inactiveTint,
         tabBarStyle: {
           position: "absolute",
           backgroundColor: Platform.select({
             ios: "transparent",
-            android: "rgba(10,26,15,0.97)",
-            default: "rgba(10,26,15,0.97)",
+            android: tabBg,
+            default: tabBg,
           }),
           borderTopWidth: 0,
           elevation: 0,
@@ -28,7 +36,7 @@ export default function TabLayout() {
         },
         tabBarBackground: () =>
           Platform.OS === "ios" ? (
-            <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={80} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
           ) : null,
         tabBarLabelStyle: {
           fontFamily: "Nunito_700Bold",
@@ -39,7 +47,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Jugar",
+          title: T("tabPlay"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="game-controller" size={size} color={color} />
           ),
@@ -48,7 +56,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="achievements"
         options={{
-          title: "Logros",
+          title: T("tabAchievements"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="star" size={size} color={color} />
           ),
@@ -57,7 +65,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="store"
         options={{
-          title: "Tienda",
+          title: T("tabStore"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="bag" size={size} color={color} />
           ),
@@ -66,7 +74,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Perfil",
+          title: T("tabProfile"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),

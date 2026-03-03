@@ -132,6 +132,7 @@ function DailyRewardModal({ visible, reward, onClaim }: {
   reward: { coins: number; xp: number; label: string; icon: string; iconColor: string } | null;
   onClaim: () => void;
 }) {
+  const T = useT();
   const sc = useSharedValue(0.7);
   useEffect(() => {
     if (visible) sc.value = withSpring(1, { damping: 12 });
@@ -144,7 +145,7 @@ function DailyRewardModal({ visible, reward, onClaim }: {
       <View style={styles.dailyOverlay}>
         <Animated.View style={[styles.dailyModal, animStyle]}>
           <LinearGradient colors={["#1a2e10", "#0a1a08"]} style={styles.dailyGrad}>
-            <Text style={styles.dailyTitle}>RECOMPENSA DIARIA</Text>
+            <Text style={styles.dailyTitle}>{T("dailyReward")}</Text>
             <View style={[styles.dailyIconWrap, { borderColor: reward.iconColor + "88" }]}>
               <Ionicons name={reward.icon as any} size={42} color={reward.iconColor} />
             </View>
@@ -161,7 +162,7 @@ function DailyRewardModal({ visible, reward, onClaim }: {
             </View>
             <Pressable onPress={onClaim} style={styles.dailyClaimBtn}>
               <LinearGradient colors={[Colors.gold, Colors.goldLight]} style={styles.dailyClaimGrad}>
-                <Text style={styles.dailyClaimText}>RECLAMAR</Text>
+                <Text style={styles.dailyClaimText}>{T("claimReward").toUpperCase()}</Text>
               </LinearGradient>
             </Pressable>
           </LinearGradient>

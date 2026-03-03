@@ -294,12 +294,12 @@ export function diffName(id: string, lang: Lang): string {
 }
 
 const modeNames: Record<string, { es: string; en: string; pt: string }> = {
-  clasico:     { es: "Clásico",     en: "Classic",    pt: "Clássico" },
-  relampago:   { es: "Relámpago",   en: "Lightning",  pt: "Relâmpago" },
-  torneo:      { es: "Torneo",      en: "Tournament", pt: "Torneio" },
-  cooperativo: { es: "Cooperativo", en: "Co-op",      pt: "Cooperativo" },
-  desafios:    { es: "Desafíos",    en: "Challenges", pt: "Desafios" },
-  practica:    { es: "Práctica",    en: "Practice",   pt: "Prática" },
+  classic:     { es: "Clásico",     en: "Classic",    pt: "Clássico" },
+  lightning:   { es: "Relámpago",   en: "Lightning",  pt: "Relâmpago" },
+  tournament:  { es: "Torneo",      en: "Tournament", pt: "Torneio" },
+  coop:        { es: "Cooperativo", en: "Co-op",      pt: "Cooperativo" },
+  challenge:   { es: "Desafíos",    en: "Challenges", pt: "Desafios" },
+  practice:    { es: "Práctica",    en: "Practice",   pt: "Prática" },
 };
 
 export function modeName(id: string, lang: Lang): string {

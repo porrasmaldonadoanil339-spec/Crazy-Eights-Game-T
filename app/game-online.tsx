@@ -625,8 +625,9 @@ export default function OnlineGameScreen() {
           );
         })}
 
-        {/* ─── Human player hand ─── */}
-        <View style={[gameStyles.playerZone, { top: tableCenterY + tableH / 2 + 10 }]}>
+        {/* ─── Human player hand (arc fan layout) ─── */}
+        <View style={[gameStyles.playerZone, { bottom: 0 }]}>
+          {/* Player label bar */}
           <View style={gameStyles.playerLabel}>
             {profile.photoUri ? (
               <Image source={{ uri: profile.photoUri }} style={[gameStyles.humanAvatar, { borderRadius: 14 }]} />
@@ -650,30 +651,7 @@ export default function OnlineGameScreen() {
             )}
           </View>
 
-          <ScrollView
-            horizontal showsHorizontalScrollIndicator={false}
-            contentContainerStyle={gameStyles.handContainer}
-          >
-            {currentHand.map((card, i) => {
-              const playable = isPlaying && multiCanPlay(card, gs);
-              const selected = selectedCard?.id === card.id;
-              return (
-                <View key={card.id} style={{
-                  marginLeft: i === 0 ? 0 : -20,
-                  zIndex: selected ? 100 : i,
-                  transform: [{ translateY: selected ? -10 : 0 }],
-                }}>
-                  <PlayingCard
-                    card={card}
-                    onPress={() => handleCardPress(card)}
-                    isPlayable={playable}
-                    isSelected={selected}
-                    size="sm"
-                  />
-                </View>
-              );
-            })}
-          </ScrollView>
+          {/* Selected card hint */}
           {selectedCard && isPlaying && (
             <Text style={gameStyles.selectedHint}>
               {(selectedCard.rank === "8" || (selectedCard.rank === "Joker" && gs.pendingDraw === 0))
@@ -681,10 +659,58 @@ export default function OnlineGameScreen() {
                 : T("tapAgainPlay")}
             </Text>
           )}
+
+          {/* Arc fan hand */}
+          {(() => {
+            const N = currentHand.length;
+            if (N === 0) return null;
+            const CARD_W = 62;
+            const CARD_H = 90;
+            const MAX_ANGLE = Math.min(24, N * 2.8);
+            const MAX_ARC = 16;
+            const xStep = N <= 4 ? CARD_W * 0.72 : N <= 7 ? CARD_W * 0.60 : N <= 10 ? CARD_W * 0.48 : CARD_W * 0.38;
+            const totalWidth = CARD_W + (N - 1) * xStep;
+            const startX = Math.max(8, (SW - totalWidth) / 2);
+            const containerH = CARD_H + MAX_ARC + 8;
+
+            return (
+              <View style={{ height: containerH, width: "100%", position: "relative" }}>
+                {currentHand.map((card, i) => {
+                  const centerI = (N - 1) / 2;
+                  const t = N <= 1 ? 0 : (i - centerI) / Math.max(1, centerI);
+                  const angle = t * MAX_ANGLE;
+                  const arcY = Math.abs(t) * MAX_ARC;
+                  const x = startX + i * xStep;
+                  const playable = isPlaying && multiCanPlay(card, gs);
+                  const selected = selectedCard?.id === card.id;
+                  return (
+                    <View
+                      key={card.id}
+                      style={{
+                        position: "absolute",
+                        left: x,
+                        bottom: arcY,
+                        zIndex: selected ? 100 : i + 1,
+                        transform: [{ rotate: `${angle}deg` }],
+                      }}
+                    >
+                      <PlayingCard
+                        card={card}
+                        onPress={() => handleCardPress(card)}
+                        isPlayable={playable}
+                        isSelected={selected}
+                        size="md"
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            );
+          })()}
         </View>
 
-        {/* Message bar */}
-        <View style={[gameStyles.messageBubble, { top: tableCenterY + tableH / 2 - 4 }]}>
+        {/* Message bar — sits above the player hand zone */}
+        <View style={[gameStyles.messageBubble, { bottom: 168 }]}>
           <Text style={gameStyles.messageText} numberOfLines={1}>{gs.message}</Text>
         </View>
 
@@ -805,7 +831,7 @@ const gameStyles = StyleSheet.create({
   faceDownDot: { fontSize: 7, color: "#4A90E2", opacity: 0.3, textAlign: "center", marginTop: 12 },
 
   // Player zone
-  playerZone: { position: "absolute", left: 0, right: 0, gap: 4 },
+  playerZone: { position: "absolute", left: 0, right: 0, gap: 2 },
   playerLabel: {
     flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14,
   },
