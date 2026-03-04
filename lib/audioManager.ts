@@ -320,6 +320,47 @@ export async function playInactivityWarning() {
   haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning));
 }
 
+// ─── New sound events ─────────────────────────────────────────────────────────
+
+export async function playLastCard() {
+  await playSfx("wild", sfxVolume * 0.95);
+  setTimeout(() => playSfx("win", sfxVolume * 0.5).catch(() => {}), 140);
+  haptic(async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 120);
+  });
+}
+
+export async function playCombo() {
+  await playSfx("wild", sfxVolume * 0.8);
+  setTimeout(() => playSfx("cardFlip", sfxVolume * 0.7).catch(() => {}), 100);
+  haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+}
+
+export async function playFriendRequest() {
+  await playSfx("button", sfxVolume * 0.8);
+  setTimeout(() => playSfx("button", sfxVolume * 0.6).catch(() => {}), 120);
+  haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+}
+
+export async function playInviteAccepted() {
+  await playSfx("win", sfxVolume * 0.85);
+  haptic(async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 150);
+  });
+}
+
+export async function playDealCard() {
+  await playSfx("cardFlip", sfxVolume * (0.5 + Math.random() * 0.3));
+  haptic(() => Haptics.selectionAsync());
+}
+
+export async function playTension() {
+  await playSfx("button", sfxVolume * 0.45);
+  haptic(() => Haptics.selectionAsync());
+}
+
 // ─── Settings ────────────────────────────────────────────────────────────────
 
 export function syncSettings(musicEnabled: boolean, sfxEnabled: boolean) {

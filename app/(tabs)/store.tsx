@@ -45,8 +45,11 @@ function ConfirmModal({
 }: { item: StoreItem | null; visible: boolean; onConfirm: () => void; onCancel: () => void }) {
   const T = useT();
   const theme = useTheme();
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
   const rarityLabel = useRarityLabel();
   if (!item) return null;
+  const localized = localizeItem(item, lang);
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
   const modalGrad = theme.isDark ? ["#0a1a0c","#061209"] as const : ["#e0f0d8","#cce4c4"] as const;
   return (
@@ -60,8 +63,8 @@ function ConfirmModal({
           <View style={[styles.rarityBadge, { backgroundColor: rarityColor + "22" }]}>
             <Text style={[styles.rarityBadgeText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
           </View>
-          <Text style={[styles.confirmName, { color: theme.text }]}>{item.name}</Text>
-          <Text style={[styles.confirmDesc, { color: theme.textMuted }]}>{item.description}</Text>
+          <Text style={[styles.confirmName, { color: theme.text }]}>{localized.name}</Text>
+          <Text style={[styles.confirmDesc, { color: theme.textMuted }]}>{localized.description}</Text>
           <View style={styles.priceRow}>
             <Ionicons name="cash" size={18} color={theme.gold} />
             <Text style={[styles.priceText, { color: theme.gold }]}>{item.price} {T("coins")}</Text>

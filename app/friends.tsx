@@ -217,6 +217,26 @@ export default function FriendsScreen() {
   const textMuted = isDark ? Colors.textMuted : "#4a7a4a";
   const borderColor = isDark ? Colors.border : "#aacfa0";
 
+  const handleInvite = (friend: Friend) => {
+    showToast(`Invitación enviada a ${friend.name}`);
+    
+    // 75% for online, 20% for offline
+    const acceptProb = friend.online ? 0.75 : 0.20;
+    const accepts = Math.random() < acceptProb;
+    const delay = 1500 + Math.random() * 1500;
+
+    setTimeout(() => {
+      if (accepts) {
+        showToast(`¡${friend.name} aceptó! Iniciando partida...`);
+        setTimeout(() => {
+          router.push(`/game-online?count=2&rivalName=${encodeURIComponent(friend.name)}`);
+        }, 1000);
+      } else {
+        showToast(`${friend.name} no está disponible ahora`);
+      }
+    }, delay);
+  };
+
   const renderFriend = ({ item }: { item: Friend }) => (
     <Pressable
       style={({ pressed }) => [styles.friendRow, { backgroundColor: surfaceColor, borderColor }, pressed && { opacity: 0.85 }]}
@@ -243,7 +263,7 @@ export default function FriendsScreen() {
       <View style={styles.friendRight}>
         <Pressable
           style={[styles.inviteBtn]}
-          onPress={() => { showToast(`Invitación enviada a ${item.name}`); }}
+          onPress={() => handleInvite(item)}
         >
           <LinearGradient colors={[Colors.gold, "#A07800"]} style={styles.inviteBtnGrad}>
             <Ionicons name="game-controller" size={13} color="#1a0a00" />
@@ -438,7 +458,15 @@ export default function FriendsScreen() {
         player={profileModal}
         onClose={() => setProfileModal(null)}
         onAddFriend={handleAddFriend}
-        onInvite={(name) => { setProfileModal(null); showToast(`Invitación enviada a ${name}`); }}
+        onInvite={(name) => {
+          setProfileModal(null);
+          const friend = friends.find(f => f.name === name);
+          if (friend) {
+            handleInvite(friend);
+          } else {
+            showToast(`Invitación enviada a ${name}`);
+          }
+        }}
       />
 
       {/* Toast */}

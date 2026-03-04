@@ -742,7 +742,11 @@ export default function GameScreen() {
         setSuitPickerVisible(true);
       } else {
         await playSound("card_play").catch(() => {});
+        const willHaveLastCard = gameState.playerHand.length === 2;
         handlePlayCard(card);
+        if (willHaveLastCard) {
+          setTimeout(() => playSound("last_card").catch(() => {}), 350);
+        }
         if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
           setShowEffect(true);
         }

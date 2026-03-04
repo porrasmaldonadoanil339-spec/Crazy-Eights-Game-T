@@ -214,6 +214,9 @@ export default function PlayScreen() {
   const [showAdModal, setShowAdModal] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
   const [adComplete, setAdComplete] = useState(false);
+  const [onlineTab, setOnlineTab] = useState<"search" | "create" | "join">("search");
+  const [generatedRoomCode, setGeneratedRoomCode] = useState("");
+  const [joinCode, setJoinCode] = useState("");
 
   const T = useT();
   const isDark = profile.darkMode !== false;
@@ -418,14 +421,14 @@ export default function PlayScreen() {
                     <Ionicons name={mode.icon as any} size={24} color={mode.color} />
                   </View>
                   <Text style={[styles.modeName, { color: mode.color }]}>{getModeName(mode.id, lang) || mode.name}</Text>
-                  <Text style={styles.modeDesc} numberOfLines={2}>{getModeDesc(mode.id, lang) || mode.description}</Text>
+                  <Text style={[styles.modeDesc, { color: theme.textMuted }]} numberOfLines={2}>{getModeDesc(mode.id, lang) || mode.description}</Text>
                   <View style={styles.modeFooter}>
                     <View style={styles.modeReward}>
                       <Ionicons name="cash" size={11} color={Colors.gold} />
                       <Text style={styles.modeRewardText}>{mode.coinsReward}</Text>
                     </View>
                     {wr !== null && (
-                      <Text style={styles.modeWR}>{wr}% WR</Text>
+                      <Text style={[styles.modeWR, { color: theme.textDim }]}>{wr}% WR</Text>
                     )}
                     {mode.hasDifficulty && (
                       <Ionicons name="chevron-forward" size={12} color={mode.color + "88"} />
@@ -522,21 +525,21 @@ export default function PlayScreen() {
         <View style={styles.quickRow}>
           <Pressable
             onPress={async () => { await playButton().catch(() => {}); router.push("/tutorial"); }}
-            style={styles.quickBtn}
+            style={[styles.quickBtn, { borderColor: theme.border }]}
           >
             <Ionicons name="help-circle-outline" size={18} color={theme.textMuted} />
             <Text style={[styles.quickBtnText, { color: theme.textMuted }]}>Tutorial</Text>
           </Pressable>
           <Pressable
             onPress={async () => { await playButton().catch(() => {}); router.push("/rules"); }}
-            style={styles.quickBtn}
+            style={[styles.quickBtn, { borderColor: theme.border }]}
           >
             <Ionicons name="book-outline" size={18} color={theme.textMuted} />
             <Text style={[styles.quickBtnText, { color: theme.textMuted }]}>{T("rules")}</Text>
           </Pressable>
           <Pressable
             onPress={async () => { await playButton().catch(() => {}); router.push("/ranking"); }}
-            style={styles.quickBtn}
+            style={[styles.quickBtn, { borderColor: theme.border }]}
           >
             <Ionicons name="earth" size={18} color={theme.textMuted} />
             <Text style={[styles.quickBtnText, { color: theme.textMuted }]}>{T("viewRanking")}</Text>
@@ -569,7 +572,7 @@ export default function PlayScreen() {
       />
 
       {/* Online modal */}
-      <Modal visible={showOnlineModal} transparent animationType="slide" onRequestClose={() => setShowOnlineModal(false)}>
+      <Modal visible={showOnlineModal} transparent animationType="slide" onRequestClose={() => { setShowOnlineModal(false); setOnlineTab("search"); setJoinCode(""); }}>
         <View style={styles.multiModalOverlay}>
           <LinearGradient colors={["#060f22", "#0a1632"]} style={styles.multiModalBox}>
             <View style={styles.multiModalHeader}>
@@ -578,50 +581,109 @@ export default function PlayScreen() {
                 <Text style={[styles.onlineDotText, { fontSize: 10 }]}>{T("multiOnlineDesc")}</Text>
               </View>
               <Text style={[styles.multiModalTitle, { color: "#4A90E2", flex: 1 }]}>Online</Text>
-              <Pressable onPress={() => setShowOnlineModal(false)} style={styles.multiModalClose}>
+              <Pressable onPress={() => { setShowOnlineModal(false); setOnlineTab("search"); setJoinCode(""); }} style={styles.multiModalClose}>
                 <Ionicons name="close" size={20} color={Colors.textMuted} />
               </Pressable>
             </View>
 
-            <Text style={styles.multiModalSectionLabel}>{T("howManyPlayersLocal")}</Text>
-            <View style={styles.multiCountRow}>
-              {[2, 3, 4].map(n => (
-                <Pressable
-                  key={n}
-                  onPress={() => setOnlinePlayerCount(n)}
-                  style={[styles.multiCountBtn, onlinePlayerCount === n && { backgroundColor: "#4A90E222", borderColor: "#4A90E266" }]}
-                >
-                  <Text style={[styles.multiCountBtnText, onlinePlayerCount === n && { color: "#4A90E2" }]}>{n}</Text>
-                  <Text style={[styles.multiCountBtnSub, onlinePlayerCount === n && { color: "#4A90E2" }]}>
-                    {n === 2 ? "1 rival" : `${n - 1} rivales`}
-                  </Text>
-                </Pressable>
-              ))}
+            {/* Tab bar */}
+            <View style={{ flexDirection: "row", gap: 6, marginBottom: 6 }}>
+              {(["search", "create", "join"] as const).map((tab) => {
+                const labels = { search: lang === "en" ? "Search" : lang === "pt" ? "Buscar" : "Buscar", create: lang === "en" ? "Create Room" : lang === "pt" ? "Criar Sala" : "Crear Sala", join: lang === "en" ? "Join Room" : lang === "pt" ? "Entrar" : "Unirse" };
+                const icons: Record<string, any> = { search: "search", create: "add-circle-outline", join: "enter-outline" };
+                return (
+                  <Pressable key={tab} onPress={() => setOnlineTab(tab)} style={[{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: onlineTab === tab ? "#4A90E266" : "rgba(255,255,255,0.08)", backgroundColor: onlineTab === tab ? "#4A90E222" : "rgba(255,255,255,0.03)" }]}>
+                    <Ionicons name={icons[tab]} size={13} color={onlineTab === tab ? "#4A90E2" : Colors.textMuted} />
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: onlineTab === tab ? "#4A90E2" : Colors.textMuted }}>{labels[tab]}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
 
-            <Text style={[styles.multiModalSectionLabel, { marginTop: 8 }]}>{T("rivals")}</Text>
-            <View style={{ gap: 6 }}>
-              {Array.from({ length: onlinePlayerCount - 1 }).map((_, i) => (
-                <View key={i} style={[styles.multiNameRow, { borderColor: "#4A90E222" }]}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#4A90E2" }} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.multiNameInput, { color: "#7fa3d0", paddingVertical: 8 }]}>
-                      #{i + 1} — {T("searchingOnline")}
-                    </Text>
-                  </View>
-                  <View style={styles.onlineDotSmall} />
+            {onlineTab === "search" && (
+              <>
+                <Text style={styles.multiModalSectionLabel}>{T("howManyPlayersLocal")}</Text>
+                <View style={styles.multiCountRow}>
+                  {[2, 3, 4].map(n => (
+                    <Pressable key={n} onPress={() => setOnlinePlayerCount(n)} style={[styles.multiCountBtn, onlinePlayerCount === n && { backgroundColor: "#4A90E222", borderColor: "#4A90E266" }]}>
+                      <Text style={[styles.multiCountBtnText, onlinePlayerCount === n && { color: "#4A90E2" }]}>{n}</Text>
+                      <Text style={[styles.multiCountBtnSub, onlinePlayerCount === n && { color: "#4A90E2" }]}>{n === 2 ? "1 rival" : `${n - 1} rivales`}</Text>
+                    </Pressable>
+                  ))}
                 </View>
-              ))}
-            </View>
+                <Pressable onPress={handleStartOnline} style={styles.multiStartBtn}>
+                  <LinearGradient colors={["#1a3a7a", "#4A90E2"]} style={styles.multiStartBtnGrad}>
+                    <Ionicons name="search" size={18} color="#fff" />
+                    <Text style={styles.multiStartBtnText}>{T("searchMatch")}</Text>
+                  </LinearGradient>
+                </Pressable>
+                <Text style={styles.multiModalHint}>{T("onlineRivals")}</Text>
+              </>
+            )}
 
-            <Pressable onPress={handleStartOnline} style={styles.multiStartBtn}>
-              <LinearGradient colors={["#1a3a7a", "#4A90E2"]} style={styles.multiStartBtnGrad}>
-                <Ionicons name="search" size={18} color="#fff" />
-                <Text style={styles.multiStartBtnText}>{T("searchMatch")}</Text>
-              </LinearGradient>
-            </Pressable>
+            {onlineTab === "create" && (
+              <>
+                <Text style={[styles.multiModalSectionLabel, { marginBottom: 4 }]}>{lang === "en" ? "YOUR ROOM CODE" : lang === "pt" ? "SEU CÓDIGO DE SALA" : "TU CÓDIGO DE SALA"}</Text>
+                <View style={{ alignItems: "center", paddingVertical: 12, gap: 8 }}>
+                  {generatedRoomCode ? (
+                    <>
+                      <Text style={{ fontFamily: "Nunito_900ExtraBold", fontSize: 38, color: "#4A90E2", letterSpacing: 8 }}>{generatedRoomCode}</Text>
+                      <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted, textAlign: "center" }}>
+                        {lang === "en" ? "Share this code with your friend" : lang === "pt" ? "Compartilhe este código com seu amigo" : "Comparte este código con tu amigo"}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textMuted, textAlign: "center" }}>
+                      {lang === "en" ? "Press the button to generate a room code" : lang === "pt" ? "Pressione o botão para gerar um código" : "Presiona el botón para generar un código"}
+                    </Text>
+                  )}
+                </View>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Pressable onPress={() => setGeneratedRoomCode(Math.random().toString(36).substr(2, 6).toUpperCase())} style={[styles.multiStartBtn, { flex: 1, borderWidth: 1, borderColor: "#4A90E244", backgroundColor: "transparent", borderRadius: 14, overflow: "hidden" }]}>
+                    <View style={[styles.multiStartBtnGrad, { backgroundColor: "rgba(74,144,226,0.12)" }]}>
+                      <Ionicons name="refresh" size={16} color="#4A90E2" />
+                      <Text style={[styles.multiStartBtnText, { color: "#4A90E2" }]}>{lang === "en" ? "New Code" : lang === "pt" ? "Novo Código" : "Nuevo Código"}</Text>
+                    </View>
+                  </Pressable>
+                  {generatedRoomCode && (
+                    <Pressable onPress={handleStartOnline} style={[styles.multiStartBtn, { flex: 2 }]}>
+                      <LinearGradient colors={["#1a3a7a", "#4A90E2"]} style={styles.multiStartBtnGrad}>
+                        <Ionicons name="play" size={18} color="#fff" />
+                        <Text style={styles.multiStartBtnText}>{lang === "en" ? "Start Room" : lang === "pt" ? "Iniciar Sala" : "Iniciar Sala"}</Text>
+                      </LinearGradient>
+                    </Pressable>
+                  )}
+                </View>
+              </>
+            )}
 
-            <Text style={styles.multiModalHint}>{T("onlineRivals")}</Text>
+            {onlineTab === "join" && (
+              <>
+                <Text style={[styles.multiModalSectionLabel, { marginBottom: 4 }]}>{lang === "en" ? "ENTER ROOM CODE" : lang === "pt" ? "INSERIR CÓDIGO" : "INGRESA EL CÓDIGO"}</Text>
+                <View style={{ gap: 10 }}>
+                  <TextInput
+                    value={joinCode}
+                    onChangeText={(t) => setJoinCode(t.toUpperCase().replace(/[^A-Z0-9]/g, "").substr(0, 6))}
+                    placeholder={lang === "en" ? "XXXXXX" : "XXXXXX"}
+                    placeholderTextColor={Colors.textDim}
+                    maxLength={6}
+                    autoCapitalize="characters"
+                    style={{ fontFamily: "Nunito_900ExtraBold", fontSize: 32, color: "#4A90E2", textAlign: "center", letterSpacing: 8, paddingVertical: 14, paddingHorizontal: 12, backgroundColor: "rgba(74,144,226,0.08)", borderRadius: 12, borderWidth: 1, borderColor: "#4A90E233" }}
+                  />
+                  <Pressable
+                    disabled={joinCode.length < 6}
+                    onPress={() => { if (joinCode.length >= 6) { setShowOnlineModal(false); setJoinCode(""); router.push({ pathname: "/game-online", params: { count: "2" } }); } }}
+                    style={[styles.multiStartBtn, { opacity: joinCode.length < 6 ? 0.4 : 1 }]}
+                  >
+                    <LinearGradient colors={["#1a3a7a", "#4A90E2"]} style={styles.multiStartBtnGrad}>
+                      <Ionicons name="enter" size={18} color="#fff" />
+                      <Text style={styles.multiStartBtnText}>{lang === "en" ? "Join Room" : lang === "pt" ? "Entrar na Sala" : "Unirse a la Sala"}</Text>
+                    </LinearGradient>
+                  </Pressable>
+                </View>
+                <Text style={styles.multiModalHint}>{lang === "en" ? "Ask your friend for their 6-character code" : lang === "pt" ? "Peça o código de 6 caracteres ao seu amigo" : "Pídele el código de 6 caracteres a tu amigo"}</Text>
+              </>
+            )}
           </LinearGradient>
         </View>
       </Modal>

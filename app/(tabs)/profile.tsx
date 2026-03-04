@@ -190,6 +190,7 @@ export default function ProfileScreen() {
   const [showFramePicker, setShowFramePicker] = useState(false);
 
   const T = useT();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
   const swipeHandlers = useSwipeTabs(3);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
@@ -363,6 +364,29 @@ export default function ProfileScreen() {
             <Ionicons name="people" size={18} color={themeGold} />
           </View>
           <Text style={[styles.friendsBtnLabel, { color: textColor }]}>Amigos</Text>
+          <Ionicons name="chevron-forward" size={16} color={textMuted} />
+        </Pressable>
+
+        {/* Account / Link button */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.friendsBtn,
+            { backgroundColor: isDark ? Colors.surface : "#c8e0c0", borderColor: isDark ? Colors.border : "#9ec89a", marginTop: 6 },
+            pressed && { opacity: 0.82 },
+          ]}
+          onPress={() => router.push("/login")}
+        >
+          <View style={[styles.friendsBtnIcon, { backgroundColor: "#4A90E222" }]}>
+            <Ionicons name="person-circle-outline" size={18} color="#4A90E2" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.friendsBtnLabel, { color: textColor }]}>
+              {lang === "en" ? "Link Account" : lang === "pt" ? "Vincular Conta" : "Vincular Cuenta"}
+            </Text>
+            <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: textMuted }}>
+              {lang === "en" ? "Google / Facebook" : lang === "pt" ? "Google / Facebook" : "Google / Facebook"}
+            </Text>
+          </View>
           <Ionicons name="chevron-forward" size={16} color={textMuted} />
         </Pressable>
 

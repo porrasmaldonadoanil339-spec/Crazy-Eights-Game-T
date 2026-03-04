@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { PlayingCard } from "@/components/PlayingCard";
+import { DealAnimation } from "@/components/DealAnimation";
 import {
   MultiGameState, Card, Suit,
   initMultiGame, multiCanPlay, multiPlayCard, multiDraw, multiChooseSuit, multiConfirmTurn,
@@ -334,7 +335,7 @@ function ResultOverlay({ isWin, winnerName, winnerColor, onClose, onPlayAgain }:
 export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
-  const params = useLocalSearchParams<{ count?: string }>();
+  const params = useLocalSearchParams<{ count?: string; rivalName?: string }>();
   const { profile } = useProfile();
   const T = useT();
 
@@ -352,14 +353,20 @@ export default function OnlineGameScreen() {
 
   const playerCount = Math.min(4, Math.max(2, parseInt(params.count ?? "2", 10)));
 
-  const [currentCpuProfiles, setCurrentCpuProfiles] = useState<CpuProfile[]>(() => pickCpuProfiles(playerCount - 1));
+  const [currentCpuProfiles, setCurrentCpuProfiles] = useState<CpuProfile[]>(() => {
+    const profiles = pickCpuProfiles(playerCount - 1);
+    if (params.rivalName && profiles.length > 0) {
+      profiles[0] = { ...profiles[0], name: params.rivalName };
+    }
+    return profiles;
+  });
   const humanName = profile.name || "Tú";
 
   // All player names: human is index 0, CPUs are 1..n
   const allNames = [humanName, ...currentCpuProfiles.map(c => c.name)];
 
   // Lobby state
-  const [lobbyPhase, setLobbyPhase] = useState<"searching" | "found" | "countdown" | "game" | "result">("searching");
+  const [lobbyPhase, setLobbyPhase] = useState<"searching" | "found" | "countdown" | "dealing" | "game" | "result">("searching");
   const [joinedCount, setJoinedCount] = useState(0);
   const [countdown, setCountdown] = useState(3);
 
@@ -397,7 +404,7 @@ export default function OnlineGameScreen() {
       const gs = initMultiGame(allNames);
       gs.phase = "playing"; // Online starts directly, no pass_device for human
       setGameState(gs);
-      setLobbyPhase("game");
+      setLobbyPhase("dealing");
     }, delay));
 
     return () => timers.forEach(clearTimeout);
@@ -583,9 +590,19 @@ export default function OnlineGameScreen() {
           humanName={humanName}
           cpuProfiles={currentCpuProfiles}
           joinedCount={joinedCount}
-          phase={lobbyPhase as "searching" | "found" | "countdown"}
+          phase={lobbyPhase === "dealing" ? "countdown" : lobbyPhase as "searching" | "found" | "countdown"}
           countdown={countdown}
         />
+        {lobbyPhase === "dealing" && gameState && (
+          <DealAnimation
+            cardsPerPlayer={7}
+            playerCards={gameState.hands[0]}
+            starterCard={multiGetTopCard(gameState)}
+            backColors={backColors}
+            backAccent={backAccent}
+            onComplete={() => setLobbyPhase("game")}
+          />
+        )}
       </View>
     );
   }

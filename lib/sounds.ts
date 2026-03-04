@@ -35,7 +35,13 @@ export type SoundEvent =
   | "effect_burst"
   | "timer_warning"
   | "joker_play"
-  | "inactivity_warning";
+  | "inactivity_warning"
+  | "last_card"
+  | "combo"
+  | "friend_request"
+  | "invite_accepted"
+  | "deal_card"
+  | "tension";
 
 import {
   playCardFlip,
@@ -65,6 +71,12 @@ import {
   playTimerWarning,
   playJokerPlay,
   playInactivityWarning,
+  playLastCard,
+  playCombo,
+  playFriendRequest,
+  playInviteAccepted,
+  playDealCard,
+  playTension,
 } from "@/lib/audioManager";
 
 export async function playSound(event: SoundEvent) {
@@ -106,5 +118,11 @@ export async function playSound(event: SoundEvent) {
     case "timer_warning":      return playTimerWarning();
     case "joker_play":         return playJokerPlay();
     case "inactivity_warning": return playInactivityWarning();
+    case "last_card":          return playLastCard();
+    case "combo":              return playCombo();
+    case "friend_request":     return playFriendRequest();
+    case "invite_accepted":    return playInviteAccepted();
+    case "deal_card":          return playDealCard();
+    case "tension":            return playTension();
   }
 }

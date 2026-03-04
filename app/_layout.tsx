@@ -72,6 +72,7 @@ function RootLayoutNav() {
         <Stack.Screen name="rules" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="ranking" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="friends" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="login" options={{ animation: "slide_from_bottom" }} />
         <Stack.Screen name="+not-found" />
       </Stack>
     </>

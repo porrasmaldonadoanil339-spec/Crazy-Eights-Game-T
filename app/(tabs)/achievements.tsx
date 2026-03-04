@@ -66,14 +66,14 @@ export default function AchievementsScreen() {
   const themeGold = isDark ? Colors.gold : "#A07800";
 
   const rarityLabel: Record<string, string> = {
-    legendary: lang === "en" ? "Legendary" : lang === "pt" ? "Lendário" : "Legendario",
-    epic:      lang === "en" ? "Epic"      : lang === "pt" ? "Épico"    : "Épico",
-    rare:      lang === "en" ? "Rare"      : lang === "pt" ? "Raro"     : "Raro",
-    common:    lang === "en" ? "Common"    : lang === "pt" ? "Comum"    : "Común",
+    legendary: T("rarityLegendary"),
+    epic:      T("rarityEpic"),
+    rare:      T("rarityRare"),
+    common:    T("rarityCommon"),
   };
 
-  const xpRequiredLabel = lang === "en" ? "XP required" : lang === "pt" ? "XP necessários" : "XP requeridos";
-  const levelLabel = lang === "en" ? "Level" : lang === "pt" ? "Nível" : "Nivel";
+  const xpRequiredLabel = T("xpNeeded");
+  const levelLabel = T("level");
   const claimLabel = T("claim");
 
   return (
