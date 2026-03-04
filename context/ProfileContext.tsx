@@ -83,6 +83,8 @@ export interface PlayerProfile {
   // Watch ads
   adsWatchedToday: number;
   lastAdsDate: string;
+  // Emotes
+  equippedEmotes: string[];
   // Settings
   musicEnabled: boolean;
   sfxEnabled: boolean;
@@ -138,6 +140,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   dailyRewardIndex: 0,
   adsWatchedToday: 0,
   lastAdsDate: "",
+  equippedEmotes: ["emote_gg", "emote_ocho", "emote_bravo", "emote_lol", "emote_no", "emote_si", "emote_jaja", "emote_bien"],
   musicEnabled: true,
   sfxEnabled: true,
   vibrationEnabled: true,
@@ -179,6 +182,7 @@ interface ProfileContextValue {
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
   updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt"; darkMode?: boolean }) => void;
+  updateEquippedEmotes: (emoteIds: string[]) => void;
   watchAd: () => boolean;
   adsWatchedToday: number;
   adDailyLimit: number;
@@ -216,6 +220,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             sfxEnabled: saved.sfxEnabled ?? true,
             selectedFrameId: saved.selectedFrameId ?? "frame_gold",
             photoUri: saved.photoUri ?? "",
+            equippedEmotes: saved.equippedEmotes ?? DEFAULT_PROFILE.equippedEmotes,
           };
           setProfile(merged);
         }
@@ -262,6 +267,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const updateEffect = useCallback((effectId: string) => {
     update((p) => ({ ...p, selectedEffect: effectId }));
+  }, [update]);
+
+  const updateEquippedEmotes = useCallback((emoteIds: string[]) => {
+    update((p) => ({ ...p, equippedEmotes: emoteIds.slice(0, 8) }));
   }, [update]);
 
   const updatePhotoUri = useCallback((uri: string) => {
@@ -496,6 +505,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         canClaimDailyReward,
         todaysDailyReward,
         updateSettings,
+        updateEquippedEmotes,
         watchAd,
         adsWatchedToday,
         adDailyLimit: AD_DAILY_LIMIT,

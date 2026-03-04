@@ -10,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/context/ProfileContext";
-import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS, localizeItem } from "@/lib/storeItems";
+import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS, EMOTES, localizeItem } from "@/lib/storeItems";
 import { playSound } from "@/lib/sounds";
 import { useT } from "@/hooks/useT";
 
@@ -38,6 +38,7 @@ function useRarityLabel() {
     { id: "frame",     icon: "ellipse",       count: STORE_ITEMS.filter(i => i.category === "frame").length },
     { id: "title",     icon: "ribbon",        count: STORE_ITEMS.filter(i => i.category === "title").length },
     { id: "effect",    icon: "sparkles",      count: STORE_ITEMS.filter(i => i.category === "effect").length },
+    { id: "emote",     icon: "chatbubble-ellipses", count: EMOTES.length },
   ];
 
 function ConfirmModal({
@@ -219,9 +220,70 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip }: {
   );
 }
 
+function EmoteCard({ item, owned, isEquipped, equippedCount, onPress, onToggle }: {
+  item: StoreItem; owned: boolean; isEquipped: boolean; equippedCount: number; onPress: () => void; onToggle: () => void;
+}) {
+  const T = useT();
+  const theme = useTheme();
+  const rarityLabel = useRarityLabel();
+  const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
+  return (
+    <Pressable
+      onPress={owned ? undefined : onPress}
+      style={({ pressed }) => [
+        styles.effectCard,
+        { borderColor: isEquipped ? Colors.gold + "88" : rarityColor + "55", backgroundColor: theme.surface },
+        isEquipped && styles.effectCardEquipped,
+        pressed && !owned && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+      ]}
+    >
+      <LinearGradient colors={[rarityColor + "18", rarityColor + "06"]} style={styles.effectGrad}>
+        <View style={[styles.effectIconWrap, { backgroundColor: item.previewColor + "33", borderColor: item.previewColor + "44", width: 44, height: 44 }]}>
+          <Ionicons name={item.preview as any} size={22} color={item.previewColor} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <View style={styles.effectTopRow}>
+            <Text style={[styles.effectName, { color: theme.text }]}>{item.name}</Text>
+            <View style={[styles.effectRarityBadge, { backgroundColor: rarityColor + "22" }]}>
+              <Text style={[styles.effectRarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
+            </View>
+          </View>
+          <Text style={[styles.effectDesc, { color: theme.textMuted }]} numberOfLines={1}>{item.description}</Text>
+          <View style={styles.effectFooter}>
+            {owned ? (
+              <Pressable
+                onPress={onToggle}
+                style={({ pressed }) => [
+                  styles.equipBtn,
+                  isEquipped
+                    ? { backgroundColor: Colors.gold + "33", borderColor: Colors.gold + "99" }
+                    : { backgroundColor: theme.surface, borderColor: theme.border },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Ionicons name={isEquipped ? "checkmark-circle" : "add-circle-outline"} size={12} color={isEquipped ? Colors.gold : theme.textMuted} />
+                <Text style={[styles.equipBtnText, { color: isEquipped ? Colors.gold : theme.textMuted }]}>
+                  {isEquipped ? T("equipped") : (equippedCount >= 8 ? "8/8" : T("equip"))}
+                </Text>
+              </Pressable>
+            ) : item.isDefault ? (
+              <Text style={styles.freeText}>{T("free")}</Text>
+            ) : (
+              <View style={styles.priceRowSm}>
+                <Ionicons name="cash" size={12} color={Colors.gold} />
+                <Text style={styles.priceSmText}>{item.price}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
 export default function StoreScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, buyItem, updateCardBack, updateAvatar, updateTitle, updateFrame, updateEffect } = useProfile();
+  const { profile, buyItem, updateCardBack, updateAvatar, updateTitle, updateFrame, updateEffect, updateEquippedEmotes } = useProfile();
   const [category, setCategory] = useState<StoreItemCategory>("card_back");
   const [confirmItem, setConfirmItem] = useState<StoreItem | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -235,6 +297,7 @@ export default function StoreScreen() {
   const lang = profile.language ?? "es";
   const items = STORE_ITEMS.filter((i) => i.category === category).map((i) => localizeItem(i, lang));
   const isEffects = category === "effect";
+  const isEmotes = category === "emote";
 
   const isDark = profile.darkMode !== false;
   const themeColors = isDark ? Colors : LightColors;
@@ -243,12 +306,15 @@ export default function StoreScreen() {
     : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
   const themeGold = themeColors.gold;
 
+  const equippedEmotes: string[] = profile.equippedEmotes ?? ["emote_gg", "emote_ocho", "emote_bravo", "emote_lol", "emote_no", "emote_si", "emote_jaja", "emote_bien"];
+
   const CATEGORY_LABELS: Record<StoreItemCategory, string> = {
     card_back: T("categoryCardBacks"),
     avatar: T("categoryAvatars"),
     frame: T("categoryFrames"),
     title: T("categoryTitles"),
     effect: T("categoryEffects"),
+    emote: T("categoryEmotes"),
   };
 
   const showToast = (msg: string) => {
@@ -273,6 +339,24 @@ export default function StoreScreen() {
     else if (item.category === "frame") updateFrame(item.id);
     else if (item.category === "effect") updateEffect(item.id);
     showToast(`${item.name} ${T("equippedItem")}!`);
+  }
+
+  function toggleEmote(item: StoreItem) {
+    const isEquipped = equippedEmotes.includes(item.id);
+    if (isEquipped) {
+      updateEquippedEmotes(equippedEmotes.filter(id => id !== item.id));
+      playSound("equip").catch(() => {});
+      showToast(T("emoteUnequipped"));
+    } else {
+      if (equippedEmotes.length >= 8) {
+        playSound("error").catch(() => {});
+        showToast(T("emoteSlotsFull"));
+        return;
+      }
+      updateEquippedEmotes([...equippedEmotes, item.id]);
+      playSound("equip").catch(() => {});
+      showToast(T("emoteEquipped"));
+    }
   }
 
   const handlePurchase = async () => {
@@ -305,7 +389,10 @@ export default function StoreScreen() {
       <View style={styles.header}>
         <View>
           <Text style={[styles.screenTitle, { color: themeGold }]}>{T("store")}</Text>
-          <Text style={styles.screenSub}>{ownedCount}/{items.length} {T("inCategory")}</Text>
+          {isEmotes
+            ? <Text style={styles.screenSub}>{equippedEmotes.length}/8 {T("emotesEquipped")}</Text>
+            : <Text style={styles.screenSub}>{ownedCount}/{items.length} {T("inCategory")}</Text>
+          }
         </View>
         <View style={styles.coinsBig}>
           <Ionicons name="cash" size={18} color={themeGold} />
@@ -345,7 +432,7 @@ export default function StoreScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
-          isEffects ? styles.listContent : styles.grid,
+          (isEffects || isEmotes) ? styles.listContent : styles.grid,
           { paddingBottom: bottomPad + 90 }
         ]}
       >
@@ -360,6 +447,22 @@ export default function StoreScreen() {
                 isEquipped={equippedId === item.id}
                 onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
                 onEquip={() => equipItem(item)}
+              />
+            );
+          })
+        ) : isEmotes ? (
+          items.map((item) => {
+            const owned = profile.ownedItems.includes(item.id) || !!item.isDefault;
+            const isEquipped = equippedEmotes.includes(item.id);
+            return (
+              <EmoteCard
+                key={item.id}
+                item={item}
+                owned={owned}
+                isEquipped={isEquipped}
+                equippedCount={equippedEmotes.length}
+                onPress={() => { if (!item.isDefault && !owned) setConfirmItem(item); }}
+                onToggle={() => { if (owned) toggleEmote(item); }}
               />
             );
           })

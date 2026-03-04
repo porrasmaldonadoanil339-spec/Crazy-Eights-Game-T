@@ -95,7 +95,7 @@ export function LevelUpOverlay({ newLevel, onDone }: LevelUpOverlayProps) {
   }, []);
 
   return (
-    <Animated.View style={[styles.overlay, { opacity: overlayOp }]} pointerEvents="none">
+    <Animated.View style={[styles.overlay, { opacity: overlayOp, pointerEvents: "none" } as any]}>
       <View style={StyleSheet.absoluteFill}>
         {Array.from({ length: PARTICLE_COUNT }).map((_, i) => (
           <Particle key={i} index={i} />

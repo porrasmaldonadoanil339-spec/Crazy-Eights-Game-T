@@ -64,7 +64,7 @@ function WinParticle({ index, total }: { index: number; total: number }) {
 function WinParticles() {
   const total = 14;
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" } as any]}>
       {Array.from({ length: total }).map((_, i) => (
         <WinParticle key={i} index={i} total={total} />
       ))}
@@ -250,9 +250,8 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
         style={[
           StyleSheet.absoluteFill,
           glowStyle,
-          { alignItems: "center", justifyContent: "center" },
+          { alignItems: "center", justifyContent: "center", pointerEvents: "none" } as any,
         ]}
-        pointerEvents="none"
       >
         <View style={[styles.bgGlow, { backgroundColor: glowColor }]} />
       </Animated.View>

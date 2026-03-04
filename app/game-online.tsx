@@ -618,7 +618,7 @@ export default function OnlineGameScreen() {
         style={StyleSheet.absoluteFill}
       />
       {/* Subtle grid texture */}
-      <View style={gameStyles.gridOverlay} pointerEvents="none" />
+      <View style={[gameStyles.gridOverlay, { pointerEvents: "none" } as any]} />
 
       {/* Header */}
       <View style={[gameStyles.header, { height: headerH }]}>

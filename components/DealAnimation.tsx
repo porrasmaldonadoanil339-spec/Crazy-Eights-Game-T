@@ -430,7 +430,7 @@ export function DealAnimation({
   const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
 
   return (
-    <Animated.View style={[styles.overlay, overlayStyle]} pointerEvents="none">
+    <Animated.View style={[styles.overlay, overlayStyle, { pointerEvents: "none" } as any]}>
       {phase === "shuffle" && (
         <ShufflePhase
           backColors={backColors}

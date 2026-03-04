@@ -161,7 +161,7 @@ export function MatchmakingScreen({
   const foundText = T("rivalFound") || "¡Oponente encontrado!";
 
   return (
-    <Animated.View style={[styles.overlay, { opacity: overlayOp }]} pointerEvents="none">
+    <Animated.View style={[styles.overlay, { opacity: overlayOp, pointerEvents: "none" } as any]}>
       <LinearGradient
         colors={["#010804", "#041008", "#071812", "#041008", "#010804"]}
         locations={[0, 0.2, 0.5, 0.8, 1]}

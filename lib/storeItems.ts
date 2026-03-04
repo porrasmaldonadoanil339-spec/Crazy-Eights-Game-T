@@ -1,5 +1,5 @@
 export type StoreItemId = string;
-export type StoreItemCategory = "card_back" | "avatar" | "effect" | "title" | "frame";
+export type StoreItemCategory = "card_back" | "avatar" | "effect" | "title" | "frame" | "emote";
 
 export interface StoreItem {
   id: StoreItemId;
@@ -517,7 +517,76 @@ export const EFFECTS: StoreItem[] = [
   { id: "effect_black_hole_e", category: "effect", name: "Agujero Negro", description: "Succión infinita de suerte.",                   price: 700, preview: "moon",            previewColor: "#1A1A1A", rarity: "legendary" },
 ];
 
-export const STORE_ITEMS: StoreItem[] = [...CARD_BACKS, ...AVATARS, ...TITLES, ...AVATAR_FRAMES, ...EFFECTS];
+// ─── EMOTES — 70 total ─────────────────────────────────────────────────────────
+export const EMOTES: StoreItem[] = [
+  // Free / default (10)
+  { id: "emote_gg",       category: "emote", name: "GG",          description: "Buen juego!",              price: 0,   preview: "thumbs-up",       previewColor: "#27AE60", rarity: "common",    isDefault: true },
+  { id: "emote_lol",      category: "emote", name: "LOL",         description: "Qué risa!",                price: 0,   preview: "happy",           previewColor: "#F1C40F", rarity: "common",    isDefault: true },
+  { id: "emote_luck",     category: "emote", name: "Suerte!",     description: "Que tengas suerte!",       price: 0,   preview: "star",            previewColor: "#E67E22", rarity: "common",    isDefault: true },
+  { id: "emote_ocho",     category: "emote", name: "Ocho!",       description: "El grito de la victoria.", price: 0,   preview: "sparkles",        previewColor: "#D4AF37", rarity: "common",    isDefault: true },
+  { id: "emote_omg",      category: "emote", name: "OMG!",        description: "No puede ser!",            price: 0,   preview: "alert-circle",    previewColor: "#E74C3C", rarity: "common",    isDefault: true },
+  { id: "emote_si",       category: "emote", name: "Sí!",         description: "Celebrando el momento.",   price: 0,   preview: "checkmark-circle",previewColor: "#2ECC71", rarity: "common",    isDefault: true },
+  { id: "emote_jaja",     category: "emote", name: "Jaja",        description: "Qué gracioso!",            price: 0,   preview: "happy",           previewColor: "#3498DB", rarity: "common",    isDefault: true },
+  { id: "emote_bravo",    category: "emote", name: "Bravo!",      description: "Aplausos!",                price: 0,   preview: "trophy",          previewColor: "#9B59B6", rarity: "common",    isDefault: true },
+  { id: "emote_no",       category: "emote", name: "Noooo!",      description: "Imposible!",               price: 0,   preview: "sad",             previewColor: "#E74C3C", rarity: "common",    isDefault: true },
+  { id: "emote_bien",     category: "emote", name: "Bien jugado", description: "Un movimiento brillante.", price: 0,   preview: "medal",           previewColor: "#1ABC9C", rarity: "common",    isDefault: true },
+  // Common paid (20)
+  { id: "emote_nice",     category: "emote", name: "Nice!",       description: "Qué buena jugada!",        price: 30,  preview: "hand-right",      previewColor: "#2ECC71", rarity: "common" },
+  { id: "emote_mala",     category: "emote", name: "Mala suerte", description: "La suerte no estuvo.",     price: 30,  preview: "dice",            previewColor: "#95A5A6", rarity: "common" },
+  { id: "emote_ay",       category: "emote", name: "Ay!",         description: "Eso dolió!",               price: 30,  preview: "bandage",         previewColor: "#E67E22", rarity: "common" },
+  { id: "emote_tremendo", category: "emote", name: "Tremendo",    description: "Qué tremenda jugada!",     price: 35,  preview: "flame",           previewColor: "#E74C3C", rarity: "common" },
+  { id: "emote_uf",       category: "emote", name: "Uf!",         description: "Qué complicado!",          price: 30,  preview: "cloud",           previewColor: "#7F8C8D", rarity: "common" },
+  { id: "emote_wow",      category: "emote", name: "Wow!",        description: "Qué impresionante!",       price: 35,  preview: "eye",             previewColor: "#3498DB", rarity: "common" },
+  { id: "emote_vamos",    category: "emote", name: "Vamos!",      description: "Arriba el equipo!",        price: 30,  preview: "rocket",          previewColor: "#E74C3C", rarity: "common" },
+  { id: "emote_como",     category: "emote", name: "Como así?",   description: "Qué acaba de pasar?",      price: 35,  preview: "help-circle",     previewColor: "#9B59B6", rarity: "common" },
+  { id: "emote_aguante",  category: "emote", name: "Aguante!",    description: "Resistiendo todo!",        price: 30,  preview: "shield",          previewColor: "#2980B9", rarity: "common" },
+  { id: "emote_juego",    category: "emote", name: "Al juego!",   description: "Concentración total.",     price: 40,  preview: "game-controller", previewColor: "#1ABC9C", rarity: "common" },
+  { id: "emote_rapido",   category: "emote", name: "Rápido!",     description: "Sin tiempo que perder!",   price: 35,  preview: "timer",           previewColor: "#F1C40F", rarity: "common" },
+  { id: "emote_trampa",   category: "emote", name: "Trampa!",     description: "Eso no puede ser legal.",  price: 40,  preview: "warning",         previewColor: "#E74C3C", rarity: "common" },
+  { id: "emote_genio",    category: "emote", name: "Genio!",      description: "Movida de genio.",         price: 40,  preview: "bulb",            previewColor: "#F1C40F", rarity: "common" },
+  { id: "emote_malo",     category: "emote", name: "Malo!",       description: "Esa carta era horrible.",  price: 30,  preview: "thumbs-down",     previewColor: "#E74C3C", rarity: "common" },
+  { id: "emote_control",  category: "emote", name: "Control",     description: "Yo controlo el juego.",    price: 40,  preview: "settings",        previewColor: "#2980B9", rarity: "common" },
+  { id: "emote_espera",   category: "emote", name: "Espera...",   description: "Pensando bien...",         price: 35,  preview: "hourglass",       previewColor: "#95A5A6", rarity: "common" },
+  { id: "emote_concentra",category: "emote", name: "Concentrado", description: "En modo estrategia.",      price: 40,  preview: "eye",             previewColor: "#2C3E50", rarity: "common" },
+  { id: "emote_suave",    category: "emote", name: "Suave!",      description: "Calma, calma...",          price: 30,  preview: "water",           previewColor: "#3498DB", rarity: "common" },
+  { id: "emote_mierda",   category: "emote", name: "Eso!",        description: "Exactamente lo que quería.",price: 40,  preview: "checkmark",       previewColor: "#27AE60", rarity: "common" },
+  { id: "emote_junto",    category: "emote", name: "A por ellos", description: "Vamos a ganar esto!",      price: 40,  preview: "people",          previewColor: "#9B59B6", rarity: "common" },
+  // Rare (15)
+  { id: "emote_imparable",category: "emote", name: "Imparable!",  description: "Nadie puede detenerme.",   price: 80,  preview: "flash",           previewColor: "#F1C40F", rarity: "rare" },
+  { id: "emote_domino",   category: "emote", name: "Domino",      description: "Control absoluto.",        price: 85,  preview: "grid",            previewColor: "#1ABC9C", rarity: "rare" },
+  { id: "emote_fuego",    category: "emote", name: "Fuego!",      description: "Estoy en llamas!",         price: 80,  preview: "flame",           previewColor: "#E74C3C", rarity: "rare" },
+  { id: "emote_maestro",  category: "emote", name: "Maestro",     description: "Soy el maestro de esto.",  price: 90,  preview: "ribbon",          previewColor: "#D4AF37", rarity: "rare" },
+  { id: "emote_locura",   category: "emote", name: "Qué locura!", description: "Esto está loco!",          price: 80,  preview: "thunderstorm",    previewColor: "#9B59B6", rarity: "rare" },
+  { id: "emote_increible",category: "emote", name: "Increíble!",  description: "No lo puedo creer!",       price: 85,  preview: "sparkles",        previewColor: "#E67E22", rarity: "rare" },
+  { id: "emote_facil",    category: "emote", name: "Fácil!",      description: "Para mí es muy simple.",   price: 80,  preview: "happy",           previewColor: "#2ECC71", rarity: "rare" },
+  { id: "emote_sinpiedad",category: "emote", name: "Sin piedad",  description: "No muestro clemencia.",    price: 90,  preview: "skull",           previewColor: "#2C3E50", rarity: "rare" },
+  { id: "emote_perfecto", category: "emote", name: "Perfecto!",   description: "Exactamente como planeé.", price: 85,  preview: "medal",           previewColor: "#D4AF37", rarity: "rare" },
+  { id: "emote_golpe",    category: "emote", name: "Qué golpe!",  description: "Esa carta fue un golpe.",  price: 80,  preview: "nuclear",         previewColor: "#E74C3C", rarity: "rare" },
+  { id: "emote_sigue",    category: "emote", name: "Sigue así!",  description: "Mantén ese ritmo.",        price: 85,  preview: "arrow-forward",   previewColor: "#3498DB", rarity: "rare" },
+  { id: "emote_tiburon",  category: "emote", name: "Tiburón",     description: "Depredador del juego.",    price: 90,  preview: "fish",            previewColor: "#2980B9", rarity: "rare" },
+  { id: "emote_estratega",category: "emote", name: "Estratega",   description: "Calculé todo esto.",       price: 85,  preview: "git-network",     previewColor: "#8E44AD", rarity: "rare" },
+  { id: "emote_victoire", category: "emote", name: "Victoria!",   description: "La victoria es mía!",      price: 90,  preview: "trophy",          previewColor: "#D4AF37", rarity: "rare" },
+  { id: "emote_shadow",   category: "emote", name: "En las sombras", description: "Nadie me ve venir.",   price: 85,  preview: "moon",            previewColor: "#2C3E50", rarity: "rare" },
+  // Epic (10)
+  { id: "emote_inalcanzable",category: "emote", name: "Inalcanzable", description: "Estoy más allá.",     price: 150, preview: "infinite",        previewColor: "#9B59B6", rarity: "epic" },
+  { id: "emote_elrey",    category: "emote", name: "El Rey",      description: "El rey del tablero.",      price: 160, preview: "diamond",         previewColor: "#D4AF37", rarity: "epic" },
+  { id: "emote_lareina",  category: "emote", name: "La Reina",    description: "La reina gobierna.",       price: 160, preview: "diamond",         previewColor: "#E91E8C", rarity: "epic" },
+  { id: "emote_bestia",   category: "emote", name: "Bestia!",     description: "Soy una bestia jugando.",  price: 150, preview: "skull",           previewColor: "#C0392B", rarity: "epic" },
+  { id: "emote_fenomeno", category: "emote", name: "Fenómeno",    description: "Un fenómeno del juego.",   price: 160, preview: "star",            previewColor: "#E67E22", rarity: "epic" },
+  { id: "emote_demoledor",category: "emote", name: "Demoledor",   description: "Demoliendo todo.",         price: 150, preview: "hammer",          previewColor: "#E74C3C", rarity: "epic" },
+  { id: "emote_superior", category: "emote", name: "Superior",    description: "Soy superior en todo.",    price: 160, preview: "arrow-up",        previewColor: "#3498DB", rarity: "epic" },
+  { id: "emote_brillante",category: "emote", name: "Brillante",   description: "Una mente brillante.",     price: 150, preview: "bulb",            previewColor: "#F1C40F", rarity: "epic" },
+  { id: "emote_espectacular",category: "emote", name: "Espectacular", description: "Fue espectacular.",  price: 160, preview: "sparkles",        previewColor: "#00D4FF", rarity: "epic" },
+  { id: "emote_indetenible",category: "emote", name: "Indetenible", description: "Nada me detiene.",      price: 150, preview: "flash",           previewColor: "#A855F7", rarity: "epic" },
+  // Legendary (5)
+  { id: "emote_eldios",   category: "emote", name: "El Dios",     description: "El dios del Ocho Locos.", price: 350, preview: "sparkles",        previewColor: "#D4AF37", rarity: "legendary" },
+  { id: "emote_locogod",  category: "emote", name: "El Locos",    description: "Solo un verdadero loco gana así.", price: 350, preview: "flame", previewColor: "#FF6B00", rarity: "legendary" },
+  { id: "emote_ocholocos",category: "emote", name: "Ocho Locos!", description: "El grito legendario.",    price: 400, preview: "trophy",          previewColor: "#D4AF37", rarity: "legendary" },
+  { id: "emote_legendario",category: "emote", name: "Legendario", description: "Un jugador de leyenda.",  price: 350, preview: "ribbon",          previewColor: "#9B59B6", rarity: "legendary" },
+  { id: "emote_elfin",    category: "emote", name: "El Fin",      description: "El juego terminó. Yo gané.", price: 400, preview: "infinite",    previewColor: "#2C3E50", rarity: "legendary" },
+];
+
+export const STORE_ITEMS: StoreItem[] = [...CARD_BACKS, ...AVATARS, ...TITLES, ...AVATAR_FRAMES, ...EFFECTS, ...EMOTES];
 
 export function getItemsByCategory(category: StoreItemCategory): StoreItem[] {
   return STORE_ITEMS.filter((i) => i.category === category);

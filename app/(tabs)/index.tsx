@@ -25,8 +25,8 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 const { width: SW } = Dimensions.get("window");
 
-function FloatSuit({ suit, x, y, size, opacity, duration }: {
-  suit: string; x: number; y: number; size: number; opacity: number; duration: number;
+function FloatSuit({ suit, x, y, size, opacity, duration, isDark }: {
+  suit: string; x: number; y: number; size: number; opacity: number; duration: number; isDark: boolean;
 }) {
   const ty = useSharedValue(0);
   useEffect(() => {
@@ -43,12 +43,15 @@ function FloatSuit({ suit, x, y, size, opacity, duration }: {
     left: x * SW,
     top: y * 600,
     opacity,
+    pointerEvents: "none" as any,
   }));
   const isRed = suit === "♥" || suit === "♦";
-  return <Animated.Text style={[style, { fontSize: size, color: isRed ? "#C0392B" : "#fff" }]}>{suit}</Animated.Text>;
+  const darkColor = isRed ? "#C0392B" : "#ffffff";
+  const lightColor = isRed ? "#C0392B" : "#1a4a1a";
+  return <Animated.Text style={[style, { fontSize: size, color: isDark ? darkColor : lightColor }]}>{suit}</Animated.Text>;
 }
 
-function FloatingSuits() {
+function FloatingSuits({ isDark }: { isDark: boolean }) {
   const positions = [
     { suit: "♠", x: 0.08, y: 0.12, size: 48, opacity: 0.08, dur: 3000 },
     { suit: "♥", x: 0.82, y: 0.06, size: 38, opacity: 0.07, dur: 3400 },
@@ -58,11 +61,11 @@ function FloatingSuits() {
     { suit: "♥", x: 0.15, y: 0.85, size: 44, opacity: 0.07, dur: 3200 },
   ];
   return (
-    <>
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" } as any]}>
       {positions.map((p, i) => (
-        <FloatSuit key={i} suit={p.suit} x={p.x} y={p.y} size={p.size} opacity={p.opacity} duration={p.dur} />
+        <FloatSuit key={i} suit={p.suit} x={p.x} y={p.y} size={p.size} opacity={p.opacity} duration={p.dur} isDark={isDark} />
       ))}
-    </>
+    </View>
   );
 }
 
@@ -173,6 +176,7 @@ function DailyRewardModal({ visible, reward, onClaim }: {
 }
 
 function PokerTitle() {
+  const theme = useTheme();
   const glowAnim = useSharedValue(0.6);
   useEffect(() => {
     glowAnim.value = withRepeat(
@@ -187,9 +191,9 @@ function PokerTitle() {
     <View style={styles.titleWrap}>
       <View style={styles.titleSuits}>
         <Text style={styles.suitRed}>♥</Text>
-        <Text style={styles.suitBlack}>♠</Text>
+        <Text style={[styles.suitBlack, { color: theme.textMuted }]}>♠</Text>
         <Text style={styles.suitRed}>♦</Text>
-        <Text style={styles.suitBlack}>♣</Text>
+        <Text style={[styles.suitBlack, { color: theme.textMuted }]}>♣</Text>
       </View>
       <Animated.View style={glowStyle}>
         <Text style={styles.mainTitle}>OCHO LOCOS</Text>
@@ -327,10 +331,10 @@ export default function PlayScreen() {
         locations={[0, 0.2, 0.5, 0.8, 1]}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.feltTextureH1} />
-      <View style={styles.feltTextureH2} />
-      <View style={styles.feltTextureV1} />
-      <FloatingSuits />
+      <View style={[styles.feltTextureH1, { pointerEvents: "none" } as any]} />
+      <View style={[styles.feltTextureH2, { pointerEvents: "none" } as any]} />
+      <View style={[styles.feltTextureV1, { pointerEvents: "none" } as any]} />
+      <FloatingSuits isDark={isDark} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Profile bar — clickable to go to profile */}
@@ -506,7 +510,7 @@ export default function PlayScreen() {
         >
           <LinearGradient colors={adsWatchedToday >= adDailyLimit ? ["#33333322","#22222211"] : [Colors.gold + "18", Colors.gold + "08"]} style={StyleSheet.absoluteFill} />
           <View style={[styles.adIconWrap, { backgroundColor: Colors.gold + "22" }]}>
-            <Ionicons name="play-circle" size={28} color={adsWatchedToday >= adDailyLimit ? Colors.textDim : Colors.gold} />
+            <Ionicons name="play-circle" size={28} color={adsWatchedToday >= adDailyLimit ? theme.textDim : theme.gold} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.adTitle, { color: adsWatchedToday >= adDailyLimit ? theme.textMuted : theme.gold }]}>

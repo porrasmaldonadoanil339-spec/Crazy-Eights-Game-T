@@ -43,6 +43,22 @@ interface FriendRequest {
   resolvedAt?: number;
 }
 
+interface ChatMessage {
+  id: string;
+  text: string;
+  fromMe: boolean;
+  ts: number;
+}
+
+const AUTO_REPLIES = [
+  "Jaja qué bueno!", "Vamos a jugar pronto!", "Estoy listo para la revancha!",
+  "Buen juego la última vez", "Cuándo jugamos?", "Hoy estoy disponible",
+  "Eso estuvo bien jugado", "Me avisas cuando quieras jugar", "Ok!",
+  "Claro, cuando quieras!", "Jeje, prepárate para perder!", "Suerte en el próximo!",
+  "Ya voy a entrar", "Dame 5 minutos", "Está buenísimo este juego!",
+  "Ocho Locos es lo mejor!", "Hoy estoy con suerte", "Qué mano tan mala!",
+];
+
 const TITLE_NAMES: Record<string, string> = {
   title_rookie: "Novato", title_regular: "Regular", title_pro: "Profesional",
   title_ace: "El As", title_legend: "Leyenda", title_god: "El Dios",
@@ -90,8 +106,8 @@ export default function FriendsScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
 
-  const [friends, setFriends] = useState<Friend[]>(buildInitialFriends);
-  const [requests, setRequests] = useState<FriendRequest[]>(buildPendingRequests);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [tab, setTab] = useState<"friends" | "requests" | "search">("friends");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Friend[]>([]);
@@ -99,6 +115,10 @@ export default function FriendsScreen() {
   const [profileModal, setProfileModal] = useState<PlayerProfileData | null>(null);
   const [inviteToast, setInviteToast] = useState<string | null>(null);
   const toastAnim = useRef(new Animated.Value(0)).current;
+  const [chatFriend, setChatFriend] = useState<Friend | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const chatListRef = useRef<FlatList<ChatMessage>>(null);
 
   const showToast = (msg: string) => {
     setInviteToast(msg);
@@ -237,6 +257,45 @@ export default function FriendsScreen() {
     }, delay);
   };
 
+  const openChat = (friend: Friend) => {
+    setChatFriend(friend);
+    setChatMessages([{
+      id: "1",
+      text: friend.online ? "Hola! Estoy en línea, listo para jugar." : `Hola! Ahora no estoy disponible pero te responderé pronto.`,
+      fromMe: false,
+      ts: Date.now() - 60000,
+    }]);
+    setChatInput("");
+  };
+
+  const sendChatMessage = () => {
+    if (!chatInput.trim() || !chatFriend) return;
+    const myMsg: ChatMessage = {
+      id: Date.now().toString(),
+      text: chatInput.trim(),
+      fromMe: true,
+      ts: Date.now(),
+    };
+    setChatMessages(prev => [...prev, myMsg]);
+    setChatInput("");
+    setTimeout(() => {
+      chatListRef.current?.scrollToEnd?.({ animated: true });
+    }, 100);
+    const replyDelay = 1200 + Math.random() * 2000;
+    setTimeout(() => {
+      const reply: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: AUTO_REPLIES[Math.floor(Math.random() * AUTO_REPLIES.length)],
+        fromMe: false,
+        ts: Date.now(),
+      };
+      setChatMessages(prev => [...prev, reply]);
+      setTimeout(() => {
+        chatListRef.current?.scrollToEnd?.({ animated: true });
+      }, 100);
+    }, replyDelay);
+  };
+
   const renderFriend = ({ item }: { item: Friend }) => (
     <Pressable
       style={({ pressed }) => [styles.friendRow, { backgroundColor: surfaceColor, borderColor }, pressed && { opacity: 0.85 }]}
@@ -261,6 +320,14 @@ export default function FriendsScreen() {
         </View>
       </View>
       <View style={styles.friendRight}>
+        <Pressable
+          style={[styles.chatBtn]}
+          onPress={(e) => { e.stopPropagation(); openChat(item); }}
+        >
+          <View style={[styles.chatBtnInner, { backgroundColor: "#3498DB22", borderColor: "#3498DB44" }]}>
+            <Ionicons name="chatbubble-ellipses" size={13} color="#3498DB" />
+          </View>
+        </Pressable>
         <Pressable
           style={[styles.inviteBtn]}
           onPress={() => handleInvite(item)}
@@ -451,6 +518,85 @@ export default function FriendsScreen() {
           />
         </View>
       )}
+
+      {/* Chat Modal */}
+      <Modal
+        visible={!!chatFriend}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setChatFriend(null)}
+      >
+        {chatFriend && (
+          <View style={[styles.chatModal, { backgroundColor: isDark ? "#010804" : "#eaf6e4", paddingTop: topPad }]}>
+            {/* Chat Header */}
+            <View style={[styles.chatHeader, { borderBottomColor: borderColor }]}>
+              <Pressable onPress={() => setChatFriend(null)} style={styles.backBtn}>
+                <Ionicons name="chevron-back" size={22} color={textColor} />
+              </Pressable>
+              <View style={[styles.avatarIcon, { backgroundColor: chatFriend.avatarColor + "33", width: 32, height: 32, borderRadius: 16 }]}>
+                <Ionicons name={chatFriend.avatarIcon as any} size={16} color={chatFriend.avatarColor} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.friendName, { color: textColor }]}>{chatFriend.name}</Text>
+                <Text style={[styles.friendSub, { color: textMuted }]}>{chatFriend.online ? "En línea" : chatFriend.lastSeen}</Text>
+              </View>
+              <Pressable
+                onPress={() => { setChatFriend(null); handleInvite(chatFriend); }}
+                style={[styles.inviteBtn, { marginRight: 4 }]}
+              >
+                <LinearGradient colors={[Colors.gold, "#A07800"]} style={styles.inviteBtnGrad}>
+                  <Ionicons name="game-controller" size={13} color="#1a0a00" />
+                </LinearGradient>
+              </Pressable>
+            </View>
+
+            {/* Messages */}
+            <FlatList
+              ref={chatListRef}
+              data={chatMessages}
+              keyExtractor={m => m.id}
+              contentContainerStyle={{ padding: 14, gap: 10, paddingBottom: 8 }}
+              renderItem={({ item: msg }) => (
+                <View style={[
+                  styles.chatBubble,
+                  msg.fromMe
+                    ? { alignSelf: "flex-end", backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "44" }
+                    : { alignSelf: "flex-start", backgroundColor: isDark ? "#1a3a1a" : "#c8e6c0", borderColor: borderColor },
+                ]}>
+                  <Text style={[styles.chatBubbleTxt, { color: textColor }]}>{msg.text}</Text>
+                  <Text style={[styles.chatBubbleTime, { color: textMuted }]}>
+                    {new Date(msg.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </Text>
+                </View>
+              )}
+              ListEmptyComponent={<Text style={[styles.friendSub, { color: textMuted, textAlign: "center", marginTop: 40 }]}>Empieza una conversación!</Text>}
+              onLayout={() => chatListRef.current?.scrollToEnd?.({ animated: false })}
+            />
+
+            {/* Input */}
+            <View style={[styles.chatInputRow, { backgroundColor: isDark ? "#0a1a0a" : "#dcefd6", borderTopColor: borderColor, paddingBottom: botPad + 8 }]}>
+              <TextInput
+                style={[styles.chatInput, { color: textColor, backgroundColor: isDark ? "#1a2e1a" : "#c8e6c0", borderColor }]}
+                placeholder="Escribe un mensaje..."
+                placeholderTextColor={textMuted}
+                value={chatInput}
+                onChangeText={setChatInput}
+                onSubmitEditing={sendChatMessage}
+                returnKeyType="send"
+                multiline={false}
+              />
+              <Pressable
+                onPress={sendChatMessage}
+                style={[styles.chatSendBtn, { opacity: chatInput.trim() ? 1 : 0.4 }]}
+              >
+                <LinearGradient colors={[Colors.gold, "#A07800"]} style={styles.chatSendBtnGrad}>
+                  <Ionicons name="send" size={16} color="#1a0a00" />
+                </LinearGradient>
+              </Pressable>
+            </View>
+          </View>
+        )}
+      </Modal>
 
       {/* Player profile modal */}
       <PlayerProfileModal
@@ -682,4 +828,51 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.text,
   },
+  chatBtn: { borderRadius: 8, overflow: "hidden" },
+  chatBtnInner: { padding: 7, borderRadius: 8, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  chatModal: { flex: 1 },
+  chatHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  chatBubble: {
+    maxWidth: "80%",
+    padding: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 2,
+  },
+  chatBubbleTxt: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  chatBubbleTime: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 10,
+    alignSelf: "flex-end",
+  },
+  chatInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+  },
+  chatInput: {
+    flex: 1,
+    fontFamily: "Nunito_400Regular",
+    fontSize: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 22,
+    borderWidth: 1,
+  },
+  chatSendBtn: { borderRadius: 22, overflow: "hidden" },
+  chatSendBtnGrad: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
 });
