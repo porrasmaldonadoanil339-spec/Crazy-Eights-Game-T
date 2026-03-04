@@ -248,4 +248,157 @@ router.post("/facebook", async (req, res) => {
   }
 });
 
+// ─── GET /api/auth/google/start ──────────────────────────────────────────────
+router.get("/google/start", (req, res) => {
+  const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    return res.status(503).send(`
+      <html><body style="font-family:sans-serif;background:#041008;color:#D4AF37;text-align:center;padding:40px">
+        <h2>Google OAuth No Configurado</h2>
+        <p style="color:#aaa">Agrega <b>EXPO_PUBLIC_GOOGLE_CLIENT_ID</b> y <b>GOOGLE_CLIENT_SECRET</b> en los Secrets de Replit</p>
+        <p style="color:#888;font-size:12px">Crea las credenciales en <a href="https://console.cloud.google.com" style="color:#4A90E2">Google Cloud Console</a></p>
+      </body></html>
+    `);
+  }
+
+  const redirectUri = `${req.protocol}://${req.get("host")}/api/auth/google/callback`;
+  const state = crypto.randomBytes(16).toString("hex");
+  const scope = "openid profile email";
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}&access_type=offline`;
+
+  return res.redirect(url);
+});
+
+// ─── GET /api/auth/google/callback ───────────────────────────────────────────
+router.get("/google/callback", async (req, res) => {
+  const { code, error: oauthError } = req.query as Record<string, string>;
+  const clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = `${req.protocol}://${req.get("host")}/api/auth/google/callback`;
+
+  if (oauthError || !code) {
+    return sendOAuthResult(res, null, "Google auth cancelled");
+  }
+
+  if (!clientId || !clientSecret) {
+    return sendOAuthResult(res, null, "Google not configured");
+  }
+
+  try {
+    const tokenResp = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, grant_type: "authorization_code" }),
+    });
+    const tokenData = await tokenResp.json() as { access_token?: string; error?: string };
+    if (!tokenData.access_token) {
+      return sendOAuthResult(res, null, tokenData.error || "No access token");
+    }
+
+    const userResp = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: `Bearer ${tokenData.access_token}` } });
+    const gUser = await userResp.json() as { sub: string; name: string; email: string };
+
+    const users = loadUsers();
+    let user = users.find(u => u.googleId === gUser.sub);
+    if (!user) {
+      let username = gUser.name?.replace(/[^a-zA-Z0-9_]/g, "").substring(0, 18) || "Player";
+      let base = username; let counter = 1;
+      while (users.find(u => u.username.toLowerCase() === username.toLowerCase())) { username = `${base}${counter++}`; }
+      const id = crypto.randomBytes(16).toString("hex");
+      user = { id, username, passwordHash: "", salt: "", createdAt: new Date().toISOString(), googleId: gUser.sub, stats: { wins: 0, gamesPlayed: 0, xp: 0, coins: 100 } };
+      users.push(user); saveUsers(users);
+    }
+
+    const token = generateToken(user.id, user.username);
+    return sendOAuthResult(res, token, null);
+  } catch (e) {
+    return sendOAuthResult(res, null, "Google auth failed");
+  }
+});
+
+// ─── GET /api/auth/facebook/start ────────────────────────────────────────────
+router.get("/facebook/start", (req, res) => {
+  const appId = process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
+  if (!appId) {
+    return res.status(503).send(`
+      <html><body style="font-family:sans-serif;background:#041008;color:#D4AF37;text-align:center;padding:40px">
+        <h2>Facebook OAuth No Configurado</h2>
+        <p style="color:#aaa">Agrega <b>FACEBOOK_APP_ID</b> y <b>FACEBOOK_APP_SECRET</b> en los Secrets de Replit</p>
+      </body></html>
+    `);
+  }
+
+  const redirectUri = `${req.protocol}://${req.get("host")}/api/auth/facebook/callback`;
+  const url = `https://www.facebook.com/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=public_profile&response_type=code`;
+  return res.redirect(url);
+});
+
+// ─── GET /api/auth/facebook/callback ─────────────────────────────────────────
+router.get("/facebook/callback", async (req, res) => {
+  const { code, error: oauthError } = req.query as Record<string, string>;
+  const appId = process.env.FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
+  const appSecret = process.env.FACEBOOK_APP_SECRET;
+  const redirectUri = `${req.protocol}://${req.get("host")}/api/auth/facebook/callback`;
+
+  if (oauthError || !code) return sendOAuthResult(res, null, "Facebook auth cancelled");
+  if (!appId || !appSecret) return sendOAuthResult(res, null, "Facebook not configured");
+
+  try {
+    const tokenResp = await fetch(`https://graph.facebook.com/v18.0/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`);
+    const tokenData = await tokenResp.json() as { access_token?: string };
+    if (!tokenData.access_token) return sendOAuthResult(res, null, "No access token");
+
+    const meResp = await fetch(`https://graph.facebook.com/me?fields=id,name&access_token=${tokenData.access_token}`);
+    const fbUser = await meResp.json() as { id: string; name: string };
+
+    const users = loadUsers();
+    let user = users.find(u => u.facebookId === fbUser.id);
+    if (!user) {
+      let username = fbUser.name?.replace(/[^a-zA-Z0-9_]/g, "").substring(0, 18) || "Player";
+      let base = username; let counter = 1;
+      while (users.find(u => u.username.toLowerCase() === username.toLowerCase())) { username = `${base}${counter++}`; }
+      const id = crypto.randomBytes(16).toString("hex");
+      user = { id, username, passwordHash: "", salt: "", createdAt: new Date().toISOString(), facebookId: fbUser.id, stats: { wins: 0, gamesPlayed: 0, xp: 0, coins: 100 } };
+      users.push(user); saveUsers(users);
+    }
+
+    const token = generateToken(user.id, user.username);
+    return sendOAuthResult(res, token, null);
+  } catch {
+    return sendOAuthResult(res, null, "Facebook auth failed");
+  }
+});
+
+function sendOAuthResult(res: import("express").Response, token: string | null, error: string | null) {
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OCHO LOCOS - Auth</title>
+  <style>
+    body { font-family: sans-serif; background: #041008; color: #D4AF37; text-align: center; padding: 40px; }
+    h2 { font-size: 24px; }
+    p { color: #aaa; }
+  </style>
+</head>
+<body>
+  <h2>OCHO LOCOS</h2>
+  ${error
+    ? `<p style="color:#E74C3C">Error: ${error}</p><script>
+        if (window.opener) { window.opener.postMessage({type:'OAUTH_ERROR',error:'${error}'},'*'); window.close(); }
+        else { setTimeout(() => window.location.href = '/login', 2000); }
+      </script>`
+    : `<p style="color:#27AE60">¡Autenticación exitosa! Volviendo al juego...</p>
+       <script>
+        const token = '${token}';
+        if (window.opener) { window.opener.postMessage({type:'OAUTH_SUCCESS',token},'*'); window.close(); }
+        else if (window.ReactNativeWebView) { window.ReactNativeWebView.postMessage(JSON.stringify({type:'OAUTH_SUCCESS',token})); }
+        else { window.location.href = 'myapp://oauth?token=' + token; }
+      </script>`
+  }
+</body>
+</html>`;
+  return res.send(html);
+}
+
 export default router;

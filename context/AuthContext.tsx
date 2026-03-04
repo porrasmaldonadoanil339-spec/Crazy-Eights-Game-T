@@ -3,6 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetch } from "expo/fetch";
 import { getApiUrl } from "@/lib/query-client";
 
+export type AuthUserPublic = { id: string; username: string };
+
 const AUTH_STORAGE_KEY = "ocho_auth_v1";
 
 export interface AuthUser {
@@ -18,6 +20,7 @@ interface AuthContextValue {
   register: (username: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   loginWithGoogle: (accessToken: string) => Promise<{ ok: boolean; error?: string }>;
   loginWithFacebook: (accessToken: string) => Promise<{ ok: boolean; error?: string }>;
+  loginWithToken: (user: AuthUserPublic, token: string) => void;
   loginAsGuest: () => void;
   logout: () => void;
   isAuthenticated: boolean;
@@ -30,6 +33,7 @@ const AuthContext = createContext<AuthContextValue>({
   register: async () => ({ ok: false }),
   loginWithGoogle: async () => ({ ok: false }),
   loginWithFacebook: async () => ({ ok: false }),
+  loginWithToken: () => {},
   loginAsGuest: () => {},
   logout: () => {},
   isAuthenticated: false,
@@ -147,6 +151,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [persist]);
 
+  const loginWithToken = useCallback((userPublic: AuthUserPublic, token: string) => {
+    persist({ id: userPublic.id, username: userPublic.username, isGuest: false }, token);
+  }, [persist]);
+
   const loginAsGuest = useCallback(() => {
     const guestId = "guest_" + Date.now().toString(36);
     const guestUser: AuthUser = { id: guestId, username: "Invitado", isGuest: true };
@@ -166,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register,
       loginWithGoogle,
       loginWithFacebook,
+      loginWithToken,
       loginAsGuest,
       logout,
       isAuthenticated: !!user,

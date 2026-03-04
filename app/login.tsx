@@ -8,10 +8,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
+import { fetch as expoFetch } from "expo/fetch";
 import { Colors } from "@/constants/colors";
 import { useAuth } from "@/context/AuthContext";
 import { useProfile } from "@/context/ProfileContext";
 import { playSound } from "@/lib/sounds";
+import { getApiUrl } from "@/lib/query-client";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -22,7 +24,7 @@ type Mode = "menu" | "login" | "register";
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { login, register, loginWithGoogle, loginWithFacebook, loginAsGuest } = useAuth();
+  const { login, register, loginWithGoogle, loginWithFacebook, loginAsGuest, loginWithToken } = useAuth();
   const { profile } = useProfile();
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
 
@@ -66,47 +68,57 @@ export default function LoginScreen() {
     return strings[key]?.[lang] ?? strings[key]?.es ?? key;
   };
 
+  const getApiBase = (): string => {
+    try {
+      const url = getApiUrl() as string;
+      return url.endsWith("/") ? url.slice(0, -1) : url;
+    } catch { return ""; }
+  };
+
   const handleOAuth = async (provider: "google" | "facebook") => {
     playSound("button_press").catch(() => {});
-    const clientId = provider === "google" ? GOOGLE_CLIENT_ID : FACEBOOK_APP_ID;
-    if (!clientId) {
-      Alert.alert(
-        t("oauthSetup"),
-        t("oauthNotConfigured"),
-      );
+    const apiBase = getApiBase();
+    if (!apiBase) {
+      setError(lang === "en" ? "Server not reachable" : "Servidor no disponible");
       return;
     }
+
     setLoading(true);
     setError("");
     try {
-      const redirectUri = "myapp://oauth/callback";
-      let url = "";
-      if (provider === "google") {
-        url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=openid%20profile%20email`;
-      } else {
-        url = `https://www.facebook.com/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=public_profile`;
-      }
-      const result = await WebBrowser.openAuthSessionAsync(url, redirectUri);
+      const oauthUrl = `${apiBase}/api/auth/${provider}/start`;
+      const redirectPrefix = "myapp://oauth";
+
+      const result = await WebBrowser.openAuthSessionAsync(oauthUrl, redirectPrefix);
+
       if (result.type === "success" && result.url) {
-        const hash = result.url.split("#")[1] || result.url.split("?")[1] || "";
-        const params = new URLSearchParams(hash);
-        const accessToken = params.get("access_token");
-        if (accessToken) {
-          const authResult = provider === "google"
-            ? await loginWithGoogle(accessToken)
-            : await loginWithFacebook(accessToken);
-          if (authResult.ok) {
+        const qs = result.url.split("?")[1] || "";
+        const params = new URLSearchParams(qs);
+        const token = params.get("token");
+
+        if (token) {
+          const verifyResp = await expoFetch(`${apiBase}/api/auth/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token }),
+            credentials: "include",
+          });
+          const verifyData = await verifyResp.json() as { ok?: boolean; user?: { id: string; username: string }; error?: string };
+          if (verifyData.ok && verifyData.user) {
+            loginWithToken(verifyData.user, token);
             playSound("win").catch(() => {});
             router.replace("/(tabs)");
           } else {
-            setError(authResult.error || "Error");
+            setError(verifyData.error || lang === "en" ? "Auth failed" : "Auth falló");
           }
         } else {
-          setError(lang === "en" ? "OAuth failed — no token received" : "OAuth falló — sin token");
+          setError(lang === "en" ? "No token in redirect" : "Sin token en la redirección");
         }
+      } else if (result.type === "cancel") {
+        // User closed the browser - do nothing
       }
-    } catch {
-      setError(lang === "en" ? "Auth error" : "Error de autenticación");
+    } catch (e) {
+      setError(lang === "en" ? "Auth error — check connection" : "Error de autenticación — revisa la conexión");
     }
     setLoading(false);
   };

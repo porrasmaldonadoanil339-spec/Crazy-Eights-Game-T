@@ -509,7 +509,7 @@ export default function PlayScreen() {
             <Ionicons name="play-circle" size={28} color={adsWatchedToday >= adDailyLimit ? Colors.textDim : Colors.gold} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.adTitle, { color: adsWatchedToday >= adDailyLimit ? Colors.textMuted : theme.gold }]}>
+            <Text style={[styles.adTitle, { color: adsWatchedToday >= adDailyLimit ? theme.textMuted : theme.gold }]}>
               {adsWatchedToday >= adDailyLimit ? T("adDailyLimit") : T("watchAd")}
             </Text>
             <Text style={[styles.adDesc, { color: theme.textMuted }]}>
