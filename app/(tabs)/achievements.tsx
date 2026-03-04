@@ -120,7 +120,7 @@ export default function AchievementsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {activeTab === "achievements" ? (
           <>
-            {["legendary", "epic", "rare", "common"].map((rarity) => {
+            {["common", "rare", "epic", "legendary"].map((rarity) => {
               const rarityAchs = ACHIEVEMENTS.filter((a) => a.rarity === rarity);
               return (
                 <View key={rarity}>

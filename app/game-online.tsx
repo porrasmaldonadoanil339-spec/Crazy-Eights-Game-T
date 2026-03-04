@@ -416,7 +416,7 @@ export default function OnlineGameScreen() {
           if (!prev || prev.phase !== "pass_device") return prev;
           return multiConfirmTurn(prev);
         });
-      }, 800);
+      }, 280);
       return () => clearTimeout(t);
     }
 
@@ -436,7 +436,7 @@ export default function OnlineGameScreen() {
           if (!prev || prev.currentPlayerIndex !== pidx) return prev;
           return multiChooseSuit(prev, bestSuit as Suit);
         });
-      }, 700);
+      }, 320);
       return () => clearTimeout(t);
     }
 

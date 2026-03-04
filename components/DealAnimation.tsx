@@ -310,25 +310,67 @@ function AiHandPlaceholder({ count, backColors, backAccent }: {
   );
 }
 
+// ─── Table center: deck pile + starter card shown after flip ──────────────────
+function TableCenter({ starterCard, backColors, backAccent, visible }: {
+  starterCard: Card | null; backColors: [string, string, string]; backAccent: string; visible: boolean;
+}) {
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.75);
+  useEffect(() => {
+    if (visible) {
+      opacity.value = withTiming(1, { duration: 380 });
+      scale.value = withSpring(1, { damping: 11, stiffness: 160 });
+    }
+  }, [visible]);
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+  const DW = 44; const DH = 63;
+  return (
+    <Animated.View style={[style, {
+      position: "absolute", top: "33%", left: 0, right: 0,
+      alignItems: "center", justifyContent: "center",
+      flexDirection: "row", gap: 22,
+    }]}>
+      {/* Remaining deck */}
+      <View style={{ position: "relative", width: DW, height: DH }}>
+        {[3, 2, 1, 0].map(off => (
+          <View key={off} style={{ position: "absolute", top: -off * 1.5, left: off, zIndex: 4 - off }}>
+            <CardBack width={DW} height={DH} backColors={backColors} backAccent={backAccent} />
+          </View>
+        ))}
+      </View>
+      {/* Starter card face-up */}
+      {starterCard && (
+        <View style={{ transform: [{ rotate: "-4deg" }] }}>
+          <PlayingCard card={starterCard} size="md" />
+        </View>
+      )}
+    </Animated.View>
+  );
+}
+
 // ─── Flip phase wrapper ───────────────────────────────────────────────────────
-function FlipPhase({ playerCards, cardsPerPlayer, backColors, backAccent, onDone }: {
-  playerCards: Card[]; cardsPerPlayer: number;
+function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backAccent, onDone }: {
+  playerCards: Card[]; cardsPerPlayer: number; starterCard: Card | null;
   backColors: [string, string, string]; backAccent: string; onDone: () => void;
 }) {
   const STAGGER = 110;
   const N = playerCards.length;
   const doneCalled = useRef(false);
+  const [tableVisible, setTableVisible] = useState(false);
 
   const handleLastFlip = () => {
     if (doneCalled.current) return;
     doneCalled.current = true;
-    // Short pause so the player sees their flipped cards, then reveal the table
-    setTimeout(onDone, 600);
+    // Show table center (deck + starter card) for 1.4s then fade out overlay
+    setTableVisible(true);
+    setTimeout(onDone, 1400);
   };
 
   return (
     <View style={StyleSheet.absoluteFill}>
       <AiHandPlaceholder count={cardsPerPlayer} backColors={backColors} backAccent={backAccent} />
+      {/* Deck pile + starter card appear after last card flips */}
+      <TableCenter starterCard={starterCard} backColors={backColors} backAccent={backAccent} visible={tableVisible} />
       {/* Fan centered at screen bottom */}
       <View style={{ position: "absolute", bottom: 24, left: 0, right: 0, height: FAN_CARD_H + 48 }}>
         {playerCards.map((card, i) => (
@@ -352,11 +394,11 @@ function FlipPhase({ playerCards, cardsPerPlayer, backColors, backAccent, onDone
 type Phase = "shuffle" | "deal" | "flip";
 
 export function DealAnimation({
-  cardsPerPlayer, playerCards, onComplete,
+  cardsPerPlayer, playerCards, starterCard = null, onComplete,
   backColors = ["#1E4080", "#0e2248", "#0a1832"],
   backAccent = Colors.gold,
 }: {
-  cardsPerPlayer: number; playerCards: Card[]; onComplete: () => void;
+  cardsPerPlayer: number; playerCards: Card[]; starterCard?: Card | null; onComplete: () => void;
   backColors?: [string, string, string]; backAccent?: string;
 }) {
   const [phase, setPhase] = useState<Phase>("shuffle");

@@ -679,7 +679,8 @@ export default function GameScreen() {
       gameState?.currentPlayer === "player" &&
       gameState?.phase === "playing" &&
       dealAnimationDone &&
-      !showMatchmaking;
+      !showMatchmaking &&
+      !isExpert; // Expert mode already has its own 8s countdown timer
 
     if (isActive) {
       lastActionTime.current = Date.now();
@@ -986,6 +987,7 @@ export default function GameScreen() {
         <DealAnimation
           cardsPerPlayer={gameState.playerHand.length}
           playerCards={gameState.playerHand}
+          starterCard={gameState.discardPile[gameState.discardPile.length - 1] ?? null}
           onComplete={() => setDealAnimationDone(true)}
           backColors={backColors}
           backAccent={backAccent}
