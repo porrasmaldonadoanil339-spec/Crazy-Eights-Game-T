@@ -291,6 +291,11 @@ const translations = {
   adSkipSoon: { es: "Podrás cerrar en", en: "You can close in", pt: "Você pode fechar em" },
   adClose: { es: "Cerrar y cobrar", en: "Close & collect", pt: "Fechar e coletar" },
 
+  // ─── Exit App ────────────────────────────────────────────────────────────
+  exitAppTitle: { es: "¿Salir?", en: "Exit?", pt: "Sair?" },
+  exitAppMsg: { es: "¿Seguro que quieres salir de OCHO LOCOS?", en: "Are you sure you want to exit OCHO LOCOS?", pt: "Tem certeza que quer sair do OCHO LOCOS?" },
+  exitApp: { es: "Salir", en: "Exit", pt: "Sair" },
+
   // ─── Matchmaking ─────────────────────────────────────────────────────────
   searchingRival: { es: "Buscando rival", en: "Finding opponent", pt: "Buscando rival" },
   rivalFound: { es: "¡Rival encontrado!", en: "Opponent found!", pt: "Rival encontrado!" },

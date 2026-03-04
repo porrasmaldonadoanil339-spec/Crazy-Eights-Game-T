@@ -94,6 +94,31 @@ export const CARD_BACKS: StoreItem[] = [
   { id: "back_eternity",  category: "card_back", name: "Eternidad",       description: "Más allá del tiempo y el espacio.",               price: 500, preview: "card", previewColor: "#F8F8FF", rarity: "legendary", backColors: ["#F8F8FF","#E6E6FA","#D8BFD8"], backAccent: "#D4AF37", backPattern: "hexagons" },
   { id: "back_cosmic",    category: "card_back", name: "Origen Cósmico",  description: "La primera luz del universo.",                     price: 550, preview: "card", previewColor: "#FFFACD", rarity: "legendary", backColors: ["#FFFACD","#FFE4B5","#FFD700"], backAccent: "#000000", backPattern: "stars" },
   { id: "back_zenith",    category: "card_back", name: "Cénit",           description: "La máxima expresión del juego.",                  price: 600, preview: "card", previewColor: "#E0E0E0", rarity: "legendary", backColors: ["#E0E0E0","#FFFFFF","#C0C0C0"], backAccent: "#000000", backPattern: "diamonds" },
+  // ── Extra 20 (total 90) ──────────────────────────────────────────────────
+  // COMMON +5
+  { id: "back_dusk",      category: "card_back", name: "Crepúsculo",      description: "El cielo entre el día y la noche.",               price: 50,  preview: "card", previewColor: "#8B6090", rarity: "common",    backColors: ["#8B6090","#C2738A","#5C3D6E"], backAccent: "#FFD700", backPattern: "waves" },
+  { id: "back_ash",       category: "card_back", name: "Ceniza",          description: "Restos del fuego que quemó.",                     price: 45,  preview: "card", previewColor: "#A8A9A8", rarity: "common",    backColors: ["#A8A9A8","#6B6B6B","#C8C8C8"], backAccent: "#FF4500", backPattern: "crosses" },
+  { id: "back_maple",     category: "card_back", name: "Arce",            description: "Hojas otoñales de color cálido.",                 price: 55,  preview: "card", previewColor: "#C76B2B", rarity: "common",    backColors: ["#C76B2B","#8B4513","#DDA060"], backAccent: "#FFD700", backPattern: "circles" },
+  { id: "back_pearl2",    category: "card_back", name: "Nácar",           description: "Suave como la concha del mar.",                   price: 45,  preview: "card", previewColor: "#F5EEE6", rarity: "common",    backColors: ["#F5EEE6","#EAE0D5","#E0D0C0"], backAccent: "#C0A060", backPattern: "diamonds" },
+  { id: "back_pine",      category: "card_back", name: "Pino",            description: "Verde profundo de montaña.",                      price: 50,  preview: "card", previewColor: "#2D5016", rarity: "common",    backColors: ["#2D5016","#3A6B1E","#1D3510"], backAccent: "#90EE90", backPattern: "hexagons" },
+  // RARE +7
+  { id: "back_coral",     category: "card_back", name: "Coral",           description: "Vivo y brillante como el arrecife.",             price: 110, preview: "card", previewColor: "#FF7F50", rarity: "rare",      backColors: ["#FF7F50","#FF4500","#CC3300"], backAccent: "#FFFF00", backPattern: "waves" },
+  { id: "back_eclipse",   category: "card_back", name: "Eclipse",         description: "El sol bloqueado por la luna.",                  price: 120, preview: "card", previewColor: "#1A1A3A", rarity: "rare",      backColors: ["#1A1A3A","#2A2A5A","#0A0A1A"], backAccent: "#FFA500", backPattern: "circles" },
+  { id: "back_jade",      category: "card_back", name: "Jade",            description: "Piedra de la suerte oriental.",                  price: 105, preview: "card", previewColor: "#00A86B", rarity: "rare",      backColors: ["#00A86B","#004225","#00C87B"], backAccent: "#D4AF37", backPattern: "hexagons" },
+  { id: "back_topaz",     category: "card_back", name: "Topacio",         description: "Claridad dorada pura.",                          price: 115, preview: "card", previewColor: "#FFC87C", rarity: "rare",      backColors: ["#FFC87C","#DAA520","#E8A030"], backAccent: "#FFFFFF", backPattern: "stars" },
+  { id: "back_sapphire",  category: "card_back", name: "Zafiro",          description: "Azul profundo real.",                             price: 130, preview: "card", previewColor: "#0F52BA", rarity: "rare",      backColors: ["#0F52BA","#000080","#1A6CD4"], backAccent: "#FFFFFF", backPattern: "diamonds" },
+  { id: "back_amber",     category: "card_back", name: "Ámbar",           description: "Resina que atrapa el tiempo.",                   price: 100, preview: "card", previewColor: "#FFBF00", rarity: "rare",      backColors: ["#FFBF00","#CC7722","#FF8C00"], backAccent: "#000000", backPattern: "circles" },
+  { id: "back_hazel",     category: "card_back", name: "Avellana",        description: "Calidez natural y terrosa.",                     price: 95,  preview: "card", previewColor: "#8B6914", rarity: "rare",      backColors: ["#8B6914","#6B4A10","#A07828"], backAccent: "#FFD700", backPattern: "diamonds" },
+  // EPIC +5
+  { id: "back_solar",     category: "card_back", name: "Solar",           description: "Poder de la estrella más cercana.",              price: 175, preview: "card", previewColor: "#FF9900", rarity: "epic",      backColors: ["#FF9900","#FF6600","#CC4400"], backAccent: "#FFFF00", backPattern: "stars" },
+  { id: "back_mirage",    category: "card_back", name: "Espejismo",       description: "Ilusión óptica en la mesa.",                     price: 195, preview: "card", previewColor: "#00CED1", rarity: "epic",      backColors: ["#00CED1","#008B8B","#00FFFF"], backAccent: "#FFFFFF", backPattern: "waves" },
+  { id: "back_iron_epic", category: "card_back", name: "Hierro Forjado",  description: "Metal templado en batalla.",                     price: 185, preview: "card", previewColor: "#4A4A4A", rarity: "epic",      backColors: ["#4A4A4A","#222222","#6A6A6A"], backAccent: "#FF4500", backPattern: "crosses" },
+  { id: "back_orchid",    category: "card_back", name: "Orquídea",        description: "Rareza floral de otro nivel.",                   price: 200, preview: "card", previewColor: "#DA70D6", rarity: "epic",      backColors: ["#DA70D6","#9B2D9B","#FF88FF"], backAccent: "#FFFFFF", backPattern: "circles" },
+  { id: "back_thunder2",  category: "card_back", name: "Tormenta Épica",  description: "Más que relámpagos, la furia del cielo.",        price: 210, preview: "card", previewColor: "#364B6E", rarity: "epic",      backColors: ["#364B6E","#1A2840","#4A6090"], backAccent: "#FFFF00", backPattern: "hexagons" },
+  // LEGENDARY +3
+  { id: "back_titan",     category: "card_back", name: "Titán",           description: "Colosal. Nadie puede pararlo.",                   price: 500, preview: "card", previewColor: "#7F7F7F", rarity: "legendary", backColors: ["#7F7F7F","#BBBBBB","#333333"], backAccent: "#FF0000", backPattern: "hexagons" },
+  { id: "back_omen",      category: "card_back", name: "Presagio",        description: "Un augurio oscuro en la baraja.",                 price: 450, preview: "card", previewColor: "#1A001A", rarity: "legendary", backColors: ["#1A001A","#330033","#0D000D"], backAccent: "#FF00FF", backPattern: "stars" },
+  { id: "back_radiant",   category: "card_back", name: "Resplandor",      description: "Luz pura que ciega a la competencia.",           price: 580, preview: "card", previewColor: "#FFFAF0", rarity: "legendary", backColors: ["#FFFAF0","#FFECCC","#FFD700"], backAccent: "#FF8C00", backPattern: "diamonds" },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -174,6 +199,31 @@ export const AVATARS: StoreItem[] = [
   { id: "avatar_demigod",   category: "avatar", name: "Semidiós",        description: "Casi un mito, totalmente letal.",                 price: 390, preview: "flash",          previewColor: "#F0E68C", rarity: "legendary" },
   { id: "avatar_entity",    category: "avatar", name: "La Entidad",      description: "Nadie sabe de dónde vino.",                       price: 500, preview: "help-circle",    previewColor: "#000000", rarity: "legendary" },
   { id: "avatar_titan_god", category: "avatar", name: "Titán Divino",    description: "La fuerza de un dios en la mesa.",                price: 480, preview: "barbell",        previewColor: "#C0C0C0", rarity: "legendary" },
+  // ── Extra 20 (total 90) ──────────────────────────────────────────────────
+  // COMMON +5
+  { id: "avatar_fisherman", category: "avatar", name: "Pescador",        description: "Paciencia para pescar la carta perfecta.",        price: 25,  preview: "water",          previewColor: "#4169E1", rarity: "common" },
+  { id: "avatar_baker",     category: "avatar", name: "Panadero",        description: "Amasa victorias con sus propias manos.",          price: 25,  preview: "restaurant",     previewColor: "#DEB887", rarity: "common" },
+  { id: "avatar_mechanic",  category: "avatar", name: "Mecánico",        description: "Arregla cualquier situación difícil.",            price: 30,  preview: "construct",      previewColor: "#708090", rarity: "common" },
+  { id: "avatar_teacher",   category: "avatar", name: "Maestro",         description: "Enseña lecciones dolorosas.",                     price: 30,  preview: "school",         previewColor: "#4682B4", rarity: "common" },
+  { id: "avatar_doctor",    category: "avatar", name: "Doctor",          description: "Cura sus errores antes que los del rival.",       price: 35,  preview: "medkit",         previewColor: "#FFFFFF", rarity: "common" },
+  // RARE +5
+  { id: "avatar_gladiator2",category: "avatar", name: "Luchador",        description: "Arena, sangre y gloria en cada carta.",           price: 80,  preview: "fitness",        previewColor: "#D4A017", rarity: "rare" },
+  { id: "avatar_pirate2",   category: "avatar", name: "Filibustero",     description: "Roba más rápido que nadie.",                      price: 75,  preview: "boat",           previewColor: "#3D2B1F", rarity: "rare" },
+  { id: "avatar_ninja2",    category: "avatar", name: "Shinobi",         description: "Invisible hasta el golpe final.",                 price: 90,  preview: "eye-off",        previewColor: "#1A1A1A", rarity: "rare" },
+  { id: "avatar_mage2",     category: "avatar", name: "Archihechicero",  description: "Controla el mazo con magia antigua.",             price: 85,  preview: "sparkles",       previewColor: "#800080", rarity: "rare" },
+  { id: "avatar_knight2",   category: "avatar", name: "Cruzado",         description: "Fe inquebrantable en sus cartas.",                price: 80,  preview: "shield-checkmark",previewColor: "#F5F5F5", rarity: "rare" },
+  // EPIC +7
+  { id: "avatar_dragon2",   category: "avatar", name: "Dragón Antiguo",  description: "El más viejo y sabio de los dragones.",           price: 160, preview: "flame",          previewColor: "#8B0000", rarity: "epic" },
+  { id: "avatar_demon",     category: "avatar", name: "Demonio",         description: "Viene del infierno a quemar la mesa.",            price: 165, preview: "skull",          previewColor: "#8B0000", rarity: "epic" },
+  { id: "avatar_angel",     category: "avatar", name: "Ángel",           description: "Alas de luz que guían al ganador.",               price: 155, preview: "sunny",          previewColor: "#FFFACD", rarity: "epic" },
+  { id: "avatar_wizard2",   category: "avatar", name: "Mago Supremo",    description: "El hechizo perfecto en cada turno.",              price: 170, preview: "planet",         previewColor: "#6A0DAD", rarity: "epic" },
+  { id: "avatar_specter",   category: "avatar", name: "Espectro Real",   description: "Ni vivo ni muerto, solo ganador.",                price: 175, preview: "cloud",          previewColor: "#B0C4DE", rarity: "epic" },
+  { id: "avatar_titan2",    category: "avatar", name: "Colosus",         description: "Montaña de músculo y astucia.",                   price: 160, preview: "barbell",        previewColor: "#808080", rarity: "epic" },
+  { id: "avatar_trickster2",category: "avatar", name: "Ilusionista",     description: "Hace aparecer victorias de la nada.",             price: 165, preview: "help-circle",    previewColor: "#FF69B4", rarity: "epic" },
+  // LEGENDARY +3
+  { id: "avatar_odin",      category: "avatar", name: "Odín",            description: "El padre de todos los guerreros de cartas.",      price: 500, preview: "people",         previewColor: "#4682B4", rarity: "legendary" },
+  { id: "avatar_thoth",     category: "avatar", name: "Thoth",           description: "Dios del conocimiento y del destino.",            price: 470, preview: "book",           previewColor: "#DAA520", rarity: "legendary" },
+  { id: "avatar_ares",      category: "avatar", name: "Ares",            description: "El dios de la guerra en la mesa.",                price: 490, preview: "flash",          previewColor: "#CC0000", rarity: "legendary" },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -254,6 +304,31 @@ export const AVATAR_FRAMES: StoreItem[] = [
   { id: "frame_eternal_l", category: "frame", name: "Marco Eterno",      description: "Inmutable ante el paso de los siglos.",           price: 600, preview: "ellipse", previewColor: "#E5E4E2", rarity: "legendary", backColors: ["#E5E4E2","#B0C4DE"] },
   { id: "frame_alpha_l",   category: "frame", name: "Marco Alfa",         description: "El primero de su clase.",                         price: 700, preview: "ellipse", previewColor: "#FF0000", rarity: "legendary", backColors: ["#FF0000","#000000"] },
   { id: "frame_omega_l",   category: "frame", name: "Marco Omega",        description: "El final de todo camino.",                        price: 700, preview: "ellipse", previewColor: "#0000FF", rarity: "legendary", backColors: ["#0000FF","#000000"] },
+  // ── Extra 20 (total 90) ──────────────────────────────────────────────────
+  // COMMON +5
+  { id: "frame_sky",       category: "frame", name: "Marco Cielo",       description: "Azul despejado de un día perfecto.",              price: 20,  preview: "ellipse", previewColor: "#87CEEB", rarity: "common",    backColors: ["#87CEEB","#4169E1"] },
+  { id: "frame_rust",      category: "frame", name: "Marco Óxido",       description: "Hierro que el tiempo ha marcado.",                price: 25,  preview: "ellipse", previewColor: "#8B4513", rarity: "common",    backColors: ["#8B4513","#A0522D"] },
+  { id: "frame_chalk",     category: "frame", name: "Marco Tiza",        description: "Simple y efectivo como el jugador.",             price: 15,  preview: "ellipse", previewColor: "#F5F5F5", rarity: "common",    backColors: ["#F5F5F5","#E0E0E0"] },
+  { id: "frame_moss2",     category: "frame", name: "Marco Musgo",       description: "Verde natural del bosque profundo.",             price: 25,  preview: "ellipse", previewColor: "#4A5D23", rarity: "common",    backColors: ["#4A5D23","#2E8B57"] },
+  { id: "frame_ink",       category: "frame", name: "Marco Tinta",       description: "Negro profundo de caligrafía.",                   price: 20,  preview: "ellipse", previewColor: "#0D0D0D", rarity: "common",    backColors: ["#0D0D0D","#1A1A1A"] },
+  // RARE +5
+  { id: "frame_lava2",     category: "frame", name: "Marco Lava",        description: "Roca fundida que rodea tu avatar.",              price: 90,  preview: "ellipse", previewColor: "#CF1020", rarity: "rare",      backColors: ["#CF1020","#FF4500"] },
+  { id: "frame_jade2",     category: "frame", name: "Marco Jade",        description: "Suerte verde en tu perfil.",                     price: 85,  preview: "ellipse", previewColor: "#00A86B", rarity: "rare",      backColors: ["#00A86B","#004225"] },
+  { id: "frame_rose",      category: "frame", name: "Marco Rosa Dorado", description: "Elegancia moderna de lujo.",                     price: 95,  preview: "ellipse", previewColor: "#B76E79", rarity: "rare",      backColors: ["#B76E79","#E0B0FF"] },
+  { id: "frame_arctic",    category: "frame", name: "Marco Ártico",      description: "Frío extremo que congela el juego.",             price: 100, preview: "ellipse", previewColor: "#B8DDEF", rarity: "rare",      backColors: ["#B8DDEF","#4FC3F7"] },
+  { id: "frame_galaxy2",   category: "frame", name: "Marco Espiral",     description: "Galaxia en espiral alrededor de tu avatar.",     price: 110, preview: "ellipse", previewColor: "#2C0066", rarity: "rare",      backColors: ["#2C0066","#4B0082"] },
+  // EPIC +7
+  { id: "frame_thunder2",  category: "frame", name: "Marco Rayo",        description: "Descarga eléctrica alrededor de ti.",            price: 180, preview: "ellipse", previewColor: "#FFFF00", rarity: "epic",      backColors: ["#FFFF00","#C8A800"] },
+  { id: "frame_storm2",    category: "frame", name: "Marco Tormenta",    description: "Nubes y rayos que te envuelven.",                price: 195, preview: "ellipse", previewColor: "#364B6E", rarity: "epic",      backColors: ["#364B6E","#1A2840"] },
+  { id: "frame_acid",      category: "frame", name: "Marco Ácido",       description: "Corrosión que disuelve a tus rivales.",          price: 185, preview: "ellipse", previewColor: "#ADFF2F", rarity: "epic",      backColors: ["#ADFF2F","#556B2F"] },
+  { id: "frame_blood2",    category: "frame", name: "Marco Sangre",      description: "Carmesí que intimida antes de jugar.",           price: 200, preview: "ellipse", previewColor: "#8B0000", rarity: "epic",      backColors: ["#8B0000","#CC0000"] },
+  { id: "frame_prism2",    category: "frame", name: "Marco Prisma",      description: "Arcoíris fraccionado que hipnotiza.",            price: 210, preview: "ellipse", previewColor: "#FF6688", rarity: "epic",      backColors: ["#FF6688","#880044"] },
+  { id: "frame_mirage",    category: "frame", name: "Marco Espejismo",   description: "Cambia de forma según quien lo mire.",           price: 195, preview: "ellipse", previewColor: "#00CED1", rarity: "epic",      backColors: ["#00CED1","#008B8B"] },
+  { id: "frame_rune",      category: "frame", name: "Marco Runas",       description: "Símbolos antiguos de poder puro.",               price: 205, preview: "ellipse", previewColor: "#DAA520", rarity: "epic",      backColors: ["#DAA520","#8B6914"] },
+  // LEGENDARY +3
+  { id: "frame_titan_l",   category: "frame", name: "Marco Titán",       description: "Solo para el más colosal de todos.",             price: 650, preview: "ellipse", previewColor: "#C0C0C0", rarity: "legendary", backColors: ["#C0C0C0","#FF0000"] },
+  { id: "frame_holy_l",    category: "frame", name: "Marco Sagrado",     description: "La luz divina que protege al campeón.",          price: 580, preview: "ellipse", previewColor: "#FFFACD", rarity: "legendary", backColors: ["#FFFACD","#FFECAA","#FFFFFF"] },
+  { id: "frame_nexus_l",   category: "frame", name: "Marco Nexo",        description: "Punto de unión entre mundos.",                   price: 700, preview: "ellipse", previewColor: "#00FFFF", rarity: "legendary", backColors: ["#00FFFF","#0000FF","#00FF00"] },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -334,6 +409,32 @@ export const TITLES: StoreItem[] = [
   { id: "title_creator",     category: "title", name: "El Creador",          description: "Quien dicta las reglas del destino.",          price: 600, preview: "construct",    previewColor: "#FFD700", rarity: "legendary" },
   { id: "title_void_walker", category: "title", name: "Caminante del Vacío", description: "Nada puede detener su avance.",               price: 520, preview: "moon",         previewColor: "#4B0082", rarity: "legendary" },
   { id: "title_zenith_t",    category: "title", name: "Cénit del Juego",     description: "La perfección hecha jugador.",                price: 700, preview: "ribbon",       previewColor: "#FFFFFF", rarity: "legendary" },
+  // ── Extra 20 (total 90) ──────────────────────────────────────────────────
+  // COMMON +5
+  { id: "title_scout",       category: "title", name: "Explorador",          description: "Siempre buscando la siguiente victoria.",      price: 15,  preview: "compass",      previewColor: "#8B6914", rarity: "common" },
+  { id: "title_jokester",    category: "title", name: "Bromista",            description: "La risa es su mejor arma.",                   price: 20,  preview: "happy",        previewColor: "#FFA500", rarity: "common" },
+  { id: "title_silent",      category: "title", name: "El Silencioso",       description: "Sus cartas hablan solas.",                     price: 25,  preview: "volume-mute",  previewColor: "#708090", rarity: "common" },
+  { id: "title_rookie2",     category: "title", name: "Principiante",        description: "Apenas empieza, pero ya promete.",            price: 10,  preview: "person",       previewColor: "#95A5A6", rarity: "common" },
+  { id: "title_hunter_c",    category: "title", name: "Cazador Novato",      description: "Siempre va por las cartas más peligrosas.",   price: 30,  preview: "locate",       previewColor: "#8B4513", rarity: "common" },
+  // RARE +5
+  { id: "title_challenger_2",category: "title", name: "Retador",             description: "Nunca baja la guardia.",                      price: 65,  preview: "trophy",       previewColor: "#E67E22", rarity: "rare" },
+  { id: "title_guardian",    category: "title", name: "Guardián",            description: "Protege su mano como un tesoro.",             price: 70,  preview: "shield",       previewColor: "#1A8FC1", rarity: "rare" },
+  { id: "title_maverick_2",  category: "title", name: "Inconformista",       description: "Juega a su manera. Y gana.",                  price: 75,  preview: "alert-circle", previewColor: "#E74C3C", rarity: "rare" },
+  { id: "title_outlaw_2",    category: "title", name: "Fuera de la Ley",     description: "Las reglas son para los demás.",              price: 70,  preview: "warning",      previewColor: "#8B4513", rarity: "rare" },
+  { id: "title_renegade_2",  category: "title", name: "Disidente",           description: "Lucha contra todos. Siempre solo.",           price: 65,  preview: "close-circle", previewColor: "#B22222", rarity: "rare" },
+  // EPIC +7
+  { id: "title_predator_e",  category: "title", name: "Gran Depredador",     description: "Nadie escapa de su estrategia.",              price: 150, preview: "eye",          previewColor: "#8B0000", rarity: "epic" },
+  { id: "title_shadow_e",    category: "title", name: "Sombra Oscura",       description: "Opera desde la oscuridad.",                   price: 160, preview: "moon",         previewColor: "#2F4F4F", rarity: "epic" },
+  { id: "title_comeback_e",  category: "title", name: "El Renacimiento",     description: "Cae y vuelve más fuerte.",                    price: 175, preview: "refresh",      previewColor: "#FF4500", rarity: "epic" },
+  { id: "title_collector_e", category: "title", name: "Gran Colector",       description: "Lo quiere todo en su colección.",             price: 155, preview: "albums",       previewColor: "#D4AF37", rarity: "epic" },
+  { id: "title_mastermind_e",category: "title", name: "La Mente Maestra",    description: "Cada movimiento ya estaba calculado.",        price: 180, preview: "git-network",  previewColor: "#6A0DAD", rarity: "epic" },
+  { id: "title_noble_e",     category: "title", name: "El Noble",            description: "Elegante hasta en la derrota.",              price: 165, preview: "ribbon",       previewColor: "#4682B4", rarity: "epic" },
+  { id: "title_vanguard_e",  category: "title", name: "Vanguardia",          description: "Siempre el primero en la línea.",            price: 170, preview: "flag",         previewColor: "#E74C3C", rarity: "epic" },
+  // LEGENDARY +3
+  { id: "title_joker_l",     category: "title", name: "El Joker",            description: "Impredecible, letal y siempre sonriendo.",    price: 500, preview: "happy",        previewColor: "#FF00FF", rarity: "legendary" },
+  { id: "title_trickster_l", category: "title", name: "El Embustero",        description: "La mejor mentira es la victoria.",            price: 480, preview: "help-circle",  previewColor: "#FF8C00", rarity: "legendary" },
+  { id: "title_rogue_l",     category: "title", name: "El Pícaro",           description: "Rápido, astuto, imposible de atrapar.",       price: 520, preview: "eye-off",      previewColor: "#1C1C1C", rarity: "legendary" },
+  { id: "title_observer2",   category: "title", name: "El Observador",       description: "Todo lo ve, nada se le escapa.",              price: 460, preview: "eye",          previewColor: "#4A4A8A", rarity: "legendary" },
 ];
 
 // ═══════════════════════════════════════════════════════════════

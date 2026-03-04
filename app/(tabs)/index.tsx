@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView,
-  Modal, Platform, Dimensions, TextInput,
+  Modal, Platform, Dimensions, TextInput, BackHandler, Alert,
 } from "react-native";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { useT } from "@/hooks/useT";
@@ -229,6 +229,24 @@ export default function PlayScreen() {
       const timer = setTimeout(() => setShowDailyModal(true), 1500);
       return () => clearTimeout(timer);
     }
+  }, []);
+
+  // Android hardware back button → exit confirmation
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      Alert.alert(
+        T("exitAppTitle"),
+        T("exitAppMsg"),
+        [
+          { text: T("cancel"), style: "cancel" },
+          { text: T("exitApp"), style: "destructive", onPress: () => BackHandler.exitApp() },
+        ],
+        { cancelable: true }
+      );
+      return true;
+    });
+    return () => sub.remove();
   }, []);
 
   const handleModePress = async (modeId: GameModeId) => {

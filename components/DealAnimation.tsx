@@ -459,6 +459,7 @@ export function DealAnimation({
         <FlipPhase
           playerCards={playerCards}
           cardsPerPlayer={cardsPerPlayer}
+          starterCard={starterCard ?? null}
           backColors={backColors}
           backAccent={backAccent}
           onDone={handleFlipDone}

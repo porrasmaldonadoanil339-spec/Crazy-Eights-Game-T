@@ -45,6 +45,7 @@ const DEMO_STATE = {
   jActive: false,
   jSuit: null as "hearts" | "diamonds" | "clubs" | "spades" | null,
   direction: 1 as 1 | -1,
+  turnId: 0,
 };
 
 interface Step {
