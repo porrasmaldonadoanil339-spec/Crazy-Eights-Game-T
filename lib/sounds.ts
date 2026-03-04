@@ -24,7 +24,18 @@ export type SoundEvent =
   | "menu_open"
   | "menu_close"
   | "coin_earn"
-  | "streak";
+  | "streak"
+  | "ocho"
+  | "special_card"
+  | "block_card"
+  | "draw_penalty"
+  | "reverse_card"
+  | "countdown"
+  | "match_start"
+  | "effect_burst"
+  | "timer_warning"
+  | "joker_play"
+  | "inactivity_warning";
 
 import {
   playCardFlip,
@@ -43,6 +54,17 @@ import {
   playStreak,
   playMenuOpen,
   playLevelUp,
+  playOcho,
+  playSpecialCard,
+  playBlockCard,
+  playDrawPenalty,
+  playReverseCard,
+  playCountdownBeep,
+  playMatchStart,
+  playEffectBurst,
+  playTimerWarning,
+  playJokerPlay,
+  playInactivityWarning,
 } from "@/lib/audioManager";
 
 export async function playSound(event: SoundEvent) {
@@ -73,5 +95,16 @@ export async function playSound(event: SoundEvent) {
     case "menu_close":         return playButton();
     case "coin_earn":          return playCoinEarn();
     case "streak":             return playStreak();
+    case "ocho":               return playOcho();
+    case "special_card":       return playSpecialCard();
+    case "block_card":         return playBlockCard();
+    case "draw_penalty":       return playDrawPenalty();
+    case "reverse_card":       return playReverseCard();
+    case "countdown":          return playCountdownBeep();
+    case "match_start":        return playMatchStart();
+    case "effect_burst":       return playEffectBurst();
+    case "timer_warning":      return playTimerWarning();
+    case "joker_play":         return playJokerPlay();
+    case "inactivity_warning": return playInactivityWarning();
   }
 }

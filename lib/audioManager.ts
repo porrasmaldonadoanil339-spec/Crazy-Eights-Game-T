@@ -227,6 +227,99 @@ export async function playLevelUp() {
   });
 }
 
+// ─── Game event sounds ────────────────────────────────────────────────────────
+
+export async function playOcho() {
+  // Triple ascending beep — "Crazy Eight!" moment
+  await playSfx("wild");
+  setTimeout(() => playSfx("cardFlip", sfxVolume * 0.7).catch(() => {}), 120);
+  setTimeout(() => playSfx("win", sfxVolume * 0.5).catch(() => {}), 250);
+  haptic(async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 130);
+    setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 260);
+  });
+}
+
+export async function playSpecialCard() {
+  // Quick swoosh for special cards (2, 3, 7, J, A, 10)
+  await playSfx("cardDraw", sfxVolume * 0.9);
+  haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+}
+
+export async function playBlockCard() {
+  // Thud for block/skip
+  await playSfx("button", sfxVolume * 0.8);
+  setTimeout(() => playSfx("button", sfxVolume * 0.5).catch(() => {}), 100);
+  haptic(async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 120);
+  });
+}
+
+export async function playDrawPenalty() {
+  // Rapid card draw sound for penalty draws
+  await playSfx("cardDraw");
+  setTimeout(() => playSfx("cardDraw", sfxVolume * 0.8).catch(() => {}), 90);
+  setTimeout(() => playSfx("cardDraw", sfxVolume * 0.6).catch(() => {}), 180);
+  haptic(async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 100);
+  });
+}
+
+export async function playReverseCard() {
+  // Reverse swoosh
+  await playSfx("shuffle", sfxVolume * 0.6);
+  haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+}
+
+export async function playCountdownBeep() {
+  // Countdown tick
+  await playSfx("button", sfxVolume * 0.6);
+  haptic(() => Haptics.selectionAsync());
+}
+
+export async function playMatchStart() {
+  // Match starting fanfare
+  await playSfx("win", sfxVolume * 0.8);
+  setTimeout(() => playSfx("cardFlip", sfxVolume * 0.6).catch(() => {}), 200);
+  setTimeout(() => playSfx("wild", sfxVolume * 0.5).catch(() => {}), 400);
+  haptic(async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 200);
+  });
+}
+
+export async function playEffectBurst() {
+  // Particle effect trigger
+  await playSfx("wild", sfxVolume * 0.5);
+  haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+}
+
+export async function playTimerWarning() {
+  // Low-time warning tick
+  await playSfx("button", sfxVolume * 0.4);
+  haptic(() => Haptics.selectionAsync());
+}
+
+export async function playJokerPlay() {
+  // Joker card played
+  await playSfx("wild");
+  setTimeout(() => playSfx("wild", sfxVolume * 0.6).catch(() => {}), 150);
+  haptic(async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 150);
+  });
+}
+
+export async function playInactivityWarning() {
+  // Warning beep before auto-draw
+  await playSfx("button", sfxVolume * 0.5);
+  setTimeout(() => playSfx("button", sfxVolume * 0.4).catch(() => {}), 150);
+  haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning));
+}
+
 // ─── Settings ────────────────────────────────────────────────────────────────
 
 export function syncSettings(musicEnabled: boolean, sfxEnabled: boolean) {

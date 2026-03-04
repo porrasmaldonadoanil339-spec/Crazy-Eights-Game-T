@@ -367,6 +367,9 @@ export default function OnlineGameScreen() {
   const [gameState, setGameState] = useState<MultiGameState | null>(null);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const cpuThinking = useRef(false);
+  const [inactivityProgress, setInactivityProgress] = useState(1);
+  const inactivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastActionTime = useRef(Date.now());
 
   // ─── Lobby sequence ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -454,6 +457,46 @@ export default function OnlineGameScreen() {
     }
   }, [gameState?.turnId, gameState?.phase, lobbyPhase]);
 
+  // ─── Inactivity timer (auto-draw after 20s idle on human turn) ───────────
+  const INACTIVITY_TIMEOUT = 20;
+  useEffect(() => {
+    const isActive =
+      gameState?.phase === "playing" &&
+      gameState?.currentPlayerIndex === 0 &&
+      lobbyPhase === "game";
+
+    if (isActive) {
+      lastActionTime.current = Date.now();
+      if (inactivityRef.current) clearInterval(inactivityRef.current);
+      inactivityRef.current = setInterval(() => {
+        const elapsed = (Date.now() - lastActionTime.current) / 1000;
+        const prog = Math.max(0, 1 - elapsed / INACTIVITY_TIMEOUT);
+        setInactivityProgress(prog);
+        if (prog <= 0 && inactivityRef.current) {
+          clearInterval(inactivityRef.current);
+          inactivityRef.current = null;
+          setGameState(prev => {
+            if (!prev || prev.phase !== "playing" || prev.currentPlayerIndex !== 0) return prev;
+            return multiDraw(prev);
+          });
+          setSelectedCard(null);
+        }
+      }, 100);
+    } else {
+      if (inactivityRef.current) {
+        clearInterval(inactivityRef.current);
+        inactivityRef.current = null;
+      }
+      setInactivityProgress(1);
+    }
+    return () => {
+      if (inactivityRef.current) {
+        clearInterval(inactivityRef.current);
+        inactivityRef.current = null;
+      }
+    };
+  }, [gameState?.currentPlayerIndex, gameState?.phase, lobbyPhase]);
+
   // ─── Player card interactions ────────────────────────────────────────────
   const isPlaying = gameState?.phase === "playing" && gameState?.currentPlayerIndex === 0;
   const currentHand = gameState?.hands[0] ?? [];
@@ -461,6 +504,7 @@ export default function OnlineGameScreen() {
 
   const handleCardPress = useCallback((card: Card) => {
     if (!gameState || !isPlaying) return;
+    lastActionTime.current = Date.now();
     if (!multiCanPlay(card, gameState)) { playCardFlip().catch(() => {}); return; }
     if (selectedCard?.id === card.id) {
       playCardFlip().catch(() => {});
@@ -486,6 +530,7 @@ export default function OnlineGameScreen() {
 
   const handleDraw = useCallback(() => {
     if (!gameState || !isPlaying) return;
+    lastActionTime.current = Date.now();
     playCardDraw().catch(() => {});
     setGameState(multiDraw(gameState));
     setSelectedCard(null);
@@ -683,6 +728,26 @@ export default function OnlineGameScreen() {
             </Text>
           )}
 
+          {/* Inactivity progress bar — shown during human turn */}
+          {isPlaying && inactivityProgress < 1 && (
+            <View style={gameStyles.inactivityBar}>
+              <View
+                style={[
+                  gameStyles.inactivityFill,
+                  {
+                    width: `${Math.round(inactivityProgress * 100)}%` as any,
+                    backgroundColor:
+                      inactivityProgress > 0.5
+                        ? "#D4AF37"
+                        : inactivityProgress > 0.25
+                        ? "#FF8C00"
+                        : "#FF3B30",
+                  },
+                ]}
+              />
+            </View>
+          )}
+
           {/* Arc fan hand */}
           {(() => {
             const N = currentHand.length;
@@ -874,6 +939,11 @@ const gameStyles = StyleSheet.create({
     borderWidth: 1, borderColor: "#4A90E244",
   },
   waitingText: { fontFamily: "Nunito_700Bold", fontSize: 10, color: "#4A90E2" },
+  inactivityBar: {
+    width: "100%", height: 3, backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 2, marginBottom: 4, overflow: "hidden",
+  },
+  inactivityFill: { height: 3, borderRadius: 2 },
   handContainer: { paddingHorizontal: 12, paddingVertical: 4 },
   selectedHint: {
     fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.gold, textAlign: "center", marginTop: 2,
