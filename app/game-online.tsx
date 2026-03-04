@@ -409,8 +409,11 @@ export default function OnlineGameScreen() {
     if (gameState.phase === "pass_device") {
       // Auto-confirm pass_device for ALL players in online mode (no physical device passing)
       const t = setTimeout(() => {
-        setGameState(prev => prev ? { ...prev, phase: "playing" } : prev);
-      }, 150);
+        setGameState(prev => {
+          if (!prev || prev.phase !== "pass_device") return prev;
+          return multiConfirmTurn(prev);
+        });
+      }, 800);
       return () => clearTimeout(t);
     }
 

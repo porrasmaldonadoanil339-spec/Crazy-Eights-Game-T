@@ -8,7 +8,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/colors";
+import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
 import { BATTLE_PASS_TIERS, getXpProgress, getBPRewardLabel } from "@/lib/battlePass";
@@ -59,6 +59,7 @@ export default function AchievementsScreen() {
   const claimableCount = profile.achievementProgress.filter((a) => a.unlocked && !a.claimedReward).length;
 
   const isDark = profile.darkMode !== false;
+  const themeColors = isDark ? Colors : LightColors;
   const bgColors: [string, string, string] = isDark
     ? ["#061209", "#0a1a0f", "#0d2418"]
     : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
@@ -92,12 +93,12 @@ export default function AchievementsScreen() {
           onPress={() => setActiveTab("achievements")}
           style={[
             styles.tabBtn,
-            { backgroundColor: theme.surface, borderColor: theme.border },
+            { backgroundColor: themeColors.surface, borderColor: themeColors.border },
             activeTab === "achievements" && { borderColor: themeGold, backgroundColor: themeGold + "22" },
           ]}
         >
-          <Ionicons name="medal" size={16} color={activeTab === "achievements" ? themeGold : theme.textMuted} />
-          <Text style={[styles.tabLabel, { color: activeTab === "achievements" ? themeGold : theme.textMuted }]}>
+          <Ionicons name="medal" size={16} color={activeTab === "achievements" ? themeGold : themeColors.textMuted} />
+          <Text style={[styles.tabLabel, { color: activeTab === "achievements" ? themeGold : themeColors.textMuted }]}>
             {T("achievements")} {claimableCount > 0 && `(${claimableCount})`}
           </Text>
         </Pressable>
@@ -105,12 +106,12 @@ export default function AchievementsScreen() {
           onPress={() => setActiveTab("battlepass")}
           style={[
             styles.tabBtn,
-            { backgroundColor: theme.surface, borderColor: theme.border },
+            { backgroundColor: themeColors.surface, borderColor: themeColors.border },
             activeTab === "battlepass" && { borderColor: themeGold, backgroundColor: themeGold + "22" },
           ]}
         >
-          <Ionicons name="star" size={16} color={activeTab === "battlepass" ? themeGold : theme.textMuted} />
-          <Text style={[styles.tabLabel, { color: activeTab === "battlepass" ? themeGold : theme.textMuted }]}>
+          <Ionicons name="star" size={16} color={activeTab === "battlepass" ? themeGold : themeColors.textMuted} />
+          <Text style={[styles.tabLabel, { color: activeTab === "battlepass" ? themeGold : themeColors.textMuted }]}>
             {T("battlePass")}
           </Text>
         </Pressable>
@@ -140,32 +141,32 @@ export default function AchievementsScreen() {
                         style={[
                           styles.achCard,
                           {
-                            backgroundColor: unlocked ? theme.card : theme.surface,
-                            borderColor: unlocked ? rarityColor + "55" : theme.border,
+                            backgroundColor: unlocked ? themeColors.card : themeColors.surface,
+                            borderColor: unlocked ? rarityColor + "55" : themeColors.border,
                           },
                         ]}
                       >
-                        <View style={[styles.achIconWrap, { backgroundColor: unlocked ? ach.iconColor + "33" : theme.card }]}>
-                          <Ionicons name={ach.icon as any} size={22} color={unlocked ? ach.iconColor : theme.textDim} />
+                        <View style={[styles.achIconWrap, { backgroundColor: unlocked ? ach.iconColor + "33" : themeColors.card }]}>
+                          <Ionicons name={ach.icon as any} size={22} color={unlocked ? ach.iconColor : themeColors.textDim} />
                         </View>
                         <View style={styles.achContent}>
                           <View style={styles.achTitleRow}>
-                            <Text style={[styles.achTitle, { color: unlocked ? theme.text : theme.textMuted }]}>{title}</Text>
+                            <Text style={[styles.achTitle, { color: unlocked ? themeColors.text : themeColors.textMuted }]}>{title}</Text>
                             {unlocked && !claimed && <View style={styles.claimDot} />}
                           </View>
-                          <Text style={[styles.achDesc, { color: theme.textMuted }]}>{desc}</Text>
+                          <Text style={[styles.achDesc, { color: themeColors.textMuted }]}>{desc}</Text>
                           {!unlocked && (
-                            <View style={[styles.progressBarBg, { backgroundColor: theme.border }]}>
-                              <View style={[styles.progressBarFill, { width: `${pct * 100}%`, backgroundColor: rarityColor }]} />
+                            <View style={[styles.progressBarBg, { backgroundColor: themeColors.border }]}>
+                              <View style={[styles.progressBarFill, { width: `${pct * 100}%`, backgroundColor: rarityColor } ]} />
                             </View>
                           )}
                           <View style={styles.achRewardRow}>
                             <Ionicons name="cash" size={11} color={themeGold} />
-                            <Text style={[styles.achRewardText, { color: theme.textMuted }]}>{ach.coinsReward}</Text>
-                            <Text style={[styles.achSep, { color: theme.textDim }]}>·</Text>
-                            <Text style={[styles.achRewardText, { color: theme.textMuted }]}>{ach.xpReward} XP</Text>
+                            <Text style={[styles.achRewardText, { color: themeColors.textMuted }]}>{ach.coinsReward}</Text>
+                            <Text style={[styles.achSep, { color: themeColors.textDim }]}>·</Text>
+                            <Text style={[styles.achRewardText, { color: themeColors.textMuted }]}>{ach.xpReward} XP</Text>
                             {!unlocked && (
-                              <Text style={[styles.progText, { color: theme.textDim }]}>{prog?.progress ?? 0}/{ach.target}</Text>
+                              <Text style={[styles.progText, { color: themeColors.textDim }]}>{prog?.progress ?? 0}/{ach.target}</Text>
                             )}
                           </View>
                         </View>
@@ -190,12 +191,12 @@ export default function AchievementsScreen() {
         ) : (
           <>
             <View style={styles.bpHeader}>
-              <View style={[styles.bpLevelBig, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <View style={[styles.bpLevelBig, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
                 <Text style={[styles.bpLevelNum, { color: themeGold }]}>{levelLabel} {xpProgress.level}</Text>
-                <View style={[styles.bpXpBar, { backgroundColor: theme.border }]}>
+                <View style={[styles.bpXpBar, { backgroundColor: themeColors.border }]}>
                   <View style={[styles.bpXpFill, { width: `${xpPct * 100}%`, backgroundColor: themeGold }]} />
                 </View>
-                <Text style={[styles.bpXpText, { color: theme.textMuted }]}>{xpProgress.current} / {xpProgress.needed} XP</Text>
+                <Text style={[styles.bpXpText, { color: themeColors.textMuted }]}>{xpProgress.current} / {xpProgress.needed} XP</Text>
               </View>
             </View>
 
@@ -208,20 +209,20 @@ export default function AchievementsScreen() {
                   key={tier.tier}
                   style={[
                     styles.bpTier,
-                    { backgroundColor: theme.surface, borderColor: theme.border },
+                    { backgroundColor: themeColors.surface, borderColor: themeColors.border },
                     reached && !claimed && { borderColor: themeGold + "66", backgroundColor: themeGold + "0a" },
                     claimed && styles.bpTierClaimed,
                   ]}
                 >
-                  <View style={[styles.bpTierNum, { backgroundColor: reached ? themeGold + "33" : theme.card }]}>
-                    <Text style={[styles.bpTierNumText, { color: reached ? themeGold : theme.textDim }]}>{tier.tier}</Text>
+                  <View style={[styles.bpTierNum, { backgroundColor: reached ? themeGold + "33" : themeColors.card }]}>
+                    <Text style={[styles.bpTierNumText, { color: reached ? themeGold : themeColors.textDim }]}>{tier.tier}</Text>
                   </View>
                   <View style={[styles.bpIconWrap, { backgroundColor: tier.iconColor + "22" }]}>
-                    <Ionicons name={tier.icon as any} size={20} color={reached ? tier.iconColor : theme.textDim} />
+                    <Ionicons name={tier.icon as any} size={20} color={reached ? tier.iconColor : themeColors.textDim} />
                   </View>
                   <View style={styles.bpTierContent}>
-                    <Text style={[styles.bpTierLabel, { color: reached ? theme.text : theme.textDim }]}>{getBPRewardLabel(tier, lang)}</Text>
-                    <Text style={[styles.bpTierXp, { color: theme.textDim }]}>{tier.xpRequired} {xpRequiredLabel}</Text>
+                    <Text style={[styles.bpTierLabel, { color: reached ? themeColors.text : themeColors.textDim }]}>{getBPRewardLabel(tier, lang)}</Text>
+                    <Text style={[styles.bpTierXp, { color: themeColors.textDim }]}>{tier.xpRequired} {xpRequiredLabel}</Text>
                   </View>
                   {canClaim && (
                     <Pressable
@@ -232,7 +233,7 @@ export default function AchievementsScreen() {
                     </Pressable>
                   )}
                   {claimed && <Ionicons name="checkmark-circle" size={22} color={Colors.success} />}
-                  {!reached && !claimed && <Ionicons name="lock-closed" size={18} color={theme.textDim} />}
+                  {!reached && !claimed && <Ionicons name="lock-closed" size={18} color={themeColors.textDim} />}
                 </View>
               );
             })}
@@ -242,9 +243,9 @@ export default function AchievementsScreen() {
       </ScrollView>
 
       {toast && (
-        <View style={[styles.toast, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.toast, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
           <Ionicons name="star" size={14} color={themeGold} />
-          <Text style={[styles.toastText, { color: theme.text }]}>{toast}</Text>
+          <Text style={[styles.toastText, { color: themeColors.text }]}>{toast}</Text>
         </View>
       )}
     </View>

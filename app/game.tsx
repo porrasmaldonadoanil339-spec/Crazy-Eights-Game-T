@@ -16,6 +16,7 @@ import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
 import { PlayingCard } from "@/components/PlayingCard";
 import { DealAnimation } from "@/components/DealAnimation";
+import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { MatchmakingScreen } from "@/components/MatchmakingScreen";
 import { LevelUpOverlay } from "@/components/LevelUpOverlay";
 import type { Suit } from "@/lib/gameEngine";
@@ -28,7 +29,7 @@ import { playSound } from "@/lib/sounds";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
-const { width: SW } = Dimensions.get("window");
+const { width: SW, height: SH } = Dimensions.get("window");
 
 // ─── Particle confetti for win ───────────────────────────────────────────────
 const PARTICLE_SYMS = ["♠","♥","♦","♣"];
@@ -464,6 +465,7 @@ export default function GameScreen() {
   const [showMatchmaking, setShowMatchmaking] = useState(true);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpNum, setLevelUpNum] = useState(1);
+  const [showEffect, setShowEffect] = useState(false);
   const prevAiHandCount = useRef<number>(0);
   const prevPendingDraw = useRef<number>(0);
   const msgOpacity = useSharedValue(1);
@@ -699,6 +701,9 @@ export default function GameScreen() {
       } else {
         await playSound("card_play").catch(() => {});
         handlePlayCard(card);
+        if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
+          setShowEffect(true);
+        }
       }
     } else {
       await playSound("card_draw").catch(() => {});
@@ -710,6 +715,9 @@ export default function GameScreen() {
     setSuitPickerVisible(false);
     if (selectedCard) {
       handlePlayCard(selectedCard, suit);
+      if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
+        setShowEffect(true);
+      }
       setSelectedCard(null);
     }
   };
@@ -924,6 +932,15 @@ export default function GameScreen() {
         />
       )}
 
+      {showEffect && (
+        <CardPlayEffect
+          effectId={profile.selectedEffect ?? "effect_none"}
+          originX={SW * 0.6}
+          originY={SH * 0.42}
+          onDone={() => setShowEffect(false)}
+        />
+      )}
+
       {/* Matchmaking screen */}
       {showMatchmaking && cpuProfile && (
         <MatchmakingScreen
@@ -1123,7 +1140,12 @@ const styles = StyleSheet.create({
   // Player hand
   playerSection: { paddingBottom: 6, gap: 5, alignItems: "center" },
   handScroll: { maxHeight: 118 },
-  handContainer: { paddingHorizontal: 24, paddingVertical: 8, alignItems: "flex-end" },
+  handContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "flex-end",
+    paddingVertical: 8,
+  },
 
   // Suit picker
   suitOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", alignItems: "center", justifyContent: "center" },

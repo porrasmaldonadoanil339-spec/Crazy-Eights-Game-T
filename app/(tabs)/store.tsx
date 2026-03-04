@@ -7,7 +7,7 @@ import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/colors";
+import { Colors, LightColors } from "@/constants/colors";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/context/ProfileContext";
 import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS, localizeItem } from "@/lib/storeItems";
@@ -32,13 +32,13 @@ function useRarityLabel() {
   };
 }
 
-const CATEGORIES: { id: StoreItemCategory; icon: string; count: number }[] = [
-  { id: "card_back", icon: "card",          count: CARD_BACKS.length },
-  { id: "avatar",    icon: "person-circle", count: AVATARS.length },
-  { id: "frame",     icon: "ellipse",       count: AVATAR_FRAMES.length },
-  { id: "title",     icon: "ribbon",        count: TITLES.length },
-  { id: "effect",    icon: "sparkles",      count: EFFECTS.length },
-];
+  const CATEGORIES: { id: StoreItemCategory; icon: string; count: number }[] = [
+    { id: "card_back", icon: "card",          count: STORE_ITEMS.filter(i => i.category === "card_back").length },
+    { id: "avatar",    icon: "person-circle", count: STORE_ITEMS.filter(i => i.category === "avatar").length },
+    { id: "frame",     icon: "ellipse",       count: STORE_ITEMS.filter(i => i.category === "frame").length },
+    { id: "title",     icon: "ribbon",        count: STORE_ITEMS.filter(i => i.category === "title").length },
+    { id: "effect",    icon: "sparkles",      count: STORE_ITEMS.filter(i => i.category === "effect").length },
+  ];
 
 function ConfirmModal({
   item, visible, onConfirm, onCancel,
@@ -83,7 +83,7 @@ function ConfirmModal({
   );
 }
 
-function EquipBadge({ isEquipped, onEquip, T }: { isEquipped: boolean; onEquip: () => void; T: (k: string) => string }) {
+function EquipBadge({ isEquipped, onEquip, T }: { isEquipped: boolean; onEquip: () => void; T: (k: any) => string }) {
   const theme = useTheme();
   if (isEquipped) {
     return (
@@ -234,10 +234,11 @@ export default function StoreScreen() {
   const isEffects = category === "effect";
 
   const isDark = profile.darkMode !== false;
+  const themeColors = isDark ? Colors : LightColors;
   const bgColors: [string, string, string] = isDark
     ? ["#061209", "#0a1a0f", "#0d2418"]
     : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
-  const themeGold = theme.gold;
+  const themeGold = themeColors.gold;
 
   const CATEGORY_LABELS: Record<StoreItemCategory, string> = {
     card_back: T("categoryCardBacks"),
@@ -313,7 +314,7 @@ export default function StoreScreen() {
         ref={catScrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.catScrollView}
+        style={[styles.catScrollView, { flexShrink: 0 }]}
         contentContainerStyle={styles.catRow}
       >
         {CATEGORIES.map((cat) => {
@@ -394,7 +395,7 @@ export default function StoreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   header: {
     flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between",
     paddingHorizontal: 16, marginBottom: 12,
@@ -407,8 +408,8 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.gold + "44",
   },
   coinsNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold },
-  catScrollView: { flexShrink: 0, flexGrow: 0, height: 68, marginBottom: 6 },
-  catRow: { paddingHorizontal: 16, paddingVertical: 6, gap: 8, flexDirection: "row", alignItems: "center" },
+  catScrollView: { flexShrink: 0, flexGrow: 0, height: 75, marginBottom: 6 },
+  catRow: { paddingHorizontal: 16, paddingVertical: 10, gap: 8, flexDirection: "row", alignItems: "center" },
   catBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,
     paddingVertical: 10, paddingHorizontal: 14, borderRadius: 20,

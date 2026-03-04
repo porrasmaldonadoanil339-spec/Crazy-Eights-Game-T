@@ -13,7 +13,7 @@ import Animated, {
   withRepeat, withSequence, Easing,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/colors";
+import { Colors, LightColors } from "@/constants/colors";
 import { useTheme } from "@/hooks/useTheme";
 import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
@@ -216,8 +216,8 @@ export default function PlayScreen() {
   const [adComplete, setAdComplete] = useState(false);
 
   const T = useT();
-  const theme = useTheme();
-  const isDark = theme.isDark;
+  const isDark = profile.darkMode !== false;
+  const theme = isDark ? Colors : LightColors;
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
   const swipeHandlers = useSwipeTabs(0);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;

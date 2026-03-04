@@ -15,15 +15,16 @@ export interface AvatarDisplayProps {
 export function AvatarDisplay({ avatarId, frameId, photoUri, size = 60, iconSize }: AvatarDisplayProps) {
   const avatarItem = AVATARS.find(a => a.id === avatarId);
   const frameItem = frameId ? AVATAR_FRAMES.find(f => f.id === frameId) : null;
-  const iSize = iconSize ?? Math.floor(size * 0.55);
+  const iSize = iconSize ?? Math.floor(size * 0.52);
   const radius = size / 2;
 
-  const frameColors = frameItem?.backColors ?? ["#D4AF37", "#B8860B"];
-  const frameBorderWidth = frameItem ? 3 : 2.5;
+  const iconColor = avatarItem?.previewColor ?? "#D4AF37";
+  const frameColors = frameItem?.backColors ?? [iconColor + "dd", iconColor + "88"];
+  const frameBorderWidth = frameItem ? 3 : 2;
 
   return (
     <View style={{ width: size, height: size, position: "relative" }}>
-      {/* Outer frame ring */}
+      {/* Outer frame ring — uses equip frame colors or defaults to icon color */}
       <LinearGradient
         colors={frameColors as [string, string]}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
@@ -35,9 +36,9 @@ export function AvatarDisplay({ avatarId, frameId, photoUri, size = 60, iconSize
           left: -frameBorderWidth,
         }]}
       />
-      {/* Inner avatar */}
+      {/* Inner avatar — dark casino background with colored icon */}
       <LinearGradient
-        colors={[avatarItem?.previewColor ?? "#1a3a2a", (avatarItem?.previewColor ?? "#1a3a2a") + "cc"]}
+        colors={["#0d1a10", "#101e13"]}
         style={[styles.inner, { width: size, height: size, borderRadius: radius }]}
       >
         {photoUri ? (
@@ -47,7 +48,19 @@ export function AvatarDisplay({ avatarId, frameId, photoUri, size = 60, iconSize
             resizeMode="cover"
           />
         ) : (
-          <Ionicons name={(avatarItem?.preview ?? "person") as any} size={iSize} color="#fff" />
+          <>
+            {/* Subtle glow behind the icon */}
+            <View
+              style={{
+                position: "absolute",
+                width: size * 0.7,
+                height: size * 0.7,
+                borderRadius: size * 0.35,
+                backgroundColor: iconColor + "22",
+              }}
+            />
+            <Ionicons name={(avatarItem?.preview ?? "person") as any} size={iSize} color={iconColor} />
+          </>
         )}
       </LinearGradient>
     </View>

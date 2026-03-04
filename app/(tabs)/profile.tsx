@@ -10,7 +10,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { Colors } from "@/constants/colors";
+import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { STORE_ITEMS, AVATARS, AVATAR_FRAMES } from "@/lib/storeItems";
 import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS } from "@/lib/battlePass";
@@ -266,13 +266,14 @@ export default function ProfileScreen() {
   };
 
   const isDark = profile.darkMode !== false;
+  const themeColors = isDark ? Colors : LightColors;
   const bgColors: [string, string, string] = isDark
     ? ["#061209", "#0a1a0f", "#0d2418"]
     : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
-  const textColor = isDark ? "#EEE8D5" : "#0d2b0d";
-  const textMuted = isDark ? "rgba(238,232,213,0.5)" : "rgba(13,43,13,0.55)";
-  const surfaceColor = isDark ? Colors.surface : "#c4ddb8";
-  const themeGold = isDark ? Colors.gold : "#A07800";
+  const textColor = isDark ? themeColors.text : themeColors.text;
+  const textMuted = isDark ? themeColors.textMuted : themeColors.textMuted;
+  const surfaceColor = isDark ? themeColors.surface : themeColors.surface;
+  const themeGold = isDark ? themeColors.gold : themeColors.gold;
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
@@ -449,7 +450,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   scroll: { paddingHorizontal: 16, paddingBottom: 24 },
   screenTitle: {
     fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: Colors.gold,
