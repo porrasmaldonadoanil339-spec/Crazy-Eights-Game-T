@@ -100,9 +100,11 @@ export function getTopCard(state: GameState): Card {
 }
 
 export function canPlay(card: Card, state: GameState): boolean {
-  // J active: must play card of jSuit
+  // J active: must play card of same suit OR any face card (J/Q/K) OR wild
   if (state.jActive && state.jSuit) {
-    return card.suit === state.jSuit || card.rank === "8" || card.rank === "Joker";
+    return card.suit === state.jSuit ||
+      card.rank === "J" || card.rank === "Q" || card.rank === "K" ||
+      card.rank === "8" || card.rank === "Joker";
   }
   // Pending draw: can only play counter cards
   if (state.pendingDraw > 0) {
@@ -207,7 +209,7 @@ export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameS
     ns.jSuit = card.suit;
     ns.currentSuit = card.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
-    ns.message = `J → Juega otra de ${suitName(card.suit)}, o roba 1`;
+    ns.message = `J → Juega otra de ${suitName(card.suit)}, figura (J/Q/K), o roba 1`;
     // currentPlayer stays "player"
   } else {
     // Normal card (A in normal context, Q, K, 5, 6, 9)
@@ -280,9 +282,12 @@ export function aiTurn(state: GameState, difficulty: string = "normal"): GameSta
   let ns = deepClone(state);
   ns.turnId = (ns.turnId ?? 0) + 1;
 
-  // Handle J active for AI
+  // Handle J active for AI — same suit OR face card (J/Q/K) OR wild
   if (ns.jActive && ns.jSuit) {
-    const jPlayable = ns.aiHand.filter(c => c.suit === ns.jSuit || c.rank === "8" || c.rank === "Joker");
+    const jPlayable = ns.aiHand.filter(c =>
+      c.suit === ns.jSuit || c.rank === "J" || c.rank === "Q" || c.rank === "K" ||
+      c.rank === "8" || c.rank === "Joker"
+    );
     if (jPlayable.length > 0) {
       const pick = jPlayable[0];
       ns.aiHand = ns.aiHand.filter(c => c.id !== pick.id);
@@ -393,8 +398,11 @@ export function aiTurn(state: GameState, difficulty: string = "normal"): GameSta
     ns.jSuit = chosen.suit;
     ns.currentSuit = chosen.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
-    // Immediately resolve J for AI: pick same-suit card
-    const jFollow = ns.aiHand.filter(c => c.suit === ns.jSuit || c.rank === "8" || c.rank === "Joker");
+    // Immediately resolve J for AI: same suit OR face card (J/Q/K) OR wild
+    const jFollow = ns.aiHand.filter(c =>
+      c.suit === ns.jSuit || c.rank === "J" || c.rank === "Q" || c.rank === "K" ||
+      c.rank === "8" || c.rank === "Joker"
+    );
     if (jFollow.length > 0) {
       const follow = jFollow[0];
       ns.aiHand = ns.aiHand.filter(c => c.id !== follow.id);

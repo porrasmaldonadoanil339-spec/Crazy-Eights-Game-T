@@ -70,7 +70,8 @@ export function multiGetTopCard(state: MultiGameState): Card {
 
 export function multiCanPlay(card: Card, state: MultiGameState): boolean {
   if (state.jActive && state.jSuit) {
-    return card.suit === state.jSuit || card.rank === "8" || card.rank === "Joker";
+    const isFaceCard = card.rank === "J" || card.rank === "Q" || card.rank === "K";
+    return card.suit === state.jSuit || isFaceCard || card.rank === "8" || card.rank === "Joker";
   }
   if (state.pendingDraw > 0) {
     if (state.pendingDrawType === "two") {
@@ -256,7 +257,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     ns.currentSuit = card.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
     ns.phase = "playing";
-    ns.message = `J → Juega otra de ${suitName(card.suit)}, o roba 1`;
+    ns.message = `J → Juega otra de ${suitName(card.suit)}, figura (J/Q/K), o roba 1`;
     return ns;
   }
 

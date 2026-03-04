@@ -466,6 +466,9 @@ export default function GameScreen() {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpNum, setLevelUpNum] = useState(1);
   const [showEffect, setShowEffect] = useState(false);
+  const [inactivityProgress, setInactivityProgress] = useState(1);
+  const inactivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastActionTime = useRef(Date.now());
   const prevAiHandCount = useRef<number>(0);
   const prevPendingDraw = useRef<number>(0);
   const msgOpacity = useSharedValue(1);
@@ -669,6 +672,43 @@ export default function GameScreen() {
     updateAchievementProgress("practice_grad", session.mode === "practice" ? 1 : 0);
   }, [gameState?.phase]);
 
+  // ─── Inactivity auto-draw timer ──────────────────────────────────────────
+  const INACTIVITY_TIMEOUT = 20;
+  useEffect(() => {
+    const isActive =
+      gameState?.currentPlayer === "player" &&
+      gameState?.phase === "playing" &&
+      dealAnimationDone &&
+      !showMatchmaking;
+
+    if (isActive) {
+      lastActionTime.current = Date.now();
+      if (inactivityRef.current) clearInterval(inactivityRef.current);
+      inactivityRef.current = setInterval(() => {
+        const elapsed = (Date.now() - lastActionTime.current) / 1000;
+        const prog = Math.max(0, 1 - elapsed / INACTIVITY_TIMEOUT);
+        setInactivityProgress(prog);
+        if (prog <= 0 && inactivityRef.current) {
+          clearInterval(inactivityRef.current);
+          inactivityRef.current = null;
+          handleDraw();
+        }
+      }, 100);
+    } else {
+      if (inactivityRef.current) {
+        clearInterval(inactivityRef.current);
+        inactivityRef.current = null;
+      }
+      setInactivityProgress(1);
+    }
+    return () => {
+      if (inactivityRef.current) {
+        clearInterval(inactivityRef.current);
+        inactivityRef.current = null;
+      }
+    };
+  }, [gameState?.currentPlayer, gameState?.phase, dealAnimationDone, gameState?.turnId, showMatchmaking]);
+
   const msgStyle = useAnimatedStyle(() => ({ opacity: msgOpacity.value }));
 
   if (!gameState) {
@@ -689,6 +729,7 @@ export default function GameScreen() {
 
   const handleCardPress = async (card: Card) => {
     if (!isPlayerTurn) return;
+    lastActionTime.current = Date.now();
     if (!canPlay(card, gameState)) {
       await playSound("error").catch(() => {});
       return;
@@ -724,6 +765,7 @@ export default function GameScreen() {
 
   const handleDrawPress = async () => {
     if (!isPlayerTurn) return;
+    lastActionTime.current = Date.now();
     await playSound("card_draw").catch(() => {});
     handleDraw();
   };
@@ -887,6 +929,24 @@ export default function GameScreen() {
             <EmotePanel onSendEmote={handleSendEmote} lastEmoteTime={lastPlayerEmoteTime} />
           </View>
         </View>
+        {/* Inactivity countdown bar — visible only on player's turn */}
+        {isPlayerTurn && (
+          <View style={styles.inactivityBar}>
+            <View
+              style={[
+                styles.inactivityFill,
+                {
+                  width: `${Math.round(inactivityProgress * 100)}%` as any,
+                  backgroundColor: inactivityProgress > 0.5
+                    ? Colors.gold
+                    : inactivityProgress > 0.25
+                    ? "#FF9500"
+                    : "#FF3B30",
+                },
+              ]}
+            />
+          </View>
+        )}
         {/* Player emote bubble */}
         <EmoteBubble emote={playerEmote} side="player" />
 
@@ -926,6 +986,7 @@ export default function GameScreen() {
         <DealAnimation
           cardsPerPlayer={gameState.playerHand.length}
           playerCards={gameState.playerHand}
+          starterCard={topCard}
           onComplete={() => setDealAnimationDone(true)}
           backColors={backColors}
           backAccent={backAccent}
@@ -1137,14 +1198,22 @@ const styles = StyleSheet.create({
   playerProfileMeta: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textMuted },
   playerTurnDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#27AE60" },
 
+  // Inactivity bar
+  inactivityBar: {
+    width: "92%", height: 3, backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 2, overflow: "hidden", marginBottom: 2,
+  },
+  inactivityFill: { height: 3, borderRadius: 2 },
+
   // Player hand
   playerSection: { paddingBottom: 6, gap: 5, alignItems: "center" },
-  handScroll: { maxHeight: 118 },
+  handScroll: { height: 138 },
   handContainer: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "flex-end",
-    paddingVertical: 8,
+    paddingBottom: 6,
+    paddingTop: 28,
   },
 
   // Suit picker
