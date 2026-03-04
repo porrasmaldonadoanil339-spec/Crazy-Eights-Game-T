@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { router } from "expo-router";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
   TextInput, Modal, Platform, Alert, Image,
@@ -349,6 +350,22 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Friends button */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.friendsBtn,
+            { backgroundColor: isDark ? Colors.surface : "#c8e0c0", borderColor: isDark ? Colors.border : "#9ec89a" },
+            pressed && { opacity: 0.82 },
+          ]}
+          onPress={() => router.push("/friends")}
+        >
+          <View style={[styles.friendsBtnIcon, { backgroundColor: Colors.gold + "22" }]}>
+            <Ionicons name="people" size={18} color={themeGold} />
+          </View>
+          <Text style={[styles.friendsBtnLabel, { color: textColor }]}>Amigos</Text>
+          <Ionicons name="chevron-forward" size={16} color={textMuted} />
+        </Pressable>
+
         {/* Stats */}
         <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("generalStats")}</Text>
         <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}>
@@ -579,5 +596,16 @@ const styles = StyleSheet.create({
   },
   rarityDot: {
     width: 6, height: 6, borderRadius: 3,
+  },
+  friendsBtn: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    borderRadius: 14, borderWidth: 1, padding: 12, marginBottom: 14,
+  },
+  friendsBtnIcon: {
+    width: 36, height: 36, borderRadius: 10,
+    alignItems: "center", justifyContent: "center",
+  },
+  friendsBtnLabel: {
+    fontFamily: "Nunito_700Bold", fontSize: 15, flex: 1,
   },
 });

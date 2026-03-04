@@ -524,22 +524,22 @@ export default function PlayScreen() {
             onPress={async () => { await playButton().catch(() => {}); router.push("/tutorial"); }}
             style={styles.quickBtn}
           >
-            <Ionicons name="help-circle-outline" size={18} color={Colors.textMuted} />
-            <Text style={styles.quickBtnText}>Tutorial</Text>
+            <Ionicons name="help-circle-outline" size={18} color={theme.textMuted} />
+            <Text style={[styles.quickBtnText, { color: theme.textMuted }]}>Tutorial</Text>
           </Pressable>
           <Pressable
             onPress={async () => { await playButton().catch(() => {}); router.push("/rules"); }}
             style={styles.quickBtn}
           >
-            <Ionicons name="book-outline" size={18} color={Colors.textMuted} />
-            <Text style={styles.quickBtnText}>{T("rules")}</Text>
+            <Ionicons name="book-outline" size={18} color={theme.textMuted} />
+            <Text style={[styles.quickBtnText, { color: theme.textMuted }]}>{T("rules")}</Text>
           </Pressable>
           <Pressable
             onPress={async () => { await playButton().catch(() => {}); router.push("/ranking"); }}
             style={styles.quickBtn}
           >
-            <Ionicons name="earth" size={18} color={Colors.textMuted} />
-            <Text style={styles.quickBtnText}>{T("viewRanking")}</Text>
+            <Ionicons name="earth" size={18} color={theme.textMuted} />
+            <Text style={[styles.quickBtnText, { color: theme.textMuted }]}>{T("viewRanking")}</Text>
           </Pressable>
           {profile.stats.totalGames > 0 && (
             <View style={styles.statChip}>
@@ -605,7 +605,7 @@ export default function PlayScreen() {
                 <View key={i} style={[styles.multiNameRow, { borderColor: "#4A90E222" }]}>
                   <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#4A90E2" }} />
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.multiNameInput, { color: Colors.textMuted, paddingVertical: 8 }]}>
+                    <Text style={[styles.multiNameInput, { color: "#7fa3d0", paddingVertical: 8 }]}>
                       #{i + 1} — {T("searchingOnline")}
                     </Text>
                   </View>

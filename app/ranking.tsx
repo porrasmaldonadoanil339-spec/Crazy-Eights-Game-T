@@ -11,6 +11,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/context/ProfileContext";
 import { useT } from "@/hooks/useT";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
+import { PlayerProfileModal, type PlayerProfileData } from "@/components/PlayerProfileModal";
 
 type Period = "alltime" | "weekly" | "monthly";
 
@@ -20,7 +21,6 @@ interface RankEntry {
   level: number;
   score: number;
   wins: number;
-  country: string;
   avatarIcon: string;
   avatarColor: string;
   photoUrl?: string;
@@ -32,9 +32,37 @@ const COUNTRIES = [
   "PT","FR","DE","IT","JP","KR","CN","IN","NG","ZA","EG","MA","GH","KE","TZ","PH","ID","TR","PL","RU",
 ];
 
+const PREFIXES = ["Shadow","Dark","Ghost","King","Luna","Neo","Blaze","Storm","Ice","Fire","Night","Steel","Cyber","Ultra","Mega","Alpha","Omega","Hyper","Toxic","Wild","Neon","Void","Iron","Gold","Star"];
+const SUFFIXES = ["Wolf","Rider","Knight","Fury","Nexus","Titan","Storm","Hawk","Blade","Rex","Zero","Nova","Sage","Viper","Fox","Bear","Lion","Eagle","Drake","Wick","Cruz","Snap","Bolt","Rush","Peak"];
+const ICONS = ["person","person-circle","shield","star","trophy","flash","flame","skull","diamond","heart","bolt","eye","leaf","paw","fish","bug","flower","sunny","moon","planet"];
+const AVATAR_COLORS = ["#E74C3C","#9B59B6","#E67E22","#2ECC71","#1A8FC1","#D4AF37","#C0392B","#27AE60","#8E44AD","#F39C12","#3498DB","#16A085","#E91E8C","#FF5722","#00BCD4","#4CAF50","#FF9800","#795548","#607D8B","#F06292"];
+
 function seededRand(seed: number): number {
   const x = Math.sin(seed + 1) * 10000;
   return x - Math.floor(x);
+}
+
+function generateExtraPlayers(count: number, startSeed: number): RankEntry[] {
+  const players: RankEntry[] = [];
+  for (let i = 0; i < count; i++) {
+    const s = startSeed + i * 17;
+    const prefix = PREFIXES[Math.floor(seededRand(s) * PREFIXES.length)];
+    const suffix = SUFFIXES[Math.floor(seededRand(s + 1) * SUFFIXES.length)];
+    const num = Math.floor(seededRand(s + 2) * 999);
+    const name = num > 800 ? `${prefix}${suffix}` : `${prefix}${suffix}${num > 0 ? num.toString().slice(0, 2) : ""}`;
+    const level = Math.max(1, Math.floor(seededRand(s + 3) * 99));
+    const wins = Math.max(1, Math.floor(level * 14 * (1 + seededRand(s + 4) * 1.5)));
+    players.push({
+      rank: 0,
+      name,
+      level,
+      score: wins * 10 + Math.floor(seededRand(s + 5) * 500),
+      wins,
+      avatarIcon: ICONS[Math.floor(seededRand(s + 6) * ICONS.length)],
+      avatarColor: AVATAR_COLORS[Math.floor(seededRand(s + 7) * AVATAR_COLORS.length)],
+    });
+  }
+  return players;
 }
 
 function buildLeaderboard(
@@ -43,9 +71,9 @@ function buildLeaderboard(
   playerWins: number,
   period: Period
 ): RankEntry[] {
-  const profiles = CPU_PROFILES;
   const multiplier = period === "alltime" ? 1 : period === "monthly" ? 0.12 : 0.03;
-  const entries: RankEntry[] = profiles.map((p, i) => {
+
+  const cpuEntries: RankEntry[] = CPU_PROFILES.map((p, i) => {
     const seed = i * 13 + (period === "weekly" ? 7777 : period === "monthly" ? 3333 : 1111);
     const baseWins = Math.floor(p.level * 18 * (1 + seededRand(seed) * 2));
     const wins = Math.max(1, Math.floor(baseWins * multiplier));
@@ -55,12 +83,19 @@ function buildLeaderboard(
       level: p.level,
       score: wins * 10 + Math.floor(seededRand(seed + 1) * 1000),
       wins,
-      country: COUNTRIES[Math.floor(seededRand(seed + 2) * COUNTRIES.length)],
       avatarIcon: p.avatarIcon,
       avatarColor: p.avatarColor,
       photoUrl: p.photoUrl,
     };
   });
+
+  const extraSeed = period === "weekly" ? 50000 : period === "monthly" ? 60000 : 70000;
+  const extraCount = 1000 - CPU_PROFILES.length - 1;
+  const extraEntries = generateExtraPlayers(Math.max(0, extraCount), extraSeed).map(e => ({
+    ...e,
+    wins: Math.max(1, Math.floor(e.wins * multiplier)),
+    score: Math.max(1, Math.floor(e.score * multiplier)),
+  }));
 
   const playerWinsAdjusted = Math.max(0, Math.floor(playerWins * multiplier));
   const playerEntry: RankEntry = {
@@ -69,17 +104,16 @@ function buildLeaderboard(
     level: playerLevel,
     score: playerWinsAdjusted * 10,
     wins: playerWinsAdjusted,
-    country: "MX",
     avatarIcon: "person",
     avatarColor: Colors.gold,
     isPlayer: true,
   };
 
-  const all = [...entries, playerEntry].sort((a, b) => b.score - a.score);
+  const all = [...cpuEntries, ...extraEntries, playerEntry].sort((a, b) => b.score - a.score);
   return all.map((e, i) => ({ ...e, rank: i + 1 }));
 }
 
-function RankRow({ entry, theme }: { entry: RankEntry; theme: any }) {
+function RankRow({ entry, theme, onPress }: { entry: RankEntry; theme: any; onPress: () => void }) {
   const isTop3 = entry.rank <= 3;
   const medalColors = ["#D4AF37", "#C0C0C0", "#CD7F32"];
   const bgColor = entry.isPlayer
@@ -87,19 +121,16 @@ function RankRow({ entry, theme }: { entry: RankEntry; theme: any }) {
     : isTop3
     ? medalColors[entry.rank - 1] + "10"
     : "transparent";
-  const borderColor = entry.isPlayer
-    ? Colors.gold + "44"
-    : "transparent";
+  const borderColor = entry.isPlayer ? Colors.gold + "44" : "transparent";
 
   return (
-    <View style={[styles.row, { backgroundColor: bgColor, borderColor }]}>
+    <Pressable
+      style={({ pressed }) => [styles.row, { backgroundColor: bgColor, borderColor }, pressed && !entry.isPlayer && { opacity: 0.8 }]}
+      onPress={onPress}
+    >
       <View style={styles.rankCol}>
         {isTop3 ? (
-          <Ionicons
-            name={entry.rank === 1 ? "trophy" : "medal"}
-            size={18}
-            color={medalColors[entry.rank - 1]}
-          />
+          <Ionicons name={entry.rank === 1 ? "trophy" : "medal"} size={18} color={medalColors[entry.rank - 1]} />
         ) : (
           <Text style={[styles.rankNum, { color: entry.isPlayer ? Colors.gold : theme.textMuted }]}>
             {entry.rank}
@@ -107,10 +138,7 @@ function RankRow({ entry, theme }: { entry: RankEntry; theme: any }) {
         )}
       </View>
       {entry.photoUrl && !entry.isPlayer ? (
-        <Image
-          source={{ uri: entry.photoUrl }}
-          style={[styles.avatarPhoto, { borderColor: entry.avatarColor + "66" }]}
-        />
+        <Image source={{ uri: entry.photoUrl }} style={[styles.avatarPhoto, { borderColor: entry.avatarColor + "66" }]} />
       ) : (
         <View style={[styles.avatarDot, { backgroundColor: entry.avatarColor + "33", borderColor: entry.avatarColor + "66" }]}>
           <Ionicons name={entry.avatarIcon as any} size={14} color={entry.avatarColor} />
@@ -118,12 +146,9 @@ function RankRow({ entry, theme }: { entry: RankEntry; theme: any }) {
       )}
       <View style={styles.nameCol}>
         <Text style={[styles.entryName, { color: entry.isPlayer ? Colors.gold : theme.text }]} numberOfLines={1}>
-          {entry.name}
-          {entry.isPlayer ? " ★" : ""}
+          {entry.name}{entry.isPlayer ? " ★" : ""}
         </Text>
-        <Text style={[styles.entryCountry, { color: theme.textMuted }]}>
-          Lv.{entry.level} · {entry.country}
-        </Text>
+        <Text style={[styles.entryLevel, { color: theme.textMuted }]}>Lv.{entry.level}</Text>
       </View>
       <View style={styles.scoreCol}>
         <Text style={[styles.entryWins, { color: entry.isPlayer ? Colors.gold : theme.text }]}>
@@ -131,7 +156,10 @@ function RankRow({ entry, theme }: { entry: RankEntry; theme: any }) {
         </Text>
         <Text style={[styles.entryWinsLabel, { color: theme.textMuted }]}>V</Text>
       </View>
-    </View>
+      {!entry.isPlayer && (
+        <Ionicons name="chevron-forward" size={13} color={theme.textDim ?? theme.textMuted} />
+      )}
+    </Pressable>
   );
 }
 
@@ -141,6 +169,8 @@ export default function RankingScreen() {
   const T = useT();
   const theme = useTheme();
   const [period, setPeriod] = useState<Period>("alltime");
+  const [selectedPlayer, setSelectedPlayer] = useState<PlayerProfileData | null>(null);
+  const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const isDark = theme.isDark;
@@ -159,10 +189,26 @@ export default function RankingScreen() {
     : ["#d4edd0", "#e8f5e2"];
 
   const PERIODS: { id: Period; label: string }[] = [
-    { id: "alltime", label: T("allTime") },
-    { id: "monthly", label: T("monthly") },
-    { id: "weekly", label: T("weekly") },
+    { id: "alltime", label: `🌍 ${T("allTime")}` },
+    { id: "monthly", label: `📅 ${T("monthly")}` },
+    { id: "weekly", label: `⚡ ${T("weekly")}` },
   ];
+
+  const openPlayerProfile = (entry: RankEntry) => {
+    if (entry.isPlayer) return;
+    setSelectedPlayer({
+      name: entry.name,
+      level: entry.level,
+      wins: entry.wins,
+      score: entry.score,
+      avatarIcon: entry.avatarIcon,
+      avatarColor: entry.avatarColor,
+      photoUrl: entry.photoUrl,
+      rank: entry.rank,
+      winRate: Math.min(92, 30 + Math.floor(entry.level * 0.5)),
+      requestSent: sentRequests.has(entry.name),
+    });
+  };
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
@@ -176,7 +222,7 @@ export default function RankingScreen() {
           <Text style={[styles.title, { color: theme.gold }]}>{T("worldRanking")}</Text>
           {playerEntry && (
             <Text style={[styles.myRankText, { color: theme.textMuted }]}>
-              {T("myRank")}: #{playerEntry.rank} / {leaderboard.length}
+              Tu posición: #{playerEntry.rank} de {leaderboard.length.toLocaleString()} jugadores
             </Text>
           )}
         </View>
@@ -203,20 +249,32 @@ export default function RankingScreen() {
       </View>
 
       <View style={[styles.colHeaders, { borderBottomColor: theme.border }]}>
-        <Text style={[styles.colLabel, { width: 40 }]}>#</Text>
-        <Text style={[styles.colLabel, { flex: 1 }]}>{T("player")}</Text>
-        <Text style={[styles.colLabel, { width: 56, textAlign: "right" }]}>{T("rankWins")}</Text>
+        <Text style={[styles.colLabel, { width: 40, color: theme.textMuted }]}>#</Text>
+        <Text style={[styles.colLabel, { flex: 1, color: theme.textMuted }]}>{T("player")}</Text>
+        <Text style={[styles.colLabel, { width: 56, textAlign: "right", color: theme.textMuted }]}>{T("rankWins")}</Text>
       </View>
 
       <FlatList
         data={leaderboard}
         keyExtractor={(e) => `${e.rank}-${e.name}`}
-        renderItem={({ item }) => <RankRow entry={item} theme={theme} />}
+        renderItem={({ item }) => (
+          <RankRow entry={item} theme={theme} onPress={() => openPlayerProfile(item)} />
+        )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
-        initialNumToRender={30}
-        maxToRenderPerBatch={30}
+        initialNumToRender={40}
+        maxToRenderPerBatch={40}
         windowSize={10}
+      />
+
+      <PlayerProfileModal
+        visible={!!selectedPlayer}
+        player={selectedPlayer}
+        onClose={() => setSelectedPlayer(null)}
+        onAddFriend={(name) => {
+          setSentRequests(prev => new Set([...prev, name]));
+          setSelectedPlayer(prev => prev ? { ...prev, requestSent: true } : null);
+        }}
       />
     </View>
   );
@@ -234,42 +292,42 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.06)",
   },
   title: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: Colors.gold, letterSpacing: 3,
+    fontFamily: "Nunito_900ExtraBold", fontSize: 18, letterSpacing: 2,
   },
-  myRankText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textMuted, marginTop: 1 },
+  myRankText: { fontFamily: "Nunito_700Bold", fontSize: 11, marginTop: 1 },
   trophyWrap: {
     width: 40, height: 40, borderRadius: 12,
     alignItems: "center", justifyContent: "center",
   },
-  tabRow: { flexDirection: "row", gap: 8, paddingHorizontal: 16, marginBottom: 8 },
+  tabRow: { flexDirection: "row", gap: 6, paddingHorizontal: 14, marginBottom: 8 },
   tabBtn: {
     flex: 1, paddingVertical: 8, borderRadius: 10, borderWidth: 1,
     alignItems: "center",
   },
-  tabText: { fontFamily: "Nunito_700Bold", fontSize: 12 },
+  tabText: { fontFamily: "Nunito_700Bold", fontSize: 11 },
   colHeaders: {
     flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 6,
     borderBottomWidth: 1,
   },
-  colLabel: { fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.textDim, letterSpacing: 1 },
+  colLabel: { fontFamily: "Nunito_700Bold", fontSize: 10, letterSpacing: 1 },
   row: {
     flexDirection: "row", alignItems: "center", gap: 10,
     paddingHorizontal: 16, paddingVertical: 10,
-    borderWidth: 1, marginHorizontal: 0,
+    borderWidth: 1,
   },
   rankCol: { width: 30, alignItems: "center" },
   rankNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 14 },
   avatarDot: {
-    width: 30, height: 30, borderRadius: 15, borderWidth: 1,
+    width: 32, height: 32, borderRadius: 16, borderWidth: 1,
     alignItems: "center", justifyContent: "center",
   },
   avatarPhoto: {
-    width: 30, height: 30, borderRadius: 15, borderWidth: 1,
+    width: 32, height: 32, borderRadius: 16, borderWidth: 1,
   },
   nameCol: { flex: 1 },
   entryName: { fontFamily: "Nunito_700Bold", fontSize: 13 },
-  entryCountry: { fontFamily: "Nunito_400Regular", fontSize: 10, marginTop: 1 },
-  scoreCol: { flexDirection: "row", alignItems: "baseline", gap: 2, minWidth: 50, justifyContent: "flex-end" },
+  entryLevel: { fontFamily: "Nunito_400Regular", fontSize: 10, marginTop: 1 },
+  scoreCol: { flexDirection: "row", alignItems: "baseline", gap: 2, minWidth: 44, justifyContent: "flex-end" },
   entryWins: { fontFamily: "Nunito_900ExtraBold", fontSize: 15 },
   entryWinsLabel: { fontFamily: "Nunito_700Bold", fontSize: 10 },
 });
