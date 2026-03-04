@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
+import { useAuth } from "@/context/AuthContext";
 import { STORE_ITEMS, AVATARS, AVATAR_FRAMES } from "@/lib/storeItems";
 import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS } from "@/lib/battlePass";
 import { playSound } from "@/lib/sounds";
@@ -184,6 +185,7 @@ function StatRow({ label, value, textColor, textMuted }: { label: string; value:
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { profile, level, xpProgress, updateName, updateAvatar, updateTitle, updateFrame, updatePhotoUri } = useProfile();
+  const { user, logout } = useAuth();
   const [showEditName, setShowEditName] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showTitlePicker, setShowTitlePicker] = useState(false);
@@ -367,28 +369,52 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={16} color={textMuted} />
         </Pressable>
 
-        {/* Account / Link button */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.friendsBtn,
-            { backgroundColor: isDark ? Colors.surface : "#c8e0c0", borderColor: isDark ? Colors.border : "#9ec89a", marginTop: 6 },
-            pressed && { opacity: 0.82 },
-          ]}
-          onPress={() => router.push("/login")}
-        >
-          <View style={[styles.friendsBtnIcon, { backgroundColor: "#4A90E222" }]}>
-            <Ionicons name="person-circle-outline" size={18} color="#4A90E2" />
+        {/* Account section */}
+        {user && !user.isGuest ? (
+          <View style={[styles.friendsBtn, { backgroundColor: isDark ? Colors.surface : "#c8e0c0", borderColor: isDark ? Colors.border : "#9ec89a", marginTop: 6 }]}>
+            <View style={[styles.friendsBtnIcon, { backgroundColor: "#27AE6022" }]}>
+              <Ionicons name="checkmark-circle" size={18} color="#27AE60" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.friendsBtnLabel, { color: textColor }]}>
+                {user.username}
+              </Text>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: textMuted }}>
+                {lang === "en" ? "Linked account" : lang === "pt" ? "Conta vinculada" : "Cuenta vinculada"}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => { logout(); playSound("button_press").catch(() => {}); }}
+              style={{ backgroundColor: "#E74C3C22", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 }}
+            >
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: "#E74C3C" }}>
+                {lang === "en" ? "Logout" : lang === "pt" ? "Sair" : "Salir"}
+              </Text>
+            </Pressable>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.friendsBtnLabel, { color: textColor }]}>
-              {lang === "en" ? "Link Account" : lang === "pt" ? "Vincular Conta" : "Vincular Cuenta"}
-            </Text>
-            <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: textMuted }}>
-              {lang === "en" ? "Google / Facebook" : lang === "pt" ? "Google / Facebook" : "Google / Facebook"}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={textMuted} />
-        </Pressable>
+        ) : (
+          <Pressable
+            style={({ pressed }) => [
+              styles.friendsBtn,
+              { backgroundColor: isDark ? Colors.surface : "#c8e0c0", borderColor: isDark ? Colors.border : "#9ec89a", marginTop: 6 },
+              pressed && { opacity: 0.82 },
+            ]}
+            onPress={() => { playSound("button_press").catch(() => {}); router.push("/login"); }}
+          >
+            <View style={[styles.friendsBtnIcon, { backgroundColor: "#4A90E222" }]}>
+              <Ionicons name="person-circle-outline" size={18} color="#4A90E2" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.friendsBtnLabel, { color: textColor }]}>
+                {lang === "en" ? "Link Account" : lang === "pt" ? "Vincular Conta" : "Vincular Cuenta"}
+              </Text>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: textMuted }}>
+                {lang === "en" ? "Google / Facebook / Email" : lang === "pt" ? "Google / Facebook / Email" : "Google / Facebook / Email"}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={textMuted} />
+          </Pressable>
+        )}
 
         {/* Stats */}
         <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("generalStats")}</Text>

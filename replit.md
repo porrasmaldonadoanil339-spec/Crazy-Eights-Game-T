@@ -220,6 +220,18 @@ assets/sounds/
 
 ---
 
+## Authentication System
+
+- **Backend**: `server/auth.ts` — JWT-like token auth with PBKDF2 password hashing; users stored in `/tmp/ocho_users.json`
+- **Endpoints**: `POST /api/auth/register`, `/login`, `/verify`, `/google`, `/facebook`
+- **AuthContext**: `context/AuthContext.tsx` — manages user state, persists token to AsyncStorage
+- **Login screen**: `app/login.tsx` — 3 modes: menu (Google/FB/Email options), register form, login form
+- **Profile screen**: shows linked username + Salir button when authenticated; "Vincular Cuenta" when not
+- **Google OAuth**: requires `EXPO_PUBLIC_GOOGLE_CLIENT_ID` in Replit Secrets; shows setup alert if missing
+- **Facebook OAuth**: requires `EXPO_PUBLIC_FACEBOOK_APP_ID` + `FACEBOOK_APP_SECRET` in Replit Secrets
+- **Guest mode**: plays locally, state saved to AsyncStorage under "ocho_profile_v3"
+- **Packages added**: `expo-auth-session`, `expo-crypto@~15.0.0`
+
 ## Workflows
 
 - **Start Backend**: `npm run server:dev` — Express on port 5000

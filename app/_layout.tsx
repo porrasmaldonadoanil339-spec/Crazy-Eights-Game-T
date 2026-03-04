@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { GameProvider } from "@/context/GameContext";
 import { ProfileProvider } from "@/context/ProfileContext";
+import { AuthProvider } from "@/context/AuthContext";
 import {
   useFonts,
   Nunito_400Regular,
@@ -99,12 +100,14 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <KeyboardProvider>
+            <AuthProvider>
             <ProfileProvider>
               <GameProvider>
                 <StatusBar style="light" />
                 <RootLayoutNav />
               </GameProvider>
             </ProfileProvider>
+            </AuthProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>
       </QueryClientProvider>
