@@ -409,6 +409,8 @@ const translations = {
   // ─── Daily Challenges ────────────────────────────────────────────────────
   dailyChallenges: { es: "DESAFÍOS DIARIOS", en: "DAILY CHALLENGES", pt: "DESAFIOS DIÁRIOS" },
   challengeComplete: { es: "¡Desafío completado!", en: "Challenge complete!", pt: "Desafio concluído!" },
+  selectCountry: { es: "Seleccionar País", en: "Select Country", pt: "Selecionar País" },
+  myCountry: { es: "MI PAÍS", en: "MY COUNTRY", pt: "MEU PAÍS" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

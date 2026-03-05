@@ -4,7 +4,15 @@
 
 **Ocho Locos** is a mobile card game app — a Spanish-language version of the classic "Crazy Eights" card game. Built with **Expo (React Native)** for the mobile frontend and **Express.js** for the backend. The app supports 6 game modes, local + online multiplayer, a store with 420+ items (70 per category + 70 emotes), 981 achievements, 800-tier battle pass, daily rewards, watch-ads-for-coins (5/day, +50 each), emote system (70 emotes, equip up to 8), avatar frames, profile photos, 3-language switcher (ES/EN/PT-BR), swipe tab navigation, light/dark mode, and a world ranking screen. All game logic runs fully on-device; the backend serves as API scaffold + static asset server.
 
-**Latest features** (current session):
+**Latest features** (current session — Free Fire-style epic update):
+- **Amigos vacío + realista**: La lista de amigos comienza vacía. El usuario busca y agrega. Las solicitudes tardan 15-60s en responderse (60% aceptan, 40% rechazan). Chat con tiempos variables (2-5s rápido, 10-30s medio, 1-3min lento). Solicitudes entrantes automáticas cada 45-120s. Toast de aceptación/rechazo realista.
+- **Rankings con rangos competitivos**: Tab renombrada a "Clasificat." (en tab bar). Sección global renombrada a "Ranking Clasificatorio". Cada jugador CPU muestra su rango (Hierro→Divino) con badge de color. Lista ordenada por rango descendente.
+- **Perfil con país + rango**: Selector de 15 países (Colombia, México, España, etc.) con banderas emoji (texto ISO en web). Rango competitivo mostrado bajo el nombre del jugador (ej. "Hierro V ⭐○○○"). Campo `country` en ProfileContext persistido en AsyncStorage.
+- **Post-game friend request**: Al terminar partida, botón "Agregar a [nombre]" para enviar solicitud al oponente CPU. Solo aparece si no ya es amigo. Persiste en "ocho_friends_v1".
+- **UI épica estilo Free Fire**: Overlay dramático de victoria/derrota al terminar partida (texto grande bounce, partículas de confetti animadas). Efecto ripple/flash al jugar carta. Banner "¡ÚLTIMA CARTA!" animado. Partículas simuladas con Animated Views.
+- **TypeScript fixes**: `lastPlayedCard: null` en DEMO_STATE de tutorial.tsx, `visible` prop añadida a FramePickerModal, `selectCountry`/`myCountry` añadidas a i18n.ts.
+
+**Previous sessions' features**:
 - **Room codes for online play**: Online modal now has 3 tabs — Buscar (auto-matchmaking), Crear Sala (6-char code generator), Unirse (code entry with validation). All 3 languages (ES/EN/PT).
 - **Friend invite → auto-game**: Inviting an online friend (75% accept, 25% refuse, 1.5-3s delay). If accepted, navigates straight to game-online with their name as the rival. Offline friends have 20% acceptance rate.
 - **Deal animation in online mode**: `game-online.tsx` now has a "dealing" phase after countdown — full-screen card shuffle/deal animation before gameplay starts.

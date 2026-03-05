@@ -14,7 +14,8 @@ import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
 import { BATTLE_PASS_TIERS, getXpProgress, getBPRewardLabel } from "@/lib/battlePass";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";
-import { getRankInfo, RANKS, RANK_COLORS } from "@/lib/ranked";
+import { getRankInfo, RANKS, RANK_COLORS, DIVISIONS } from "@/lib/ranked";
+import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { router } from "expo-router";
 
 const RARITY_COLORS_MAP: Record<string, string> = {
@@ -129,7 +130,7 @@ export default function AchievementsScreen() {
         >
           <Ionicons name="trophy" size={16} color={activeTab === "ranked" ? themeGold : themeColors.textMuted} />
           <Text style={[styles.tabLabel, { color: activeTab === "ranked" ? themeGold : themeColors.textMuted }]}>
-            Ranking
+            {lang === "en" ? "Qualifying" : lang === "pt" ? "Classific." : "Clasificat."}
           </Text>
         </Pressable>
       </View>
@@ -275,19 +276,48 @@ export default function AchievementsScreen() {
               </Pressable>
             </View>
             
-            <Text style={[styles.rarityHeader, { color: themeColors.text, marginTop: 24 }]}>{T("globalRanking")}</Text>
-            {Array.from({ length: 10 }).map((_, i) => {
-              const cpuRank = Math.max(0, 11 - Math.floor(i / 2));
+            <Text style={[styles.rarityHeader, { color: themeColors.text, marginTop: 24 }]}>
+              {lang === "en" ? "Qualifying Ranking" : lang === "pt" ? "Ranking de Qualificação" : "Ranking Clasificatorio"}
+            </Text>
+            {CPU_PROFILES.map((cpu, i) => {
+              // Seeded random rank based on level and name index
+              const seed = cpu.level + i;
+              const cpuRank = Math.min(11, Math.floor((seed * 13) % 12));
+              const cpuDivision = (seed * 7) % 5;
+              const cpuWins = cpu.level * 5 + (seed % 10);
+              
+              return { cpu, rank: cpuRank, division: cpuDivision, wins: cpuWins };
+            })
+            .sort((a, b) => {
+              if (b.rank !== a.rank) return b.rank - a.rank;
+              return b.wins - a.wins;
+            })
+            .slice(0, 20)
+            .map((item, i) => {
+              const rankInfo = getRankInfo({ 
+                rank: item.rank, 
+                division: item.division, 
+                stars: 0, 
+                maxStars: 5, 
+                totalWins: item.wins, 
+                totalLosses: 0 
+              });
+              
               return (
                 <View key={i} style={[styles.rankRow, { backgroundColor: themeColors.surface }]}>
                   <Text style={[styles.rankNum, { color: i < 3 ? themeGold : themeColors.textDim }]}>#{i + 1}</Text>
                   <View style={styles.rankInfo}>
-                    <Text style={[styles.rankPlayerName, { color: themeColors.text }]}>Player {i + 100}</Text>
-                    <Text style={[styles.rankPlayerMeta, { color: themeColors.textMuted }]}>
-                       {T(`rank${RANKS[cpuRank]}` as any)} I
-                    </Text>
+                    <Text style={[styles.rankPlayerName, { color: themeColors.text }]}>{item.cpu.name}</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                      <Text style={[styles.rankPlayerMeta, { color: rankInfo.color, fontFamily: "Nunito_700Bold" }]}>
+                         {T(`rank${RANKS[item.rank]}` as any) || rankInfo.rankName} {DIVISIONS[item.division]}
+                      </Text>
+                      <Text style={[styles.rankPlayerMeta, { color: themeColors.textMuted }]}>
+                        · {item.wins} {T("wins")}
+                      </Text>
+                    </View>
                   </View>
-                  <Ionicons name="trophy" size={16} color={RANK_COLORS[cpuRank] || themeGold} />
+                  <Ionicons name="trophy" size={16} color={rankInfo.color} />
                 </View>
               );
             })}

@@ -16,11 +16,28 @@ import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { STORE_ITEMS, AVATARS, AVATAR_FRAMES } from "@/lib/storeItems";
 import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS } from "@/lib/battlePass";
+import { getRankInfo } from "@/lib/ranked";
 import { playSound } from "@/lib/sounds";
 import { GAME_MODES } from "@/lib/gameModes";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 const TITLE_ITEMS = STORE_ITEMS.filter((i) => i.category === "title");
+
+const COUNTRIES = [
+  { code: "CO", name: "Colombia", flag: "🇨🇴" },
+  { code: "MX", name: "México", flag: "🇲🇽" },
+  { code: "ES", name: "España", flag: "🇪🇸" },
+  { code: "AR", name: "Argentina", flag: "🇦🇷" },
+  { code: "US", name: "USA", flag: "🇺🇸" },
+  { code: "BR", name: "Brasil", flag: "🇧🇷" },
+  { code: "VE", name: "Venezuela", flag: "🇻🇪" },
+  { code: "PE", name: "Perú", flag: "🇵🇪" },
+  { code: "CL", name: "Chile", flag: "🇨🇱" },
+  { code: "EC", name: "Ecuador", flag: "🇪🇨" },
+  { code: "UY", name: "Uruguay", flag: "🇺🇾" },
+  { code: "PY", name: "Paraguay", flag: "🇵🇾" },
+  { code: "BO", name: "Bolivia", flag: "🇧🇴" },
+];
 
 function EditNameModal({
   visible, currentName, onSave, onClose,
@@ -173,6 +190,48 @@ function FramePickerModal({
   );
 }
 
+function CountryPickerModal({
+  visible, currentCode, onSelect, onClose,
+}: {
+  visible: boolean; currentCode: string;
+  onSelect: (code: string) => void; onClose: () => void;
+}) {
+  const T = useT();
+  return (
+    <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
+      <Pressable style={styles.modalBg} onPress={onClose}>
+        <View style={styles.pickerModal}>
+          <View style={styles.pickerHeader}>
+            <Text style={styles.pickerTitle}>{T("selectCountry") || "Seleccionar País"}</Text>
+            <Pressable onPress={onClose}><Ionicons name="close" size={22} color={Colors.textMuted} /></Pressable>
+          </View>
+          <ScrollView contentContainerStyle={styles.countryList}>
+            {COUNTRIES.map((c) => (
+              <Pressable
+                key={c.code}
+                onPress={() => { onSelect(c.code); onClose(); }}
+                style={[styles.countryItem, c.code === currentCode && styles.countryItemSelected]}
+              >
+                <View style={styles.flagContainer}>
+                  {Platform.OS === "web" ? (
+                    <View style={[styles.webFlag, { backgroundColor: Colors.gold + "44" }]}>
+                      <Text style={styles.webFlagText}>{c.code}</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.flagEmoji}>{c.flag}</Text>
+                  )}
+                </View>
+                <Text style={[styles.countryName, c.code === currentCode && { color: Colors.gold }]}>{c.name}</Text>
+                {c.code === currentCode && <Ionicons name="checkmark" size={20} color={Colors.gold} />}
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
 function StatRow({ label, value, textColor, textMuted }: { label: string; value: string | number; textColor?: string; textMuted?: string }) {
   return (
     <View style={styles.statRow}>
@@ -184,12 +243,13 @@ function StatRow({ label, value, textColor, textMuted }: { label: string; value:
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, level, xpProgress, updateName, updateAvatar, updateTitle, updateFrame, updatePhotoUri } = useProfile();
+  const { profile, level, xpProgress, updateName, updateAvatar, updateTitle, updateFrame, updatePhotoUri, updateCountry } = useProfile();
   const { user, logout } = useAuth();
   const [showEditName, setShowEditName] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showTitlePicker, setShowTitlePicker] = useState(false);
   const [showFramePicker, setShowFramePicker] = useState(false);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
 
   const T = useT();
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
@@ -200,6 +260,8 @@ export default function ProfileScreen() {
   const titleItem = STORE_ITEMS.find((i) => i.id === profile.titleId);
   const cardBackItem = STORE_ITEMS.find((i) => i.id === profile.cardBackId);
   const frameItem = AVATAR_FRAMES.find((f) => f.id === profile.selectedFrameId);
+  const rankInfo = getRankInfo(profile.rankedProfile);
+  const country = COUNTRIES.find(c => c.code === profile.country) ?? COUNTRIES[0];
 
   const handleSaveName = async (name: string) => {
     await playSound("button_press");
@@ -317,10 +379,27 @@ export default function ProfileScreen() {
               <Ionicons name="pencil" size={14} color={themeGold} />
             </Pressable>
 
-            <Pressable onPress={() => setShowTitlePicker(true)} style={[styles.titleBadge, { backgroundColor: themeGold + "22", borderColor: themeGold + "44" }]}>
-              <Text style={[styles.titleText, { color: themeGold }]}>{titleItem?.name ?? "Novato"}</Text>
-              <Ionicons name="chevron-down" size={12} color={themeGold} />
-            </Pressable>
+            <View style={styles.rankSubHeader}>
+              <Text style={[styles.rankDisplayText, { color: rankInfo.color }]}>
+                {rankInfo.displayName} {"⭐".repeat(profile.rankedProfile.stars)}{"○".repeat(Math.max(0, profile.rankedProfile.maxStars - profile.rankedProfile.stars))}
+              </Text>
+            </View>
+
+            <View style={styles.badgeRow}>
+              <Pressable onPress={() => setShowTitlePicker(true)} style={[styles.titleBadge, { backgroundColor: themeGold + "22", borderColor: themeGold + "44" }]}>
+                <Text style={[styles.titleText, { color: themeGold }]}>{titleItem?.name ?? "Novato"}</Text>
+                <Ionicons name="chevron-down" size={12} color={themeGold} />
+              </Pressable>
+
+              <Pressable onPress={() => setShowCountryPicker(true)} style={[styles.countryBadge, { backgroundColor: surfaceColor, borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+                {Platform.OS === "web" ? (
+                  <Text style={[styles.countryBadgeText, { color: textColor }]}>{country.code}</Text>
+                ) : (
+                  <Text style={styles.countryBadgeFlag}>{country.flag}</Text>
+                )}
+                <Ionicons name="chevron-down" size={10} color={textMuted} style={{ marginLeft: 4 }} />
+              </Pressable>
+            </View>
 
             <View style={styles.levelSection}>
               <Text style={[styles.levelNum, { color: textMuted }]}>{T("level")} {level}</Text>
@@ -480,6 +559,12 @@ export default function ProfileScreen() {
         currentId={profile.selectedFrameId}
         onSelect={updateFrame}
         onClose={() => setShowFramePicker(false)}
+      />
+      <CountryPickerModal
+        visible={showCountryPicker}
+        currentCode={profile.country}
+        onSelect={updateCountry}
+        onClose={() => setShowCountryPicker(false)}
       />
       <Modal transparent animationType="slide" visible={showTitlePicker} onRequestClose={() => setShowTitlePicker(false)}>
         <Pressable style={styles.modalBg} onPress={() => setShowTitlePicker(false)}>
@@ -657,5 +742,72 @@ const styles = StyleSheet.create({
   },
   friendsBtnLabel: {
     fontFamily: "Nunito_700Bold", fontSize: 15, flex: 1,
+  },
+  rankSubHeader: {
+    marginBottom: 4,
+  },
+  rankDisplayText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 13,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 8,
+  },
+  countryBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  countryBadgeFlag: {
+    fontSize: 14,
+  },
+  countryBadgeText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 10,
+  },
+  countryList: {
+    paddingBottom: 20,
+  },
+  countryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border + "44",
+  },
+  countryItemSelected: {
+    backgroundColor: Colors.gold + "11",
+  },
+  flagContainer: {
+    width: 40,
+    alignItems: "center",
+  },
+  flagEmoji: {
+    fontSize: 24,
+  },
+  webFlag: {
+    width: 30,
+    height: 20,
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  webFlagText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 10,
+    color: Colors.gold,
+  },
+  countryName: {
+    flex: 1,
+    fontFamily: "Nunito_600SemiBold",
+    fontSize: 16,
+    color: Colors.text,
+    marginLeft: 12,
   },
 });

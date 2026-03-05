@@ -28,6 +28,7 @@ export interface GameState {
   jActive: boolean;
   jSuit: Suit | null;
   direction: 1 | -1;
+  lastPlayedCard: Card | null;
 }
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
@@ -92,6 +93,7 @@ export function initGame(cardsPerPlayer: number = 7, difficulty: string = "norma
     jActive: false,
     jSuit: null,
     direction: 1,
+    lastPlayedCard: null,
   };
 }
 
@@ -136,6 +138,7 @@ export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameS
   ns.turnId = (ns.turnId ?? 0) + 1;
   ns.playerHand = ns.playerHand.filter((c) => c.id !== card.id);
   ns.discardPile.push(card);
+  ns.lastPlayedCard = card;
   ns.consecutiveDraws = 0;
 
   // Clear J state when playing any card
@@ -292,6 +295,7 @@ export function aiTurn(state: GameState, difficulty: string = "normal"): GameSta
       const pick = jPlayable[0];
       ns.aiHand = ns.aiHand.filter(c => c.id !== pick.id);
       ns.discardPile.push(pick);
+      ns.lastPlayedCard = pick;
       ns.jActive = false; ns.jSuit = null;
       ns.currentSuit = pick.suit;
       if (pick.rank === "8" || pick.rank === "Joker") {
@@ -344,6 +348,7 @@ export function aiTurn(state: GameState, difficulty: string = "normal"): GameSta
   const chosen = aiChooseCard(playable, ns, difficulty);
   ns.aiHand = ns.aiHand.filter(c => c.id !== chosen.id);
   ns.discardPile.push(chosen);
+  ns.lastPlayedCard = chosen;
   ns.consecutiveDraws = 0;
   ns.jActive = false; ns.jSuit = null;
 

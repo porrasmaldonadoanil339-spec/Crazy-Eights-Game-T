@@ -7,9 +7,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming,
-  withRepeat, withDelay, Easing, runOnJS,
+  withRepeat, withDelay, Easing, runOnJS, FadeIn, ZoomIn,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useGame } from "@/context/GameContext";
@@ -29,8 +30,45 @@ import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 
-const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const { width: SW, height: SH } = Dimensions.get("window");
+
+// ─── Epic Victory/Defeat Overlay ──────────────────────────────────────────────
+function EpicResultOverlay({ type, coins }: { type: "win" | "lose"; coins: number }) {
+  const T = useT();
+  const scale = useSharedValue(0.5);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    scale.value = withSpring(1, { damping: 8, stiffness: 100 });
+    opacity.value = withTiming(1, { duration: 400 });
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  const isWin = type === "win";
+  const mainColor = isWin ? Colors.gold : Colors.red;
+
+  return (
+    <View style={[StyleSheet.absoluteFill, styles.epicOverlay]}>
+      <Animated.View style={[styles.epicContent, animatedStyle]}>
+        <Text style={[styles.epicTitle, { color: mainColor }]}>
+          {isWin ? "¡VICTORIA!" : "DERROTA"}
+        </Text>
+        {isWin && (
+          <Text style={styles.epicCoins}>
+            +{coins.toLocaleString()} 💰
+          </Text>
+        )}
+      </Animated.View>
+      {isWin && <WinParticles />}
+    </View>
+  );
+}
+
+const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 
 // ─── Particle confetti for win ───────────────────────────────────────────────
 const PARTICLE_SYMS = ["♠","♥","♦","♣"];
@@ -186,8 +224,9 @@ function TournamentModal({ scores, round, onContinue, onQuit }: {
 }
 
 // ─── End modal ────────────────────────────────────────────────────────────────
-function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
+function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
+  cpuProfile?: CpuProfile | null;
 }) {
   const T = useT();
   const isWin = phase === "player_wins";
@@ -197,6 +236,51 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
   const glowOp = useSharedValue(0);
   const titleY = useSharedValue(20);
   const titleOp = useSharedValue(0);
+
+  const [requestSent, setRequestSent] = useState(false);
+  const [isFriend, setIsFriend] = useState(false);
+
+  useEffect(() => {
+    async function checkFriendStatus() {
+      if (!cpuProfile) return;
+      try {
+        const stored = await AsyncStorage.getItem("ocho_friends_v1");
+        if (stored) {
+          const { friends } = JSON.parse(stored);
+          if (friends.some((f: any) => f.id === cpuProfile.name)) {
+            setIsFriend(true);
+          }
+        }
+      } catch (e) {}
+    }
+    checkFriendStatus();
+  }, [cpuProfile]);
+
+  const handleAddFriend = async () => {
+    if (!cpuProfile || requestSent || isFriend) return;
+    setRequestSent(true);
+    playSound("button_press").catch(() => {});
+
+    try {
+      const stored = await AsyncStorage.getItem("ocho_friends_v1");
+      const data = stored ? JSON.parse(stored) : { friends: [], requests: [] };
+
+      const newReq = {
+        id: `out_${cpuProfile.name}`,
+        name: cpuProfile.name,
+        level: cpuProfile.level,
+        avatarIcon: cpuProfile.avatarIcon,
+        avatarColor: cpuProfile.avatarColor,
+        photoUrl: cpuProfile.photoUrl,
+        status: "pending",
+        direction: "outgoing",
+        ts: Date.now()
+      };
+
+      data.requests = [newReq, ...data.requests.filter((r: any) => r.id !== newReq.id)];
+      await AsyncStorage.setItem("ocho_friends_v1", JSON.stringify(data));
+    } catch (e) {}
+  };
 
   const WIN_MSGS = [T("winMsg0"), T("winMsg1"), T("winMsg2"), T("winMsg3"), T("winMsg4"), T("winMsg5"), T("winMsg6")];
   const LOSE_MSGS = [T("loseMsg0"), T("loseMsg1"), T("loseMsg2"), T("loseMsg3"), T("loseMsg4"), T("loseMsg5")];
@@ -267,6 +351,28 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
               {isWin ? winMsg : isDraw ? T("drawMsg") : loseMsg}
             </Text>
           </Animated.View>
+
+          {/* Friend Request Button */}
+          {cpuProfile && !isFriend && (
+            <Pressable
+              onPress={handleAddFriend}
+              disabled={requestSent}
+              style={[
+                styles.friendAddBtn,
+                { borderColor: accentColor + "44", backgroundColor: accentColor + "11" },
+                requestSent && { opacity: 0.5 }
+              ]}
+            >
+              <Ionicons
+                name={requestSent ? "checkmark-circle" : "person-add"}
+                size={16}
+                color={accentColor}
+              />
+              <Text style={[styles.friendAddBtnText, { color: accentColor }]}>
+                {requestSent ? "Solicitud enviada" : `Agregar a ${cpuProfile.name}`}
+              </Text>
+            </Pressable>
+          )}
 
           {/* Divider */}
           <View style={[styles.endDivider, { backgroundColor: accentColor + "22" }]} />
@@ -443,12 +549,45 @@ export default function GameScreen() {
   const [expertTimer, setExpertTimer] = useState(8);
   const [playerEmote, setPlayerEmote] = useState<Emote | null>(null);
   const [cpuEmote, setCpuEmote] = useState<Emote | null>(null);
+  const [showLastCardBanner, setShowLastCardBanner] = useState(false);
   const [lastPlayerEmoteTime, setLastPlayerEmoteTime] = useState(0);
+  const lastCardBannerAnim = useSharedValue(0);
+
+  const lastCardBannerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: withSpring(showLastCardBanner ? 0 : -100) }],
+    opacity: withTiming(showLastCardBanner ? 1 : 0, { duration: 300 }),
+  }));
+
+  useEffect(() => {
+    if (gameState?.playerHand?.length === 1 && dealAnimationDone) {
+      setShowLastCardBanner(true);
+      setTimeout(() => setShowLastCardBanner(false), 2000);
+    }
+  }, [gameState?.playerHand?.length]);
+
+  const [lastPlayedCardId, setLastPlayedCardId] = useState<string | null>(null);
+  const playRippleAnim = useSharedValue(0);
+
+  const playRippleStyle = useAnimatedStyle(() => ({
+    opacity: playRippleAnim.value,
+    transform: [{ scale: 0.5 + playRippleAnim.value * 1.5 }],
+  }));
+
+  useEffect(() => {
+    if (gameState?.lastPlayedCard && gameState.lastPlayedCard.id !== lastPlayedCardId) {
+      setLastPlayedCardId(gameState.lastPlayedCard.id);
+      playRippleAnim.value = withSequence(
+        withTiming(1, { duration: 150 }),
+        withTiming(0, { duration: 150 })
+      );
+    }
+  }, [gameState?.lastPlayedCard]);
   const [muteCpuEmotes, setMuteCpuEmotes] = useState(false);
   const [showMatchmaking, setShowMatchmaking] = useState(true);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpNum, setLevelUpNum] = useState(1);
   const [showEffect, setShowEffect] = useState(false);
+  const [showEpicResult, setShowEpicResult] = useState<"win" | "lose" | null>(null);
   const [inactivityProgress, setInactivityProgress] = useState(1);
   const inactivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastActionTime = useRef(Date.now());
@@ -620,6 +759,9 @@ export default function GameScreen() {
     setEndCoins(coins);
     setEndXp(xp);
 
+    // Show Epic Result Overlay
+    setShowEpicResult(won ? "win" : "lose");
+
     if (session.mode === "tournament") {
       const newScores: [number, number] = won
         ? [tournamentScores[0] + 1, tournamentScores[1]]
@@ -627,12 +769,18 @@ export default function GameScreen() {
       setTournamentScores(newScores);
       setTournamentRound((r) => r + 1);
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
-      setTimeout(() => setShowTournamentModal(true), 900);
+      setTimeout(() => {
+        setShowEpicResult(null);
+        setShowTournamentModal(true);
+      }, 1500);
     } else {
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
       if (session.mode === "ranked") {
         updateRanked(won ? 2 : -1);
       }
+      setTimeout(() => {
+        setShowEpicResult(null);
+      }, 1500);
     }
 
     if (won) {
@@ -793,6 +941,24 @@ export default function GameScreen() {
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.tableGlowBorder} />
+
+      {/* Ripple effect on play */}
+      <Animated.View style={[styles.playRipple, playRippleStyle]} pointerEvents="none" />
+
+      {/* Last Card Banner */}
+      <Animated.View style={[styles.lastCardBanner, lastCardBannerStyle]} pointerEvents="none">
+        <LinearGradient colors={[Colors.gold, "#A07800"]} style={styles.lastCardBannerInner}>
+          <Text style={styles.lastCardBannerText}>¡ÚLTIMA CARTA!</Text>
+        </LinearGradient>
+      </Animated.View>
+
+      {/* Epic Result Overlay */}
+      {showEpicResult && (
+        <EpicResultOverlay
+          type={showEpicResult}
+          coins={endCoins}
+        />
+      )}
 
       {/* Header */}
       <View style={styles.header}>
@@ -1050,6 +1216,7 @@ export default function GameScreen() {
             if (session) startGame(session.mode, session.difficulty);
           }}
           onHome={() => router.back()}
+          cpuProfile={cpuProfile}
         />
       )}
 
@@ -1292,4 +1459,84 @@ const styles = StyleSheet.create({
     flexDirection: "row", justifyContent: "center", gap: 8,
   },
   btnSecondaryTxt: { fontFamily: "Nunito_700Bold", fontSize: 14 },
+
+  // Epic Result
+  epicOverlay: {
+    backgroundColor: "rgba(0,0,0,0.85)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 9999,
+  },
+  epicContent: {
+    alignItems: "center",
+  },
+  epicTitle: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 72,
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.75)",
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 10,
+  },
+  epicCoins: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 28,
+    color: "#4ade80",
+    marginTop: 10,
+  },
+
+  // Friend Add Button in EndModal
+  friendAddBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginTop: 16,
+  },
+  friendAddBtnText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 14,
+  },
+
+  // Ripple effect
+  playRipple: {
+    position: "absolute",
+    top: SH * 0.42 - 100,
+    left: SW * 0.5 - 100,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    zIndex: 5,
+  },
+
+  // Last Card Banner
+  lastCardBanner: {
+    position: "absolute",
+    top: 100,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  lastCardBannerInner: {
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.3)",
+    shadowColor: Colors.gold,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  lastCardBannerText: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 24,
+    color: "#1a0a00",
+  },
 });

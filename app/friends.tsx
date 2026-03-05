@@ -65,28 +65,38 @@ const GENERIC_REPLIES = [
   "Me encanta este mazo", "Tienes mucha habilidad", "Fue pura suerte!",
   "La próxima no será tan fácil", "Qué buena estrategia", "Me divertí mucho",
   "Vale, acepto el reto", "Déjame ver mi mazo", "Un saludo!",
+  "Estaba viendo unas jugadas pro en YouTube, ¡ya casi te alcanzo!",
+  "Increíble cómo cambiaste el color justo cuando tenía puros rojos...",
+  "¿Viste esa jugada? Ni yo me la creí, ¡pura adrenalina!",
+  "Estoy ahorrando para un nuevo dorso, el de dragón se ve épico.",
+  "La verdad es que me pusiste a sudar con ese último Ocho Loco.",
+  "¿Alguna vez has llegado a Rango Maestro? Es mi meta de esta temporada.",
+  "¡Qué buena racha llevas! Alguien anda encendido hoy.",
+  "Oye, ¿viste el nuevo pase de batalla? Las recompensas están geniales.",
+  "A veces el azar no ayuda, pero la estrategia lo es todo aquí.",
+  "¡Esa carta de +4 me dolió en el alma! Buena esa.",
 ];
 
 function getContextualReply(message: string): string {
   const msg = message.toLowerCase();
   if (msg.includes("hola") || msg.includes("hi") || msg.includes("hello")) {
-    const greetings = ["Hola!", "Qué tal?", "Hey! Cómo vas?", "Hola amigo!", "Buenas!"];
+    const greetings = ["Hola!", "Qué tal?", "Hey! Cómo vas?", "Hola amigo!", "Buenas!", "¡Hola! ¿Listo para un duelo legendario?", "¡Qué onda! ¿Echamos una partida?"];
     return greetings[Math.floor(Math.random() * greetings.length)];
   }
   if (msg.includes("jugar") || msg.includes("game") || msg.includes("play") || msg.includes("partida")) {
-    const playReplies = ["Claro, ¡invítame!", "Dale, una partida rápida", "En un momento estoy libre para jugar", "Me encantaría, vamos!", "Ahora mismo no puedo, ¡pero luego sí!"];
+    const playReplies = ["Claro, ¡invítame!", "Dale, una partida rápida", "En un momento estoy libre para jugar", "Me encantaría, vamos!", "Ahora mismo no puedo, ¡pero luego sí!", "¡Dame un segundo que termino esta y le damos!", "¡De una! Prepárate para perder (es broma... o no)."];
     return playReplies[Math.floor(Math.random() * playReplies.length)];
   }
   if (msg.includes("como") || msg.includes("cómo") || msg.includes("how")) {
-    const statusReplies = ["Todo bien por aquí, ¿y tú?", "Excelente, ganando algunas partidas", "Muy bien, disfrutando de Ocho Locos", "Genial!", "Todo tranquilo, gracias por preguntar"];
+    const statusReplies = ["Todo bien por aquí, ¿y tú?", "Excelente, ganando algunas partidas", "Muy bien, disfrutando de Ocho Locos", "Genial!", "Todo tranquilo, gracias por preguntar", "¡Súper bien! Subiendo en el ranking poco a poco.", "¡A tope! Acabo de ganar una partida épica."];
     return statusReplies[Math.floor(Math.random() * statusReplies.length)];
   }
   if (msg.includes("suerte") || msg.includes("luck") || msg.includes("buena")) {
-    const thanksReplies = ["Muchas gracias!", "Igualmente para ti!", "Gracias, la necesité", "Tú también tuviste suerte!", "Suerte en la próxima!"];
+    const thanksReplies = ["Muchas gracias!", "Igualmente para ti!", "Gracias, la necesité", "Tú también tuviste suerte!", "Suerte en la próxima!", "¡Gracias crack! La suerte es para los que no tienen estrategia (mentira, me salvó el azar)."];
     return thanksReplies[Math.floor(Math.random() * thanksReplies.length)];
   }
   if (msg.includes("cartas") || msg.includes("cards")) {
-    const cardReplies = ["Me salieron unas cartas buenísimas", "Ese ocho me salvó la vida", "Menudas cartas me tocaron...", "Este mazo es mi favorito", "Las cartas no me acompañaron esta vez"];
+    const cardReplies = ["Me salieron unas cartas buenísimas", "Ese ocho me salvó la vida", "Menudas cartas me tocaron...", "Este mazo es mi favorito", "Las cartas no me acompañaron esta vez", "¡Ojalá me saliera un mazo así más seguido!", "A veces las cartas te aman, a veces te odian."];
     return cardReplies[Math.floor(Math.random() * cardReplies.length)];
   }
   return GENERIC_REPLIES[Math.floor(Math.random() * GENERIC_REPLIES.length)];
@@ -103,18 +113,7 @@ const TITLE_NAMES: Record<string, string> = {
 const LAST_SEEN = ["Hace 2 min", "Hace 15 min", "Hace 1 hora", "Hace 3 horas", "Ayer", "Hace 2 días"];
 
 function buildInitialFriends(): Friend[] {
-  return CPU_PROFILES.slice(0, 18).map((p, i) => ({
-    id: p.name,
-    name: p.name,
-    level: p.level,
-    avatarIcon: p.avatarIcon,
-    avatarColor: p.avatarColor,
-    photoUrl: p.photoUrl,
-    online: seededRand(i) > 0.55,
-    wins: Math.floor(p.level * 12 + seededRand(i + 5) * 100),
-    lastSeen: LAST_SEEN[Math.floor(seededRand(i + 3) * LAST_SEEN.length)],
-    titleName: TITLE_NAMES[p.titleId] ?? "Jugador",
-  }));
+  return [];
 }
 
 export default function FriendsScreen() {
@@ -177,28 +176,27 @@ export default function FriendsScreen() {
   // Periodic incoming requests from CPU profiles
   useEffect(() => {
     const interval = setInterval(() => {
-      if (Math.random() > 0.5) { // 50% chance every check
-        const pool = CPU_PROFILES.filter(p => 
-          !friends.some(f => f.name === p.name) && 
-          !requests.some(r => r.name === p.name)
-        );
-        if (pool.length > 0) {
-          const p = pool[Math.floor(Math.random() * pool.length)];
-          const newReq: FriendRequest = {
-            id: `in_${p.name}`,
-            name: p.name,
-            level: p.level,
-            avatarIcon: p.avatarIcon,
-            avatarColor: p.avatarColor,
-            photoUrl: p.photoUrl,
-            status: "pending",
-            direction: "incoming",
-          };
-          setRequests(prev => [newReq, ...prev]);
-          showToast(`${p.name} te envió una solicitud`);
-        }
+      // Every 45-120s (simulated by checking every 45s with chance, or better, random timeout)
+      const pool = CPU_PROFILES.filter(p => 
+        !friends.some(f => f.name === p.name) && 
+        !requests.some(r => r.name === p.name)
+      );
+      if (pool.length > 0) {
+        const p = pool[Math.floor(Math.random() * pool.length)];
+        const newReq: FriendRequest = {
+          id: `in_${p.name}`,
+          name: p.name,
+          level: p.level,
+          avatarIcon: p.avatarIcon,
+          avatarColor: p.avatarColor,
+          photoUrl: p.photoUrl,
+          status: "pending",
+          direction: "incoming",
+        };
+        setRequests(prev => [newReq, ...prev]);
+        showToast(`${p.name} te envió una solicitud`);
       }
-    }, 45000); // Check every 45s (range 30-90s logic)
+    }, 45000 + Math.random() * 75000); // 45s to 120s
     
     return () => clearInterval(interval);
   }, [friends, requests]);
@@ -223,9 +221,9 @@ export default function FriendsScreen() {
       };
       setRequests(prev => [outReq, ...prev.filter(r => r.id !== req.id)]);
 
-      // Delay for outgoing request response: 8-20s
-      const accept = Math.random() < 0.7;
-      const delay = 8000 + Math.random() * 12000;
+      // Delay for outgoing request response: 15-60s
+      const accept = Math.random() < 0.6;
+      const delay = 15000 + Math.random() * 45000;
       setTimeout(() => {
         removeOutgoingFriendRequest(req.id);
         if (accept) {
@@ -243,9 +241,10 @@ export default function FriendsScreen() {
           };
           setFriends(prev => [newFriend, ...prev.filter(f => f.id !== req.id)]);
           setRequests(prev => prev.filter(r => r.id !== req.id));
-          showToast(`${req.name} aceptó tu solicitud`);
+          showToast(`¡${req.name} aceptó tu solicitud!`);
         } else {
           setRequests(prev => prev.filter(r => r.id !== req.id));
+          showToast(`${req.name} rechazó tu solicitud`);
         }
       }, delay);
     });
@@ -305,9 +304,9 @@ export default function FriendsScreen() {
       setRequests(prev => [outReq, ...prev.filter(r => r.id !== `out_${name}`)]);
     }
 
-    // Delay for outgoing request response: 8-20s
-    const accept = Math.random() < 0.7;
-    const delay = 8000 + Math.random() * 12000;
+    // Delay for outgoing request response: 15-60s
+    const accept = Math.random() < 0.6;
+    const delay = 15000 + Math.random() * 45000;
     setTimeout(() => {
       if (accept) {
         const profile = CPU_PROFILES.find(p => p.name === name);
@@ -327,11 +326,12 @@ export default function FriendsScreen() {
           setFriends(prev => [newFriend, ...prev.filter(f => f.id !== name)]);
           setRequests(prev => prev.filter(r => r.id !== `out_${name}`));
           setSentRequests(prev => { const s = new Set(prev); s.delete(name); return s; });
-          showToast(`${name} aceptó tu solicitud`);
+          showToast(`¡${name} aceptó tu solicitud!`);
         }
       } else {
         setRequests(prev => prev.filter(r => r.id !== `out_${name}`));
         setSentRequests(prev => { const s = new Set(prev); s.delete(name); return s; });
+        showToast(`${name} rechazó tu solicitud`);
       }
     }, delay);
 
@@ -431,13 +431,42 @@ export default function FriendsScreen() {
     setChatInput("");
     setTimeout(() => chatListRef.current?.scrollToEnd?.({ animated: true }), 100);
 
-    // Show typing indicator after 600ms, then reply after 2-6s
-    const typingDelay = 600 + Math.random() * 400;
-    const replyDelay = 2000 + Math.random() * 4000;
-    setTimeout(() => {
+    const rand = Math.random();
+    let replyDelay = 2000;
+    if (rand < 0.3) {
+      // 30% responde en 2-5s
+      replyDelay = 2000 + Math.random() * 3000;
+    } else if (rand < 0.7) {
+      // 40% responde en 10-30s
+      replyDelay = 10000 + Math.random() * 20000;
+    } else {
+      // 30% responde en 1-3 minutos
+      replyDelay = 60000 + Math.random() * 120000;
+    }
+
+    // Typing indicator logic
+    const showTyping = () => {
       setIsTyping(true);
       setTimeout(() => chatListRef.current?.scrollToEnd?.({ animated: true }), 50);
-    }, typingDelay);
+    };
+
+    // Sometimes they "see" it but don't type immediately
+    const initialWait = 1000 + Math.random() * 2000;
+    setTimeout(() => {
+      // 80% chance to show typing indicator before replying
+      if (Math.random() < 0.8) {
+        showTyping();
+        // Sometimes typing indicator disappears and reappears
+        if (replyDelay > 15000 && Math.random() < 0.5) {
+          setTimeout(() => {
+            setIsTyping(false);
+            setTimeout(() => {
+              if (chatFriend) showTyping();
+            }, 5000 + Math.random() * 10000);
+          }, 5000 + Math.random() * 5000);
+        }
+      }
+    }, initialWait);
     
     setTimeout(() => {
       setIsTyping(false);
@@ -541,9 +570,11 @@ export default function FriendsScreen() {
           </Pressable>
         </View>
       ) : (
-        <View style={{ paddingHorizontal: 8, alignItems: "center", gap: 2 }}>
-          <Ionicons name="time-outline" size={16} color={textMuted} />
-          <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 9, color: textMuted }}>Pendiente</Text>
+        <View style={{ paddingHorizontal: 8, alignItems: "center", gap: 2, flexDirection: "row" }}>
+          <View style={{ marginRight: 4 }}>
+            <Ionicons name="time-outline" size={16} color={textMuted} />
+          </View>
+          <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 9, color: textMuted }}>Pendiente...</Text>
         </View>
       )}
     </View>

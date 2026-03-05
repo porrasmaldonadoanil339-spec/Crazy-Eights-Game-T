@@ -46,6 +46,7 @@ const DEMO_STATE = {
   jSuit: null as "hearts" | "diamonds" | "clubs" | "spades" | null,
   direction: 1 as 1 | -1,
   turnId: 0,
+  lastPlayedCard: null as any,
 };
 
 interface Step {

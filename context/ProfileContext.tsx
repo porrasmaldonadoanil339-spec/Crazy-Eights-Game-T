@@ -102,6 +102,7 @@ export interface PlayerProfile {
   vibrationEnabled: boolean;
   language: "es" | "en" | "pt";
   darkMode: boolean;
+  country: string;
   // Friend requests (global, persisted)
   pendingOutgoingRequests?: OutgoingRequest[];
   // Linked accounts
@@ -163,6 +164,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   vibrationEnabled: true,
   language: "es",
   darkMode: true,
+  country: "CO",
   rankedProfile: { rank: 0, division: 0, stars: 0, maxStars: 5, totalWins: 0, totalLosses: 0 },
 };
 
@@ -177,6 +179,7 @@ interface ProfileContextValue {
   updateFrame: (frameId: string) => void;
   updateEffect: (effectId: string) => void;
   updatePhotoUri: (uri: string) => void;
+  updateCountry: (country: string) => void;
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
   addXp: (amount: number) => void;
@@ -243,6 +246,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             sfxEnabled: saved.sfxEnabled ?? true,
             selectedFrameId: saved.selectedFrameId ?? "frame_gold",
             photoUri: saved.photoUri ?? "",
+            country: saved.country ?? "CO",
             equippedEmotes: saved.equippedEmotes ?? DEFAULT_PROFILE.equippedEmotes,
           };
           setProfile(merged);
@@ -305,6 +309,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const updatePhotoUri = useCallback((uri: string) => {
     update((p) => ({ ...p, photoUri: uri }));
+  }, [update]);
+
+  const updateCountry = useCallback((country: string) => {
+    update((p) => ({ ...p, country }));
   }, [update]);
 
   const addCoins = useCallback((amount: number) => {
@@ -554,6 +562,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         updateFrame,
         updateEffect,
         updatePhotoUri,
+        updateCountry,
         addCoins,
         spendCoins,
         addXp,

@@ -1,0 +1,14 @@
+ADEMAS EN EL RANKING MUNDIAL DE LA PRIMERA INTERFAZ ME APAREZCA LOS RANGOS TB DE ACUERDO A ELLO ADAPTALO LOS RANGOS QUE TENGO. EN EL LA INTERFAZ DE LOGROS EN VEZ LLAMARSE RANKING QUE SE LLAME CLASFIICATORIA PARA PODER ASCEDNER ELLO PORFA. Y EN EL RANKING MUNDIAL APAREZCA. Y ALLI RANKING DEBE MODIFICA ELLO DE  GLOBAL RANKING PARA QUE TENGA ALGO DE CLASIFICATORIA.. EN EL RANKING MUNDIAL DE LA PRIMERA INTERFAZ QUE APAREZCAN LOS RANGOS DE TODOS ELLOS DE ACUEDO DE MAS BAJO A MAS ALTO Y QUE CONTENGAN TODOS MIS RANGOS. ADEMAS AGREGA LA OPCION EN MIS PARTIDAS PARA QUE SE PUEDA LANZAR CARTAS IGUALES Permitir tirar todas las cartas iguales (hasta 4).Porque:
+•	hace el juego más rápido
+•	crea momentos épicos
+•	la gente siente que hizo una jugada fuerte
+CUANDO INGRESE A AMIGOS COMO QUE ME APARECEN AMIGOS QUE NO AGREGE DEBERIA ESTAR VACIO YA CUANDO RECIEN YO DECIDE AGREAGAR APAREZCA EN LA SOLICIUTDES AMISTAD Y ALGUNOS ME ACEPTEN COMO OTROS NO Y ME APAREZCAN EN AMIGOS Y ALGUNOS ME SALGA TE RECHAZARON SOLICITUD DE AMISTAD PARA QUE SE NOTE MAS REALISTO EN SI QUE EN ESE ASPECTO SE VEA LO MAS REAL POSIBLE COMO LOS JUEGOS ONLINE. Y EL CHAT A LA HORA DE RESPONDER QUE SE TARDE UN POCO Y MAS Y EN OTROS CASOS QE ME RESPONDA DESPUES DE MUCHO TIEMPO PARA SE VEA QUE PAREZCA ONLINE MI JUEGO
+Quiero que todo el sistema de idioma funcione en toda la aplicación. Actualmente hay palabras que no se traducen cuando cambio el idioma. Revisa toda la app para que todos los textos usen el sistema de traducción. Esto debe aplicarse en: menú principal, configuraciones, inicio de sesión, botones, mensajes, errores, tutorial y también dentro de las partidas. Cuando el jugador cambie el idioma, todo el juego debe actualizarse automáticamente.
+Quiero mejorar el perfil del jugador. Agrega una sección donde el usuario pueda elegir de qué país es (con bandera) y que también se muestre el rango competitivo al que pertenece. Esta información debe aparecer en el perfil del jugador y también en el Global Ranking y en las partidas.
+También puedes añadir más detalle:
+•	País seleccionado (con bandera) 
+•	Rango competitivo actual. 
+•	TODO ELLO ADAPTALO A MI JUEGO . ADEMAS QUE CUANDO FINALIZE LA PARTIDA PUEDE ENVIAR SOLICITUD AL JUGADOR O SALGA ALLI ALGO ASI ADAPTALO PORFAVOR 
+
+
+
