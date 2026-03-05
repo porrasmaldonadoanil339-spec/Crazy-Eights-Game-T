@@ -66,10 +66,10 @@ export default function AchievementsScreen() {
   const themeGold = isDark ? Colors.gold : "#A07800";
 
   const rarityLabel: Record<string, string> = {
-    legendary: T("rarityLegendary"),
-    epic:      T("rarityEpic"),
-    rare:      T("rarityRare"),
-    common:    T("rarityCommon"),
+    legendary: T("rarityLegendary").toUpperCase(),
+    epic:      T("rarityEpic").toUpperCase(),
+    rare:      T("rarityRare").toUpperCase(),
+    common:    T("rarityCommon").toUpperCase(),
   };
 
   const xpRequiredLabel = T("xpNeeded");

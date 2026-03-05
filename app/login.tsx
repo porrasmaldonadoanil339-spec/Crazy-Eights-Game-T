@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   View, Text, StyleSheet, Pressable, TextInput, Modal,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -71,10 +72,10 @@ export default function LoginScreen() {
 
   const handleOAuth = (provider: "google" | "facebook") => {
     playSound("button_press").catch(() => {});
-    setOauthProvider(provider);
-    setOauthStep("email");
-    setOauthEmail("");
-    setOauthPassword("");
+    Alert.alert(
+      lang === "en" ? "Coming Soon" : lang === "pt" ? "Em breve" : "Próximamente",
+      lang === "en" ? "This feature is not available yet." : lang === "pt" ? "Este recurso ainda não está disponível." : "Esta función no está disponible todavía."
+    );
   };
 
   const handleOAuthNext = () => {

@@ -391,9 +391,9 @@ export default function PlayScreen() {
         <PokerTitle />
 
         <View style={styles.suitDivider}>
-          <View style={[styles.dividerLine, { backgroundColor: isDark ? "rgba(212,175,55,0.25)" : "rgba(120,80,0,0.2)" }]} />
-          <Text style={[styles.dividerSuit, { color: isDark ? Colors.gold : "#A07800" }]}>♦</Text>
-          <View style={[styles.dividerLine, { backgroundColor: isDark ? "rgba(212,175,55,0.25)" : "rgba(120,80,0,0.2)" }]} />
+          <View style={[styles.dividerLine, { backgroundColor: theme.gold + "40" }]} />
+          <Text style={[styles.dividerSuit, { color: theme.gold }]}>♦</Text>
+          <View style={[styles.dividerLine, { backgroundColor: theme.gold + "40" }]} />
         </View>
 
         <View style={styles.sectionHeader}>
@@ -414,7 +414,7 @@ export default function PlayScreen() {
               >
                 <LinearGradient
                   colors={[mode.color + "28", mode.color + "08", "transparent"]}
-                  style={[styles.modeGrad, { borderColor: mode.color + "50" }]}
+                  style={[styles.modeGrad, { borderColor: mode.color + "50", backgroundColor: theme.surface }]}
                 >
                   {mode.isNew && (
                     <LinearGradient colors={[Colors.red, "#a01a15"]} style={styles.newBadge}>
@@ -432,7 +432,7 @@ export default function PlayScreen() {
                       <Text style={[styles.modeRewardText, { color: theme.gold }]}>{mode.coinsReward}</Text>
                     </View>
                     {wr !== null && (
-                      <Text style={[styles.modeWR, { color: theme.textDim }]}>{wr}% WR</Text>
+                      <Text style={[styles.modeWR, { color: theme.textMuted }]}>{wr}% WR</Text>
                     )}
                     {mode.hasDifficulty && (
                       <Ionicons name="chevron-forward" size={12} color={mode.color + "88"} />
@@ -631,19 +631,25 @@ export default function PlayScreen() {
                 <View style={{ alignItems: "center", paddingVertical: 12, gap: 8 }}>
                   {generatedRoomCode ? (
                     <>
-                      <Text style={{ fontFamily: "Nunito_900ExtraBold", fontSize: 38, color: "#4A90E2", letterSpacing: 8 }}>{generatedRoomCode}</Text>
+                      <Text style={{ fontFamily: "Nunito_900ExtraBold", fontSize: 44, color: "#4A90E2", letterSpacing: 8 }}>{generatedRoomCode}</Text>
                       <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: theme.textMuted, textAlign: "center" }}>
                         {lang === "en" ? "Share this code with your friend" : lang === "pt" ? "Compartilhe este código com seu amigo" : "Comparte este código con tu amigo"}
                       </Text>
                     </>
                   ) : (
-                    <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: theme.textMuted, textAlign: "center" }}>
-                      {lang === "en" ? "Press the button to generate a room code" : lang === "pt" ? "Pressione o botão para gerar um código" : "Presiona el botón para generar un código"}
+                    <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: theme.textMuted, textAlign: "center", paddingVertical: 20 }}>
+                      {lang === "en" ? "Press the button to generate a room code" : lang === "pt" ? "Pressione o botão para generar um código" : "Presiona el botón para generar un código"}
                     </Text>
                   )}
                 </View>
                 <View style={{ flexDirection: "row", gap: 8 }}>
-                  <Pressable onPress={() => setGeneratedRoomCode(Math.random().toString(36).substr(2, 6).toUpperCase())} style={[styles.multiStartBtn, { flex: 1, borderWidth: 1, borderColor: "#4A90E244", backgroundColor: "transparent", borderRadius: 14, overflow: "hidden" }]}>
+                  <Pressable 
+                    onPress={() => {
+                      playButton().catch(() => {});
+                      setGeneratedRoomCode(Math.random().toString(36).substr(2, 6).toUpperCase());
+                    }} 
+                    style={[styles.multiStartBtn, { flex: 1, borderWidth: 1, borderColor: "#4A90E244", backgroundColor: "transparent", borderRadius: 14, overflow: "hidden" }]}
+                  >
                     <View style={[styles.multiStartBtnGrad, { backgroundColor: "rgba(74,144,226,0.12)" }]}>
                       <Ionicons name="refresh" size={16} color="#4A90E2" />
                       <Text style={[styles.multiStartBtnText, { color: "#4A90E2" }]}>{lang === "en" ? "New Code" : lang === "pt" ? "Novo Código" : "Nuevo Código"}</Text>

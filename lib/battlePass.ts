@@ -1,3 +1,5 @@
+import { STORE_ITEMS, localizeItem } from "./storeItems";
+
 export interface BattlePassTier {
   tier: number;
   xpRequired: number;
@@ -848,7 +850,16 @@ export function getBPRewardLabel(tier: BattlePassTier, lang: "es" | "en" | "pt")
   if (!prefix) return tier.rewardLabel;
 
   const parts = tier.rewardLabel.split(": ");
-  const namePart = parts.slice(1).join(": ") || String(tier.rewardValue);
+  let namePart = parts.length > 1 ? parts.slice(1).join(": ") : parts[0];
+
+  // If the reward value is an item ID, we can try to localize its name
+  const itemId = String(tier.rewardValue);
+  const foundItem = STORE_ITEMS.find(i => i.id === itemId);
+  if (foundItem) {
+    const localizedItem = localizeItem(foundItem, lang);
+    namePart = localizedItem.name;
+  }
+
   return `${prefix[lang]}: ${namePart}`;
 }
 

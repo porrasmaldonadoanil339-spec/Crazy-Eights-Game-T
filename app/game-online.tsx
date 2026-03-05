@@ -410,6 +410,10 @@ export default function OnlineGameScreen() {
     return () => timers.forEach(clearTimeout);
   }, []);
 
+  const handleDealingComplete = useCallback(() => {
+    setLobbyPhase("game");
+  }, []);
+
   // ─── CPU auto-play ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!gameState || lobbyPhase !== "game") return;
@@ -583,28 +587,31 @@ export default function OnlineGameScreen() {
 
   // Show lobby
   if (lobbyPhase !== "game" && lobbyPhase !== "result") {
-    return (
-      <View style={{ flex: 1 }}>
-        <LobbyScreen
-          playerCount={playerCount}
-          humanName={humanName}
-          cpuProfiles={currentCpuProfiles}
-          joinedCount={joinedCount}
-          phase={lobbyPhase === "dealing" ? "countdown" : lobbyPhase as "searching" | "found" | "countdown"}
-          countdown={countdown}
-        />
-        {lobbyPhase === "dealing" && gameState && (
+    if (lobbyPhase === "dealing" && gameState) {
+      return (
+        <View style={{ flex: 1, backgroundColor: "#020810" }}>
           <DealAnimation
             cardsPerPlayer={7}
             playerCards={gameState.hands[0]}
             starterCard={multiGetTopCard(gameState)}
+            onComplete={handleDealingComplete}
             backColors={backColors}
             backAccent={backAccent}
             numOpponents={playerCount - 1}
-            onComplete={() => setLobbyPhase("game")}
           />
-        )}
-      </View>
+        </View>
+      );
+    }
+
+    return (
+      <LobbyScreen
+        playerCount={playerCount}
+        humanName={humanName}
+        cpuProfiles={currentCpuProfiles}
+        joinedCount={joinedCount}
+        phase={lobbyPhase as "searching" | "found" | "countdown"}
+        countdown={countdown}
+      />
     );
   }
 

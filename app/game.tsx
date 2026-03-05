@@ -719,12 +719,16 @@ export default function GameScreen() {
     }
     if (selectedCard?.id === card.id) {
       const needsSuitPick = card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0);
+      const willHaveLastCard = gameState.playerHand.length === 2;
+      
       if (needsSuitPick) {
         await playSound("card_wild").catch(() => {});
+        if (willHaveLastCard) {
+          setTimeout(() => playSound("last_card").catch(() => {}), 350);
+        }
         setSuitPickerVisible(true);
       } else {
         await playSound("card_play").catch(() => {});
-        const willHaveLastCard = gameState.playerHand.length === 2;
         handlePlayCard(card);
         if (willHaveLastCard) {
           setTimeout(() => playSound("last_card").catch(() => {}), 350);

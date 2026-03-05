@@ -124,7 +124,8 @@ function haptic(fn: () => Promise<void>) {
 // ─── Core card sounds ────────────────────────────────────────────────────────
 
 export async function playCardFlip() {
-  await playSfx("cardFlip");
+  const volume = sfxVolume * (0.8 + Math.random() * 0.2);
+  await playSfx("cardFlip", volume);
   haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
 }
 

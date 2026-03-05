@@ -4,7 +4,6 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, View, Text } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Ionicons } from "@expo/vector-icons";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
@@ -182,20 +181,18 @@ export default function RootLayout() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <KeyboardProvider>
-            <NetworkProvider>
-              <AuthProvider>
-                <ProfileProvider>
-                  <NetworkGuard>
-                    <GameProvider>
-                      <StatusBar style="light" />
-                      <RootLayoutNav />
-                    </GameProvider>
-                  </NetworkGuard>
-                </ProfileProvider>
-              </AuthProvider>
-            </NetworkProvider>
-          </KeyboardProvider>
+          <NetworkProvider>
+            <AuthProvider>
+              <ProfileProvider>
+                <NetworkGuard>
+                  <GameProvider>
+                    <StatusBar style="light" />
+                    <RootLayoutNav />
+                  </GameProvider>
+                </NetworkGuard>
+              </ProfileProvider>
+            </AuthProvider>
+          </NetworkProvider>
         </GestureHandlerRootView>
       </QueryClientProvider>
     </ErrorBoundary>
