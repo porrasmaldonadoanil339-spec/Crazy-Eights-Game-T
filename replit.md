@@ -1,31 +1,8 @@
-# Ocho Locos — replit.md
+# Ocho Locos
 
 ## Overview
 
-**Ocho Locos** is a mobile card game app — a Spanish-language version of the classic "Crazy Eights" card game. Built with **Expo (React Native)** for the mobile frontend and **Express.js** for the backend. The app supports 6 game modes, local + online multiplayer, a store with 420+ items (70 per category + 70 emotes), 981 achievements, 800-tier battle pass, daily rewards, watch-ads-for-coins (5/day, +50 each), emote system (70 emotes, equip up to 8), avatar frames, profile photos, 3-language switcher (ES/EN/PT-BR), swipe tab navigation, light/dark mode, and a world ranking screen. All game logic runs fully on-device; the backend serves as API scaffold + static asset server.
-
-**Latest features** (current session — Free Fire-style epic update):
-- **Amigos vacío + realista**: La lista de amigos comienza vacía. El usuario busca y agrega. Las solicitudes tardan 15-60s en responderse (60% aceptan, 40% rechazan). Chat con tiempos variables (2-5s rápido, 10-30s medio, 1-3min lento). Solicitudes entrantes automáticas cada 45-120s. Toast de aceptación/rechazo realista.
-- **Rankings con rangos competitivos**: Tab renombrada a "Clasificat." (en tab bar). Sección global renombrada a "Ranking Clasificatorio". Cada jugador CPU muestra su rango (Hierro→Divino) con badge de color. Lista ordenada por rango descendente.
-- **Perfil con país + rango**: Selector de 15 países (Colombia, México, España, etc.) con banderas emoji (texto ISO en web). Rango competitivo mostrado bajo el nombre del jugador (ej. "Hierro V ⭐○○○"). Campo `country` en ProfileContext persistido en AsyncStorage.
-- **Post-game friend request**: Al terminar partida, botón "Agregar a [nombre]" para enviar solicitud al oponente CPU. Solo aparece si no ya es amigo. Persiste en "ocho_friends_v1".
-- **UI épica estilo Free Fire**: Overlay dramático de victoria/derrota al terminar partida (texto grande bounce, partículas de confetti animadas). Efecto ripple/flash al jugar carta. Banner "¡ÚLTIMA CARTA!" animado. Partículas simuladas con Animated Views.
-- **TypeScript fixes**: `lastPlayedCard: null` en DEMO_STATE de tutorial.tsx, `visible` prop añadida a FramePickerModal, `selectCountry`/`myCountry` añadidas a i18n.ts.
-
-**Previous sessions' features**:
-- **Room codes for online play**: Online modal now has 3 tabs — Buscar (auto-matchmaking), Crear Sala (6-char code generator), Unirse (code entry with validation). All 3 languages (ES/EN/PT).
-- **Friend invite → auto-game**: Inviting an online friend (75% accept, 25% refuse, 1.5-3s delay). If accepted, navigates straight to game-online with their name as the rival. Offline friends have 20% acceptance rate.
-- **Deal animation in online mode**: `game-online.tsx` now has a "dealing" phase after countdown — full-screen card shuffle/deal animation before gameplay starts.
-- **Login UI (Google/Facebook)**: New `app/login.tsx` with casino dark theme. "Continue with Google/Facebook" → "Coming soon" alert. "Jugar sin cuenta" → main app. Profile tab shows Account section with link/logout options.
-- **Light mode fixes**: `app/(tabs)/index.tsx` — game mode descriptions, dividers, card borders all use `theme.*` variables instead of hardcoded dark colors.
-- **i18n store & BP labels**: Effect descriptions in store now fully translated EN/PT. BP reward labels localized. Achievement rarity labels use `T()`.
-- **Expanded sound events**: 6 new events — last_card (UNO moment), combo, friend_request, invite_accepted, deal_card, tension. `playCardFlip` randomizes volume 0.8-1.0. `game.tsx` triggers last_card when hand reaches 1 card.
-- **Crash fix (keyboard-controller)**: Removed `<KeyboardProvider>` — `react-native-keyboard-controller` requires native linking that Expo Go doesn't have (`bindings.native.js` explicitly warns "You are not using Expo Go"). Replaced `KeyboardAwareScrollViewCompat` with plain `ScrollView`.
-- **Previous sessions**: Network guard ✓ | expo-audio downgrade ✓ | netinfo downgrade ✓ | Google/Facebook OAuth modal ✓ | Global friend requests ✓ | i18n Win/Lose ✓ | i18n hints ✓ | Friends chat ✓ | 981 achievements ✓ | 800 BP tiers ✓
-
-Targets iOS, Android, and Web (via Expo + React Native Web). Dark casino-themed UI: felt-green (`#0a1a0f`) background, gold (`#D4AF37`) accents, Nunito fonts.
-
----
+Ocho Locos is a mobile card game application, a Spanish-language adaptation of "Crazy Eights," developed using Expo (React Native) for the frontend and Express.js for the backend. The game offers extensive features including 6 game modes, local and online multiplayer, a customizable store with over 420 items, 981 achievements, an 800-tier battle pass, daily rewards, and an emote system. The app also supports avatar customization, a 3-language switcher (ES/EN/PT-BR), swipe tab navigation, and light/dark mode. A key design principle is that all core game logic executes on-device, with the backend primarily serving as an API scaffold and static asset server. The project aims to deliver a "Free Fire-style epic update" experience, focusing on realistic social interactions (friend requests, chat), competitive rankings with distinct tiers, and an immersive UI with dramatic victory/defeat overlays and animated card play effects.
 
 ## User Preferences
 
@@ -33,227 +10,39 @@ Preferred communication style: Simple, everyday language.
 No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
 "OCHO LOCOS" brand name NEVER translates.
 
----
-
 ## System Architecture
 
 ### Frontend (Expo / React Native)
-- **Routing**: Expo Router (file-based). Root layout at `app/_layout.tsx`, tabs at `app/(tabs)/`
-- **State**: React Context for profile + game state, AsyncStorage for persistence
-- **Styling**: `StyleSheet` only, no external CSS/styled-components
-- **Fonts**: Nunito (400Regular, 700Bold, 900ExtraBold) from `@expo-google-fonts/nunito`
-- **Storage key**: `"ocho_profile_v3"` in AsyncStorage
-- **i18n**: `lib/i18n.ts` with ES/EN/PT keys; `hooks/useT.ts` hook reads language from ProfileContext
-- **achTranslations**: `lib/achTranslations.ts` — all 114 achievement titles+descriptions, 8 emote labels, 6 mode names+descriptions, 5 difficulty names+descriptions in ES/EN/PT; exports: `achTitle()`, `achDesc()`, `emoteLabel()`, `modeName()`, `modeDesc()`, `diffName()`, `diffDesc()`
-- **Theme**: `hooks/useTheme.ts` returns `DarkColors` or `LightColors` from `constants/colors.ts` based on `profile.darkMode`; achievements.tsx and profile.tsx now use inline theme overrides for full light-mode support
+- **Routing**: Expo Router (file-based) with root layout (`app/_layout.tsx`) and tab navigation (`app/(tabs)/`).
+- **State Management**: React Context for profile and game states, with AsyncStorage for persistence.
+- **Styling**: Exclusively uses React Native's `StyleSheet`.
+- **Fonts**: Nunito (400Regular, 700Bold, 900ExtraBold) from `@expo-google-fonts/nunito`.
+- **Internationalization (i18n)**: `lib/i18n.ts` for ES/EN/PT translations, `hooks/useT.ts` for language selection from ProfileContext. `lib/achTranslations.ts` handles localized achievement, emote, mode, and difficulty descriptions.
+- **Theming**: `hooks/useTheme.ts` dynamically applies `DarkColors` or `LightColors` from `constants/colors.ts` based on `profile.darkMode` setting. The UI adopts a dark casino theme (felt-green with gold accents) with a corresponding light mode.
+- **Core Game Logic**: `lib/gameEngine.ts` implements all card game mechanics, including special card effects (2, 3, 7, 8, 10, J, Joker) and AI strategies tailored across five difficulty levels (Easy to Expert).
+- **Multiplayer**: Supports local pass-device multiplayer (`game-multi.tsx`) and simulated online multiplayer (`game-online.tsx`) with CPU profiles acting as rivals.
+- **Animation**: Utilizes Reanimated for shuffle and deal animations, and Animated Views for particle effects and UI banners.
+- **Store System**: Features 5 categories (card_back, avatar, frame, title, effect) with 70 items each, totaling 350 items, each with rarity levels and translated labels.
+- **Battle Pass & Achievements**: An 800-tier battle pass and 981 achievements with progressive XP requirements and coin/XP rewards.
+- **Audio System**: Manages background music and 18 distinct sound effects using `expo-audio`, with route-based music switching and settings synchronization.
 
 ### Backend (Express.js)
-- Runs on port 5000
-- Minimal API scaffold + serves `server/templates/landing-page.html`
-- No database currently needed (all game data stored on-device)
+- Runs on port 5000.
+- Serves as a minimal API scaffold and static asset server, including `server/templates/landing-page.html`.
+- No database is currently required as all game data is stored on-device.
+- **Authentication System**: Features JWT-like token authentication with PBKDF2 password hashing. Supports user registration, login, and integrations for Google and Facebook OAuth. User data is stored in `/tmp/ocho_users.json`.
 
----
+## External Dependencies
 
-## Project Structure
-
-```
-app/
-  _layout.tsx           ← Root layout (providers: Query, Gesture, Keyboard, Profile, Game; AudioManager)
-  (tabs)/
-    _layout.tsx         ← Tab bar with useT() for runtime language switching (Jugar/Play/Jogar etc.)
-    index.tsx           ← Play screen: mode selection, stats, quick start (fully i18n + light/dark)
-    achievements.tsx    ← Achievements + Battle Pass screens (100 achievements, 100-tier BP)
-    store.tsx           ← Item shop (70 items × 5 categories; rarity labels translated)
-    profile.tsx         ← Player profile, stats, avatar/title picker (multiplayer stats included)
-  game.tsx              ← Main game screen; DealAnimation receives player's backColors+backAccent
-  game-multi.tsx        ← Local multiplayer game (pass-device flow; fully i18n)
-  game-online.tsx       ← Online multiplayer (simulated lobby + game; fully i18n; 100 CPU profiles with photos)
-  tutorial.tsx          ← Interactive step-by-step tutorial (8 steps)
-  rules.tsx             ← Static rules reference
-  settings.tsx          ← Settings (audio, language ES/EN/PT, dark/light mode toggle, reset)
-
-components/
-  PlayingCard.tsx       ← Card component (faceUp/faceDown, sizes sm/md/lg)
-  DealAnimation.tsx     ← Shuffle + deal animation overlay (Reanimated)
-  AvatarDisplay.tsx     ← Avatar icon or photo with gradient frame ring
-  ErrorBoundary.tsx     ← Error boundary with reload
-
-context/
-  ProfileContext.tsx    ← Player profile, coins, XP, stats (incl. localMulti/onlineMulti), achievements progress
-  GameContext.tsx       ← Game state machine, session tracking
-
-lib/
-  gameEngine.ts         ← Core game logic (deck, hands, play/draw/AI turns, special cards 2/3/7/10/J/Joker)
-  gameModes.ts          ← 6 modes × 5 difficulties (easy/normal/intermediate/hard/expert)
-  achievements.ts       ← 114 achievement definitions (common/rare/epic/legendary)
-  storeItems.ts         ← 350 store items (70 each: card backs, avatars, frames, titles, effects)
-  battlePass.ts         ← 100-tier battle pass, XP/level helpers (XP_FOR_LEVEL, getPlayerLevel, etc.)
-  cpuProfiles.ts        ← 12 CPU player profiles with avatar/name/level/title
-  audioManager.ts       ← Audio system using expo-audio: music + SFX + haptics
-  sounds.ts             ← SoundEvent dispatcher with 18 events (wraps audioManager)
-  i18n.ts               ← All UI translations (ES/EN/PT) — 260+ keys
-  query-client.ts       ← React Query client + API URL helper
-
-hooks/
-  useT.ts               ← Translation hook; reads profile.language from context
-  useTheme.ts           ← Returns DarkColors or LightColors based on profile.darkMode
-  useSwipeTabs.ts       ← Swipe gesture handlers for tab navigation
-
-constants/
-  colors.ts             ← DarkColors + LightColors (both exported); Colors = DarkColors (legacy)
-
-assets/sounds/
-  card-flip.wav, card-draw.wav, shuffle.wav, win.wav, lose.wav, button.wav, wild.wav
-  menu-music.wav (8-bar jazz loop), game-music.wav (tense minor loop)
-```
-
----
-
-## Game Modes
-
-| Mode        | Cards | Notes                             |
-|-------------|-------|-----------------------------------|
-| Clásico     | 8     | Standard game with difficulty     |
-| Relámpago   | 5     | Fast mode                         |
-| Torneo      | 8     | Best of 3 rounds                  |
-| Cooperativo | 7     | 2v2 (simulated ally)              |
-| Desafíos    | 7     | Daily/weekly challenges           |
-| Práctica    | 7     | No penalty, hints enabled         |
-
-## Difficulties: Easy / Normal / Intermediate / Hard / Expert
-- Expert difficulty: 8-second countdown timer per player turn (auto-draws on expiry)
-- AI strategy: random (easy) → optimal suit matching (expert)
-- Coin multipliers: 0.8x → 1.0x → 1.3x → 1.7x → 2.0x
-
-## Special Cards (fully implemented in gameEngine.ts)
-- 2: Draw 2 accumulative; counter with 2/Ace/Joker
-- 3: Skip opponent's turn + extra turn
-- 7: Draw 2 accumulative; counter with 7/Joker
-- 8: Wild card; choose new active suit
-- 10: Reverse direction (extra turn in 2-player)
-- J: Repeat turn with same suit; CPU must play jSuit or 8/Joker
-- Joker (rank 14): Wild like 8, or adds 5 to pendingDraw stack
-
----
-
-## i18n System
-
-- **3 languages**: Spanish (es), English (en), Portuguese Brazil (pt)
-- **lib/i18n.ts**: 260+ translation keys, all 3 languages per key
-- **hooks/useT.ts**: `useT()` hook returns `T(key)` function reading profile.language
-- **Applied to**: All tabs, game screens, modals, settings, store, achievements, profile, multiplayer
-- **"OCHO LOCOS"** brand name NEVER translates in any language
-
----
-
-## Light/Dark Mode
-
-- **constants/colors.ts**: `DarkColors` (casino felt dark) + `LightColors` (light green felt)
-- **hooks/useTheme.ts**: returns correct palette based on `profile.darkMode !== false`
-- **Toggle**: Settings screen → Display section → Dark Mode toggle
-- **Applied to**: index.tsx, store.tsx, settings.tsx, game-online.tsx, game-multi.tsx
-
----
-
-## Store System
-
-- 5 categories: card_back, avatar, frame, title, effect
-- **70 items per category = 350 total**
-- Rarities: common / rare / epic / legendary
-- Rarity labels fully translated (COMÚN/COMMON/COMUM etc.)
-- Item "Obtained/Obtenido/Obtido" and "Free/Gratis/Grátis" labels translated
-- Purchase modal: price, cancel, buy button all translated
-- Category bar: horizontal ScrollView with `flexShrink: 0` to prevent clipping
-
----
-
-## Battle Pass
-
-- **100 tiers** with progressive XP requirements (Tier 1 = 0 XP, Tier 100 = 8,603,000 XP)
-- Rewards: coins, card backs, avatars, frames, titles, effects
-- Claimable from Achievements tab → Battle Pass sub-tab
-- `getCurrentBattlePassTier(totalXp)` utility in battlePass.ts
-
----
-
-## Achievements
-
-- **116 achievement definitions** across rarities: common / rare / epic / legendary / hidden
-- Categories: wins, modes, special cards, hands, coins, streaks, store, difficulty, social, multiplayer, XP, battle pass, language, theme, gameplay specifics
-- Coin + XP rewards per achievement
-
----
-
-## Audio System
-
-- `initAudio()` + `preloadSounds()` called in `_layout.tsx` AudioManager component
-- Music switches route-based via `useSegments`: menuMusic ↔ gameMusic
-- Settings sync via `syncSettings(musicEnabled, sfxEnabled)`
-- SFX: card_play, card_draw, card_wild, card_deal, shuffle, win, lose, button_press, achievement, purchase, error, turn_change, daily_reward, level_up, battle_pass_unlock, purchase_success, notification
-- All audio calls wrapped in safe() try/catch; web audio autoplay gracefully handled
-
----
-
-## Profile Stats
-
-- `localMultiWins`, `localMultiGames`, `onlineMultiWins`, `onlineMultiGames` tracked in PlayerStats
-- Profile screen shows multiplayer stats under BY MODE section
-
----
-
-## Daily Rewards
-
-- 7-day rotating cycle stored in ProfileContext
-- Claimed once per day; modal auto-shows 1.5s after home screen loads
-- `canClaimDailyReward` and `todaysDailyReward` exposed from useProfile()
-
----
-
-## Multiplayer
-
-### Local Multiplayer
-- 2-4 players, pass-device UI with dark overlay between turns
-- Oval table layout; face-down fans for opponents, face-up scrollable hand for current player
-- Engine: `lib/multiplayerEngine.ts`
-
-### Online Multiplayer (Simulated)
-- Lobby: searching → players join → countdown → game
-- CPU profiles act as real online rivals (flag emoji, level, win rate)
-- Blue navy-themed table; CPU auto-plays after 1-2s delay
-- `pass_device` phase auto-confirmed for ALL players (no manual device passing in online mode)
-- 8/Joker cards: `multiPlayCard(gs, card)` → `choosing_suit` phase → SuitPicker → `multiChooseSuit(gs, suit)`
-- Result overlay: translated "¡GANASTE!/YOU WON!/VOCÊ GANHOU!" or "DERROTA/DEFEAT"
-
----
-
-## Key Design Decisions
-
-- `RARITY_COLORS_MAP` defined locally in screens; rarity labels via `useRarityLabel()` hook in store.tsx
-- Audio: expo-audio (not expo-av): `createAudioPlayer()` for SFX, `player.loop = true` for BGM
-- Profile saved to AsyncStorage after every update
-- Game phase starts as "playing" — deal animation is purely visual overlay
-- AI turn runs with 800–1400ms delay to feel natural
-- Tournament mode: 3 rounds, best of 2 wins
-
----
-
-## Authentication System
-
-- **Backend**: `server/auth.ts` — JWT-like token auth with PBKDF2 password hashing; users stored in `/tmp/ocho_users.json`
-- **Endpoints**: `POST /api/auth/register`, `/login`, `/verify`, `/google`, `/facebook`
-- **AuthContext**: `context/AuthContext.tsx` — manages user state, persists token to AsyncStorage
-- **Login screen**: `app/login.tsx` — 3 modes: menu (Google/FB/Email options), register form, login form
-- **Profile screen**: shows linked username + Salir button when authenticated; "Vincular Cuenta" when not
-- **Google OAuth**: requires `EXPO_PUBLIC_GOOGLE_CLIENT_ID` in Replit Secrets; shows setup alert if missing
-- **Facebook OAuth**: requires `EXPO_PUBLIC_FACEBOOK_APP_ID` + `FACEBOOK_APP_SECRET` in Replit Secrets
-- **Guest mode**: plays locally, state saved to AsyncStorage under "ocho_profile_v3"
-- **Packages added**: `expo-auth-session`, `expo-crypto@~15.0.0`
-
-## Workflows
-
-- **Start Backend**: `npm run server:dev` — Express on port 5000
-- **Start Frontend**: `npm run expo:dev` — Expo Metro on port 8081
-
-## Deploy
-
-Backend + static site on port 5000. Mobile app via Expo Go (scan QR) or web build.
+- **Expo / React Native**: Frontend framework.
+- **Express.js**: Backend server.
+- **@expo/vector-icons (Ionicons)**: For all in-app icons.
+- **@expo-google-fonts/nunito**: Provides Nunito font variations.
+- **AsyncStorage**: For on-device data persistence.
+- **React Context**: For state management.
+- **React Query**: For client-side data fetching and caching.
+- **Reanimated**: For complex UI animations.
+- **expo-audio**: For managing in-game sounds and music.
+- **expo-auth-session**: For authentication flows.
+- **expo-crypto**: For cryptographic functions in authentication.
+- **NetInfo**: For network status detection.

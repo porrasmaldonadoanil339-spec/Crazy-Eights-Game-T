@@ -88,13 +88,23 @@ export function addStars(rp: RankedProfile, delta: number): RankedProfile {
   };
 }
 
-export function getRankUpReward(rank: number, division: number) {
-  // Simple rewards for ranking up
-  const baseCoins = (rank + 1) * 50;
-  const baseXP = (rank + 1) * 100;
-  
-  return [
-    { type: "coins", value: baseCoins, label: `${baseCoins} Monedas` },
-    { type: "xp", value: baseXP, label: `${baseXP} XP` },
-  ];
+export function getRankUpRewards(newRank: number): string[] {
+  // Return 3 item IDs from store appropriate to new rank
+  // Items from lib/storeItems.ts
+  if (newRank <= 1) { // Hierro, Bronce
+    return ["back_crimson", "title_rookie", "frame_wood"];
+  } else if (newRank <= 3) { // Plata, Oro
+    return ["back_emerald", "title_regular", "frame_stone"];
+  } else if (newRank <= 5) { // Platino, Diamante
+    return ["back_gold", "title_pro", "frame_silver"];
+  } else if (newRank <= 7) { // Épico, Mítico
+    return ["back_ruby", "title_strategist", "frame_gold"];
+  } else { // Maestro and above
+    return ["back_galaxy", "title_legend_l", "frame_coal"];
+  }
+}
+
+export function getRankUpBonusCoins(newRank: number): number {
+  const bonuses = [500, 800, 1200, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 10000];
+  return bonuses[newRank] || 500;
 }

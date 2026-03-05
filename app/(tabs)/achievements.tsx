@@ -130,7 +130,7 @@ export default function AchievementsScreen() {
         >
           <Ionicons name="trophy" size={16} color={activeTab === "ranked" ? themeGold : themeColors.textMuted} />
           <Text style={[styles.tabLabel, { color: activeTab === "ranked" ? themeGold : themeColors.textMuted }]}>
-            {lang === "en" ? "Qualifying" : lang === "pt" ? "Classific." : "Clasificat."}
+            {T("tabAchievements") === "Logros" ? "Clasificatorio" : T("tabAchievements") === "Achievements" ? "Qualifying" : "Classific."}
           </Text>
         </Pressable>
       </View>
@@ -265,18 +265,34 @@ export default function AchievementsScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={[styles.rankMiniLabel, { color: themeColors.textMuted }]}>{T("yourTurn")}</Text>
                 <Text style={[styles.rankMiniName, { color: rankInfo.color }]}>
-                  {T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName} {profile.rankedProfile.division + 1}
+                  {T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName} {DIVISIONS[profile.rankedProfile.division]}
                 </Text>
               </View>
               <Pressable
                 onPress={() => router.push("/ranked")}
                 style={({ pressed }) => [styles.viewRankBtn, { backgroundColor: themeGold }, pressed && { opacity: 0.8 }]}
               >
-                <Text style={styles.viewRankText}>{T("ok")}</Text>
+                <Ionicons name="play" size={20} color="#1a0a00" />
               </Pressable>
             </View>
+
+            <View style={[styles.infoBox, { backgroundColor: themeGold + "11", borderColor: themeGold + "33" }]}>
+              <Ionicons name="information-circle" size={20} color={themeGold} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.infoTitle, { color: themeGold }]}>
+                  {lang === "en" ? "How to Rank Up?" : lang === "pt" ? "Como Subir de Rank?" : "¿Cómo ascender?"}
+                </Text>
+                <Text style={[styles.infoText, { color: themeColors.textMuted }]}>
+                  {lang === "en" 
+                    ? `Win matches in Ranked mode to earn stars. Collect ${profile.rankedProfile.maxStars} stars to promote to the next division. Promote to division I to reach the next rank and earn exclusive rewards!`
+                    : lang === "pt"
+                    ? `Ganhe partidas no modo Classificatório para ganhar estrelas. Colete ${profile.rankedProfile.maxStars} estrelas para subir para a próxima divisão. Suba para a divisão I para alcançar el próximo rank e ganhar recompensas exclusivas!`
+                    : `Gana partidas en modo Clasificatoria para ganar estrellas. Colecciona ${profile.rankedProfile.maxStars} estrellas para subir a la siguiente división. ¡Sube de la división I para alcanzar el siguiente rango y ganar recompensas exclusivas!`}
+                </Text>
+              </View>
+            </View>
             
-            <Text style={[styles.rarityHeader, { color: themeColors.text, marginTop: 24 }]}>
+            <Text style={[styles.rarityHeader, { color: themeColors.text, marginTop: 12 }]}>
               {lang === "en" ? "Qualifying Ranking" : lang === "pt" ? "Ranking de Qualificação" : "Ranking Clasificatorio"}
             </Text>
             {CPU_PROFILES.map((cpu, i) => {
@@ -434,8 +450,13 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 12,
     padding: 12, borderRadius: 14, marginBottom: 8,
   },
-  rankNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, width: 25 },
+  rankNum: { fontFamily: "Nunito_700Bold", fontSize: 14, minWidth: 28, textAlign: "right", marginRight: 8 },
   rankInfo: { flex: 1 },
   rankPlayerName: { fontFamily: "Nunito_700Bold", fontSize: 14 },
   rankPlayerMeta: { fontFamily: "Nunito_400Regular", fontSize: 12 },
+  infoBox: {
+    flexDirection: "row", gap: 12, padding: 12, borderRadius: 12, borderWidth: 1, marginTop: 4,
+  },
+  infoTitle: { fontFamily: "Nunito_700Bold", fontSize: 13, marginBottom: 2 },
+  infoText: { fontFamily: "Nunito_400Regular", fontSize: 11, lineHeight: 15 },
 });

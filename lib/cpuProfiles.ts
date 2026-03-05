@@ -362,25 +362,58 @@ export const CPU_PROFILES: CpuProfile[] = [
   { name: "AsanteMX21",    avatarId: "avatar_emperor",   titleId: "title_eternal",      level: 99, avatarColor: "#D4AF37", avatarIcon: "ribbon" },
 ];
 
-export function getRandomCpuProfile(seed?: number): CpuProfile {
+export function getRandomCpuProfile(seed?: number, playerLevel?: number, isExpert?: boolean): CpuProfile {
+  if (isExpert) {
+    const experts = CPU_PROFILES.filter(p => p.level >= 80);
+    const pool = experts.length > 0 ? experts : CPU_PROFILES;
+    const idx = seed !== undefined ? Math.abs(seed) % pool.length : Math.floor(Math.random() * pool.length);
+    return pool[idx];
+  }
+
+  if (playerLevel !== undefined) {
+    const minLevel = Math.max(1, playerLevel - 5);
+    const maxLevel = playerLevel + 5;
+    const nearby = CPU_PROFILES.filter(p => p.level >= minLevel && p.level <= maxLevel);
+    
+    if (nearby.length > 0) {
+      const idx = seed !== undefined ? Math.abs(seed) % nearby.length : Math.floor(Math.random() * nearby.length);
+      return nearby[idx];
+    }
+    
+    // Fallback: pick from 10 closest
+    const sorted = [...CPU_PROFILES].sort((a, b) => Math.abs(a.level - playerLevel) - Math.abs(b.level - playerLevel));
+    const pool = sorted.slice(0, 10);
+    const idx = seed !== undefined ? Math.abs(seed) % pool.length : Math.floor(Math.random() * pool.length);
+    return pool[idx];
+  }
+
   const idx = seed !== undefined
     ? Math.abs(seed) % CPU_PROFILES.length
     : Math.floor(Math.random() * CPU_PROFILES.length);
   return CPU_PROFILES[idx];
 }
 
-export function pickCpuProfiles(n: number, seed?: number): CpuProfile[] {
-  const total = CPU_PROFILES.length;
+export function pickCpuProfiles(n: number, seed?: number, playerLevel?: number, isExpert?: boolean): CpuProfile[] {
+  const pool = isExpert 
+    ? CPU_PROFILES.filter(p => p.level >= 80)
+    : playerLevel !== undefined
+      ? CPU_PROFILES.filter(p => p.level >= Math.max(1, playerLevel - 5) && p.level <= playerLevel + 5)
+      : CPU_PROFILES;
+
+  const actualPool = pool.length >= n ? pool : (playerLevel !== undefined ? [...CPU_PROFILES].sort((a, b) => Math.abs(a.level - playerLevel) - Math.abs(b.level - playerLevel)).slice(0, Math.max(n, 20)) : CPU_PROFILES);
+
+  const total = actualPool.length;
   const picks: CpuProfile[] = [];
   const used = new Set<number>();
-  let s = seed ?? Math.floor(Math.random() * total);
+  let s = seed ?? Math.floor(Math.random() * 1000000);
+  
   while (picks.length < Math.min(n, total)) {
     const idx = Math.abs(s) % total;
     if (!used.has(idx)) {
-      picks.push(CPU_PROFILES[idx]);
+      picks.push(actualPool[idx]);
       used.add(idx);
     }
-    s = (s * 6364136223846793005 + 1442695040888963407) & 0x7fffffff;
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
     if (used.size === total) break;
   }
   return picks;

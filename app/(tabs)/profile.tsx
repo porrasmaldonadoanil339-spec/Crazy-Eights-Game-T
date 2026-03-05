@@ -24,19 +24,109 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 const TITLE_ITEMS = STORE_ITEMS.filter((i) => i.category === "title");
 
 const COUNTRIES = [
-  { code: "CO", name: "Colombia", flag: "🇨🇴" },
-  { code: "MX", name: "México", flag: "🇲🇽" },
-  { code: "ES", name: "España", flag: "🇪🇸" },
+  // América del Sur
   { code: "AR", name: "Argentina", flag: "🇦🇷" },
-  { code: "US", name: "USA", flag: "🇺🇸" },
-  { code: "BR", name: "Brasil", flag: "🇧🇷" },
-  { code: "VE", name: "Venezuela", flag: "🇻🇪" },
-  { code: "PE", name: "Perú", flag: "🇵🇪" },
-  { code: "CL", name: "Chile", flag: "🇨🇱" },
-  { code: "EC", name: "Ecuador", flag: "🇪🇨" },
-  { code: "UY", name: "Uruguay", flag: "🇺🇾" },
-  { code: "PY", name: "Paraguay", flag: "🇵🇾" },
   { code: "BO", name: "Bolivia", flag: "🇧🇴" },
+  { code: "BR", name: "Brasil", flag: "🇧🇷" },
+  { code: "CL", name: "Chile", flag: "🇨🇱" },
+  { code: "CO", name: "Colombia", flag: "🇨🇴" },
+  { code: "EC", name: "Ecuador", flag: "🇪🇨" },
+  { code: "GY", name: "Guyana", flag: "🇬🇾" },
+  { code: "PY", name: "Paraguay", flag: "🇵🇾" },
+  { code: "PE", name: "Perú", flag: "🇵🇪" },
+  { code: "SR", name: "Surinam", flag: "🇸🇷" },
+  { code: "UY", name: "Uruguay", flag: "🇺🇾" },
+  { code: "VE", name: "Venezuela", flag: "🇻🇪" },
+  // América Central & Caribe
+  { code: "CR", name: "Costa Rica", flag: "🇨🇷" },
+  { code: "CU", name: "Cuba", flag: "🇨🇺" },
+  { code: "DO", name: "Rep. Dominicana", flag: "🇩🇴" },
+  { code: "SV", name: "El Salvador", flag: "🇸🇻" },
+  { code: "GT", name: "Guatemala", flag: "🇬🇹" },
+  { code: "HN", name: "Honduras", flag: "🇭🇳" },
+  { code: "JM", name: "Jamaica", flag: "🇯🇲" },
+  { code: "NI", name: "Nicaragua", flag: "🇳🇮" },
+  { code: "PA", name: "Panamá", flag: "🇵🇦" },
+  { code: "PR", name: "Puerto Rico", flag: "🇵🇷" },
+  { code: "TT", name: "Trinidad y Tobago", flag: "🇹🇹" },
+  { code: "MX", name: "México", flag: "🇲🇽" },
+  // América del Norte
+  { code: "CA", name: "Canadá", flag: "🇨🇦" },
+  { code: "US", name: "USA", flag: "🇺🇸" },
+  // Europa
+  { code: "BE", name: "Bélgica", flag: "🇧🇪" },
+  { code: "CH", name: "Suiza", flag: "🇨🇭" },
+  { code: "DE", name: "Alemania", flag: "🇩🇪" },
+  { code: "DK", name: "Dinamarca", flag: "🇩🇰" },
+  { code: "ES", name: "España", flag: "🇪🇸" },
+  { code: "FR", name: "Francia", flag: "🇫🇷" },
+  { code: "GB", name: "Reino Unido", flag: "🇬🇧" },
+  { code: "IT", name: "Italia", flag: "🇮🇹" },
+  { code: "NL", name: "Países Bajos", flag: "🇳🇱" },
+  { code: "NO", name: "Noruega", flag: "🇳🇴" },
+  { code: "PL", name: "Polonia", flag: "🇵🇱" },
+  { code: "PT", name: "Portugal", flag: "🇵🇹" },
+  { code: "RU", name: "Rusia", flag: "🇷🇺" },
+  { code: "SE", name: "Suecia", flag: "🇸🇪" },
+  { code: "TR", name: "Turquía", flag: "🇹🇷" },
+  // Asia
+  { code: "AE", name: "EAU", flag: "🇦🇪" },
+  { code: "CN", name: "China", flag: "🇨🇳" },
+  { code: "IL", name: "Israel", flag: "🇮🇱" },
+  { code: "IN", name: "India", flag: "🇮🇳" },
+  { code: "ID", name: "Indonesia", flag: "🇮🇩" },
+  { code: "JP", name: "Japón", flag: "🇯🇵" },
+  { code: "KR", name: "Corea del Sur", flag: "🇰🇷" },
+  { code: "PH", name: "Filipinas", flag: "🇵🇭" },
+  { code: "PK", name: "Pakistán", flag: "🇵🇰" },
+  { code: "TH", name: "Tailandia", flag: "🇹🇭" },
+  { code: "VN", name: "Vietnam", flag: "🇻🇳" },
+  { code: "SA", name: "Arabia Saudita", flag: "🇸🇦" },
+  // África
+  { code: "EG", name: "Egipto", flag: "🇪🇬" },
+  { code: "ET", name: "Etiopía", flag: "🇪🇹" },
+  { code: "GH", name: "Ghana", flag: "🇬🇭" },
+  { code: "KE", name: "Kenia", flag: "🇰🇪" },
+  { code: "MA", name: "Marruecos", flag: "🇲🇦" },
+  { code: "NG", name: "Nigeria", flag: "🇳🇬" },
+  { code: "SN", name: "Senegal", flag: "🇸🇳" },
+  { code: "TZ", name: "Tanzania", flag: "🇹🇿" },
+  { code: "ZA", name: "Sudáfrica", flag: "🇿🇦" },
+  // Oceanía
+  { code: "AU", name: "Australia", flag: "🇦🇺" },
+  { code: "FJ", name: "Fiyi", flag: "🇫🇯" },
+  { code: "NZ", name: "Nueva Zelanda", flag: "🇳🇿" },
+];
+
+const COUNTRY_SECTIONS = [
+  {
+    continent: { es: "América del Sur", en: "South America", pt: "América do Sul" },
+    countries: ["AR", "BO", "BR", "CL", "CO", "EC", "GY", "PY", "PE", "SR", "UY", "VE"]
+  },
+  {
+    continent: { es: "América Central & Caribe", en: "Central America & Caribbean", pt: "América Central & Caribe" },
+    countries: ["CR", "CU", "DO", "SV", "GT", "HN", "JM", "NI", "PA", "PR", "TT", "MX"]
+  },
+  {
+    continent: { es: "América del Norte", en: "North America", pt: "América do Norte" },
+    countries: ["CA", "US"]
+  },
+  {
+    continent: { es: "Europa", en: "Europe", pt: "Europa" },
+    countries: ["BE", "CH", "DE", "DK", "ES", "FR", "GB", "IT", "NL", "NO", "PL", "PT", "RU", "SE", "TR"]
+  },
+  {
+    continent: { es: "Asia", en: "Asia", pt: "Ásia" },
+    countries: ["AE", "CN", "IL", "IN", "ID", "JP", "KR", "PH", "PK", "TH", "VN", "SA"]
+  },
+  {
+    continent: { es: "África", en: "Africa", pt: "África" },
+    countries: ["EG", "ET", "GH", "KE", "MA", "NG", "SN", "TZ", "ZA"]
+  },
+  {
+    continent: { es: "Oceanía", en: "Oceania", pt: "Oceania" },
+    countries: ["AU", "FJ", "NZ"]
+  },
 ];
 
 function EditNameModal({
@@ -196,6 +286,8 @@ function CountryPickerModal({
   visible: boolean; currentCode: string;
   onSelect: (code: string) => void; onClose: () => void;
 }) {
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
   const T = useT();
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
@@ -206,24 +298,35 @@ function CountryPickerModal({
             <Pressable onPress={onClose}><Ionicons name="close" size={22} color={Colors.textMuted} /></Pressable>
           </View>
           <ScrollView contentContainerStyle={styles.countryList}>
-            {COUNTRIES.map((c) => (
-              <Pressable
-                key={c.code}
-                onPress={() => { onSelect(c.code); onClose(); }}
-                style={[styles.countryItem, c.code === currentCode && styles.countryItemSelected]}
-              >
-                <View style={styles.flagContainer}>
-                  {Platform.OS === "web" ? (
-                    <View style={[styles.webFlag, { backgroundColor: Colors.gold + "44" }]}>
-                      <Text style={styles.webFlagText}>{c.code}</Text>
-                    </View>
-                  ) : (
-                    <Text style={styles.flagEmoji}>{c.flag}</Text>
-                  )}
-                </View>
-                <Text style={[styles.countryName, c.code === currentCode && { color: Colors.gold }]}>{c.name}</Text>
-                {c.code === currentCode && <Ionicons name="checkmark" size={20} color={Colors.gold} />}
-              </Pressable>
+            {COUNTRY_SECTIONS.map((section, sIdx) => (
+              <View key={`section-${sIdx}`}>
+                <Text style={styles.sectionHeader}>
+                  {section.continent[lang]}
+                </Text>
+                {section.countries.map((code) => {
+                  const c = COUNTRIES.find(cnt => cnt.code === code);
+                  if (!c) return null;
+                  return (
+                    <Pressable
+                      key={c.code}
+                      onPress={() => { onSelect(c.code); onClose(); }}
+                      style={[styles.countryItem, c.code === currentCode && styles.countryItemSelected]}
+                    >
+                      <View style={styles.flagContainer}>
+                        {Platform.OS === "web" ? (
+                          <View style={[styles.webFlag, { backgroundColor: Colors.gold + "44" }]}>
+                            <Text style={styles.webFlagText}>{c.code}</Text>
+                          </View>
+                        ) : (
+                          <Text style={styles.flagEmoji}>{c.flag}</Text>
+                        )}
+                      </View>
+                      <Text style={[styles.countryName, c.code === currentCode && { color: Colors.gold }]}>{c.name}</Text>
+                      {c.code === currentCode && <Ionicons name="checkmark" size={20} color={Colors.gold} />}
+                    </Pressable>
+                  );
+                })}
+              </View>
             ))}
           </ScrollView>
         </View>
@@ -809,5 +912,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text,
     marginLeft: 12,
+  },
+  sectionHeader: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 13,
+    color: Colors.gold,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
   },
 });

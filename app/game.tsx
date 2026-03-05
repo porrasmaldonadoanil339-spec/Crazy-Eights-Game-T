@@ -538,7 +538,6 @@ export default function GameScreen() {
   const cpuEmoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryCount = useRef(0);
   const prevLevel = useRef(level);
-  const [cpuProfile, setCpuProfile] = useState<CpuProfile | null>(null);
   const [suitPickerVisible, setSuitPickerVisible] = useState(false);
   const [showTournamentModal, setShowTournamentModal] = useState(false);
   const [tournamentScores, setTournamentScores] = useState<[number, number]>([0, 0]);
@@ -600,18 +599,10 @@ export default function GameScreen() {
   const isExpert = session?.difficulty === "expert";
   const timerTotal = 8;
 
+  const activeCpu = session?.cpuProfile ?? null;
+
   const currentModeConfig = session?.mode ? getModeById(session.mode) : null;
   const modeName = currentModeConfig ? T(`mode${currentModeConfig.id.charAt(0).toUpperCase() + currentModeConfig.id.slice(1)}` as any) : "";
-
-  // Pick CPU profile — new seed each retry so opponent changes
-  const pickNewCpuProfile = () => {
-    const seed = (Math.floor(Date.now() / 1000) + retryCount.current * 37) % 347;
-    setCpuProfile(getRandomCpuProfile(seed));
-  };
-
-  useEffect(() => {
-    pickNewCpuProfile();
-  }, []);
 
   useEffect(() => {
     if (!dealAnimationDone) {
@@ -998,7 +989,7 @@ export default function GameScreen() {
 
       {/* AI section with CPU emote */}
       <View style={styles.aiSectionWrapper}>
-        <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={cpuProfile} backColors={backColors} backAccent={backAccent} />
+        <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={activeCpu} backColors={backColors} backAccent={backAccent} />
         <EmoteBubble emote={cpuEmote} side="cpu" muted={muteCpuEmotes} />
       </View>
 
@@ -1179,13 +1170,13 @@ export default function GameScreen() {
       )}
 
       {/* Matchmaking screen */}
-      {showMatchmaking && cpuProfile && (
+      {showMatchmaking && activeCpu && (
         <MatchmakingScreen
           playerAvatarId={profile.avatarId}
           playerFrameId={profile.selectedFrameId}
           playerPhotoUri={profile.photoUri || undefined}
           playerName={profile.name}
-          cpuProfile={cpuProfile}
+          cpuProfile={activeCpu}
           onComplete={() => setShowMatchmaking(false)}
         />
       )}
@@ -1211,12 +1202,11 @@ export default function GameScreen() {
           xpEarned={endXp}
           onRestart={() => {
             retryCount.current += 1;
-            pickNewCpuProfile();
             setShowMatchmaking(true);
             if (session) startGame(session.mode, session.difficulty);
           }}
           onHome={() => router.back()}
-          cpuProfile={cpuProfile}
+          cpuProfile={activeCpu}
         />
       )}
 

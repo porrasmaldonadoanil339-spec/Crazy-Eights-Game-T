@@ -34,7 +34,7 @@ const COUNTRIES = [
 
 const PREFIXES = ["Shadow","Dark","Ghost","King","Luna","Neo","Blaze","Storm","Ice","Fire","Night","Steel","Cyber","Ultra","Mega","Alpha","Omega","Hyper","Toxic","Wild","Neon","Void","Iron","Gold","Star"];
 const SUFFIXES = ["Wolf","Rider","Knight","Fury","Nexus","Titan","Storm","Hawk","Blade","Rex","Zero","Nova","Sage","Viper","Fox","Bear","Lion","Eagle","Drake","Wick","Cruz","Snap","Bolt","Rush","Peak"];
-const ICONS = ["person","person-circle","shield","star","trophy","flash","flame","skull","diamond","heart","bolt","eye","leaf","paw","fish","bug","flower","sunny","moon","planet"];
+const ICONS = ["person","person-circle","shield","star","trophy","flash","flame","skull","diamond","heart","flash-sharp","eye","leaf","paw","fish","bug","flower","sunny","moon","planet"];
 const AVATAR_COLORS = ["#E74C3C","#9B59B6","#E67E22","#2ECC71","#1A8FC1","#D4AF37","#C0392B","#27AE60","#8E44AD","#F39C12","#3498DB","#16A085","#E91E8C","#FF5722","#00BCD4","#4CAF50","#FF9800","#795548","#607D8B","#F06292"];
 
 function seededRand(seed: number): number {

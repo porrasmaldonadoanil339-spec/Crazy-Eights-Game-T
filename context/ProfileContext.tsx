@@ -12,7 +12,7 @@ import { ACHIEVEMENTS, Achievement, AchievementId } from "@/lib/achievements";
 import { STORE_ITEMS, StoreItem } from "@/lib/storeItems";
 import { BATTLE_PASS_TIERS, getCurrentBattlePassTier, getPlayerLevel, getXpProgress } from "@/lib/battlePass";
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
-import { RankedProfile, addStars } from "@/lib/ranked";
+import { RankedProfile, addStars, getRankUpRewards, getRankUpBonusCoins } from "@/lib/ranked";
 
 export interface PlayerStats {
   totalGames: number;
@@ -301,10 +301,29 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [update]);
 
   const updateRanked = useCallback((delta: number) => {
-    update((p) => ({
-      ...p,
-      rankedProfile: addStars(p.rankedProfile, delta),
-    }));
+    update((p) => {
+      const nextRanked = addStars(p.rankedProfile, delta);
+      const itemsToAdd: string[] = [];
+      let bonusCoins = 0;
+
+      // Detect rank up
+      if (nextRanked.rank > p.rankedProfile.rank) {
+        bonusCoins = getRankUpBonusCoins(nextRanked.rank);
+        const rewards = getRankUpRewards(nextRanked.rank);
+        rewards.forEach(id => {
+          if (!p.ownedItems.includes(id)) {
+            itemsToAdd.push(id);
+          }
+        });
+      }
+
+      return {
+        ...p,
+        rankedProfile: nextRanked,
+        coins: p.coins + bonusCoins,
+        ownedItems: [...p.ownedItems, ...itemsToAdd],
+      };
+    });
   }, [update]);
 
   const updatePhotoUri = useCallback((uri: string) => {

@@ -19,6 +19,7 @@ import {
 } from "@/lib/gameEngine";
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { getModeById, getDifficultyById } from "@/lib/gameModes";
+import { getRandomCpuProfile, CpuProfile } from "@/lib/cpuProfiles";
 
 export interface GameSession {
   mode: GameModeId;
@@ -30,6 +31,7 @@ export interface GameSession {
   eightsPlayedThisGame: number;
   cardsPlayedThisGame: number;
   maxHandSizeReached: number;
+  cpuProfile: CpuProfile | null;
 }
 
 interface GameContextValue {
@@ -50,7 +52,10 @@ interface GameContextValue {
 
 const GameContext = createContext<GameContextValue | null>(null);
 
+import { useProfile } from "./ProfileContext";
+
 export function GameProvider({ children }: { children: ReactNode }) {
+  const { level: playerLevel } = useProfile();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [session, setSession] = useState<GameSession | null>(null);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
@@ -59,6 +64,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const startGame = useCallback((mode: GameModeId, difficulty: Difficulty) => {
     const modeConfig = getModeById(mode);
     const newState = initGame(modeConfig.cardsPerPlayer, difficulty);
+    const isExpert = difficulty === "expert";
+    const cpuProfile = getRandomCpuProfile(undefined, playerLevel, isExpert);
+
     setSelectedCard(null);
     setDealAnimationDone(false);
     setGameState(newState);
@@ -72,8 +80,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       eightsPlayedThisGame: 0,
       cardsPlayedThisGame: 0,
       maxHandSizeReached: modeConfig.cardsPerPlayer,
+      cpuProfile,
     });
-  }, []);
+  }, [playerLevel]);
 
   const handlePlayCard = useCallback((card: Card, chosenSuit?: Suit) => {
     setGameState((prev) => {
@@ -124,6 +133,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       if (!prev) return prev;
       const modeConfig = getModeById(prev.mode);
       const newState = initGame(modeConfig.cardsPerPlayer, prev.difficulty);
+      const isExpert = prev.difficulty === "expert";
+      const cpuProfile = getRandomCpuProfile(undefined, playerLevel, isExpert);
+
       setDealAnimationDone(false);
       setGameState(newState);
       return {
@@ -133,10 +145,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         cardsDrawnThisGame: 0,
         eightsPlayedThisGame: 0,
         cardsPlayedThisGame: 0,
+        cpuProfile,
       };
     });
     setSelectedCard(null);
-  }, []);
+  }, [playerLevel]);
 
   const getGameResult = useCallback((): "player_wins" | "ai_wins" | "draw" | null => {
     if (!gameState) return null;
