@@ -184,25 +184,6 @@ function TournamentModal({ scores, round, onContinue, onQuit }: {
   );
 }
 
-// ─── Win messages pool ────────────────────────────────────────────────────────
-const WIN_MESSAGES = [
-  "¡Dominas la mesa como un campeón!",
-  "¡Nadie puede contigo hoy!",
-  "¡Las cartas son tuyas, maestro!",
-  "¡Brillante estrategia! ¡Impresionante!",
-  "¡El oponente ni supo lo que pasó!",
-  "¡Eso fue pura magia de cartas!",
-  "¡Eres imparable, sigue así!",
-];
-const LOSE_MESSAGES = [
-  "¡La próxima será tuya, no te rindas!",
-  "El CPU tuvo suerte… ¡hoy no te ganarán!",
-  "¡Cada derrota te hace más fuerte!",
-  "Un buen jugador aprende de cada partida.",
-  "¡Así no, inténtalo de nuevo!",
-  "El oponente estuvo listo hoy. ¡Tú serás el próximo!",
-];
-
 // ─── End modal ────────────────────────────────────────────────────────────────
 function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
@@ -216,8 +197,10 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome }: {
   const titleY = useSharedValue(20);
   const titleOp = useSharedValue(0);
 
-  const winMsg = WIN_MESSAGES[Math.floor(Math.random() * WIN_MESSAGES.length)];
-  const loseMsg = LOSE_MESSAGES[Math.floor(Math.random() * LOSE_MESSAGES.length)];
+  const WIN_MSGS = [T("winMsg0"), T("winMsg1"), T("winMsg2"), T("winMsg3"), T("winMsg4"), T("winMsg5"), T("winMsg6")];
+  const LOSE_MSGS = [T("loseMsg0"), T("loseMsg1"), T("loseMsg2"), T("loseMsg3"), T("loseMsg4"), T("loseMsg5")];
+  const winMsg = WIN_MSGS[Math.floor(Math.random() * WIN_MSGS.length)];
+  const loseMsg = LOSE_MSGS[Math.floor(Math.random() * LOSE_MSGS.length)];
 
   useEffect(() => {
     sc.value = withSpring(1, { damping: 10, stiffness: 120 });
@@ -900,12 +883,12 @@ export default function GameScreen() {
           <View style={styles.selectedHint}>
             <Text style={styles.selectedHintText}>
               {selectedCard.rank === "8"
-                ? "8 Loco · toca de nuevo para elegir palo"
+                ? T("crazy8Hint")
                 : selectedCard.rank === "Joker" && gameState.pendingDraw === 0
-                  ? "Comodín · toca de nuevo para elegir palo"
+                  ? T("jokerChooseSuitHint")
                   : selectedCard.rank === "Joker" && gameState.pendingDraw > 0
-                    ? `Comodín · añade 5 al stack (${gameState.pendingDraw + 5} total)`
-                    : "Toca la carta de nuevo para jugarla"}
+                    ? T("jokerAddStackHint").replace("{n}", String(gameState.pendingDraw + 5))
+                    : T("tapToPlay")}
             </Text>
           </View>
         )}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  View, Text, StyleSheet, Pressable, Alert, TextInput,
+  View, Text, StyleSheet, Pressable, TextInput, Modal,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
@@ -20,7 +20,7 @@ type Mode = "menu" | "login" | "register";
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { login, register, loginWithGoogle, loginWithFacebook, loginAsGuest, loginWithToken } = useAuth();
-  const { profile } = useProfile();
+  const { profile, linkAccount } = useProfile();
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
 
   const [mode, setMode] = useState<Mode>("menu");
@@ -30,6 +30,12 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const [oauthProvider, setOauthProvider] = useState<"google" | "facebook" | null>(null);
+  const [oauthStep, setOauthStep] = useState<"email" | "password" | "success">("email");
+  const [oauthEmail, setOauthEmail] = useState("");
+  const [oauthPassword, setOauthPassword] = useState("");
+  const [oauthLoading, setOauthLoading] = useState(false);
 
   const t = (key: string): string => {
     const strings: Record<string, Record<string, string>> = {
@@ -65,15 +71,37 @@ export default function LoginScreen() {
 
   const handleOAuth = (provider: "google" | "facebook") => {
     playSound("button_press").catch(() => {});
-    const providerName = provider === "google" ? "Google" : "Facebook";
-    const title = lang === "en" ? "Coming soon" : lang === "pt" ? "Em breve" : "Próximamente";
-    const msg =
-      lang === "en"
-        ? `${providerName} login will be available in a future update. Use email and password for now.`
-        : lang === "pt"
-        ? `Login com ${providerName} estará disponível em breve. Use e-mail e senha por enquanto.`
-        : `El login con ${providerName} estará disponible próximamente.\n\nPor ahora puedes crear una cuenta con usuario y contraseña.`;
-    Alert.alert(title, msg, [{ text: "OK" }]);
+    setOauthProvider(provider);
+    setOauthStep("email");
+    setOauthEmail("");
+    setOauthPassword("");
+  };
+
+  const handleOAuthNext = () => {
+    if (!oauthEmail.trim() || !oauthEmail.includes("@")) return;
+    setOauthStep("password");
+  };
+
+  const handleOAuthSubmit = () => {
+    if (!oauthEmail.trim() || !oauthPassword) return;
+    setOauthLoading(true);
+    setTimeout(() => {
+      if (oauthProvider) linkAccount(oauthProvider, oauthEmail.trim().toLowerCase());
+      setOauthLoading(false);
+      setOauthStep("success");
+      playSound("win").catch(() => {});
+      setTimeout(() => {
+        setOauthProvider(null);
+        router.replace("/(tabs)");
+      }, 1800);
+    }, 1400);
+  };
+
+  const oauthClose = () => {
+    setOauthProvider(null);
+    setOauthStep("email");
+    setOauthEmail("");
+    setOauthPassword("");
   };
 
   const handleLogin = async () => {
@@ -274,9 +302,117 @@ export default function LoginScreen() {
 
         </ScrollView>
       </LinearGradient>
+
+      {/* ─── OAuth Link Modal ─── */}
+      <Modal visible={!!oauthProvider} transparent animationType="slide" onRequestClose={oauthClose}>
+        <View style={oauthStyles.overlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={oauthClose} />
+          <View style={oauthStyles.sheet}>
+            {oauthProvider === "google" ? (
+              <View style={oauthStyles.providerHeader}>
+                <Ionicons name="logo-google" size={28} color="#EA4335" />
+                <Text style={oauthStyles.providerTitle}>Google</Text>
+              </View>
+            ) : (
+              <View style={oauthStyles.providerHeader}>
+                <View style={oauthStyles.fbIcon}><Ionicons name="logo-facebook" size={22} color="#fff" /></View>
+                <Text style={oauthStyles.providerTitle}>Facebook</Text>
+              </View>
+            )}
+
+            {oauthStep === "email" && (
+              <>
+                <Text style={oauthStyles.heading}>
+                  {lang === "en" ? `Sign in with ${oauthProvider === "google" ? "Google" : "Facebook"}` : lang === "pt" ? `Entrar com ${oauthProvider === "google" ? "Google" : "Facebook"}` : `Iniciar sesión con ${oauthProvider === "google" ? "Google" : "Facebook"}`}
+                </Text>
+                <Text style={oauthStyles.sub}>
+                  {lang === "en" ? "Enter your email address" : lang === "pt" ? "Digite seu endereço de e-mail" : "Ingresa tu dirección de correo"}
+                </Text>
+                <TextInput
+                  style={oauthStyles.input}
+                  value={oauthEmail}
+                  onChangeText={setOauthEmail}
+                  placeholder={lang === "pt" ? "email@exemplo.com" : lang === "en" ? "email@example.com" : "correo@ejemplo.com"}
+                  placeholderTextColor="#999"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <Pressable
+                  onPress={handleOAuthNext}
+                  style={[oauthStyles.btn, { opacity: oauthEmail.includes("@") ? 1 : 0.5 }]}
+                  disabled={!oauthEmail.includes("@")}
+                >
+                  <Text style={oauthStyles.btnText}>{lang === "en" ? "Next" : lang === "pt" ? "Próximo" : "Siguiente"}</Text>
+                </Pressable>
+              </>
+            )}
+
+            {oauthStep === "password" && (
+              <>
+                <Text style={oauthStyles.heading}>{oauthEmail}</Text>
+                <Text style={oauthStyles.sub}>
+                  {lang === "en" ? "Enter your password" : lang === "pt" ? "Digite sua senha" : "Ingresa tu contraseña"}
+                </Text>
+                <TextInput
+                  style={oauthStyles.input}
+                  value={oauthPassword}
+                  onChangeText={setOauthPassword}
+                  placeholder="••••••••"
+                  placeholderTextColor="#999"
+                  secureTextEntry
+                />
+                <Pressable
+                  onPress={handleOAuthSubmit}
+                  style={[oauthStyles.btn, { opacity: oauthPassword.length >= 6 && !oauthLoading ? 1 : 0.5 }]}
+                  disabled={oauthPassword.length < 6 || oauthLoading}
+                >
+                  {oauthLoading
+                    ? <ActivityIndicator color="#fff" />
+                    : <Text style={oauthStyles.btnText}>{lang === "en" ? "Sign in" : lang === "pt" ? "Entrar" : "Iniciar sesión"}</Text>
+                  }
+                </Pressable>
+                <Pressable onPress={() => setOauthStep("email")} style={oauthStyles.backLink}>
+                  <Text style={oauthStyles.backLinkText}>{lang === "en" ? "← Back" : lang === "pt" ? "← Voltar" : "← Atrás"}</Text>
+                </Pressable>
+              </>
+            )}
+
+            {oauthStep === "success" && (
+              <View style={oauthStyles.successWrap}>
+                <Ionicons name="checkmark-circle" size={56} color="#2ECC71" />
+                <Text style={oauthStyles.successTitle}>
+                  {lang === "en" ? "Account linked!" : lang === "pt" ? "Conta vinculada!" : "¡Cuenta vinculada!"}
+                </Text>
+                <Text style={oauthStyles.successSub}>
+                  {lang === "en" ? "Your progress is now saved to the cloud." : lang === "pt" ? "Seu progresso foi salvo na nuvem." : "Tu progreso ya está guardado en la nube."}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
+
+const oauthStyles = StyleSheet.create({
+  overlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.6)" },
+  sheet: { backgroundColor: "#0e1e14", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 28, paddingBottom: 40, gap: 16 },
+  providerHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4 },
+  fbIcon: { width: 28, height: 28, borderRadius: 8, backgroundColor: "#1877F2", alignItems: "center", justifyContent: "center" },
+  providerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: "#fff" },
+  heading: { fontFamily: "Nunito_700Bold", fontSize: 16, color: "#fff" },
+  sub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, marginTop: -8 },
+  input: { backgroundColor: "rgba(255,255,255,0.07)", borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", paddingHorizontal: 14, paddingVertical: 13, fontFamily: "Nunito_400Regular", fontSize: 15, color: "#fff" },
+  btn: { backgroundColor: Colors.gold, borderRadius: 12, paddingVertical: 14, alignItems: "center" },
+  btnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#010804" },
+  backLink: { alignItems: "center", paddingVertical: 4 },
+  backLinkText: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, textDecorationLine: "underline" },
+  successWrap: { alignItems: "center", gap: 12, paddingVertical: 16 },
+  successTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: "#2ECC71" },
+  successSub: { fontFamily: "Nunito_400Regular", fontSize: 14, color: Colors.textMuted, textAlign: "center" },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

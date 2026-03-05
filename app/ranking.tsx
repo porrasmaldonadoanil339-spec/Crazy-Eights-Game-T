@@ -165,7 +165,7 @@ function RankRow({ entry, theme, onPress }: { entry: RankEntry; theme: any; onPr
 
 export default function RankingScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, level } = useProfile();
+  const { profile, level, addOutgoingFriendRequest } = useProfile();
   const T = useT();
   const theme = useTheme();
   const [period, setPeriod] = useState<Period>("alltime");
@@ -274,6 +274,16 @@ export default function RankingScreen() {
         onAddFriend={(name) => {
           setSentRequests(prev => new Set([...prev, name]));
           setSelectedPlayer(prev => prev ? { ...prev, requestSent: true } : null);
+          if (selectedPlayer) {
+            addOutgoingFriendRequest({
+              id: `rank_${name}`,
+              name: selectedPlayer.name,
+              level: selectedPlayer.level,
+              avatarIcon: selectedPlayer.avatarIcon,
+              avatarColor: selectedPlayer.avatarColor,
+              photoUrl: selectedPlayer.photoUrl,
+            });
+          }
         }}
       />
     </View>

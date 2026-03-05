@@ -62,6 +62,16 @@ export const DAILY_REWARDS: DailyReward[] = [
   { day: 7, coins: 100, xp: 250, label: "¡100 monedas! Gran recompensa", icon: "trophy", iconColor: "#D4AF37" },
 ];
 
+export interface OutgoingRequest {
+  id: string;
+  name: string;
+  level: number;
+  avatarIcon: string;
+  avatarColor: string;
+  photoUrl?: string;
+  sentAt: number;
+}
+
 export interface PlayerProfile {
   name: string;
   avatarId: string;
@@ -91,6 +101,11 @@ export interface PlayerProfile {
   vibrationEnabled: boolean;
   language: "es" | "en" | "pt";
   darkMode: boolean;
+  // Friend requests (global, persisted)
+  pendingOutgoingRequests?: OutgoingRequest[];
+  // Linked accounts
+  linkedGoogle?: string;
+  linkedFacebook?: string;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -189,6 +204,10 @@ interface ProfileContextValue {
   level: number;
   xpProgress: { current: number; needed: number; level: number };
   battlePassTier: number;
+  addOutgoingFriendRequest: (req: Omit<OutgoingRequest, "sentAt">) => void;
+  removeOutgoingFriendRequest: (id: string) => void;
+  linkAccount: (provider: "google" | "facebook", email: string) => void;
+  unlinkAccount: (provider: "google" | "facebook") => void;
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
@@ -480,6 +499,37 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const xpProgress = useMemo(() => getXpProgress(profile.totalXp), [profile.totalXp]);
   const battlePassTier = useMemo(() => getCurrentBattlePassTier(profile.totalXp), [profile.totalXp]);
 
+  const addOutgoingFriendRequest = useCallback((req: Omit<OutgoingRequest, "sentAt">) => {
+    update((p) => ({
+      ...p,
+      pendingOutgoingRequests: [
+        { ...req, sentAt: Date.now() },
+        ...(p.pendingOutgoingRequests ?? []).filter((r) => r.id !== req.id),
+      ].slice(0, 50),
+    }));
+  }, [update]);
+
+  const removeOutgoingFriendRequest = useCallback((id: string) => {
+    update((p) => ({
+      ...p,
+      pendingOutgoingRequests: (p.pendingOutgoingRequests ?? []).filter((r) => r.id !== id),
+    }));
+  }, [update]);
+
+  const linkAccount = useCallback((provider: "google" | "facebook", email: string) => {
+    update((p) => ({
+      ...p,
+      ...(provider === "google" ? { linkedGoogle: email } : { linkedFacebook: email }),
+    }));
+  }, [update]);
+
+  const unlinkAccount = useCallback((provider: "google" | "facebook") => {
+    update((p) => ({
+      ...p,
+      ...(provider === "google" ? { linkedGoogle: undefined } : { linkedFacebook: undefined }),
+    }));
+  }, [update]);
+
   return (
     <ProfileContext.Provider
       value={{
@@ -512,6 +562,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         level,
         xpProgress,
         battlePassTier,
+        addOutgoingFriendRequest,
+        removeOutgoingFriendRequest,
+        linkAccount,
+        unlinkAccount,
       }}
     >
       {children}

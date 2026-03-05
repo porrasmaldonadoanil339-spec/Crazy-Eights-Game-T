@@ -99,7 +99,7 @@ function buildPendingRequests(): FriendRequest[] {
 
 export default function FriendsScreen() {
   const insets = useSafeAreaInsets();
-  const { profile } = useProfile();
+  const { profile, removeOutgoingFriendRequest } = useProfile();
   const T = useT();
   const isDark = profile.darkMode !== false;
 
@@ -155,6 +155,53 @@ export default function FriendsScreen() {
     });
     return () => timeouts.forEach(clearTimeout);
   }, []);
+
+  // Merge outgoing requests from ProfileContext (e.g. sent from ranking screen)
+  const processedGlobalRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const pending = profile.pendingOutgoingRequests ?? [];
+    pending.forEach((req) => {
+      if (processedGlobalRef.current.has(req.id)) return;
+      processedGlobalRef.current.add(req.id);
+
+      const outReq: FriendRequest = {
+        id: req.id,
+        name: req.name,
+        level: req.level,
+        avatarIcon: req.avatarIcon,
+        avatarColor: req.avatarColor,
+        photoUrl: req.photoUrl,
+        status: "pending",
+        direction: "outgoing",
+      };
+      setRequests(prev => [outReq, ...prev.filter(r => r.id !== req.id)]);
+
+      const accept = Math.random() < 0.7;
+      const delay = 3000 + Math.random() * 5000;
+      setTimeout(() => {
+        removeOutgoingFriendRequest(req.id);
+        if (accept) {
+          const newFriend: Friend = {
+            id: req.id,
+            name: req.name,
+            level: req.level,
+            avatarIcon: req.avatarIcon,
+            avatarColor: req.avatarColor,
+            photoUrl: req.photoUrl,
+            online: Math.random() > 0.4,
+            wins: Math.floor(req.level * 12),
+            lastSeen: "Ahora",
+            titleName: "Jugador",
+          };
+          setFriends(prev => [newFriend, ...prev.filter(f => f.id !== req.id)]);
+          setRequests(prev => prev.filter(r => r.id !== req.id));
+          showToast(`${req.name} aceptó tu solicitud`);
+        } else {
+          setRequests(prev => prev.filter(r => r.id !== req.id));
+        }
+      }, delay);
+    });
+  }, [profile.pendingOutgoingRequests]);
 
   const showToast = (msg: string) => {
     setInviteToast(msg);

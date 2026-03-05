@@ -311,6 +311,39 @@ const translations = {
   // ─── Mute Emotes ─────────────────────────────────────────────────────────
   muteEmotes: { es: "Silenciar emotes", en: "Mute emotes", pt: "Silenciar emotes" },
   unmuteEmotes: { es: "Activar emotes", en: "Unmute emotes", pt: "Ativar emotes" },
+
+  // ─── In-game hints ───────────────────────────────────────────────────────
+  crazy8Hint: { es: "8 Loco · toca de nuevo para elegir palo", en: "Crazy 8 · tap again to choose suit", pt: "8 Louco · toque novamente para escolher naipe" },
+  jokerChooseSuitHint: { es: "Comodín · toca de nuevo para elegir palo", en: "Joker · tap again to choose suit", pt: "Curinga · toque novamente para escolher naipe" },
+  jokerAddStackHint: { es: "Comodín · añade 5 al stack ({n} total)", en: "Joker · adds 5 to stack ({n} total)", pt: "Curinga · adiciona 5 ao stack ({n} total)" },
+  tapToPlay: { es: "Toca la carta de nuevo para jugarla", en: "Tap the card again to play it", pt: "Toque a carta novamente para jogá-la" },
+
+  // ─── Win / Lose messages ─────────────────────────────────────────────────
+  winMsg0: { es: "¡Dominas la mesa como un campeón!", en: "You dominate the table like a champion!", pt: "Você domina a mesa como um campeão!" },
+  winMsg1: { es: "¡Nadie puede contigo hoy!", en: "Nobody can stop you today!", pt: "Ninguém consegue te parar hoje!" },
+  winMsg2: { es: "¡Las cartas son tuyas, maestro!", en: "The cards are yours, master!", pt: "As cartas são suas, mestre!" },
+  winMsg3: { es: "¡Brillante estrategia! ¡Impresionante!", en: "Brilliant strategy! Impressive!", pt: "Estratégia brilhante! Impressionante!" },
+  winMsg4: { es: "¡El oponente ni supo lo que pasó!", en: "The opponent didn't know what hit them!", pt: "O adversário nem sabia o que aconteceu!" },
+  winMsg5: { es: "¡Eso fue pura magia de cartas!", en: "That was pure card magic!", pt: "Isso foi pura magia de cartas!" },
+  winMsg6: { es: "¡Eres imparable, sigue así!", en: "You're unstoppable, keep it up!", pt: "Você é imparável, continue assim!" },
+  loseMsg0: { es: "¡La próxima será tuya, no te rindas!", en: "Next one's yours, don't give up!", pt: "A próxima é sua, não desista!" },
+  loseMsg1: { es: "El CPU tuvo suerte… ¡hoy no te ganarán!", en: "CPU got lucky… they won't beat you again!", pt: "A CPU teve sorte… não vão te ganhar de novo!" },
+  loseMsg2: { es: "¡Cada derrota te hace más fuerte!", en: "Every loss makes you stronger!", pt: "Cada derrota te torna mais forte!" },
+  loseMsg3: { es: "Un buen jugador aprende de cada partida.", en: "A good player learns from every game.", pt: "Um bom jogador aprende com cada partida." },
+  loseMsg4: { es: "¡Así no, inténtalo de nuevo!", en: "Not like that, try again!", pt: "Assim não, tente de novo!" },
+  loseMsg5: { es: "El oponente estuvo listo hoy. ¡Tú serás el próximo!", en: "The opponent was ready today. You'll be next!", pt: "O adversário estava pronto hoje. Você será o próximo!" },
+
+  // ─── OAuth / Account linking ──────────────────────────────────────────────
+  linkAccountTitle: { es: "Vincular cuenta", en: "Link account", pt: "Vincular conta" },
+  enterEmailFor: { es: "Ingresa tu email de {p}", en: "Enter your {p} email", pt: "Digite seu e-mail do {p}" },
+  emailPlaceholder: { es: "correo@ejemplo.com", en: "email@example.com", pt: "email@exemplo.com" },
+  enterPasswordFor: { es: "Contraseña de {p}", en: "{p} password", pt: "Senha do {p}" },
+  linking: { es: "Vinculando…", en: "Linking…", pt: "Vinculando…" },
+  linkedSuccess: { es: "¡Cuenta vinculada correctamente!", en: "Account linked successfully!", pt: "Conta vinculada com sucesso!" },
+  unlinkTitle: { es: "Desvincular cuenta", en: "Unlink account", pt: "Desvincular conta" },
+  unlinkMsg: { es: "¿Seguro que quieres desvincular esta cuenta?", en: "Are you sure you want to unlink this account?", pt: "Tem certeza que quer desvincular esta conta?" },
+  linked: { es: "Vinculado", en: "Linked", pt: "Vinculado" },
+  notLinked: { es: "No vinculado", en: "Not linked", pt: "Não vinculado" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

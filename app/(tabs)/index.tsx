@@ -699,7 +699,7 @@ export default function PlayScreen() {
               <Ionicons name="people" size={22} color="#63B3ED" />
               <Text style={styles.multiModalTitle}>{T("multiLocal")}</Text>
               <Pressable onPress={() => setShowMultiModal(false)} style={styles.multiModalClose}>
-                <Ionicons name="close" size={20} color={Colors.textMuted} />
+                <Ionicons name="close" size={20} color={theme.textMuted} />
               </Pressable>
             </View>
 
