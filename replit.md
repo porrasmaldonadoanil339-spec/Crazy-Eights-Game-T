@@ -4,7 +4,14 @@
 
 **Ocho Locos** is a mobile card game app — a Spanish-language version of the classic "Crazy Eights" card game. Built with **Expo (React Native)** for the mobile frontend and **Express.js** for the backend. The app supports 6 game modes, local + online multiplayer, a store with 420+ items (70 per category + 70 emotes), 981 achievements, 800-tier battle pass, daily rewards, watch-ads-for-coins (5/day, +50 each), emote system (70 emotes, equip up to 8), avatar frames, profile photos, 3-language switcher (ES/EN/PT-BR), swipe tab navigation, light/dark mode, and a world ranking screen. All game logic runs fully on-device; the backend serves as API scaffold + static asset server.
 
-**Latest features**: 70-emote system in store (equip up to 8, toggle per emote with gold UI), equippedEmotes in ProfileContext, friends screen starts empty (search CPU_PROFILES to add), friend chat modal with auto-reply (1-3s delay), invite friends → auto game (75% online / 20% offline accept chance → navigates to game-online with rivalName param), light mode PokerTitle suit colors fixed (theme.textMuted), game.tsx duplicate style TS error fixed. Previously: 981 achievements, 800 BP tiers, deal animation in game-online, room codes (6-char), all sound effects (last_card/combo/friend_request etc.), Google/Facebook login UI, matchmaking screen, DealAnimation, inactivity timer, CardPlayEffect.
+**Latest features** (current session):
+- **Light mode**: All hardcoded `Colors.X` in index.tsx replaced with dynamic `theme.X` — text/borders visible in both modes
+- **i18n Store**: `localizeItem()` used in all store cards (EffectCard, StoreItemCard, EmoteCard); 70 emote ITEM_TL translations added to storeItems.ts for EN+PT
+- **Friends improvements**: Solicitudes tab shows direction badge (incoming "→ TÚ" / outgoing "ENVIADA"); auto-incoming requests after 6-11s on mount; handleAddFriend adds outgoing entry immediately, removes when resolved; chat typing indicator (3-dot bubble) before auto-replies
+- **Login OAuth**: Google/Facebook buttons now show Alert "Próximamente disponible" instead of OAuth browser flow
+- **Game modes**: `timerSeconds` added to GameModeConfig; lightning=10s, practice=30s, others=20s inactivity timer; `teamMode: true` on coop; `hasHints: true` on practice
+- **DealAnimation multi-player**: `numOpponents` prop (default 1); FlipPhase shows 1/2/3 AI hand placeholders at top/topLeft-topRight/left-top-right positions; game-online passes `numOpponents={playerCount-1}`
+- **Battle pass**: 800 tiers ✓ | **Achievements**: 981 achievements ✓ | **Room codes**: 3-tab modal (Buscar/Crear Sala/Unirse) ✓ | **Sound effects**: last_card, combo, friend_request, deal_card, tension ✓
 
 Targets iOS, Android, and Web (via Expo + React Native Web). Dark casino-themed UI: felt-green (`#0a1a0f`) background, gold (`#D4AF37`) accents, Nunito fonts.
 

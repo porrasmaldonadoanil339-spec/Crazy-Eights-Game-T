@@ -7,15 +7,10 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as WebBrowser from "expo-web-browser";
-import { fetch as expoFetch } from "expo/fetch";
 import { Colors } from "@/constants/colors";
 import { useAuth } from "@/context/AuthContext";
 import { useProfile } from "@/context/ProfileContext";
 import { playSound } from "@/lib/sounds";
-import { getApiUrl } from "@/lib/query-client";
-
-WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
 const FACEBOOK_APP_ID = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
@@ -68,59 +63,17 @@ export default function LoginScreen() {
     return strings[key]?.[lang] ?? strings[key]?.es ?? key;
   };
 
-  const getApiBase = (): string => {
-    try {
-      const url = getApiUrl() as string;
-      return url.endsWith("/") ? url.slice(0, -1) : url;
-    } catch { return ""; }
-  };
-
-  const handleOAuth = async (provider: "google" | "facebook") => {
+  const handleOAuth = (provider: "google" | "facebook") => {
     playSound("button_press").catch(() => {});
-    const apiBase = getApiBase();
-    if (!apiBase) {
-      setError(lang === "en" ? "Server not reachable" : "Servidor no disponible");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    try {
-      const oauthUrl = `${apiBase}/api/auth/${provider}/start`;
-      const redirectPrefix = "myapp://oauth";
-
-      const result = await WebBrowser.openAuthSessionAsync(oauthUrl, redirectPrefix);
-
-      if (result.type === "success" && result.url) {
-        const qs = result.url.split("?")[1] || "";
-        const params = new URLSearchParams(qs);
-        const token = params.get("token");
-
-        if (token) {
-          const verifyResp = await expoFetch(`${apiBase}/api/auth/verify`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token }),
-            credentials: "include",
-          });
-          const verifyData = await verifyResp.json() as { ok?: boolean; user?: { id: string; username: string }; error?: string };
-          if (verifyData.ok && verifyData.user) {
-            loginWithToken(verifyData.user, token);
-            playSound("win").catch(() => {});
-            router.replace("/(tabs)");
-          } else {
-            setError(verifyData.error || lang === "en" ? "Auth failed" : "Auth falló");
-          }
-        } else {
-          setError(lang === "en" ? "No token in redirect" : "Sin token en la redirección");
-        }
-      } else if (result.type === "cancel") {
-        // User closed the browser - do nothing
-      }
-    } catch (e) {
-      setError(lang === "en" ? "Auth error — check connection" : "Error de autenticación — revisa la conexión");
-    }
-    setLoading(false);
+    const providerName = provider === "google" ? "Google" : "Facebook";
+    const title = lang === "en" ? "Coming soon" : lang === "pt" ? "Em breve" : "Próximamente";
+    const msg =
+      lang === "en"
+        ? `${providerName} login will be available in a future update. Use email and password for now.`
+        : lang === "pt"
+        ? `Login com ${providerName} estará disponível em breve. Use e-mail e senha por enquanto.`
+        : `El login con ${providerName} estará disponible próximamente.\n\nPor ahora puedes crear una cuenta con usuario y contraseña.`;
+    Alert.alert(title, msg, [{ text: "OK" }]);
   };
 
   const handleLogin = async () => {

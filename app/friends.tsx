@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View, Text, StyleSheet, FlatList, Pressable, TextInput,
   Modal, Image, Platform, Animated,
@@ -118,7 +118,43 @@ export default function FriendsScreen() {
   const [chatFriend, setChatFriend] = useState<Friend | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const chatListRef = useRef<FlatList<ChatMessage>>(null);
+
+  // Auto-generate 2-3 incoming requests from CPU players after a delay
+  useEffect(() => {
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    const numIncoming = 2 + Math.floor(Math.random() * 2);
+    const pool = CPU_PROFILES.slice(21, 50);
+    const picked = [...pool].sort(() => Math.random() - 0.5).slice(0, numIncoming);
+    picked.forEach((p, i) => {
+      const delay = 6000 + i * 4000 + Math.random() * 2000;
+      const t = setTimeout(() => {
+        setRequests(prev => {
+          if (prev.some(r => r.id === `in_${p.name}`)) return prev;
+          return [{
+            id: `in_${p.name}`,
+            name: p.name,
+            level: p.level,
+            avatarIcon: p.avatarIcon,
+            avatarColor: p.avatarColor,
+            photoUrl: p.photoUrl,
+            status: "pending" as const,
+            direction: "incoming" as const,
+          }, ...prev];
+        });
+        setInviteToast(`${p.name} te envió una solicitud`);
+        toastAnim.setValue(0);
+        Animated.sequence([
+          Animated.timing(toastAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
+          Animated.delay(1800),
+          Animated.timing(toastAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+        ]).start();
+      }, delay);
+      timeouts.push(t);
+    });
+    return () => timeouts.forEach(clearTimeout);
+  }, []);
 
   const showToast = (msg: string) => {
     setInviteToast(msg);
@@ -159,9 +195,25 @@ export default function FriendsScreen() {
     setSentRequests(prev => new Set([...prev, name]));
     setProfileModal(null);
 
+    // Add outgoing request to Solicitudes tab immediately
+    const cpuP = CPU_PROFILES.find(p => p.name === name);
+    if (cpuP) {
+      const outReq: FriendRequest = {
+        id: `out_${name}`,
+        name: cpuP.name,
+        level: cpuP.level,
+        avatarIcon: cpuP.avatarIcon,
+        avatarColor: cpuP.avatarColor,
+        photoUrl: cpuP.photoUrl,
+        status: "pending",
+        direction: "outgoing",
+      };
+      setRequests(prev => [outReq, ...prev.filter(r => r.id !== `out_${name}`)]);
+    }
+
     // 70% chance to auto-accept after delay
     const accept = Math.random() < 0.7;
-    const delay = 2000 + Math.random() * 3000;
+    const delay = 3000 + Math.random() * 4000;
     setTimeout(() => {
       if (accept) {
         const profile = CPU_PROFILES.find(p => p.name === name);
@@ -179,9 +231,14 @@ export default function FriendsScreen() {
             titleName: TITLE_NAMES[profile.titleId] ?? "Jugador",
           };
           setFriends(prev => [newFriend, ...prev.filter(f => f.id !== name)]);
+          setRequests(prev => prev.filter(r => r.id !== `out_${name}`));
           setSentRequests(prev => { const s = new Set(prev); s.delete(name); return s; });
           showToast(`${name} aceptó tu solicitud`);
         }
+      } else {
+        // Rejected — remove outgoing request silently
+        setRequests(prev => prev.filter(r => r.id !== `out_${name}`));
+        setSentRequests(prev => { const s = new Set(prev); s.delete(name); return s; });
       }
     }, delay);
 
@@ -278,11 +335,17 @@ export default function FriendsScreen() {
     };
     setChatMessages(prev => [...prev, myMsg]);
     setChatInput("");
+    setTimeout(() => chatListRef.current?.scrollToEnd?.({ animated: true }), 100);
+
+    // Show typing indicator after 600ms, then reply after 2.5-5s
+    const typingDelay = 600 + Math.random() * 400;
+    const replyDelay = 2500 + Math.random() * 2500;
     setTimeout(() => {
-      chatListRef.current?.scrollToEnd?.({ animated: true });
-    }, 100);
-    const replyDelay = 1200 + Math.random() * 2000;
+      setIsTyping(true);
+      setTimeout(() => chatListRef.current?.scrollToEnd?.({ animated: true }), 50);
+    }, typingDelay);
     setTimeout(() => {
+      setIsTyping(false);
       const reply: ChatMessage = {
         id: (Date.now() + 1).toString(),
         text: AUTO_REPLIES[Math.floor(Math.random() * AUTO_REPLIES.length)],
@@ -290,9 +353,7 @@ export default function FriendsScreen() {
         ts: Date.now(),
       };
       setChatMessages(prev => [...prev, reply]);
-      setTimeout(() => {
-        chatListRef.current?.scrollToEnd?.({ animated: true });
-      }, 100);
+      setTimeout(() => chatListRef.current?.scrollToEnd?.({ animated: true }), 100);
     }, replyDelay);
   };
 
@@ -354,22 +415,42 @@ export default function FriendsScreen() {
           </View>
         )}
         <View style={styles.friendInfo}>
-          <Text style={[styles.friendName, { color: textColor }]} numberOfLines={1}>{item.name}</Text>
-          <Text style={[styles.friendSub, { color: textMuted }]}>Nv.{item.level} · Quiere ser tu amigo</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Text style={[styles.friendName, { color: textColor }]} numberOfLines={1}>{item.name}</Text>
+            <View style={[{
+              paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1,
+              backgroundColor: item.direction === "incoming" ? "#27AE6022" : "#4A90E222",
+              borderColor: item.direction === "incoming" ? "#27AE6044" : "#4A90E244",
+            }]}>
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: item.direction === "incoming" ? "#27AE60" : "#4A90E2" }}>
+                {item.direction === "incoming" ? "→ TÚ" : "ENVIADA"}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.friendSub, { color: textMuted }]}>
+            Nv.{item.level} · {item.direction === "incoming" ? "Quiere ser tu amigo" : "Esperando respuesta..."}
+          </Text>
         </View>
       </View>
-      <View style={styles.requestBtns}>
-        <Pressable style={styles.acceptBtn} onPress={() => handleAcceptRequest(item)}>
-          <LinearGradient colors={["#27AE60", "#1a7a43"]} style={styles.reqBtnGrad}>
-            <Ionicons name="checkmark" size={14} color="#fff" />
-          </LinearGradient>
-        </Pressable>
-        <Pressable style={styles.rejectBtn} onPress={() => handleRejectRequest(item)}>
-          <View style={[styles.reqBtnGrad, { backgroundColor: "#E74C3C22", borderWidth: 1, borderColor: "#E74C3C44" }]}>
-            <Ionicons name="close" size={14} color="#E74C3C" />
-          </View>
-        </Pressable>
-      </View>
+      {item.direction === "incoming" ? (
+        <View style={styles.requestBtns}>
+          <Pressable style={styles.acceptBtn} onPress={() => handleAcceptRequest(item)}>
+            <LinearGradient colors={["#27AE60", "#1a7a43"]} style={styles.reqBtnGrad}>
+              <Ionicons name="checkmark" size={14} color="#fff" />
+            </LinearGradient>
+          </Pressable>
+          <Pressable style={styles.rejectBtn} onPress={() => handleRejectRequest(item)}>
+            <View style={[styles.reqBtnGrad, { backgroundColor: "#E74C3C22", borderWidth: 1, borderColor: "#E74C3C44" }]}>
+              <Ionicons name="close" size={14} color="#E74C3C" />
+            </View>
+          </Pressable>
+        </View>
+      ) : (
+        <View style={{ paddingHorizontal: 8, alignItems: "center", gap: 2 }}>
+          <Ionicons name="time-outline" size={16} color={textMuted} />
+          <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 9, color: textMuted }}>Pendiente</Text>
+        </View>
+      )}
     </View>
   );
 
@@ -569,6 +650,15 @@ export default function FriendsScreen() {
                   </Text>
                 </View>
               )}
+              ListFooterComponent={isTyping ? (
+                <View style={[styles.chatBubble, { alignSelf: "flex-start", backgroundColor: isDark ? "#1a3a1a" : "#c8e6c0", borderColor, marginTop: 10 }]}>
+                  <View style={{ flexDirection: "row", gap: 5, alignItems: "center", paddingHorizontal: 2, paddingVertical: 4 }}>
+                    {[0, 1, 2].map(i => (
+                      <View key={i} style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: textMuted, opacity: 0.7 }} />
+                    ))}
+                  </View>
+                </View>
+              ) : null}
               ListEmptyComponent={<Text style={[styles.friendSub, { color: textMuted, textAlign: "center", marginTop: 40 }]}>Empieza una conversación!</Text>}
               onLayout={() => chatListRef.current?.scrollToEnd?.({ animated: false })}
             />

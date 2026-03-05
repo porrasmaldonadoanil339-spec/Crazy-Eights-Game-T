@@ -117,6 +117,9 @@ function EffectCard({ item, owned, isEquipped, onPress, onEquip }: {
 }) {
   const T = useT();
   const theme = useTheme();
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const localized = localizeItem(item, lang);
   const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
   return (
@@ -135,12 +138,12 @@ function EffectCard({ item, owned, isEquipped, onPress, onEquip }: {
         </View>
         <View style={{ flex: 1 }}>
           <View style={styles.effectTopRow}>
-            <Text style={[styles.effectName, { color: theme.text }]}>{item.name}</Text>
+            <Text style={[styles.effectName, { color: theme.text }]}>{localized.name}</Text>
             <View style={[styles.effectRarityBadge, { backgroundColor: rarityColor + "22" }]}>
               <Text style={[styles.effectRarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
             </View>
           </View>
-          <Text style={[styles.effectDesc, { color: theme.textMuted }]}>{item.description}</Text>
+          <Text style={[styles.effectDesc, { color: theme.textMuted }]}>{localized.description}</Text>
           <View style={styles.effectFooter}>
             {owned ? (
               <EquipBadge isEquipped={isEquipped} onEquip={onEquip} T={T} />
@@ -164,6 +167,9 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip }: {
 }) {
   const T = useT();
   const theme = useTheme();
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const localized = localizeItem(item, lang);
   const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
   return (
@@ -201,8 +207,8 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip }: {
             <Ionicons name={item.preview as any} size={28} color={owned ? item.previewColor : item.previewColor + "aa"} />
           </View>
         )}
-        <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
-        <Text style={[styles.itemDesc, { color: theme.textMuted }]} numberOfLines={2}>{item.description}</Text>
+        <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={1}>{localized.name}</Text>
+        <Text style={[styles.itemDesc, { color: theme.textMuted }]} numberOfLines={2}>{localized.description}</Text>
         <View style={styles.itemFooter}>
           {owned ? (
             <EquipBadge isEquipped={isEquipped} onEquip={onEquip} T={T} />
@@ -225,6 +231,9 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, onPress, onToggle }
 }) {
   const T = useT();
   const theme = useTheme();
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const localized = localizeItem(item, lang);
   const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
   return (
@@ -243,12 +252,12 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, onPress, onToggle }
         </View>
         <View style={{ flex: 1 }}>
           <View style={styles.effectTopRow}>
-            <Text style={[styles.effectName, { color: theme.text }]}>{item.name}</Text>
+            <Text style={[styles.effectName, { color: theme.text }]}>{localized.name}</Text>
             <View style={[styles.effectRarityBadge, { backgroundColor: rarityColor + "22" }]}>
               <Text style={[styles.effectRarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
             </View>
           </View>
-          <Text style={[styles.effectDesc, { color: theme.textMuted }]} numberOfLines={1}>{item.description}</Text>
+          <Text style={[styles.effectDesc, { color: theme.textMuted }]} numberOfLines={1}>{localized.description}</Text>
           <View style={styles.effectFooter}>
             {owned ? (
               <Pressable

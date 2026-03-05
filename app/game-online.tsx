@@ -600,6 +600,7 @@ export default function OnlineGameScreen() {
             starterCard={multiGetTopCard(gameState)}
             backColors={backColors}
             backAccent={backAccent}
+            numOpponents={playerCount - 1}
             onComplete={() => setLobbyPhase("game")}
           />
         )}

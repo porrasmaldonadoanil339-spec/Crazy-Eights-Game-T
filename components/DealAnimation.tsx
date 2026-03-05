@@ -349,9 +349,10 @@ function TableCenter({ starterCard, backColors, backAccent, visible }: {
 }
 
 // ─── Flip phase wrapper ───────────────────────────────────────────────────────
-function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backAccent, onDone }: {
+function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backAccent, onDone, numOpponents }: {
   playerCards: Card[]; cardsPerPlayer: number; starterCard: Card | null;
   backColors: [string, string, string]; backAccent: string; onDone: () => void;
+  numOpponents: number;
 }) {
   const STAGGER = 110;
   const N = playerCards.length;
@@ -366,9 +367,27 @@ function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backA
     setTimeout(onDone, 1400);
   };
 
+  // Positions for AI hands based on opponent count
+  const aiPositions: Array<object> = numOpponents === 1
+    ? [{ position: "absolute" as const, top: 4, left: 0, right: 0, alignItems: "center" as const }]
+    : numOpponents === 2
+    ? [
+        { position: "absolute" as const, top: 4, left: 16 },
+        { position: "absolute" as const, top: 4, right: 16 },
+      ]
+    : [
+        { position: "absolute" as const, top: 4, left: 4 },
+        { position: "absolute" as const, top: 4, left: 0, right: 0, alignItems: "center" as const },
+        { position: "absolute" as const, top: 4, right: 4 },
+      ];
+
   return (
     <View style={StyleSheet.absoluteFill}>
-      <AiHandPlaceholder count={cardsPerPlayer} backColors={backColors} backAccent={backAccent} />
+      {aiPositions.map((posStyle, idx) => (
+        <View key={idx} style={posStyle as object}>
+          <AiHandPlaceholder count={cardsPerPlayer} backColors={backColors} backAccent={backAccent} />
+        </View>
+      ))}
       {/* Deck pile + starter card appear after last card flips */}
       <TableCenter starterCard={starterCard} backColors={backColors} backAccent={backAccent} visible={tableVisible} />
       {/* Fan centered at screen bottom */}
@@ -397,9 +416,11 @@ export function DealAnimation({
   cardsPerPlayer, playerCards, starterCard = null, onComplete,
   backColors = ["#1E4080", "#0e2248", "#0a1832"],
   backAccent = Colors.gold,
+  numOpponents = 1,
 }: {
   cardsPerPlayer: number; playerCards: Card[]; starterCard?: Card | null; onComplete: () => void;
   backColors?: [string, string, string]; backAccent?: string;
+  numOpponents?: number;
 }) {
   const [phase, setPhase] = useState<Phase>("shuffle");
   const overlayOpacity = useSharedValue(1);
@@ -463,6 +484,7 @@ export function DealAnimation({
           backColors={backColors}
           backAccent={backAccent}
           onDone={handleFlipDone}
+          numOpponents={numOpponents}
         />
       )}
     </Animated.View>

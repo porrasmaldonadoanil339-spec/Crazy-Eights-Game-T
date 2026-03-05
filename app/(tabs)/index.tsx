@@ -429,7 +429,7 @@ export default function PlayScreen() {
                   <View style={styles.modeFooter}>
                     <View style={styles.modeReward}>
                       <Ionicons name="cash" size={11} color={Colors.gold} />
-                      <Text style={styles.modeRewardText}>{mode.coinsReward}</Text>
+                      <Text style={[styles.modeRewardText, { color: theme.gold }]}>{mode.coinsReward}</Text>
                     </View>
                     {wr !== null && (
                       <Text style={[styles.modeWR, { color: theme.textDim }]}>{wr}% WR</Text>
@@ -582,11 +582,11 @@ export default function PlayScreen() {
             <View style={styles.multiModalHeader}>
               <View style={styles.onlineDotPill}>
                 <View style={styles.onlineDotSmall} />
-                <Text style={[styles.onlineDotText, { fontSize: 10 }]}>{T("multiOnlineDesc")}</Text>
+                <Text style={[styles.onlineDotText, { fontSize: 10, color: "#2ecc71" }]}>{T("multiOnlineDesc")}</Text>
               </View>
               <Text style={[styles.multiModalTitle, { color: "#4A90E2", flex: 1 }]}>Online</Text>
               <Pressable onPress={() => { setShowOnlineModal(false); setOnlineTab("search"); setJoinCode(""); }} style={styles.multiModalClose}>
-                <Ionicons name="close" size={20} color={Colors.textMuted} />
+                <Ionicons name="close" size={20} color={theme.textMuted} />
               </Pressable>
             </View>
 
@@ -597,8 +597,8 @@ export default function PlayScreen() {
                 const icons: Record<string, any> = { search: "search", create: "add-circle-outline", join: "enter-outline" };
                 return (
                   <Pressable key={tab} onPress={() => setOnlineTab(tab)} style={[{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: onlineTab === tab ? "#4A90E266" : "rgba(255,255,255,0.08)", backgroundColor: onlineTab === tab ? "#4A90E222" : "rgba(255,255,255,0.03)" }]}>
-                    <Ionicons name={icons[tab]} size={13} color={onlineTab === tab ? "#4A90E2" : Colors.textMuted} />
-                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: onlineTab === tab ? "#4A90E2" : Colors.textMuted }}>{labels[tab]}</Text>
+                    <Ionicons name={icons[tab]} size={13} color={onlineTab === tab ? "#4A90E2" : theme.textMuted} />
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: onlineTab === tab ? "#4A90E2" : theme.textMuted }}>{labels[tab]}</Text>
                   </Pressable>
                 );
               })}
@@ -606,12 +606,12 @@ export default function PlayScreen() {
 
             {onlineTab === "search" && (
               <>
-                <Text style={styles.multiModalSectionLabel}>{T("howManyPlayersLocal")}</Text>
+            <Text style={[styles.multiModalSectionLabel, { color: theme.textDim }]}>{T("howManyPlayersLocal")}</Text>
                 <View style={styles.multiCountRow}>
                   {[2, 3, 4].map(n => (
-                    <Pressable key={n} onPress={() => setOnlinePlayerCount(n)} style={[styles.multiCountBtn, onlinePlayerCount === n && { backgroundColor: "#4A90E222", borderColor: "#4A90E266" }]}>
-                      <Text style={[styles.multiCountBtnText, onlinePlayerCount === n && { color: "#4A90E2" }]}>{n}</Text>
-                      <Text style={[styles.multiCountBtnSub, onlinePlayerCount === n && { color: "#4A90E2" }]}>{n === 2 ? "1 rival" : `${n - 1} rivales`}</Text>
+                    <Pressable key={n} onPress={() => setOnlinePlayerCount(n)} style={[styles.multiCountBtn, onlinePlayerCount === n && { backgroundColor: "#4A90E222", borderColor: "#4A90E266" }, { borderColor: theme.border }]}>
+                      <Text style={[styles.multiCountBtnText, onlinePlayerCount === n ? { color: "#4A90E2" } : { color: theme.textMuted }]}>{n}</Text>
+                      <Text style={[styles.multiCountBtnSub, onlinePlayerCount === n ? { color: "#4A90E2" } : { color: theme.textDim }]}>{n === 2 ? "1 rival" : `${n - 1} rivales`}</Text>
                     </Pressable>
                   ))}
                 </View>
@@ -621,23 +621,23 @@ export default function PlayScreen() {
                     <Text style={styles.multiStartBtnText}>{T("searchMatch")}</Text>
                   </LinearGradient>
                 </Pressable>
-                <Text style={styles.multiModalHint}>{T("onlineRivals")}</Text>
+                <Text style={[styles.multiModalHint, { color: theme.textDim }]}>{T("onlineRivals")}</Text>
               </>
             )}
 
             {onlineTab === "create" && (
               <>
-                <Text style={[styles.multiModalSectionLabel, { marginBottom: 4 }]}>{lang === "en" ? "YOUR ROOM CODE" : lang === "pt" ? "SEU CÓDIGO DE SALA" : "TU CÓDIGO DE SALA"}</Text>
+                <Text style={[styles.multiModalSectionLabel, { marginBottom: 4, color: theme.textDim }]}>{lang === "en" ? "YOUR ROOM CODE" : lang === "pt" ? "SEU CÓDIGO DE SALA" : "TU CÓDIGO DE SALA"}</Text>
                 <View style={{ alignItems: "center", paddingVertical: 12, gap: 8 }}>
                   {generatedRoomCode ? (
                     <>
                       <Text style={{ fontFamily: "Nunito_900ExtraBold", fontSize: 38, color: "#4A90E2", letterSpacing: 8 }}>{generatedRoomCode}</Text>
-                      <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted, textAlign: "center" }}>
+                      <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: theme.textMuted, textAlign: "center" }}>
                         {lang === "en" ? "Share this code with your friend" : lang === "pt" ? "Compartilhe este código com seu amigo" : "Comparte este código con tu amigo"}
                       </Text>
                     </>
                   ) : (
-                    <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textMuted, textAlign: "center" }}>
+                    <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: theme.textMuted, textAlign: "center" }}>
                       {lang === "en" ? "Press the button to generate a room code" : lang === "pt" ? "Pressione o botão para gerar um código" : "Presiona el botón para generar un código"}
                     </Text>
                   )}
@@ -663,13 +663,13 @@ export default function PlayScreen() {
 
             {onlineTab === "join" && (
               <>
-                <Text style={[styles.multiModalSectionLabel, { marginBottom: 4 }]}>{lang === "en" ? "ENTER ROOM CODE" : lang === "pt" ? "INSERIR CÓDIGO" : "INGRESA EL CÓDIGO"}</Text>
+                <Text style={[styles.multiModalSectionLabel, { marginBottom: 4, color: theme.textDim }]}>{lang === "en" ? "ENTER ROOM CODE" : lang === "pt" ? "INSERIR CÓDIGO" : "INGRESA EL CÓDIGO"}</Text>
                 <View style={{ gap: 10 }}>
                   <TextInput
                     value={joinCode}
                     onChangeText={(t) => setJoinCode(t.toUpperCase().replace(/[^A-Z0-9]/g, "").substr(0, 6))}
                     placeholder={lang === "en" ? "XXXXXX" : "XXXXXX"}
-                    placeholderTextColor={Colors.textDim}
+                    placeholderTextColor={theme.textDim}
                     maxLength={6}
                     autoCapitalize="characters"
                     style={{ fontFamily: "Nunito_900ExtraBold", fontSize: 32, color: "#4A90E2", textAlign: "center", letterSpacing: 8, paddingVertical: 14, paddingHorizontal: 12, backgroundColor: "rgba(74,144,226,0.08)", borderRadius: 12, borderWidth: 1, borderColor: "#4A90E233" }}
@@ -685,7 +685,7 @@ export default function PlayScreen() {
                     </LinearGradient>
                   </Pressable>
                 </View>
-                <Text style={styles.multiModalHint}>{lang === "en" ? "Ask your friend for their 6-character code" : lang === "pt" ? "Peça o código de 6 caracteres ao seu amigo" : "Pídele el código de 6 caracteres a tu amigo"}</Text>
+                <Text style={[styles.multiModalHint, { color: theme.textDim }]}>{lang === "en" ? "Ask your friend for their 6-character code" : lang === "pt" ? "Peça o código de 6 caracteres ao seu amigo" : "Pídele el código de 6 caracteres a tu amigo"}</Text>
               </>
             )}
           </LinearGradient>
@@ -703,33 +703,33 @@ export default function PlayScreen() {
               </Pressable>
             </View>
 
-            <Text style={styles.multiModalSectionLabel}>{T("howManyPlayersLocal")}</Text>
+            <Text style={[styles.multiModalSectionLabel, { color: theme.textDim }]}>{T("howManyPlayersLocal")}</Text>
             <View style={styles.multiCountRow}>
               {[2, 3, 4].map(n => (
                 <Pressable
                   key={n}
                   onPress={() => setMultiPlayerCount(n)}
-                  style={[styles.multiCountBtn, multiPlayerCount === n && styles.multiCountBtnActive]}
+                  style={[styles.multiCountBtn, multiPlayerCount === n && styles.multiCountBtnActive, { borderColor: theme.border }]}
                 >
-                  <Text style={[styles.multiCountBtnText, multiPlayerCount === n && styles.multiCountBtnTextActive]}>
+                  <Text style={[styles.multiCountBtnText, multiPlayerCount === n ? styles.multiCountBtnTextActive : { color: theme.textMuted }]}>
                     {n}
                   </Text>
-                  <Text style={[styles.multiCountBtnSub, multiPlayerCount === n && { color: "#63B3ED" }]}>
+                  <Text style={[styles.multiCountBtnSub, multiPlayerCount === n ? { color: "#63B3ED" } : { color: theme.textDim }]}>
                     {n === 2 ? "1vs1" : n === 3 ? "3 amigos" : "4 amigos"}
                   </Text>
                 </Pressable>
               ))}
             </View>
 
-            <Text style={[styles.multiModalSectionLabel, { marginTop: 12 }]}>{T("namesOptional")}</Text>
+            <Text style={[styles.multiModalSectionLabel, { marginTop: 12, color: theme.textDim }]}>{T("namesOptional")}</Text>
             {Array.from({ length: multiPlayerCount }).map((_, i) => {
               const colors = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
               const c = colors[i % colors.length];
               return (
-                <View key={i} style={styles.multiNameRow}>
+                <View key={i} style={[styles.multiNameRow, { borderColor: theme.border }]}>
                   <View style={[styles.multiNameDot, { backgroundColor: c }]} />
                   <TextInput
-                    style={styles.multiNameInput}
+                    style={[styles.multiNameInput, { color: theme.text }]}
                     value={multiPlayerNames[i]}
                     onChangeText={t => setMultiPlayerNames(prev => {
                       const n = [...prev];
@@ -737,7 +737,7 @@ export default function PlayScreen() {
                       return n;
                     })}
                     placeholder={`Jugador ${i + 1}`}
-                    placeholderTextColor={Colors.textDim}
+                    placeholderTextColor={theme.textDim}
                     maxLength={16}
                   />
                 </View>
@@ -751,7 +751,7 @@ export default function PlayScreen() {
               </LinearGradient>
             </Pressable>
 
-            <Text style={styles.multiModalHint}>{T("passDeviceHint")}</Text>
+            <Text style={[styles.multiModalHint, { color: theme.textDim }]}>{T("passDeviceHint")}</Text>
           </LinearGradient>
         </View>
       </Modal>
@@ -1020,30 +1020,30 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.07)", alignItems: "center", justifyContent: "center",
   },
   multiModalSectionLabel: {
-    fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.textDim, letterSpacing: 2,
+    fontFamily: "Nunito_700Bold", fontSize: 10, letterSpacing: 2,
   },
   multiCountRow: { flexDirection: "row", gap: 10 },
   multiCountBtn: {
     flex: 1, borderRadius: 12, paddingVertical: 10, alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: Colors.border, gap: 2,
+    backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, gap: 2,
   },
   multiCountBtnActive: {
     backgroundColor: "#63B3ED22", borderColor: "#63B3ED66",
   },
   multiCountBtnText: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: Colors.textMuted,
+    fontFamily: "Nunito_900ExtraBold", fontSize: 22,
   },
   multiCountBtnTextActive: { color: "#63B3ED" },
-  multiCountBtnSub: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim },
+  multiCountBtnSub: { fontFamily: "Nunito_400Regular", fontSize: 10 },
   multiNameRow: {
     flexDirection: "row", alignItems: "center", gap: 10,
     backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 2,
-    borderWidth: 1, borderColor: Colors.border,
+    borderWidth: 1,
   },
   multiNameDot: { width: 10, height: 10, borderRadius: 5 },
   multiNameInput: {
-    flex: 1, fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.text,
+    flex: 1, fontFamily: "Nunito_700Bold", fontSize: 14,
     paddingVertical: 10,
   },
   multiStartBtn: { marginTop: 8, borderRadius: 14, overflow: "hidden" },
@@ -1053,9 +1053,8 @@ const styles = StyleSheet.create({
   },
   multiStartBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#fff", letterSpacing: 1 },
   multiModalHint: {
-    fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textDim, textAlign: "center", marginTop: 4,
+    fontFamily: "Nunito_400Regular", fontSize: 11, textAlign: "center", marginTop: 4,
   },
-
   // Watch Ads section
   adBanner: {
     flexDirection: "row", alignItems: "center", gap: 12,
@@ -1063,14 +1062,13 @@ const styles = StyleSheet.create({
     marginBottom: 12, overflow: "hidden",
   },
   adIconWrap: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  adTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: Colors.gold, letterSpacing: 0.5 },
-  adDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted, marginTop: 2 },
+  adTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, letterSpacing: 0.5 },
+  adDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, marginTop: 2 },
   adCounter: {
-    backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 10,
+    borderRadius: 10,
     paddingHorizontal: 8, paddingVertical: 4, minWidth: 36, alignItems: "center",
   },
-  adCounterText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textMuted },
-
+  adCounterText: { fontFamily: "Nunito_700Bold", fontSize: 11 },
   // Watch Ad Modal
   adModalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "center", alignItems: "center" },
   adModalBox: {
@@ -1078,21 +1076,21 @@ const styles = StyleSheet.create({
     alignItems: "center", gap: 12, overflow: "hidden",
   },
   adModalIcon: {
-    width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.gold + "22",
+    width: 80, height: 80, borderRadius: 40,
     alignItems: "center", justifyContent: "center", marginBottom: 4,
   },
-  adModalTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 32, color: Colors.gold },
-  adModalSub: { fontFamily: "Nunito_400Regular", fontSize: 13, textAlign: "center", color: Colors.textMuted },
+  adModalTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 32 },
+  adModalSub: { fontFamily: "Nunito_400Regular", fontSize: 13, textAlign: "center" },
   adCountdownWrap: {
     width: 64, height: 64, borderRadius: 32,
-    backgroundColor: Colors.gold + "22", alignItems: "center", justifyContent: "center",
+    alignItems: "center", justifyContent: "center",
   },
-  adCountdownNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 28, color: Colors.text },
+  adCountdownNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 28 },
   adRewardRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  adRewardText: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: Colors.gold },
+  adRewardText: { fontFamily: "Nunito_900ExtraBold", fontSize: 20 },
   adClaimBtn: { width: "100%", borderRadius: 12, overflow: "hidden", marginTop: 4 },
   adClaimGrad: { paddingVertical: 13, alignItems: "center" },
   adClaimText: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: "#1a0a00", letterSpacing: 1 },
   adCancelBtn: { marginTop: 4 },
-  adCancelText: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted },
+  adCancelText: { fontFamily: "Nunito_400Regular", fontSize: 13 },
 });

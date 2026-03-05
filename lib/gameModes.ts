@@ -21,6 +21,9 @@ export interface GameModeConfig {
   xpReward: number;
   isNew?: boolean;
   hasDifficulty: boolean;
+  timerSeconds?: number;
+  hasHints?: boolean;
+  teamMode?: boolean;
 }
 
 export interface DifficultyConfig {
@@ -60,6 +63,7 @@ export const GAME_MODES: GameModeConfig[] = [
     coinsReward: 10,
     xpReward: 30,
     hasDifficulty: true,
+    timerSeconds: 10,
   },
   {
     id: "tournament",
@@ -86,6 +90,7 @@ export const GAME_MODES: GameModeConfig[] = [
     coinsReward: 25,
     xpReward: 80,
     hasDifficulty: true,
+    teamMode: true,
   },
   {
     id: "challenge",
@@ -112,6 +117,8 @@ export const GAME_MODES: GameModeConfig[] = [
     coinsReward: 5,
     xpReward: 15,
     hasDifficulty: true,
+    hasHints: true,
+    timerSeconds: 30,
   },
 ];
 
