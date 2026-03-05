@@ -1,14 +1,18 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, View, Text } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { Ionicons } from "@expo/vector-icons";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { GameProvider } from "@/context/GameContext";
 import { ProfileProvider } from "@/context/ProfileContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { NetworkProvider, useNetwork } from "@/context/NetworkContext";
+import { OfflineScreen } from "@/components/OfflineScreen";
 import {
   useFonts,
   Nunito_400Regular,
@@ -80,6 +84,85 @@ function RootLayoutNav() {
   );
 }
 
+function RestoredBanner() {
+  const slideAnim = useRef(new Animated.Value(-60)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(slideAnim, { toValue: 0, duration: 350, useNativeDriver: true }),
+        Animated.timing(opacityAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+      ]),
+      Animated.delay(1800),
+      Animated.parallel([
+        Animated.timing(slideAnim, { toValue: -60, duration: 350, useNativeDriver: true }),
+        Animated.timing(opacityAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        position: "absolute",
+        top: 0, left: 0, right: 0,
+        zIndex: 9999,
+        alignItems: "center",
+        paddingTop: 56,
+        opacity: opacityAnim,
+        transform: [{ translateY: slideAnim }],
+        pointerEvents: "none",
+      } as any}
+    >
+      <View style={{
+        flexDirection: "row", alignItems: "center", gap: 8,
+        backgroundColor: "#27ae60",
+        paddingHorizontal: 20, paddingVertical: 10,
+        borderRadius: 24,
+        shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3, shadowRadius: 8, elevation: 8,
+      }}>
+        <Ionicons name="wifi" size={18} color="#fff" />
+        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 14, color: "#fff" }}>
+          Conexión restaurada
+        </Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+function NetworkGuard({ children }: { children: React.ReactNode }) {
+  const { isConnected, isChecking } = useNetwork();
+  const [showRestored, setShowRestored] = useState(false);
+  const wasOffline = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isChecking && !isConnected) {
+      wasOffline.current = true;
+    }
+    if (!isChecking && isConnected && wasOffline.current) {
+      wasOffline.current = false;
+      setShowRestored(true);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setShowRestored(false), 2700);
+    }
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [isConnected, isChecking]);
+
+  if (!isChecking && !isConnected) {
+    return <OfflineScreen />;
+  }
+
+  return (
+    <>
+      {children}
+      {showRestored && <RestoredBanner key={Date.now()} />}
+    </>
+  );
+}
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
@@ -100,14 +183,18 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <KeyboardProvider>
-            <AuthProvider>
-            <ProfileProvider>
-              <GameProvider>
-                <StatusBar style="light" />
-                <RootLayoutNav />
-              </GameProvider>
-            </ProfileProvider>
-            </AuthProvider>
+            <NetworkProvider>
+              <AuthProvider>
+                <ProfileProvider>
+                  <NetworkGuard>
+                    <GameProvider>
+                      <StatusBar style="light" />
+                      <RootLayoutNav />
+                    </GameProvider>
+                  </NetworkGuard>
+                </ProfileProvider>
+              </AuthProvider>
+            </NetworkProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>
       </QueryClientProvider>
