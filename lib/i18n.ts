@@ -253,8 +253,32 @@ const translations = {
   // ─── Online lobby ─────────────────────────────────────────────────────────
   onlineLobby: { es: "Sala online", en: "Online Lobby", pt: "Sala online" },
   searching: { es: "Buscando partida…", en: "Searching for match…", pt: "Buscando partida…" },
+  searchingWorld: { es: "Buscando en todo el mundo", en: "Searching worldwide", pt: "Buscando pelo mundo" },
   connected: { es: "Conectado", en: "Connected", pt: "Conectado" },
   waitingPlayers: { es: "Esperando jugadores", en: "Waiting for players", pt: "Aguardando jogadores" },
+
+  // ─── Suits ────────────────────────────────────────────────────────────────
+  suit_hearts: { es: "Corazones", en: "Hearts", pt: "Copas" },
+  suit_diamonds: { es: "Diamantes", en: "Diamonds", pt: "Ouros" },
+  suit_clubs: { es: "Tréboles", en: "Clubs", pt: "Paus" },
+  suit_spades: { es: "Espadas", en: "Spades", pt: "Espadas" },
+
+  // ─── Actions ───────────────────────────────────────────────────────────────
+  action_draw2: { es: "Robar 2", en: "Draw 2", pt: "Comprar 2" },
+  action_skip: { es: "Saltar turno", en: "Skip turn", pt: "Pular vez" },
+  action_reverse: { es: "Cambio de sentido", en: "Reverse direction", pt: "Inverter sentido" },
+  action_chooseSuit: { es: "Elige palo", en: "Choose suit", pt: "Escolha o naipe" },
+  action_draw4: { es: "Robar 4", en: "Draw 4", pt: "Comprar 4" },
+
+  // ─── Emotes ────────────────────────────────────────────────────────────────
+  emote_hello: { es: "¡Hola!", en: "Hello!", pt: "Olá!" },
+  emote_good_game: { es: "¡Buena partida!", en: "Good game!", pt: "Bom jogo!" },
+  emote_luck: { es: "¡Buena suerte!", en: "Good luck!", pt: "Boa sorte!" },
+  emote_win: { es: "¡Gané!", en: "I win!", pt: "Ganhei!" },
+  emote_expert: { es: "¡Qué nivel!", en: "Pro move!", pt: "Que nível!" },
+  emote_close: { es: "¡Cerca!", en: "So close!", pt: "Quase!" },
+  emote_oops: { es: "¡Uy!", en: "Oops!", pt: "Ops!" },
+  emote_wow: { es: "¡Increíble!", en: "Wow!", pt: "Incrível!" },
 
   // ─── Misc ─────────────────────────────────────────────────────────────────
   newBadge: { es: "NUEVO", en: "NEW", pt: "NOVO" },
@@ -280,6 +304,25 @@ const translations = {
   rankWins: { es: "VICTORIAS", en: "WINS", pt: "VITÓRIAS" },
   rankScore: { es: "PUNTOS", en: "SCORE", pt: "PONTOS" },
   rankLevel: { es: "NIV.", en: "LVL.", pt: "NÍV." },
+
+  // ─── Ranked ───────────────────────────────────────────────────────────────
+  rankedMode: { es: "Clasificatorio", en: "Ranked", pt: "Ranqueado" },
+  rankHierro: { es: "Hierro", en: "Iron", pt: "Ferro" },
+  rankBronce: { es: "Bronce", en: "Bronze", pt: "Bronze" },
+  rankPlata: { es: "Plata", en: "Silver", pt: "Prata" },
+  rankOro: { es: "Oro", en: "Gold", pt: "Ouro" },
+  rankPlatino: { es: "Platino", en: "Platinum", pt: "Platina" },
+  rankDiamante: { es: "Diamante", en: "Diamond", pt: "Diamante" },
+  rankEpico: { es: "Épico", en: "Epic", pt: "Épico" },
+  rankMitico: { es: "Mítico", en: "Mythic", pt: "Mítico" },
+  rankMaestro: { es: "Maestro", en: "Master", pt: "Mestre" },
+  rankGranMaestro: { es: "Gran Maestro", en: "Grand Master", pt: "Grão-Mestre" },
+  rankLegendario: { es: "Legendario", en: "Legendary", pt: "Lendário" },
+  rankDivino: { es: "Divino", en: "Divine", pt: "Divino" },
+  playRanked: { es: "JUGAR CLASIFICATORIA", en: "PLAY RANKED", pt: "JOGAR RANQUEADO" },
+  recentMatches: { es: "Partidas recientes", en: "Recent Matches", pt: "Partidas recentes" },
+  globalRanking: { es: "Ranking Global", en: "Global Ranking", pt: "Ranking Global" },
+  stars: { es: "Estrellas", en: "Stars", pt: "Estrelas" },
   youLabel: { es: "TÚ", en: "YOU", pt: "VOCÊ" },
   rankTitle: { es: "Ranking", en: "Ranking", pt: "Ranking" },
   viewRanking: { es: "Ranking Mundial", en: "World Ranking", pt: "Ranking Mundial" },
@@ -344,6 +387,28 @@ const translations = {
   unlinkMsg: { es: "¿Seguro que quieres desvincular esta cuenta?", en: "Are you sure you want to unlink this account?", pt: "Tem certeza que quer desvincular esta conta?" },
   linked: { es: "Vinculado", en: "Linked", pt: "Vinculado" },
   notLinked: { es: "No vinculado", en: "Not linked", pt: "Não vinculado" },
+
+  // ─── Store info previews ──────────────────────────────────────────────────
+  effectInfoPreview: { es: "Este efecto se mostrará al jugar cartas especiales.", en: "This effect shows when playing special cards.", pt: "Este efeito aparece ao jogar cartas especiais." },
+  emoteLabel: { es: "Emote", en: "Emote", pt: "Emote" },
+  profileInfoPreview: { es: "Personaliza tu perfil con este item.", en: "Customize your profile with this item.", pt: "Personalize seu perfil com este item." },
+  cardBackInfoPreview: { es: "Cambia el diseño del dorso de tus cartas.", en: "Changes the design of your card backs.", pt: "Altera o design do verso das suas cartas." },
+  titleInfoPreview: { es: "Se muestra bajo tu nombre en el perfil.", en: "Displayed below your name on your profile.", pt: "Exibido abaixo do seu nome no perfil." },
+
+  // ─── Ranked mode ─────────────────────────────────────────────────────────
+  ranked: { es: "Clasificatoria", en: "Ranked", pt: "Classificatória" },
+  modeRanked: { es: "Clasificatoria", en: "Ranked", pt: "Classificatória" },
+  rankedTitle: { es: "Modo Clasificatorio", en: "Ranked Mode", pt: "Modo Classificatório" },
+  rankedRank: { es: "Rango", en: "Rank", pt: "Rank" },
+  rankedDivision: { es: "División", en: "Division", pt: "Divisão" },
+  rankedStars: { es: "Estrellas", en: "Stars", pt: "Estrelas" },
+  rankedPromoted: { es: "¡SUBISTE DE RANGO!", en: "RANK UP!", pt: "SUBIU DE RANK!" },
+  rankedDemoted: { es: "Bajaste de rango", en: "Rank Down", pt: "Caiu de rank" },
+  rankedPlay: { es: "Jugar Clasificatoria", en: "Play Ranked", pt: "Jogar Classificatória" },
+
+  // ─── Daily Challenges ────────────────────────────────────────────────────
+  dailyChallenges: { es: "DESAFÍOS DIARIOS", en: "DAILY CHALLENGES", pt: "DESAFIOS DIÁRIOS" },
+  challengeComplete: { es: "¡Desafío completado!", en: "Challenge complete!", pt: "Desafio concluído!" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

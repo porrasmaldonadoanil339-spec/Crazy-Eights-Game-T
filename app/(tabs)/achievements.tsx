@@ -14,6 +14,8 @@ import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
 import { BATTLE_PASS_TIERS, getXpProgress, getBPRewardLabel } from "@/lib/battlePass";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";
+import { getRankInfo, RANKS, RANK_COLORS } from "@/lib/ranked";
+import { router } from "expo-router";
 
 const RARITY_COLORS_MAP: Record<string, string> = {
   common: "#95A5A6",
@@ -22,7 +24,7 @@ const RARITY_COLORS_MAP: Record<string, string> = {
   legendary: "#D4AF37",
 };
 
-type Tab = "achievements" | "battlepass";
+type Tab = "achievements" | "battlepass" | "ranked";
 
 export default function AchievementsScreen() {
   const insets = useSafeAreaInsets();
@@ -57,6 +59,8 @@ export default function AchievementsScreen() {
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
   const unlockedCount = profile.achievementProgress.filter((a) => a.unlocked).length;
   const claimableCount = profile.achievementProgress.filter((a) => a.unlocked && !a.claimedReward).length;
+
+  const rankInfo = getRankInfo(profile.rankedProfile);
 
   const isDark = profile.darkMode !== false;
   const themeColors = isDark ? Colors : LightColors;
@@ -113,6 +117,19 @@ export default function AchievementsScreen() {
           <Ionicons name="star" size={16} color={activeTab === "battlepass" ? themeGold : themeColors.textMuted} />
           <Text style={[styles.tabLabel, { color: activeTab === "battlepass" ? themeGold : themeColors.textMuted }]}>
             {T("battlePass")}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setActiveTab("ranked")}
+          style={[
+            styles.tabBtn,
+            { backgroundColor: themeColors.surface, borderColor: themeColors.border },
+            activeTab === "ranked" && { borderColor: themeGold, backgroundColor: themeGold + "22" },
+          ]}
+        >
+          <Ionicons name="trophy" size={16} color={activeTab === "ranked" ? themeGold : themeColors.textMuted} />
+          <Text style={[styles.tabLabel, { color: activeTab === "ranked" ? themeGold : themeColors.textMuted }]}>
+            Ranking
           </Text>
         </Pressable>
       </View>
@@ -188,7 +205,7 @@ export default function AchievementsScreen() {
               );
             })}
           </>
-        ) : (
+        ) : activeTab === "battlepass" ? (
           <>
             <View style={styles.bpHeader}>
               <View style={[styles.bpLevelBig, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
@@ -238,6 +255,43 @@ export default function AchievementsScreen() {
               );
             })}
           </>
+        ) : (
+          <View style={styles.rankedSection}>
+            <View style={[styles.rankMiniCard, { backgroundColor: themeColors.surface, borderColor: rankInfo.color + "44" }]}>
+              <View style={[styles.rankMiniIcon, { backgroundColor: rankInfo.color + "22" }]}>
+                <Ionicons name="trophy" size={32} color={rankInfo.color} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.rankMiniLabel, { color: themeColors.textMuted }]}>{T("yourTurn")}</Text>
+                <Text style={[styles.rankMiniName, { color: rankInfo.color }]}>
+                  {T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName} {profile.rankedProfile.division + 1}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => router.push("/ranked")}
+                style={({ pressed }) => [styles.viewRankBtn, { backgroundColor: themeGold }, pressed && { opacity: 0.8 }]}
+              >
+                <Text style={styles.viewRankText}>{T("ok")}</Text>
+              </Pressable>
+            </View>
+            
+            <Text style={[styles.rarityHeader, { color: themeColors.text, marginTop: 24 }]}>{T("globalRanking")}</Text>
+            {Array.from({ length: 10 }).map((_, i) => {
+              const cpuRank = Math.max(0, 11 - Math.floor(i / 2));
+              return (
+                <View key={i} style={[styles.rankRow, { backgroundColor: themeColors.surface }]}>
+                  <Text style={[styles.rankNum, { color: i < 3 ? themeGold : themeColors.textDim }]}>#{i + 1}</Text>
+                  <View style={styles.rankInfo}>
+                    <Text style={[styles.rankPlayerName, { color: themeColors.text }]}>Player {i + 100}</Text>
+                    <Text style={[styles.rankPlayerMeta, { color: themeColors.textMuted }]}>
+                       {T(`rank${RANKS[cpuRank]}` as any)} I
+                    </Text>
+                  </View>
+                  <Ionicons name="trophy" size={16} color={RANK_COLORS[cpuRank] || themeGold} />
+                </View>
+              );
+            })}
+          </View>
         )}
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -331,4 +385,27 @@ const styles = StyleSheet.create({
     shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 8,
   },
   toastText: { fontFamily: "Nunito_700Bold", fontSize: 13 },
+  rankedSection: { gap: 12 },
+  rankMiniCard: {
+    flexDirection: "row", alignItems: "center", gap: 16,
+    padding: 16, borderRadius: 16, borderWidth: 1,
+  },
+  rankMiniIcon: {
+    width: 60, height: 60, borderRadius: 30,
+    alignItems: "center", justifyContent: "center",
+  },
+  rankMiniLabel: { fontFamily: "Nunito_400Regular", fontSize: 11 },
+  rankMiniName: { fontFamily: "Nunito_900ExtraBold", fontSize: 18 },
+  viewRankBtn: {
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+  },
+  viewRankText: { fontFamily: "Nunito_900ExtraBold", fontSize: 12, color: "#1a0a00" },
+  rankRow: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    padding: 12, borderRadius: 14, marginBottom: 8,
+  },
+  rankNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, width: 25 },
+  rankInfo: { flex: 1 },
+  rankPlayerName: { fontFamily: "Nunito_700Bold", fontSize: 14 },
+  rankPlayerMeta: { fontFamily: "Nunito_400Regular", fontSize: 12 },
 });

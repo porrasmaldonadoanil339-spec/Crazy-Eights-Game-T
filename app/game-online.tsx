@@ -20,14 +20,23 @@ import {
   cpuPlayMulti, suitName, suitSymbol, suitColor, multiGetTopCard,
 } from "@/lib/multiplayerEngine";
 import { useProfile } from "@/context/ProfileContext";
-import { playCardFlip, playCardDraw, playButton, playWin } from "@/lib/audioManager";
+import { playCardFlip, playCardDraw, playButton, playWin, playMenuOpen, stopMusic, resumeMusic } from "@/lib/audioManager";
 import { CARD_BACKS } from "@/lib/storeItems";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
+import { playSound } from "@/lib/sounds";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 
-function pickCpuProfiles(count: number): CpuProfile[] {
-  const shuffled = [...CPU_PROFILES].sort(() => Math.random() - 0.5);
+function pickCpuProfiles(count: number, playerLevel: number): CpuProfile[] {
+  const range = 15;
+  let candidates = CPU_PROFILES.filter(p => Math.abs(p.level - playerLevel) <= range);
+  
+  if (candidates.length < count) {
+    const wideRange = 30;
+    candidates = CPU_PROFILES.filter(p => Math.abs(p.level - playerLevel) <= wideRange);
+  }
+
+  const shuffled = [...(candidates.length >= count ? candidates : CPU_PROFILES)].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
 
@@ -68,15 +77,22 @@ function LobbyScreen({
   }, [phase]);
   const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
 
+  const modeParam = useLocalSearchParams<{ mode?: string }>().mode || "classic";
+  const modeName = T(`mode${modeParam.charAt(0).toUpperCase() + modeParam.slice(1)}` as any);
+
   return (
     <View style={lobbyStyles.container}>
       <LinearGradient colors={["#020810", "#041530", "#02080f"]} style={lobbyStyles.bg} />
 
       <View style={lobbyStyles.content}>
+        <View style={lobbyStyles.header}>
+          <Text style={lobbyStyles.modeLabel}>{modeName.toUpperCase()}</Text>
+        </View>
+
         {phase === "searching" && (
           <>
             <LobbySpinner />
-            <Text style={lobbyStyles.searchLabel}>{T("searching").toUpperCase()}</Text>
+            <Text style={lobbyStyles.searchLabel}>{T("searchingWorld").toUpperCase()}</Text>
             <Text style={lobbyStyles.searchSub}>{joinedCount + 1}/{playerCount} {T("players")}</Text>
           </>
         )}
@@ -152,6 +168,8 @@ const lobbyStyles = StyleSheet.create({
   container: { flex: 1 },
   bg: StyleSheet.absoluteFillObject,
   content: { flex: 1, alignItems: "center", justifyContent: "center", gap: 20, padding: 24 },
+  header: { position: "absolute", top: 60, alignItems: "center" },
+  modeLabel: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: Colors.gold, letterSpacing: 4 },
   spinner: { fontSize: 52, color: "#4A90E2", fontFamily: "Nunito_900ExtraBold" },
   searchLabel: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: "#4A90E2", letterSpacing: 3 },
   searchSub: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textDim },
@@ -336,7 +354,7 @@ export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
   const params = useLocalSearchParams<{ count?: string; rivalName?: string }>();
-  const { profile } = useProfile();
+  const { profile, level: playerLevel } = useProfile();
   const T = useT();
 
   const cardBack = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
@@ -351,10 +369,10 @@ export default function OnlineGameScreen() {
   const tableH = tableW * 0.55;
   const tableCenterY = zoneH * 0.44;
 
-  const playerCount = Math.min(4, Math.max(2, parseInt(params.count ?? "2", 10)));
+  const playerCount = Math.min(4, Math.max(3, parseInt(params.count ?? "3", 10)));
 
   const [currentCpuProfiles, setCurrentCpuProfiles] = useState<CpuProfile[]>(() => {
-    const profiles = pickCpuProfiles(playerCount - 1);
+    const profiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
     if (params.rivalName && profiles.length > 0) {
       profiles[0] = { ...profiles[0], name: params.rivalName };
     }
@@ -383,21 +401,30 @@ export default function OnlineGameScreen() {
     const timers: ReturnType<typeof setTimeout>[] = [];
     let delay = 1200;
 
+    playSound("searching").catch(() => {});
+
     for (let i = 0; i < playerCount - 1; i++) {
-      const d = delay;
+      const d = delay + Math.random() * 2000;
       timers.push(setTimeout(() => setJoinedCount(prev => prev + 1), d));
-      delay += 800 + Math.random() * 400;
+      delay = d + 1500 + Math.random() * 1000;
     }
 
-    timers.push(setTimeout(() => setLobbyPhase("found"), delay));
-    delay += 800;
-    timers.push(setTimeout(() => setLobbyPhase("countdown"), delay));
-    delay += 400;
+    const searchTime = 6000 + Math.random() * 6000;
+    const finalSearchDelay = Math.max(delay, searchTime);
+
+    timers.push(setTimeout(() => {
+      setLobbyPhase("found");
+      stopMusic().catch(() => {});
+    }, finalSearchDelay));
+    
+    let currentDelay = finalSearchDelay + 800;
+    timers.push(setTimeout(() => setLobbyPhase("countdown"), currentDelay));
+    currentDelay += 400;
 
     for (let c = 3; c >= 1; c--) {
       const cVal = c;
-      timers.push(setTimeout(() => setCountdown(cVal), delay));
-      delay += 1000;
+      timers.push(setTimeout(() => setCountdown(cVal), currentDelay));
+      currentDelay += 1000;
     }
 
     timers.push(setTimeout(() => {
@@ -405,9 +432,12 @@ export default function OnlineGameScreen() {
       gs.phase = "playing"; // Online starts directly, no pass_device for human
       setGameState(gs);
       setLobbyPhase("dealing");
-    }, delay));
+    }, currentDelay));
 
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      timers.forEach(clearTimeout);
+      resumeMusic().catch(() => {});
+    };
   }, []);
 
   const handleDealingComplete = useCallback(() => {
@@ -549,7 +579,7 @@ export default function OnlineGameScreen() {
 
   // ─── Play again with fresh opponent ─────────────────────────────────────
   const handlePlayAgain = React.useCallback(() => {
-    const newProfiles = pickCpuProfiles(playerCount - 1);
+    const newProfiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
     setCurrentCpuProfiles(newProfiles);
     const newNames = [humanName, ...newProfiles.map(c => c.name)];
     const gs = initMultiGame(newNames);

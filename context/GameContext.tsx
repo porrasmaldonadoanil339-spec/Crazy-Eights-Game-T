@@ -28,6 +28,7 @@ export interface GameSession {
   gameStartTime: number;
   cardsDrawnThisGame: number;
   eightsPlayedThisGame: number;
+  cardsPlayedThisGame: number;
   maxHandSizeReached: number;
 }
 
@@ -69,6 +70,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       gameStartTime: Date.now(),
       cardsDrawnThisGame: 0,
       eightsPlayedThisGame: 0,
+      cardsPlayedThisGame: 0,
       maxHandSizeReached: modeConfig.cardsPerPlayer,
     });
   }, []);
@@ -84,6 +86,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       return {
         ...prev,
         eightsPlayedThisGame: card.rank === "8" ? prev.eightsPlayedThisGame + 1 : prev.eightsPlayedThisGame,
+        cardsPlayedThisGame: prev.cardsPlayedThisGame + 1,
       };
     });
     setSelectedCard(null);
@@ -129,6 +132,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         gameStartTime: Date.now(),
         cardsDrawnThisGame: 0,
         eightsPlayedThisGame: 0,
+        cardsPlayedThisGame: 0,
       };
     });
     setSelectedCard(null);

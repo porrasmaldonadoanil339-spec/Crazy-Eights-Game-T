@@ -41,7 +41,8 @@ export type SoundEvent =
   | "friend_request"
   | "invite_accepted"
   | "deal_card"
-  | "tension";
+  | "tension"
+  | "searching";
 
 import {
   playCardFlip,
@@ -124,5 +125,6 @@ export async function playSound(event: SoundEvent) {
     case "invite_accepted":    return playInviteAccepted();
     case "deal_card":          return playDealCard();
     case "tension":            return playTension();
+    case "searching":          return playMenuOpen();
   }
 }

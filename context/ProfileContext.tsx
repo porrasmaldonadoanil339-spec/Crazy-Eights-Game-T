@@ -12,6 +12,7 @@ import { ACHIEVEMENTS, Achievement, AchievementId } from "@/lib/achievements";
 import { STORE_ITEMS, StoreItem } from "@/lib/storeItems";
 import { BATTLE_PASS_TIERS, getCurrentBattlePassTier, getPlayerLevel, getXpProgress } from "@/lib/battlePass";
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
+import { RankedProfile, addStars } from "@/lib/ranked";
 
 export interface PlayerStats {
   totalGames: number;
@@ -106,6 +107,7 @@ export interface PlayerProfile {
   // Linked accounts
   linkedGoogle?: string;
   linkedFacebook?: string;
+  rankedProfile: RankedProfile;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -161,6 +163,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   vibrationEnabled: true,
   language: "es",
   darkMode: true,
+  rankedProfile: { rank: 0, division: 0, stars: 0, maxStars: 5, totalWins: 0, totalLosses: 0 },
 };
 
 interface ProfileContextValue {
@@ -198,6 +201,7 @@ interface ProfileContextValue {
   todaysDailyReward: DailyReward;
   updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt"; darkMode?: boolean }) => void;
   updateEquippedEmotes: (emoteIds: string[]) => void;
+  updateRanked: (delta: number) => void;
   watchAd: () => boolean;
   adsWatchedToday: number;
   adDailyLimit: number;
@@ -290,6 +294,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const updateEquippedEmotes = useCallback((emoteIds: string[]) => {
     update((p) => ({ ...p, equippedEmotes: emoteIds.slice(0, 8) }));
+  }, [update]);
+
+  const updateRanked = useCallback((delta: number) => {
+    update((p) => ({
+      ...p,
+      rankedProfile: addStars(p.rankedProfile, delta),
+    }));
   }, [update]);
 
   const updatePhotoUri = useCallback((uri: string) => {
@@ -556,6 +567,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         todaysDailyReward,
         updateSettings,
         updateEquippedEmotes,
+        updateRanked,
         watchAd,
         adsWatchedToday,
         adDailyLimit: AD_DAILY_LIMIT,

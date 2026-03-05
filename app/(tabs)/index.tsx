@@ -22,6 +22,8 @@ import { playButton, syncSettings } from "@/lib/audioManager";
 import { playSound } from "@/lib/sounds";
 import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName } from "@/lib/achTranslations";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
+import { FlatList } from "react-native";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -206,7 +208,7 @@ function PokerTitle() {
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
-  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp } = useProfile();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
@@ -222,10 +224,31 @@ export default function PlayScreen() {
   const [generatedRoomCode, setGeneratedRoomCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
 
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+
   const T = useT();
   const isDark = profile.darkMode !== false;
   const theme = isDark ? Colors : LightColors;
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+
+  // Load challenges
+  useEffect(() => {
+    if (isLoaded) {
+      getDailyChallenges(level).then(setChallenges);
+    }
+  }, [level, isLoaded]);
+
+  const handleClaimChallenge = async (id: string) => {
+    const ch = challenges.find((c) => c.id === id);
+    if (!ch || !ch.completed || ch.claimed) return;
+    
+    await playSound("daily_reward").catch(() => {});
+    addCoins(ch.coinReward);
+    addXp(ch.xpReward);
+    
+    const updated = await claimChallenge(id);
+    setChallenges(updated);
+  };
   const swipeHandlers = useSwipeTabs(0);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
@@ -389,6 +412,76 @@ export default function PlayScreen() {
         )}
 
         <PokerTitle />
+
+        {/* Daily Challenges Section */}
+        {challenges.length > 0 && (
+          <View style={{ marginVertical: 10 }}>
+            <View style={[styles.sectionHeader, { marginTop: 0 }]}>
+              <Ionicons name="flash" size={14} color={theme.gold} />
+              <Text style={[styles.sectionLabel, { color: theme.gold }]}>
+                {lang === "en" ? "DAILY CHALLENGES" : lang === "pt" ? "DESAFIOS DIÁRIOS" : "DESAFÍOS DIARIOS"}
+              </Text>
+            </View>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={challenges}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingBottom: 8 }}
+              renderItem={({ item }) => {
+                const title = lang === "en" ? item.titleEn : lang === "pt" ? item.titlePt : item.title;
+                const desc = lang === "en" ? item.descriptionEn : lang === "pt" ? item.descriptionPt : item.description;
+                const progressPct = Math.min(1, item.progress / item.target);
+                
+                return (
+                  <View style={[
+                    styles.challengeCard, 
+                    { backgroundColor: theme.surface, borderColor: item.completed ? theme.gold : "rgba(255,255,255,0.1)" },
+                    item.claimed && { opacity: 0.6 }
+                  ]}>
+                    <View style={styles.challengeHeader}>
+                      <View style={[styles.challengeIcon, { backgroundColor: item.completed ? theme.gold + "20" : "rgba(255,255,255,0.05)" }]}>
+                        <Ionicons name={item.icon as any} size={20} color={item.completed ? theme.gold : theme.textMuted} />
+                      </View>
+                      <View style={{ flex: 1, marginLeft: 10 }}>
+                        <Text style={[styles.challengeTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
+                        <Text style={[styles.challengeDesc, { color: theme.textMuted }]} numberOfLines={2}>{desc}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.challengeProgressWrap}>
+                      <View style={styles.challengeProgressInfo}>
+                        <Text style={[styles.challengeProgressText, { color: theme.textMuted }]}>{item.progress}/{item.target}</Text>
+                        <Text style={[styles.challengeRewardText, { color: theme.gold }]}>+{item.coinReward} <Ionicons name="cash" size={10} /></Text>
+                      </View>
+                      <View style={[styles.challengeProgressBar, { backgroundColor: "rgba(255,255,255,0.1)" }]}>
+                        <View style={[styles.challengeProgressFill, { width: `${progressPct * 100}%`, backgroundColor: item.completed ? theme.gold : "#4A90E2" }]} />
+                      </View>
+                    </View>
+
+                    {item.completed && !item.claimed && (
+                      <Pressable 
+                        onPress={() => handleClaimChallenge(item.id)}
+                        style={({ pressed }) => [styles.challengeClaimBtn, pressed && { opacity: 0.8 }]}
+                      >
+                        <LinearGradient colors={[theme.gold, "#B8860B"]} style={styles.challengeClaimGrad}>
+                          <Text style={styles.challengeClaimText}>{T("claim").toUpperCase()}</Text>
+                        </LinearGradient>
+                      </Pressable>
+                    )}
+                    
+                    {item.claimed && (
+                      <View style={styles.challengeClaimedBadge}>
+                        <Ionicons name="checkmark-circle" size={16} color={theme.gold} />
+                        <Text style={[styles.challengeClaimedText, { color: theme.gold }]}>{T("claimed").toUpperCase()}</Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              }}
+            />
+          </View>
+        )}
 
         <View style={styles.suitDivider}>
           <View style={[styles.dividerLine, { backgroundColor: theme.gold + "40" }]} />
@@ -655,7 +748,7 @@ export default function PlayScreen() {
                       <Text style={[styles.multiStartBtnText, { color: "#4A90E2" }]}>{lang === "en" ? "New Code" : lang === "pt" ? "Novo Código" : "Nuevo Código"}</Text>
                     </View>
                   </Pressable>
-                  {generatedRoomCode && (
+                  {!!generatedRoomCode && (
                     <Pressable onPress={handleStartOnline} style={[styles.multiStartBtn, { flex: 2 }]}>
                       <LinearGradient colors={["#1a3a7a", "#4A90E2"]} style={styles.multiStartBtnGrad}>
                         <Ionicons name="play" size={18} color="#fff" />
@@ -1006,6 +1099,85 @@ const styles = StyleSheet.create({
   },
   onlineDotSmall: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#2ecc71" },
   onlineDotText: { fontFamily: "Nunito_900ExtraBold", fontSize: 8, color: "#2ecc71", letterSpacing: 1 },
+
+  // Challenge Cards
+  challengeCard: {
+    width: 200,
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    gap: 10,
+    justifyContent: "space-between",
+  },
+  challengeHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  challengeIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  challengeTitle: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 13,
+  },
+  challengeDesc: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 10,
+    lineHeight: 12,
+  },
+  challengeProgressWrap: {
+    gap: 4,
+  },
+  challengeProgressInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  challengeProgressText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 10,
+  },
+  challengeRewardText: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 11,
+  },
+  challengeProgressBar: {
+    height: 6,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  challengeProgressFill: {
+    height: "100%",
+    borderRadius: 3,
+  },
+  challengeClaimBtn: {
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  challengeClaimGrad: {
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  challengeClaimText: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 12,
+    color: "#1a0a00",
+  },
+  challengeClaimedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: 6,
+  },
+  challengeClaimedText: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 12,
+  },
 
   // Multiplayer modal
   multiModalOverlay: {

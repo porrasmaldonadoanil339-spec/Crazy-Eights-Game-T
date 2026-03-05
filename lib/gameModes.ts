@@ -4,7 +4,8 @@ export type GameModeId =
   | "tournament"
   | "coop"
   | "challenge"
-  | "practice";
+  | "practice"
+  | "ranked";
 
 export type Difficulty = "easy" | "normal" | "intermediate" | "hard" | "expert";
 

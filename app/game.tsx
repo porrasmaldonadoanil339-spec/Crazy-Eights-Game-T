@@ -24,6 +24,7 @@ import { suitSymbol, suitName, suitColor, canPlay } from "@/lib/gameEngine";
 import { getModeById, getDifficultyById } from "@/lib/gameModes";
 import { AVATARS, CARD_BACKS } from "@/lib/storeItems";
 import type { Card } from "@/lib/gameEngine";
+import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
@@ -142,7 +143,7 @@ function SuitPicker({ visible, onSelect, isJoker }: {
               {SUITS.map((suit) => (
                 <Pressable key={suit} onPress={() => onSelect(suit)} style={({ pressed }) => [styles.suitOption, pressed && styles.suitOptionPressed]}>
                   <Text style={[styles.suitSymLg, { color: suitColor(suit) }]}>{suitSymbol(suit)}</Text>
-                  <Text style={styles.suitLbl}>{suitName(suit)}</Text>
+                  <Text style={styles.suitLbl}>{T(`suit_${suit}` as any)}</Text>
                 </Pressable>
               ))}
             </View>
@@ -417,7 +418,7 @@ export default function GameScreen() {
     runAiTurn, selectedCard, setSelectedCard, dealAnimationDone, setDealAnimationDone,
     startNextTournamentRound, startGame, getGameResult,
   } = useGame();
-  const { profile, level, recordGameResult, updateAchievementProgress } = useProfile();
+  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked } = useProfile();
   const T = useT();
 
   const cardBack = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
@@ -460,6 +461,9 @@ export default function GameScreen() {
   const isExpert = session?.difficulty === "expert";
   const timerTotal = 8;
 
+  const currentModeConfig = session?.mode ? getModeById(session.mode) : null;
+  const modeName = currentModeConfig ? T(`mode${currentModeConfig.id.charAt(0).toUpperCase() + currentModeConfig.id.slice(1)}` as any) : "";
+
   // Pick CPU profile — new seed each retry so opponent changes
   const pickNewCpuProfile = () => {
     const seed = (Math.floor(Date.now() / 1000) + retryCount.current * 37) % 347;
@@ -495,13 +499,14 @@ export default function GameScreen() {
       if (cpuEmoteTimerRef.current) { clearInterval(cpuEmoteTimerRef.current); cpuEmoteTimerRef.current = null; }
       return;
     }
-    const randomEmotes = ["luck", "win", "expert", "close"];
+    const randomEmotes = ["hello", "good_game", "luck", "win", "expert", "close", "oops", "wow"];
     cpuEmoteTimerRef.current = setInterval(() => {
       if (Math.random() < 0.3) {
         const id = randomEmotes[Math.floor(Math.random() * randomEmotes.length)];
         const emote = EMOTES.find(e => e.id === id) ?? null;
         if (emote) {
-          setCpuEmote(emote);
+          const localizedEmote = { ...emote, label: T(`emote_${emote.id}` as any) };
+          setCpuEmote(localizedEmote);
           setTimeout(() => setCpuEmote(null), 2500);
         }
       }
@@ -625,6 +630,9 @@ export default function GameScreen() {
       setTimeout(() => setShowTournamentModal(true), 900);
     } else {
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
+      if (session.mode === "ranked") {
+        updateRanked(won ? 2 : -1);
+      }
     }
 
     if (won) {
@@ -644,6 +652,17 @@ export default function GameScreen() {
       if (isComeback) updateAchievementProgress("comeback_king", 1);
       if (session.mode === "lightning" && duration < 120000) updateAchievementProgress("speed_demon", 1);
       if (duration > 600000) updateAchievementProgress("marathon_man", 1);
+
+      // Update Daily Challenges
+      updateChallengeProgress("wins", won ? 1 : 0, session.mode);
+      updateChallengeProgress("play_mode", 1, session.mode);
+      updateChallengeProgress("cards_played", session.cardsPlayedThisGame ?? 0, session.mode);
+      updateChallengeProgress("specials", session.eightsPlayedThisGame, session.mode);
+    } else {
+      // Even if lost, progress "play_mode" and "cards_played"
+      updateChallengeProgress("play_mode", 1, session.mode);
+      updateChallengeProgress("cards_played", session.cardsPlayedThisGame ?? 0, session.mode);
+      updateChallengeProgress("specials", session.eightsPlayedThisGame, session.mode);
     }
     if (session.eightsPlayedThisGame > 0) {
       updateAchievementProgress("eight_wizard", 1);
@@ -781,10 +800,10 @@ export default function GameScreen() {
           <Ionicons name="arrow-back" size={20} color={Colors.gold} />
         </Pressable>
         <View style={styles.headerCenter}>
-          {modeConfig && (
-            <View style={[styles.modePill, { borderColor: modeConfig.color + "44" }]}>
-              <Ionicons name={modeConfig.icon as any} size={11} color={modeConfig.color} />
-              <Text style={[styles.modeLabel, { color: modeConfig.color }]}>{modeConfig.name}</Text>
+          {currentModeConfig && (
+            <View style={[styles.modePill, { borderColor: currentModeConfig.color + "44" }]}>
+              <Ionicons name={currentModeConfig.icon as any} size={11} color={currentModeConfig.color} />
+              <Text style={[styles.modeLabel, { color: currentModeConfig.color }]}>{modeName}</Text>
               {isExpert && <Ionicons name="timer" size={10} color="#E74C3C" style={{ marginLeft: 2 }} />}
             </View>
           )}
@@ -827,7 +846,7 @@ export default function GameScreen() {
         {/* Current suit indicator */}
         <View style={[styles.suitIndicator, { borderColor: currentSuitColor + "55" }]}>
           <Text style={[styles.suitIndicatorSym, { color: currentSuitColor }]}>{currentSuitSym}</Text>
-          <Text style={styles.suitIndicatorName}>{suitName(gameState.currentSuit)}</Text>
+          <Text style={styles.suitIndicatorName}>{T(`suit_${gameState.currentSuit}` as any)}</Text>
           {gameState.jActive && gameState.jSuit && (
             <View style={styles.jActiveBadge}>
               <Text style={styles.jActiveTxt}>{T("jActive")}</Text>

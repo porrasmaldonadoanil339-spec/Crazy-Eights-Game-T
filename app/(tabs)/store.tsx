@@ -87,6 +87,59 @@ function ConfirmModal({
   );
 }
 
+function InfoModal({
+  item, visible, onClose,
+}: { item: StoreItem | null; visible: boolean; onClose: () => void }) {
+  const T = useT();
+  const theme = useTheme();
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const rarityLabel = useRarityLabel();
+  if (!item) return null;
+  const localized = localizeItem(item, lang);
+  const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
+  const modalGrad = theme.isDark ? ["#1a1a1a", "#0a0a0a"] as const : ["#ffffff", "#f0f0f0"] as const;
+
+  let previewText = "";
+  if (item.category === "effect") {
+    previewText = T("effectInfoPreview") ?? "Este efecto se mostrará al jugar cartas especiales.";
+  } else if (item.category === "emote") {
+    previewText = `${T("emoteLabel") ?? "Emote"}: ${localized.name}`;
+  } else if (item.category === "frame" || item.category === "avatar") {
+    previewText = T("profileInfoPreview") ?? "Personaliza tu perfil con este item.";
+  } else if (item.category === "card_back") {
+    previewText = T("cardBackInfoPreview") ?? "Cambia el diseño del dorso de tus cartas.";
+  } else if (item.category === "title") {
+    previewText = T("titleInfoPreview") ?? "Se muestra bajo tu nombre en el perfil.";
+  }
+
+  return (
+    <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
+      <View style={[styles.modalBg, { backgroundColor: theme.overlay }]}>
+        <View style={[styles.infoModal, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <LinearGradient colors={modalGrad} style={StyleSheet.absoluteFill} />
+          <View style={[styles.confirmIconWrap, { backgroundColor: item.previewColor + "33", borderColor: rarityColor + "66", borderWidth: 1.5 }]}>
+            <Ionicons name={item.preview as any} size={32} color={item.previewColor} />
+          </View>
+          <View style={[styles.rarityBadge, { backgroundColor: rarityColor + "22" }]}>
+            <Text style={[styles.rarityBadgeText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
+          </View>
+          <Text style={[styles.confirmName, { color: theme.text }]}>{localized.name}</Text>
+          <Text style={[styles.confirmDesc, { color: theme.textMuted, textAlign: 'center' }]}>{localized.description}</Text>
+          
+          <View style={[styles.infoPreviewBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.infoPreviewText, { color: theme.text }]}>{previewText}</Text>
+          </View>
+
+          <Pressable onPress={onClose} style={[styles.closeInfoBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.cancelText, { color: theme.text }]}>{T("close")}</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function EquipBadge({ isEquipped, onEquip, T }: { isEquipped: boolean; onEquip: () => void; T: (k: any) => string }) {
   const theme = useTheme();
   if (isEquipped) {
@@ -112,8 +165,8 @@ function EquipBadge({ isEquipped, onEquip, T }: { isEquipped: boolean; onEquip: 
   );
 }
 
-function EffectCard({ item, owned, isEquipped, onPress, onEquip }: {
-  item: StoreItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void;
+function EffectCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
+  item: StoreItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void; onInfo: () => void;
 }) {
   const T = useT();
   const theme = useTheme();
@@ -133,6 +186,12 @@ function EffectCard({ item, owned, isEquipped, onPress, onEquip }: {
       ]}
     >
       <LinearGradient colors={[rarityColor + "18", rarityColor + "06"]} style={styles.effectGrad}>
+        <Pressable 
+          onPress={(e) => { e.stopPropagation(); onInfo(); }}
+          style={styles.infoBtn}
+        >
+          <Ionicons name="help-circle-outline" size={18} color={theme.textMuted} />
+        </Pressable>
         <View style={[styles.effectIconWrap, { backgroundColor: item.previewColor + "33", borderColor: item.previewColor + "44" }]}>
           <Ionicons name={item.preview as any} size={30} color={item.previewColor} />
         </View>
@@ -162,8 +221,8 @@ function EffectCard({ item, owned, isEquipped, onPress, onEquip }: {
   );
 }
 
-function StoreItemCard({ item, owned, isEquipped, onPress, onEquip }: {
-  item: StoreItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void;
+function StoreItemCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
+  item: StoreItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void; onInfo: () => void;
 }) {
   const T = useT();
   const theme = useTheme();
@@ -183,6 +242,12 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip }: {
       ]}
     >
       <LinearGradient colors={[rarityColor + "18", "transparent"]} style={styles.itemGrad}>
+        <Pressable 
+          onPress={(e) => { e.stopPropagation(); onInfo(); }}
+          style={styles.infoBtn}
+        >
+          <Ionicons name="help-circle-outline" size={16} color={theme.textMuted} />
+        </Pressable>
         <View style={[styles.rarityBadgeSmall]}>
           <Text style={[styles.rarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
         </View>
@@ -226,8 +291,8 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip }: {
   );
 }
 
-function EmoteCard({ item, owned, isEquipped, equippedCount, onPress, onToggle }: {
-  item: StoreItem; owned: boolean; isEquipped: boolean; equippedCount: number; onPress: () => void; onToggle: () => void;
+function EmoteCard({ item, owned, isEquipped, equippedCount, onPress, onToggle, onInfo }: {
+  item: StoreItem; owned: boolean; isEquipped: boolean; equippedCount: number; onPress: () => void; onToggle: () => void; onInfo: () => void;
 }) {
   const T = useT();
   const theme = useTheme();
@@ -247,6 +312,12 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, onPress, onToggle }
       ]}
     >
       <LinearGradient colors={[rarityColor + "18", rarityColor + "06"]} style={styles.effectGrad}>
+        <Pressable 
+          onPress={(e) => { e.stopPropagation(); onInfo(); }}
+          style={styles.infoBtn}
+        >
+          <Ionicons name="help-circle-outline" size={18} color={theme.textMuted} />
+        </Pressable>
         <View style={[styles.effectIconWrap, { backgroundColor: item.previewColor + "33", borderColor: item.previewColor + "44", width: 44, height: 44 }]}>
           <Ionicons name={item.preview as any} size={22} color={item.previewColor} />
         </View>
@@ -295,6 +366,7 @@ export default function StoreScreen() {
   const { profile, buyItem, updateCardBack, updateAvatar, updateTitle, updateFrame, updateEffect, updateEquippedEmotes } = useProfile();
   const [category, setCategory] = useState<StoreItemCategory>("card_back");
   const [confirmItem, setConfirmItem] = useState<StoreItem | null>(null);
+  const [infoItem, setInfoItem] = useState<StoreItem | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const catScrollRef = useRef<ScrollView>(null);
 
@@ -456,6 +528,7 @@ export default function StoreScreen() {
                 isEquipped={equippedId === item.id}
                 onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
                 onEquip={() => equipItem(item)}
+                onInfo={() => { setInfoItem(item); playSound("tab").catch(() => {}); }}
               />
             );
           })
@@ -472,6 +545,7 @@ export default function StoreScreen() {
                 equippedCount={equippedEmotes.length}
                 onPress={() => { if (!item.isDefault && !owned) setConfirmItem(item); }}
                 onToggle={() => { if (owned) toggleEmote(item); }}
+                onInfo={() => { setInfoItem(item); playSound("tab").catch(() => {}); }}
               />
             );
           })
@@ -486,6 +560,7 @@ export default function StoreScreen() {
                 isEquipped={equippedId === item.id}
                 onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
                 onEquip={() => equipItem(item)}
+                onInfo={() => { setInfoItem(item); playSound("tab").catch(() => {}); }}
               />
             );
           })
@@ -504,6 +579,12 @@ export default function StoreScreen() {
         visible={!!confirmItem}
         onConfirm={handlePurchase}
         onCancel={() => setConfirmItem(null)}
+      />
+
+      <InfoModal
+        item={infoItem}
+        visible={!!infoItem}
+        onClose={() => setInfoItem(null)}
       />
     </View>
   );
@@ -640,4 +721,23 @@ const styles = StyleSheet.create({
     shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 8,
   },
   toastText: { fontFamily: "Nunito_700Bold", fontSize: 13, color: Colors.text },
+  infoBtn: {
+    position: "absolute", top: 8, right: 8, zIndex: 10,
+    padding: 4,
+  },
+  infoModal: {
+    width: "85%", maxWidth: 340, padding: 24, borderRadius: 32, alignItems: "center",
+    borderWidth: 2, overflow: "hidden", gap: 12,
+  },
+  infoPreviewBox: {
+    width: "100%", padding: 16, borderRadius: 20, borderWidth: 1,
+    marginTop: 12, alignItems: "center", justifyContent: "center",
+  },
+  infoPreviewText: {
+    fontFamily: "Nunito_600SemiBold", fontSize: 14, textAlign: "center", lineHeight: 20,
+  },
+  closeInfoBtn: {
+    marginTop: 12, width: "100%", padding: 14, borderRadius: 16, alignItems: "center",
+    borderWidth: 1,
+  },
 });
