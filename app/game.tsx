@@ -951,6 +951,21 @@ export default function GameScreen() {
 
   const msgStyle = useAnimatedStyle(() => ({ opacity: msgOpacity.value }));
 
+  const [adviceCardId, setAdviceCardId] = useState<string | null>(null);
+
+  // Practice Advice Logic — must be before early return to respect Rules of Hooks
+  useEffect(() => {
+    if (!gameState) { setAdviceCardId(null); return; }
+    const _isPlayerTurn = gameState.currentPlayer === "player" && gameState.phase === "playing" && dealAnimationDone;
+    const _isGameOver = ["player_wins", "ai_wins", "draw"].includes(gameState.phase);
+    if (session?.mode === "practice" && _isPlayerTurn && !_isGameOver) {
+      const playable = gameState.playerHand.filter(c => canPlay(c, gameState));
+      setAdviceCardId(playable.length > 0 ? playable[0].id : null);
+    } else {
+      setAdviceCardId(null);
+    }
+  }, [gameState?.currentPlayer, gameState?.turnId, session?.mode, gameState?.phase, dealAnimationDone]);
+
   if (!gameState) {
     return (
       <View style={[styles.container, { paddingTop: topPad }]}>
@@ -966,22 +981,6 @@ export default function GameScreen() {
   const isGameOver = ["player_wins", "ai_wins", "draw"].includes(gameState.phase);
   const playableCount = isPlayerTurn ? gameState.playerHand.filter((c) => canPlay(c, gameState)).length : 0;
   const modeConfig = session ? getModeById(session.mode) : null;
-
-  const [adviceCardId, setAdviceCardId] = useState<string | null>(null);
-
-  // Practice Advice Logic
-  useEffect(() => {
-    if (session?.mode === "practice" && isPlayerTurn && !isGameOver) {
-      const playable = gameState.playerHand.filter(c => canPlay(c, gameState));
-      if (playable.length > 0) {
-        setAdviceCardId(playable[0].id);
-      } else {
-        setAdviceCardId(null);
-      }
-    } else {
-      setAdviceCardId(null);
-    }
-  }, [isPlayerTurn, gameState?.turnId, session?.mode, isGameOver]);
 
   const handleCardPress = async (card: Card) => {
     if (!isPlayerTurn) return;

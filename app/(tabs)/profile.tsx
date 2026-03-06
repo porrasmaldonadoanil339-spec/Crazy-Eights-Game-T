@@ -173,6 +173,7 @@ function AvatarPickerModal({
   onClearPhoto: () => void;
   onClose: () => void;
 }) {
+  const T = useT();
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.modalBg} onPress={onClose}>
@@ -233,6 +234,7 @@ function FramePickerModal({
   visible: boolean; ownedItems: string[]; currentId: string;
   onSelect: (id: string) => void; onClose: () => void;
 }) {
+  const T = useT();
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.modalBg} onPress={onClose}>

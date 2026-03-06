@@ -1,0 +1,132 @@
+CORRIGEME ESTO QUE ME APARECE CUANDO JUEGO Something went wrong
+Please reload the app to continue.  (NO SE PUEDE JUGAR LA VISTA PREVIA CORRIGE ELLO PORFAVOR) LO DE LAS CARTAS NO DEBE TENER EL MISMO FORMATO QUE LOS DORSOS PORQUE CARTAS ES LO DE ADELANTE ES DECIR QUE SALGA UNA IMAGEN DE LA CARTA OCHO CON DISTINTOS DISEÑOS COMO LOS QUE TE MANDE DE DISEÑOS DE CARTAS Y LA CANTIDAD 90 ESTA BIEN .
+Quiero implementar notificaciones push en mi juego para que aparezcan en el celular del jugador incluso cuando la app esté cerrada.
+Las notificaciones deben depender del progreso del jugador.
+Por ejemplo:
+•	Cuando haya misiones nuevas disponibles.
+•	Cuando el jugador pueda reclamar recompensas.
+•	Cuando tenga energía o turnos disponibles para jugar.
+•	Cuando haya eventos especiales o recompensas diarias.
+•	Recordatorios si el jugador no entra al juego durante varias horas o días.
+Las notificaciones deben ser dinámicas según el progreso del jugador y personalizadas.
+AGREGARE ESTA ACTUALIZACION CON Idiomas para tu juego
+🇪🇸 Español
+Español (España)
+🇲🇽 Español (Latinoamérica)
+🇺🇸 English
+English (USA)
+🇬🇧 English (UK)
+🇧🇷 Português
+Português (Brasil)
+🇵🇹 Português (Portugal)
+🇫🇷 Français
+Français (France)
+🇩🇪 Deutsch
+Deutsch (Deutschland)
+🇮🇹 Italiano
+Italiano (Italia)
+🇹🇷 Türkçe
+🇷🇺 Русский
+Russian
+🇵🇱 Polski
+Polish
+🇳🇱 Nederlands
+Dutch
+🇸🇪 Svenska
+Swedish
+🇩🇰 Dansk
+Danish
+🇫🇮 Suomi
+Finnish
+🇳🇴 Norsk
+Norwegian
+🇨🇳 中文 (简体)
+Chinese (Simplified)
+🇹🇼 中文 (繁體)
+Chinese (Traditional)
+🇯🇵 日本語
+Japanese
+🇰🇷 한국어
+Korean
+🇮🇳 हिन्दी
+Hindi
+🇹🇭 ไทย
+Thai
+🇻🇳 Tiếng Việt
+Vietnamese
+🇮🇩 Bahasa Indonesia
+Indonesian
+🇸🇦 العربية
+Arabic
+
+Quiero implementar un sistema de internacionalización completo (i18n).
+Cuando el jugador cambie el idioma en configuración, todo el juego debe cambiar al 100% al idioma seleccionado.
+Esto incluye:
+•	Menús
+•	Botones
+•	Misiones
+•	Notificaciones
+•	Tienda
+•	Tutorial
+•	Mensajes del sistema
+•	Errores
+•	Eventos
+Ningún texto debe quedar en otro idioma.
+PARA LOS AJUSTES DE MI JUEGO
+🌐 Idioma
+•	Cambiar idioma del juego 
+•	Detectar idioma automáticamente del teléfono
+________________________________________
+🔊 Sonido
+•	Volumen de música
+•	Volumen de efectos
+•	Activar / desactivar música
+•	Activar / desactivar efectos
+________________________________________
+🔔 Notificaciones
+•	Activar / desactivar notificaciones
+•	Notificaciones de misiones
+•	Notificaciones de recompensas
+•	Notificaciones de eventos
+•	Recordatorios para volver a jugar
+________________________________________
+🎮 Jugabilidad
+•	Animaciones rápidas / normales
+•	Vibración del celular
+•	Confirmación antes de usar cartas especiales
+•	Mostrar tutoriales
+________________________________________
+🎨 Gráficos
+•	Calidad gráfica
+o	Baja
+o	Media
+o	Alta
+•	Activar efectos especiales
+•	Activar animaciones
+________________________________________
+🌙 Apariencia
+•	Modo claro
+•	Modo oscuro
+•	Tema automático
+________________________________________
+👤 Cuenta (QUE PARA INICIAR CUENTA YA NO APAREZCA EN EL PERFIL DEL JUAGADORI SINO ACA EN LOS AJUSTES)
+•	Iniciar sesión con Google
+•	Iniciar sesión con Facebook
+•	Jugar como invitado
+•	Guardar progreso en la nube
+________________________________________
+🛡️ Privacidad
+•	Política de privacidad
+•	Permisos del juego
+•	Gestión de datos
+________________________________________
+❓ Ayuda
+•	Soporte técnico
+•	Preguntas frecuentes
+•	Reportar error
+•	Reportar jugador
+________________________________________
+ℹ️ Información
+•	Versión del juego
+•	Créditos
+•	Términos de servicio
