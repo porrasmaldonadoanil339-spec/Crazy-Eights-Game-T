@@ -140,6 +140,8 @@ export default function FriendsScreen() {
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const chatListRef = useRef<FlatList<ChatMessage>>(null);
+  const friendsRef = useRef<Friend[]>([]);
+  const requestsRef = useRef<FriendRequest[]>([]);
 
   // Persistence: Load from AsyncStorage
   useEffect(() => {
@@ -162,6 +164,10 @@ export default function FriendsScreen() {
     loadData();
   }, []);
 
+  // Keep refs in sync with state (for setTimeout callbacks that may fire after unmount)
+  useEffect(() => { friendsRef.current = friends; }, [friends]);
+  useEffect(() => { requestsRef.current = requests; }, [requests]);
+
   // Persistence: Save to AsyncStorage
   useEffect(() => {
     if (!isLoaded) return;
@@ -172,6 +178,12 @@ export default function FriendsScreen() {
     }
     saveData();
   }, [friends, requests, isLoaded]);
+
+  const saveDirectly = async (updatedFriends: Friend[], updatedRequests: FriendRequest[]) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ friends: updatedFriends, requests: updatedRequests }));
+    } catch (e) {}
+  };
 
   // Periodic incoming requests from CPU profiles
   useEffect(() => {
@@ -224,8 +236,9 @@ export default function FriendsScreen() {
       // Delay for outgoing request response: 15-60s
       const accept = Math.random() < 0.6;
       const delay = 15000 + Math.random() * 45000;
-      setTimeout(() => {
+      setTimeout(async () => {
         removeOutgoingFriendRequest(req.id);
+        const currentRequests = requestsRef.current.filter(r => r.id !== req.id);
         if (accept) {
           const newFriend: Friend = {
             id: req.id,
@@ -239,11 +252,14 @@ export default function FriendsScreen() {
             lastSeen: "Ahora",
             titleName: "Jugador",
           };
-          setFriends(prev => [newFriend, ...prev.filter(f => f.id !== req.id)]);
-          setRequests(prev => prev.filter(r => r.id !== req.id));
+          const currentFriends = [newFriend, ...friendsRef.current.filter(f => f.id !== req.id)];
+          await saveDirectly(currentFriends, currentRequests);
+          setFriends(currentFriends);
+          setRequests(currentRequests);
           showToast(`¡${req.name} aceptó tu solicitud!`);
         } else {
-          setRequests(prev => prev.filter(r => r.id !== req.id));
+          await saveDirectly(friendsRef.current, currentRequests);
+          setRequests(currentRequests);
           showToast(`${req.name} rechazó tu solicitud`);
         }
       }, delay);
@@ -307,29 +323,33 @@ export default function FriendsScreen() {
     // Delay for outgoing request response: 15-60s
     const accept = Math.random() < 0.6;
     const delay = 15000 + Math.random() * 45000;
-    setTimeout(() => {
+    setTimeout(async () => {
+      const currentRequests = requestsRef.current.filter(r => r.id !== `out_${name}`);
       if (accept) {
-        const profile = CPU_PROFILES.find(p => p.name === name);
-        if (profile) {
+        const cpuProfile = CPU_PROFILES.find(p => p.name === name);
+        if (cpuProfile) {
           const newFriend: Friend = {
-            id: profile.name,
-            name: profile.name,
-            level: profile.level,
-            avatarIcon: profile.avatarIcon,
-            avatarColor: profile.avatarColor,
-            photoUrl: profile.photoUrl,
+            id: cpuProfile.name,
+            name: cpuProfile.name,
+            level: cpuProfile.level,
+            avatarIcon: cpuProfile.avatarIcon,
+            avatarColor: cpuProfile.avatarColor,
+            photoUrl: cpuProfile.photoUrl,
             online: Math.random() > 0.4,
-            wins: Math.floor(profile.level * 12),
+            wins: Math.floor(cpuProfile.level * 12),
             lastSeen: "Ahora",
-            titleName: TITLE_NAMES[profile.titleId] ?? "Jugador",
+            titleName: TITLE_NAMES[cpuProfile.titleId] ?? "Jugador",
           };
-          setFriends(prev => [newFriend, ...prev.filter(f => f.id !== name)]);
-          setRequests(prev => prev.filter(r => r.id !== `out_${name}`));
+          const currentFriends = [newFriend, ...friendsRef.current.filter(f => f.id !== name)];
+          await saveDirectly(currentFriends, currentRequests);
+          setFriends(currentFriends);
+          setRequests(currentRequests);
           setSentRequests(prev => { const s = new Set(prev); s.delete(name); return s; });
           showToast(`¡${name} aceptó tu solicitud!`);
         }
       } else {
-        setRequests(prev => prev.filter(r => r.id !== `out_${name}`));
+        await saveDirectly(friendsRef.current, currentRequests);
+        setRequests(currentRequests);
         setSentRequests(prev => { const s = new Set(prev); s.delete(name); return s; });
         showToast(`${name} rechazó tu solicitud`);
       }
@@ -432,16 +452,16 @@ export default function FriendsScreen() {
     setTimeout(() => chatListRef.current?.scrollToEnd?.({ animated: true }), 100);
 
     const rand = Math.random();
-    let replyDelay = 2000;
-    if (rand < 0.3) {
-      // 30% responde en 2-5s
-      replyDelay = 2000 + Math.random() * 3000;
-    } else if (rand < 0.7) {
-      // 40% responde en 10-30s
-      replyDelay = 10000 + Math.random() * 20000;
+    let replyDelay: number;
+    if (rand < 0.25) {
+      // 25%: quick response 6-12s
+      replyDelay = 6000 + Math.random() * 6000;
+    } else if (rand < 0.65) {
+      // 40%: medium response 15-45s
+      replyDelay = 15000 + Math.random() * 30000;
     } else {
-      // 30% responde en 1-3 minutos
-      replyDelay = 60000 + Math.random() * 120000;
+      // 35%: slow response 1-5 minutes
+      replyDelay = 60000 + Math.random() * 240000;
     }
 
     // Typing indicator logic

@@ -21,7 +21,7 @@ import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { MatchmakingScreen } from "@/components/MatchmakingScreen";
 import { LevelUpOverlay } from "@/components/LevelUpOverlay";
 import type { Suit } from "@/lib/gameEngine";
-import { suitSymbol, suitName, suitColor, canPlay } from "@/lib/gameEngine";
+import { suitSymbol, suitName, suitColor, canPlay, setEngineLang } from "@/lib/gameEngine";
 import { getModeById, getDifficultyById } from "@/lib/gameModes";
 import { AVATARS, CARD_BACKS, getCardDesignById, getTableDesignById } from "@/lib/storeItems";
 import type { Card } from "@/lib/gameEngine";
@@ -609,6 +609,7 @@ export default function GameScreen() {
   } = useGame();
   const { profile, level, recordGameResult, updateAchievementProgress, updateRanked } = useProfile();
   const T = useT();
+  useEffect(() => { setEngineLang(profile.language ?? "es"); }, [profile.language]);
 
   const cardBack = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
   const backColors = (cardBack.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];

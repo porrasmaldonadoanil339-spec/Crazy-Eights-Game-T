@@ -1,4 +1,4 @@
-import { Card, Suit, Rank, createDeck, shuffleDeck, suitName, suitColor, suitSymbol } from "./gameEngine";
+import { Card, Suit, Rank, createDeck, shuffleDeck, suitName, suitColor, suitSymbol, gm } from "./gameEngine";
 
 export type { Suit, Rank, Card };
 export { suitName, suitColor, suitSymbol };
@@ -147,7 +147,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
   if (ns.hands[pidx].length === 0) {
     ns.phase = "game_over";
     ns.winnerIndex = pidx;
-    ns.message = `¡${ns.playerNames[pidx]} ganó!`;
+    ns.message = gm("mpWon", { p: ns.playerNames[pidx] });
     return ns;
   }
 
@@ -159,7 +159,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
       ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
       ns.currentPlayerIndex = next;
       ns.phase = "pass_device";
-      ns.message = `8 Loco → ${suitName(chosenSuit)}`;
+      ns.message = gm("mp8Suit", { s: suitName(chosenSuit) });
     } else {
       ns.phase = "choosing_suit";
     }
@@ -171,14 +171,14 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
       ns.pendingDraw += 5;
       ns.currentPlayerIndex = next;
       ns.phase = "pass_device";
-      ns.message = `Comodín → ${ns.playerNames[next]} roba ${ns.pendingDraw}`;
+      ns.message = gm("mpJkrDraw", { p: ns.playerNames[next], n: String(ns.pendingDraw) });
     } else {
       if (chosenSuit) {
         ns.currentSuit = chosenSuit;
         ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
         ns.currentPlayerIndex = next;
         ns.phase = "pass_device";
-        ns.message = `Comodín → ${suitName(chosenSuit)}`;
+        ns.message = gm("mpJkrSuit", { s: suitName(chosenSuit) });
       } else {
         ns.phase = "choosing_suit";
       }
@@ -193,7 +193,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     ns.currentSuit = card.suit;
     ns.currentPlayerIndex = next;
     ns.phase = "pass_device";
-    ns.message = `+2 → ${ns.playerNames[next]} roba ${ns.pendingDraw}`;
+    ns.message = gm("mpPlus2Draw", { p: ns.playerNames[next], n: String(ns.pendingDraw) });
     return ns;
   }
 
@@ -202,7 +202,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     ns.currentSuit = card.suit;
     ns.currentPlayerIndex = next;
     ns.phase = "pass_device";
-    ns.message = `As → Robo cancelado`;
+    ns.message = gm("mpAceCancel");
     return ns;
   }
 
@@ -215,11 +215,11 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     if (ns.playerCount === 2) {
       ns.currentPlayerIndex = pidx;
       ns.phase = "pass_device";
-      ns.message = `3 → ${ns.playerNames[next]} pierde turno. ¡Juegas de nuevo!`;
+      ns.message = gm("mp3SkipYou", { p: ns.playerNames[next] });
     } else {
       ns.currentPlayerIndex = skipNext;
       ns.phase = "pass_device";
-      ns.message = `3 → ${ns.playerNames[skipped]} pierde turno`;
+      ns.message = gm("mp3SkipOther", { p: ns.playerNames[skipped] });
     }
     return ns;
   }
@@ -230,7 +230,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     ns.currentSuit = card.suit;
     ns.currentPlayerIndex = next;
     ns.phase = "pass_device";
-    ns.message = `+2 → ${ns.playerNames[next]} roba ${ns.pendingDraw}`;
+    ns.message = gm("mpPlus2Draw", { p: ns.playerNames[next], n: String(ns.pendingDraw) });
     return ns;
   }
 
@@ -241,12 +241,12 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     if (ns.playerCount === 2) {
       ns.currentPlayerIndex = pidx;
       ns.phase = "pass_device";
-      ns.message = `10 → ¡Dirección invertida! Juegas de nuevo`;
+      ns.message = gm("mp10RevYou");
     } else {
       const newNext = nextPlayerIndex(ns);
       ns.currentPlayerIndex = newNext;
       ns.phase = "pass_device";
-      ns.message = `10 → ¡Dirección invertida!`;
+      ns.message = gm("mp10Rev");
     }
     return ns;
   }
@@ -257,7 +257,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     ns.currentSuit = card.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
     ns.phase = "playing";
-    ns.message = `J → Juega otra de ${suitName(card.suit)}, figura (J/Q/K), o roba 1`;
+    ns.message = gm("jackRule", { s: suitName(card.suit) });
     return ns;
   }
 
@@ -265,7 +265,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
   ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
   ns.currentPlayerIndex = next;
   ns.phase = "pass_device";
-  ns.message = `${card.rank} de ${suitName(card.suit)}`;
+  ns.message = gm("mpPlayedCard", { r: card.rank, s: suitName(card.suit) });
   return ns;
 }
 
@@ -286,7 +286,7 @@ export function multiDraw(state: MultiGameState): MultiGameState {
     const next = nextPlayerIndex(ns);
     ns.currentPlayerIndex = next;
     ns.phase = "pass_device";
-    ns.message = `Robaste ${count} cartas`;
+    ns.message = gm("mpDrewN", { n: String(count) });
     return ns;
   }
 
@@ -295,7 +295,7 @@ export function multiDraw(state: MultiGameState): MultiGameState {
     const next = nextPlayerIndex(ns);
     ns.currentPlayerIndex = next;
     ns.phase = "pass_device";
-    ns.message = `Sin cartas disponibles`;
+    ns.message = gm("emptyDraw");
     return ns;
   }
 
@@ -303,13 +303,13 @@ export function multiDraw(state: MultiGameState): MultiGameState {
   ns.hands[pidx] = [...ns.hands[pidx], card];
 
   if (multiCanPlay(card, ns)) {
-    ns.message = "Robaste una carta (puedes jugarla)";
+    ns.message = gm("drewCard");
     ns.phase = "playing";
   } else {
     const next = nextPlayerIndex(ns);
     ns.currentPlayerIndex = next;
     ns.phase = "pass_device";
-    ns.message = `Sin jugada — Turno de ${ns.playerNames[next]}`;
+    ns.message = gm("mpNoPlay", { p: ns.playerNames[next] });
   }
   return ns;
 }
@@ -321,7 +321,7 @@ export function multiChooseSuit(state: MultiGameState, suit: Suit): MultiGameSta
   const next = nextPlayerIndex(ns);
   ns.currentPlayerIndex = next;
   ns.phase = "pass_device";
-  ns.message = `Palo: ${suitName(suit)}`;
+  ns.message = gm("mpSuit", { s: suitName(suit) });
   return ns;
 }
 
