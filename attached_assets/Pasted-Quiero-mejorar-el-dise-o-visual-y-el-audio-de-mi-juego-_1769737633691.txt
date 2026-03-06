@@ -1,0 +1,23 @@
+Quiero mejorar el diseño visual y el audio de mi juego de cartas.
+Agrega fondos modernos tanto para modo claro como modo oscuro. Los fondos deben tener ligera transparencia para que las cartas y botones se vean bien.
+También quiero fondos con movimiento suave (animación lenta) para que el juego se vea más vivo, pero sin distraer al jugador.
+Además, agrega música de fondo para mi menú , adecuada para un juego de cartas. La música debe reproducirse en el menú
+(QUE SEA DISTINTA LA MUSICA TANTO PARA EL MENU COMO PARA LAS PARTIDAS PERO QUE SE VEA REALISTA)
+  EN EL MODO CLASIFICATORIA SACALO DEL INTERFAZ DE LOGROS PORQUE ESTA MUY ESCONDIDO Y COLOCALO EN LA INTERFAZ DE JUGAR EN LA PRIMEA SECCION AADAPTALO PORFAVORL 
+rango.
+Cada rango tendrá 5 divisiones (V, IV, III, II, I).
+El orden de rangos será: Hierro, Bronce, Plata, Oro, Platino, Diamante, Épico, Mítico, Maestro, Gran Maestro, Legendario y Divino. Por ejemplo debo comenzar comenzar con hierro 5 y abajo hay 5 estrellas cada partida gana aumenta una estrella con un efecto realista  y así hasta llegar a 5 estrellas para ascender al siguiente hierro 4 con sus estrellas y así sucesivamente. Y cuando llegue a un nuevo rango como por ejemplo de hierro 1 con 5 estrellas a Bronce (bronce 5) me de de regalos un jugador algunas dorsos y efectos o marcos de regalos adecuado a su rango que se encnetra porfavor. Además agregame  además en la intefarz de clasificatoria cuando ingreso para poder jugar que ya no me aparezca ese ranking que solamente aparezca en la primera parte de clasificatoria y que pueda observar el avatar del jugadores y los logos de cada rango HIERRO, BRONCE, PLATA, ORO, PLATINO, DIAMANTE,  ÉPICO, MITICO, MAESTRO, GRAN MAESTRO, LEGENDARIO Y  DIVINO QUE TENGA UN LOGO MAS DETALLADO Y MAS CREATIVO QUE DIFERENCIA A CADA UNO . ADEMAS EN LA OPCION DE IDIOMAS COMO QUE ESTA FALLANDO PARA VER TODOS LOS IDIOMAS QUE ME AGREGASTE NO ME PERMITE, EL EFECTO DE VICTORIA QUE DEMORE UN POCO MAS DE LAS PARTIDAS Y CUANDO SUBO DE NIVEL IGUAL. IGUALMENTE O SINO QUE CUANDO APAREZCA ESE MENSAJE ME DE LA OPCION DE CONTINUAR PARA CUANDO ME SALLGA ESTE EFECTO DE SUBIDA DE NIVEL. CUANDO SUBA DE RANGOS ME APAREZCA ESE MISMO EFECTO DE la subida. ESOS DESAFIOS DIARIOS QUE CUANDO LOS COMPLETEN LES DE 3 NUEVOS DESAFIOS AUTOMATICAMENTE Y SEAN DIFRENTE Y VARIADOS DESAFIOS.
+🤝 Cooperativo
+No debe ser solo jugar normal con bots.
+Puedes pedir:
+En el modo Cooperativo, el jugador y una IA aliada deben enfrentarse a dos CPUs. El jugador debe poder coordinarse con su aliado mediante acciones del juego o decisiones automáticas. El objetivo es trabajar en equipo para ganar, por ejemplo ayudando al aliado con cartas o evitando que los rivales jueguen.
+Quiero que el Modo Desafío sea un modo de juego con retos especiales. Cada desafío debe tener reglas diferentes a la partida normal, como límite de turnos, cartas iniciales distintas o restricciones al jugar cartas. El jugador debe completar el objetivo para ganar el desafío y recibir recompensas. Los desafíos deben cambiar regularmente para que el modo sea interesante y no se sienta como una partida clásica.
+
+
+El modo Práctica debe ayudar al jugador a aprender el juego. Debe incluir pistas, explicaciones de jugadas recomendadas y sin penalización de ranking. La IA debe ser más sencilla y el sistema puede sugerir qué carta jugar.
+Características:
+•	Sugerencias de jugadas
+•	IA más fácil
+•	sin perder puntos de ranking
+ADEMAS QUE EN RANKING DE CLASIFICATORIA APAREZCA EL PERFIL DEL JUGADOR CON AVATAR Y TODO ELLO Y LO ADAPTARMELO MEJOR A MI JUEGO Y ESO DE MI PERFIL DONDE SALE MI RANGO EN VEZ DE CIRCULOS QUE APAREZCAN LAS ESTRELLAS DEPENDIENDO DE LAS 5 ESTRELLAS DONDE ME ENCUENTRE PARA SUBIR. EN EL MODO ONLINE TB DEBERIA APARECER LA CANCION. SERIA BUENO QUE EN EL MODO MULTIJUGADOR CUANDO YO LE DE SE PUEDE TANTO CON 2 CON 3 CON 4 O CON 6JUGADORES DEPENDIENDO LOS QUE SE CONECTEN PERO MAXIMO 6 Y MINIMO 3.
+Quiero que agregues mejoras y optimizaciones a mi juego, pero sin cambiar la lógica principal ni las funciones que ya funcionan correctamente. No modifiques las mecánicas principales del juego ni rompas el sistema actual. Solo agrega mejoras visuales, de rendimiento y de experiencia de usuario para que el juego se vea más profesional.

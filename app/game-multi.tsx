@@ -209,16 +209,22 @@ export default function MultiGameScreen() {
   const tableCenterX = SW / 2;
 
   const playerNames = React.useMemo(() => {
-    if (params.names) {
-      try { return JSON.parse(params.names) as string[]; }
-      catch {}
-    }
-    const count = parseInt(params.count ?? "2", 10);
-    return Array.from({ length: count }, (_, i) => `${T("player")} ${i + 1}`);
-  }, []);
+    return Array.from({ length: 6 }, (_, i) => `${T("player")} ${i + 1}`);
+  }, [T]);
 
-  const [gameState, setGameState] = useState<MultiGameState>(() => initMultiGame(playerNames));
+  const [gameStarted, setGameStarted] = useState(false);
+  const [playerCountSelect, setPlayerCountSelect] = useState(3);
+
+  const [gameState, setGameState] = useState<MultiGameState>(() => initMultiGame(playerNames.slice(0, playerCountSelect)));
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+
+  // Re-initialize when starting
+  const handleStartGame = useCallback(() => {
+    playButton().catch(() => {});
+    const selectedNames = playerNames.slice(0, playerCountSelect);
+    setGameState(initMultiGame(selectedNames));
+    setGameStarted(true);
+  }, [playerCountSelect, playerNames]);
 
   const pidx = gameState.currentPlayerIndex;
   const currentHand = gameState.hands[pidx] ?? [];
@@ -277,10 +283,20 @@ export default function MultiGameScreen() {
         { ...opponents[1], pos: "topRight" as const },
       ];
     }
+    if (playerCount === 4) {
+      return [
+        { ...opponents[0], pos: "right" as const },
+        { ...opponents[1], pos: "top" as const },
+        { ...opponents[2], pos: "left" as const },
+      ];
+    }
+    // For 6 players
     return [
       { ...opponents[0], pos: "right" as const },
-      { ...opponents[1], pos: "top" as const },
-      { ...opponents[2], pos: "left" as const },
+      { ...opponents[1], pos: "topRight" as const },
+      { ...opponents[2], pos: "top" as const },
+      { ...opponents[3], pos: "topLeft" as const },
+      { ...opponents[4], pos: "left" as const },
     ];
   };
 
@@ -309,6 +325,52 @@ export default function MultiGameScreen() {
       right: 4,
     },
   };
+
+  if (!gameStarted) {
+    return (
+      <View style={[styles.container, { paddingTop: topPad }]}>
+        <LinearGradient
+          colors={["#051209", "#081a0d", "#0a1f10", "#081a0d", "#051209"]}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.header}>
+          <Pressable onPress={() => { playButton().catch(() => {}); router.back(); }} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={18} color={Colors.gold} />
+          </Pressable>
+          <Text style={styles.configTitle}>{T("multiplayer")}</Text>
+          <View style={{ width: 34 }} />
+        </View>
+
+        <View style={styles.configContainer}>
+          <View style={styles.configCard}>
+            <Ionicons name="people" size={48} color={Colors.gold} style={{ alignSelf: "center", marginBottom: 20 }} />
+            <Text style={styles.configLabel}>{T("playerCount")}</Text>
+            <View style={styles.chipRow}>
+              {[2, 3, 4, 6].map(n => (
+                <Pressable
+                  key={n}
+                  onPress={() => { playButton().catch(() => {}); setPlayerCountSelect(n); }}
+                  style={[styles.chip, playerCountSelect === n && styles.chipActive]}
+                >
+                  <Text style={[styles.chipText, playerCountSelect === n && styles.chipTextActive]}>{n}P</Text>
+                </Pressable>
+              ))}
+            </View>
+            <Text style={styles.configDesc}>
+              {playerCountSelect} {T("players")} {T("local").toLowerCase()}. {T("passDevicePrompt") || "Pasa el dispositivo entre turnos."}
+            </Text>
+
+            <Pressable style={styles.startBtn} onPress={handleStartGame}>
+              <LinearGradient colors={[Colors.gold, "#B8860B"]} style={styles.startBtnGrad}>
+                <Ionicons name="play" size={20} color="#000" />
+                <Text style={styles.startBtnText}>{T("startGame")}</Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
@@ -646,4 +708,81 @@ const styles = StyleSheet.create({
   winBtn: { marginTop: 24, borderRadius: 16, overflow: "hidden", width: 250 },
   winBtnGrad: { paddingVertical: 16, alignItems: "center" },
   winBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#1a0a00" },
+
+  // Config Screen
+  configTitle: { fontFamily: "Nunito_700Bold", fontSize: 18, color: Colors.gold },
+  configContainer: { flex: 1, padding: 20, justifyContent: "center" },
+  configCard: {
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  configLabel: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 14,
+    color: Colors.textMuted,
+    textAlign: "center",
+    marginBottom: 16,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  chipRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
+    marginBottom: 24,
+  },
+  chip: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  chipActive: {
+    backgroundColor: Colors.gold + "22",
+    borderColor: Colors.gold,
+  },
+  chipText: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 16,
+    color: Colors.textDim,
+  },
+  chipTextActive: {
+    color: Colors.gold,
+  },
+  configDesc: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 13,
+    color: Colors.textDim,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: 32,
+  },
+  startBtn: {
+    borderRadius: 16,
+    overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  startBtnGrad: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    gap: 10,
+  },
+  startBtnText: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 16,
+    color: "#1a0a00",
+  },
 });

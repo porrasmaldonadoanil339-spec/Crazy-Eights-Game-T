@@ -23,6 +23,7 @@ import { playSound } from "@/lib/sounds";
 import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName } from "@/lib/achTranslations";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
+import { getRankInfo, RANKS } from "@/lib/ranked";
 import { FlatList } from "react-native";
 
 const { width: SW } = Dimensions.get("window");
@@ -31,43 +32,145 @@ function FloatSuit({ suit, x, y, size, opacity, duration, isDark }: {
   suit: string; x: number; y: number; size: number; opacity: number; duration: number; isDark: boolean;
 }) {
   const ty = useSharedValue(0);
+  const rot = useSharedValue(0);
+  const opac = useSharedValue(opacity);
+
   useEffect(() => {
     ty.value = withRepeat(
       withSequence(
-        withTiming(-12, { duration, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration, easing: Easing.inOut(Easing.sin) })
-      ), -1
+        withTiming(-20, { duration: duration * 0.8, easing: Easing.inOut(Easing.sin) }),
+        withTiming(20, { duration: duration * 1.2, easing: Easing.inOut(Easing.sin) })
+      ), -1, true
+    );
+    rot.value = withRepeat(
+      withTiming(360, { duration: duration * 2, easing: Easing.linear }),
+      -1, false
+    );
+    opac.value = withRepeat(
+      withSequence(
+        withTiming(opacity * 0.5, { duration: duration }),
+        withTiming(opacity, { duration: duration })
+      ), -1, true
     );
   }, []);
+
   const style = useAnimatedStyle(() => ({
-    transform: [{ translateY: ty.value }],
+    transform: [
+      { translateY: ty.value },
+      { rotate: `${rot.value}deg` }
+    ],
     position: "absolute",
     left: x * SW,
-    top: y * 600,
-    opacity,
-    pointerEvents: "none" as any,
+    top: y * 800,
+    opacity: opac.value,
   }));
-  const isRed = suit === "♥" || suit === "♦";
-  const darkColor = isRed ? "#C0392B" : "#ffffff";
-  const lightColor = isRed ? "#C0392B" : "#1a4a1a";
-  return <Animated.Text style={[style, { fontSize: size, color: isDark ? darkColor : lightColor }]}>{suit}</Animated.Text>;
+
+  const isRed = suit === "heart" || suit === "diamond";
+  const iconName = suit as any;
+  const color = isDark 
+    ? (isRed ? "#C0392B" : "#ffffff") 
+    : (isRed ? "#C0392B" : "#1a4a1a");
+
+  return (
+    <Animated.View style={[style, { pointerEvents: "none" } as any]}>
+      <Ionicons name={iconName} size={size} color={color} />
+    </Animated.View>
+  );
 }
 
-function FloatingSuits({ isDark }: { isDark: boolean }) {
+function AnimatedBackground({ isDark }: { isDark: boolean }) {
+  const baseOpacity = isDark ? 0.06 : 0.03;
   const positions = [
-    { suit: "♠", x: 0.08, y: 0.12, size: 48, opacity: 0.08, dur: 3000 },
-    { suit: "♥", x: 0.82, y: 0.06, size: 38, opacity: 0.07, dur: 3400 },
-    { suit: "♦", x: 0.72, y: 0.45, size: 52, opacity: 0.06, dur: 3800 },
-    { suit: "♣", x: 0.04, y: 0.55, size: 42, opacity: 0.07, dur: 4200 },
-    { suit: "♠", x: 0.88, y: 0.78, size: 36, opacity: 0.05, dur: 3600 },
-    { suit: "♥", x: 0.15, y: 0.85, size: 44, opacity: 0.07, dur: 3200 },
+    { suit: "heart", x: 0.1, y: 0.15, size: 40, dur: 8000 },
+    { suit: "leaf", x: 0.85, y: 0.1, size: 35, dur: 9500 },
+    { suit: "diamond", x: 0.75, y: 0.5, size: 45, dur: 11000 },
+    { suit: "flower", x: 0.05, y: 0.6, size: 38, dur: 12500 },
+    { suit: "heart", x: 0.2, y: 0.85, size: 42, dur: 14000 },
+    { suit: "star", x: 0.8, y: 0.8, size: 36, dur: 10500 },
   ];
+
   return (
-    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" } as any]}>
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none", zIndex: -1 } as any]}>
       {positions.map((p, i) => (
-        <FloatSuit key={i} suit={p.suit} x={p.x} y={p.y} size={p.size} opacity={p.opacity} duration={p.dur} isDark={isDark} />
+        <FloatSuit 
+          key={i} 
+          suit={p.suit} 
+          x={p.x} 
+          y={p.y} 
+          size={p.size} 
+          opacity={baseOpacity} 
+          duration={p.dur} 
+          isDark={isDark} 
+        />
       ))}
     </View>
+  );
+}
+
+function RankedPreviewCard({ isDark, lang }: { isDark: boolean; lang: "es" | "en" | "pt" }) {
+  const { profile } = useProfile();
+  const T = useT();
+  const rp = profile.rankedProfile;
+  const rankInfo = getRankInfo(rp);
+  
+  const title = lang === "en" ? "RANKED" : lang === "pt" ? "CLASSIFICATÓRIA" : "CLASIFICATORIA";
+  const subtitle = lang === "en" ? "Win games, earn stars, climb the ranks" : 
+                   lang === "pt" ? "Ganhe partidas, suba estrelas, suba de nível" : 
+                   "Gana partidas, suba estrellas, asciende de rango";
+  const playText = lang === "en" ? "PLAY RANKED" : lang === "pt" ? "JOGAR CLASSIFICATÓRIA" : "JUGAR CLASIFICATORIA";
+
+  return (
+    <Pressable 
+      onPress={() => { playButton().catch(() => {}); router.push("/ranked"); }}
+      style={({ pressed }) => [
+        styles.rankedCard, 
+        { borderColor: "#D4AF37", borderWidth: 1.5 },
+        pressed && { transform: [{ scale: 0.98 }] }
+      ]}
+    >
+      <LinearGradient
+        colors={["#1a0a00", "#2a1400", "#1a0a00"]}
+        style={styles.rankedGrad}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+      />
+      <View style={styles.rankedCardContent}>
+        <View style={styles.rankedHeader}>
+          <View style={styles.rankedIconContainer}>
+            <Ionicons name="trophy" size={32} color="#D4AF37" />
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.rankedTitle}>{title}</Text>
+            <Text style={styles.rankedSubtitle}>{subtitle}</Text>
+          </View>
+        </View>
+
+        <View style={styles.rankedStatus}>
+          <View style={[styles.rankBadge, { backgroundColor: rankInfo.color + "33" }]}>
+            <Text style={[styles.rankBadgeText, { color: rankInfo.color }]}>
+              {T(`rank${RANKS[rp.rank]}` as any) || rankInfo.rankName} {rp.division + 1}
+            </Text>
+          </View>
+          <View style={styles.starsMini}>
+            {Array.from({ length: rp.maxStars }).map((_, i) => (
+              <Ionicons 
+                key={i} 
+                name={i < rp.stars ? "star" : "star-outline"} 
+                size={14} 
+                color={i < rp.stars ? rankInfo.color : "#D4AF3744"} 
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.rankedAction}>
+          <LinearGradient colors={["#D4AF37", "#B8860B"]} style={styles.rankedBtnGrad}>
+            <Text style={styles.rankedBtnText}>{playText}</Text>
+            <Ionicons name="chevron-forward" size={16} color="#000" />
+          </LinearGradient>
+        </View>
+      </View>
+    </Pressable>
   );
 }
 
@@ -357,7 +460,7 @@ export default function PlayScreen() {
       <View style={[styles.feltTextureH1, { pointerEvents: "none" } as any]} />
       <View style={[styles.feltTextureH2, { pointerEvents: "none" } as any]} />
       <View style={[styles.feltTextureV1, { pointerEvents: "none" } as any]} />
-      <FloatingSuits isDark={isDark} />
+      <AnimatedBackground isDark={isDark} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Profile bar — clickable to go to profile */}
@@ -412,6 +515,8 @@ export default function PlayScreen() {
         )}
 
         <PokerTitle />
+
+        <RankedPreviewCard isDark={isDark} lang={lang} />
 
         {/* Daily Challenges Section */}
         {challenges.length > 0 && (
@@ -1271,4 +1376,90 @@ const styles = StyleSheet.create({
   adClaimText: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: "#1a0a00", letterSpacing: 1 },
   adCancelBtn: { marginTop: 4 },
   adCancelText: { fontFamily: "Nunito_400Regular", fontSize: 13 },
+
+  // Ranked Card
+  rankedCard: {
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 20,
+    overflow: "hidden",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  rankedGrad: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  rankedCardContent: {
+    padding: 16,
+    gap: 12,
+  },
+  rankedHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  rankedIconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "rgba(212,175,55,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#D4AF3733",
+  },
+  rankedTitle: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 18,
+    color: "#D4AF37",
+    letterSpacing: 1,
+  },
+  rankedSubtitle: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 11,
+    color: "rgba(255,255,255,0.6)",
+    lineHeight: 14,
+  },
+  rankedStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  rankBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  rankBadgeText: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 12,
+  },
+  starsMini: {
+    flexDirection: "row",
+    gap: 4,
+  },
+  rankedAction: {
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  rankedBtnGrad: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    gap: 8,
+  },
+  rankedBtnText: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 14,
+    color: "#000",
+    letterSpacing: 0.5,
+  },
 });

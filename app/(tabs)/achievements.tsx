@@ -10,6 +10,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
 import { BATTLE_PASS_TIERS, getXpProgress, getBPRewardLabel } from "@/lib/battlePass";
 import { playSound } from "@/lib/sounds";
@@ -258,6 +259,45 @@ export default function AchievementsScreen() {
           </>
         ) : (
           <View style={styles.rankedSection}>
+            <LinearGradient
+              colors={["#1a0a00", "#2a1400", "#1a0a00"]}
+              style={[styles.playerRankCard, { borderColor: "#D4AF37", borderWidth: 2 }]}
+            >
+              <View style={styles.playerRankHeader}>
+                <AvatarDisplay
+                  avatarId={profile.avatarId}
+                  frameId={profile.selectedFrameId}
+                  photoUri={profile.photoUri}
+                  size={50}
+                />
+                <View style={styles.playerRankInfo}>
+                  <Text style={[styles.playerRankName, { color: "#FFFFFF" }]}>{profile.name}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <Text style={[styles.rankPlayerMeta, { color: rankInfo.color, fontFamily: "Nunito_700Bold" }]}>
+                      {T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName} {DIVISIONS[profile.rankedProfile.division]}
+                    </Text>
+                    <View style={{ flexDirection: "row", gap: 2 }}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Ionicons
+                          key={i}
+                          name={i < profile.rankedProfile.stars ? "star" : "star-outline"}
+                          size={12}
+                          color={i < profile.rankedProfile.stars ? rankInfo.color : "#D4AF3766"}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                  <Text style={[styles.rankPlayerMeta, { color: "#BBBBBB" }]}>
+                    {profile.rankedProfile.totalWins} {T("wins")} · {profile.rankedProfile.totalLosses} {T("losses")}
+                  </Text>
+                </View>
+                <View style={styles.worldRankBadge}>
+                  <Text style={styles.worldRankLabel}>RANK</Text>
+                  <Text style={styles.worldRankValue}>#12</Text>
+                </View>
+              </View>
+            </LinearGradient>
+
             <View style={[styles.rankMiniCard, { backgroundColor: themeColors.surface, borderColor: rankInfo.color + "44" }]}>
               <View style={[styles.rankMiniIcon, { backgroundColor: rankInfo.color + "22" }]}>
                 <Ionicons name="trophy" size={32} color={rankInfo.color} />
@@ -459,4 +499,41 @@ const styles = StyleSheet.create({
   },
   infoTitle: { fontFamily: "Nunito_700Bold", fontSize: 13, marginBottom: 2 },
   infoText: { fontFamily: "Nunito_400Regular", fontSize: 11, lineHeight: 15 },
+  playerRankCard: {
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 8,
+  },
+  playerRankHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  playerRankInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  playerRankName: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 16,
+  },
+  worldRankBadge: {
+    alignItems: "center",
+    backgroundColor: "#D4AF3722",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#D4AF3744",
+  },
+  worldRankLabel: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 8,
+    color: "#D4AF37",
+  },
+  worldRankValue: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 14,
+    color: "#D4AF37",
+  },
 });

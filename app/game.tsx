@@ -32,6 +32,62 @@ import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmoteP
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
+// ─── Background Animation ──────────────────────────────────────────────────
+function AnimatedBackground() {
+  const { width: SW, height: SH } = Dimensions.get("window");
+  const icons = [
+    { name: "heart", x: SW * 0.2, y: SH * 0.1, delay: 0 },
+    { name: "diamond", x: SW * 0.8, y: SH * 0.3, delay: 2000 },
+    { name: "club", x: SW * 0.1, y: SH * 0.7, delay: 4000 },
+    { name: "spade", x: SW * 0.7, y: SH * 0.8, delay: 6000 },
+  ];
+
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      {icons.map((icon, i) => (
+        <FloatingIcon key={i} icon={icon} SW={SW} SH={SH} />
+      ))}
+    </View>
+  );
+}
+
+function FloatingIcon({ icon, SW, SH }: { icon: any; SW: number; SH: number }) {
+  const tx = useSharedValue(0);
+  const ty = useSharedValue(0);
+  const opacity = useSharedValue(0.04);
+
+  useEffect(() => {
+    tx.value = withRepeat(
+      withSequence(
+        withTiming(Math.random() * 40 - 20, { duration: 10000 + Math.random() * 5000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 10000 + Math.random() * 5000, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1
+    );
+    ty.value = withRepeat(
+      withSequence(
+        withTiming(Math.random() * 60 - 30, { duration: 12000 + Math.random() * 5000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 12000 + Math.random() * 5000, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1
+    );
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    position: "absolute",
+    left: icon.x,
+    top: icon.y,
+    opacity: opacity.value,
+    transform: [{ translateX: tx.value }, { translateY: ty.value }],
+  }));
+
+  return (
+    <Animated.View style={style}>
+      <Ionicons name={icon.name as any} size={80} color="#fff" />
+    </Animated.View>
+  );
+}
+
 // ─── Epic Victory/Defeat Overlay ──────────────────────────────────────────────
 function EpicResultOverlay({ type, coins }: { type: "win" | "lose"; coins: number }) {
   const T = useT();
@@ -110,6 +166,26 @@ function WinParticles() {
     </View>
   );
 }
+
+// ─── Advice Badge ────────────────────────────────────────────────────────────
+function AdviceBadge({ card, T }: { card: Card; T: any }) {
+  return (
+    <Animated.View entering={FadeIn.duration(400)} style={adviceStyles.badge}>
+      <Ionicons name="bulb" size={12} color="#1a0a00" />
+      <Text style={adviceStyles.text}>Sugerida</Text>
+    </Animated.View>
+  );
+}
+const adviceStyles = StyleSheet.create({
+  badge: {
+    position: "absolute", top: -15, left: "10%", right: "10%",
+    backgroundColor: Colors.gold, borderRadius: 10,
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4,
+    paddingVertical: 2, zIndex: 100,
+    borderWidth: 1, borderColor: "#fff5",
+  },
+  text: { fontFamily: "Nunito_900ExtraBold", fontSize: 10, color: "#1a0a00" },
+});
 
 // ─── Expert timer bar ──────────────────────────────────────────────────────────
 function ExpertTimerBar({ seconds, total }: { seconds: number; total: number }) {
@@ -868,6 +944,22 @@ export default function GameScreen() {
   const playableCount = isPlayerTurn ? gameState.playerHand.filter((c) => canPlay(c, gameState)).length : 0;
   const modeConfig = session ? getModeById(session.mode) : null;
 
+  const [adviceCardId, setAdviceCardId] = useState<string | null>(null);
+
+  // Practice Advice Logic
+  useEffect(() => {
+    if (session?.mode === "practice" && isPlayerTurn && !isGameOver) {
+      const playable = gameState.playerHand.filter(c => canPlay(c, gameState));
+      if (playable.length > 0) {
+        setAdviceCardId(playable[0].id);
+      } else {
+        setAdviceCardId(null);
+      }
+    } else {
+      setAdviceCardId(null);
+    }
+  }, [isPlayerTurn, gameState?.turnId, session?.mode, isGameOver]);
+
   const handleCardPress = async (card: Card) => {
     if (!isPlayerTurn) return;
     lastActionTime.current = Date.now();
@@ -931,6 +1023,7 @@ export default function GameScreen() {
         locations={[0, 0.25, 0.5, 0.75, 1]}
         style={StyleSheet.absoluteFill}
       />
+      <AnimatedBackground />
       <View style={styles.tableGlowBorder} />
 
       {/* Ripple effect on play */}
@@ -1014,7 +1107,9 @@ export default function GameScreen() {
         {/* Message */}
         <Animated.View style={[styles.messageBubble, msgStyle]}>
           <Text style={styles.messageText} numberOfLines={2}>
-            {dealAnimationDone ? gameState.message : T("dealingCards")}
+            {session?.mode === "practice" && isPlayerTurn && adviceCardId 
+              ? `Consejo: Puedes jugar ${suitName(gameState.playerHand.find(c => c.id === adviceCardId)!.suit)} ${gameState.playerHand.find(c => c.id === adviceCardId)!.rank}`
+              : dealAnimationDone ? gameState.message : T("dealingCards")}
           </Text>
         </Animated.View>
 
@@ -1092,6 +1187,9 @@ export default function GameScreen() {
           {isPlayerTurn && playableCount > 0 && (
             <Text style={styles.playableHint}>{playableCount} {playableCount !== 1 ? T("playableCountPlural") : T("playableCount")}</Text>
           )}
+          {session?.mode === "practice" && (
+            <Text style={[styles.playableHint, { color: Colors.gold }]}>Modo Práctica — Sin penalización</Text>
+          )}
           <View style={{ marginLeft: "auto" }}>
             <EmotePanel onSendEmote={handleSendEmote} lastEmoteTime={lastPlayerEmoteTime} />
           </View>
@@ -1133,6 +1231,7 @@ export default function GameScreen() {
                   marginLeft: i === 0 ? 0 : -20,
                   zIndex: selected ? 100 : i,
                   transform: [{ rotate: `${angle}deg` }],
+                  alignItems: "center",
                 }}
               >
                 <PlayingCard
@@ -1142,6 +1241,7 @@ export default function GameScreen() {
                   isSelected={selected}
                   size="md"
                 />
+                {adviceCardId === card.id && <AdviceBadge card={card} T={T} />}
               </View>
             );
           })}

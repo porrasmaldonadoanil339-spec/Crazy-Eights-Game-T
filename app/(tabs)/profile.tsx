@@ -484,7 +484,15 @@ export default function ProfileScreen() {
 
             <View style={styles.rankSubHeader}>
               <Text style={[styles.rankDisplayText, { color: rankInfo.color }]}>
-                {rankInfo.displayName} {"⭐".repeat(profile.rankedProfile.stars)}{"○".repeat(Math.max(0, profile.rankedProfile.maxStars - profile.rankedProfile.stars))}
+                {rankInfo.displayName}{" "}
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Ionicons
+                    key={i}
+                    name={i < profile.rankedProfile.stars ? "star" : "star-outline"}
+                    size={16}
+                    color={i < profile.rankedProfile.stars ? rankInfo.color : Colors.gold + "66"}
+                  />
+                ))}
               </Text>
             </View>
 

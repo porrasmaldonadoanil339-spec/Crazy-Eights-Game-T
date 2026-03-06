@@ -297,6 +297,8 @@ const translations = {
   // ─── World Ranking ────────────────────────────────────────────────────────
   worldRanking: { es: "RANKING MUNDIAL", en: "WORLD RANKING", pt: "RANKING MUNDIAL" },
   myRank: { es: "Mi posición", en: "My Rank", pt: "Minha posição" },
+  playerCount: { es: "JUGADORES", en: "PLAYERS", pt: "JOGADORES" },
+  passDevicePrompt: { es: "Pasa el dispositivo entre turnos.", en: "Pass the device between turns.", pt: "Passe o dispositivo entre os turnos." },
   allTime: { es: "Todo el tiempo", en: "All-Time", pt: "Geral" },
   weekly: { es: "Semanal", en: "Weekly", pt: "Semanal" },
   monthly: { es: "Mensual", en: "Monthly", pt: "Mensal" },

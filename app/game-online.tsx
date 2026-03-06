@@ -20,7 +20,10 @@ import {
   cpuPlayMulti, suitName, suitSymbol, suitColor, multiGetTopCard,
 } from "@/lib/multiplayerEngine";
 import { useProfile } from "@/context/ProfileContext";
-import { playCardFlip, playCardDraw, playButton, playWin, playMenuOpen, stopMusic, resumeMusic } from "@/lib/audioManager";
+import {
+  playCardFlip, playCardDraw, playButton, playWin, playMenuOpen,
+  stopMusic, resumeMusic, startGameMusic
+} from "@/lib/audioManager";
 import { CARD_BACKS } from "@/lib/storeItems";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
@@ -415,6 +418,7 @@ export default function OnlineGameScreen() {
     timers.push(setTimeout(() => {
       setLobbyPhase("found");
       stopMusic().catch(() => {});
+      startGameMusic().catch(() => {});
     }, finalSearchDelay));
     
     let currentDelay = finalSearchDelay + 800;
