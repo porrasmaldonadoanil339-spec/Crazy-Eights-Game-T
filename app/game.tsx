@@ -615,7 +615,7 @@ export default function GameScreen() {
   const backAccent = cardBack.backAccent ?? Colors.gold;
 
   const cardDesign = getCardDesignById(profile.cardDesignId ?? "face_default");
-  const cardColors = (cardDesign.backColors ?? ["#F8F4E8", "#2C2C2C", "#D4AF37"]) as [string, string, string];
+  const cardColors = cardDesign.isDefault ? undefined : (cardDesign.backColors ?? undefined) as [string, string, string] | undefined;
 
   const tableDesign = getTableDesignById(profile.tableDesignId ?? "table_casino");
   const tableBg = tableDesign.backColors?.[0] ?? "#061510";
@@ -1049,10 +1049,10 @@ export default function GameScreen() {
       <View style={styles.tableGlowBorder} />
 
       {/* Ripple effect on play */}
-      <Animated.View style={[styles.playRipple, playRippleStyle]} pointerEvents="none" />
+      <Animated.View style={[styles.playRipple, playRippleStyle, { pointerEvents: "none" }]} />
 
       {/* Last Card Banner */}
-      <Animated.View style={[styles.lastCardBanner, lastCardBannerStyle]} pointerEvents="none">
+      <Animated.View style={[styles.lastCardBanner, lastCardBannerStyle, { pointerEvents: "none" }]}>
         <LinearGradient colors={[Colors.gold, "#A07800"]} style={styles.lastCardBannerInner}>
           <Text style={styles.lastCardBannerText}>¡ÚLTIMA CARTA!</Text>
         </LinearGradient>

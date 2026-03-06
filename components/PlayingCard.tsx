@@ -37,8 +37,8 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
   const isEight = card.rank === "8";
   const isFace = ["J", "Q", "K"].includes(card.rank);
 
-  const customBg = cardColors?.[0];
-  const customSuitColor = cardColors?.[1];
+  const customBg = isJoker ? undefined : cardColors?.[0];
+  const customSuitColor = isJoker ? undefined : cardColors?.[1];
 
   const color = isJoker
     ? (card.suit === "spades" || card.suit === "clubs" ? "#1a1a2e" : "#8B0000")
@@ -47,9 +47,7 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
   const rankDisplay = isJoker ? "★" : card.rank;
 
   if (isJoker) {
-    const jokerColors: [string, string, string] = customBg 
-      ? [customBg, customBg, customBg] 
-      : ["#1a0a2e", "#2d1a4a", "#1a0a2e"];
+    const jokerColors: [string, string, string] = ["#1a0a2e", "#2d1a4a", "#1a0a2e"];
     return (
       <LinearGradient
         colors={jokerColors}
@@ -179,6 +177,7 @@ export function PlayingCard({
   faceDown = false,
   size: sizeKey = "md",
   backColors,
+  backAccent,
   cardColors,
 }: PlayingCardProps) {
   const sobj = SIZES[sizeKey];

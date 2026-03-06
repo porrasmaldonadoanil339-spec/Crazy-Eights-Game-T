@@ -257,17 +257,74 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
         <View style={[styles.rarityBadgeSmall]}>
           <Text style={[styles.rarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
         </View>
-        {item.category === "card_back" || item.category === "card_design" ? (
+        {item.category === "card_back" ? (
           <LinearGradient
             colors={(item.backColors ?? [item.previewColor, item.previewColor + "88"]) as [string, string]}
             style={styles.cardPreview}
           >
-            <Text style={[styles.cardPreviewDot, { color: item.backAccent ?? Colors.gold }]}>◆</Text>
-            <Text style={[styles.cardPreviewDot2, { color: item.backAccent ?? Colors.gold, opacity: 0.3 }]}>◆</Text>
+            <View style={styles.cardBackPatternWrap}>
+              {[0,1,2].map(row => (
+                <View key={row} style={{ flexDirection: "row", gap: 3 }}>
+                  {[0,1,2,3].map(col => (
+                    <Text key={col} style={{ fontSize: 7, color: item.backAccent ?? Colors.gold, opacity: 0.35 }}>◆</Text>
+                  ))}
+                </View>
+              ))}
+            </View>
+            <View style={[styles.cardBackEmblem, {
+              backgroundColor: (item.backAccent ?? Colors.gold) + "22",
+              borderColor: (item.backAccent ?? Colors.gold) + "55",
+            }]}>
+              <Text style={{ fontSize: 11, color: item.backAccent ?? Colors.gold }}>◆</Text>
+            </View>
+            <View style={[styles.cardPreviewInnerBorder, { borderColor: (item.backAccent ?? Colors.gold) + "44" }]} />
           </LinearGradient>
+        ) : item.category === "card_design" ? (
+          <View style={[styles.cardPreview, {
+            backgroundColor: item.backColors?.[0] ?? "#FEFDF4",
+            borderRadius: 4,
+            overflow: "hidden",
+          }]}>
+            <View style={[styles.cardFaceCornerTL]}>
+              <Text style={[styles.cardFaceRank, { color: item.backColors?.[1] ?? item.previewColor }]}>8</Text>
+              <Text style={[styles.cardFaceSuit, { color: item.backColors?.[1] ?? item.previewColor }]}>♥</Text>
+            </View>
+            <View style={styles.cardFaceCenter}>
+              <View style={[styles.cardFaceBadge, { backgroundColor: (item.backColors?.[1] ?? item.previewColor) + "dd" }]}>
+                <Text style={styles.cardFaceBadgeSuit}>♥</Text>
+              </View>
+              <Text style={[styles.cardFaceBadgeNum, { color: item.backColors?.[1] ?? item.previewColor }]}>8</Text>
+            </View>
+            <View style={[styles.cardFaceCornerBR]}>
+              <Text style={[styles.cardFaceRank, { color: item.backColors?.[1] ?? item.previewColor, transform: [{ rotate: "180deg" }] }]}>8</Text>
+              <Text style={[styles.cardFaceSuit, { color: item.backColors?.[1] ?? item.previewColor, transform: [{ rotate: "180deg" }] }]}>♥</Text>
+            </View>
+            <View style={[styles.cardFaceInnerBorder, { borderColor: (item.backColors?.[2] ?? Colors.gold) + "66" }]} />
+          </View>
         ) : item.category === "table_design" ? (
-          <View style={[styles.cardPreview, { backgroundColor: item.backColors?.[0] ?? item.previewColor, borderRadius: 4 }]}>
-             <View style={{ flex: 1, margin: 4, borderWidth: 1, borderColor: (item.backColors?.[1] ?? item.previewColor) + "44", borderRadius: 2 }} />
+          <View style={[styles.cardPreview, { overflow: "hidden", borderRadius: 4 }]}>
+            <LinearGradient
+              colors={(item.backColors ?? [item.previewColor, item.previewColor + "88"]) as [string, string]}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.tablePreviewPattern}>
+              {[0,1,2,3,4].map(r => (
+                <View key={r} style={{ flexDirection: "row", gap: 4 }}>
+                  {[0,1,2,3,4,5].map(c => (
+                    <View key={c} style={{
+                      width: 6, height: 6, borderRadius: 1,
+                      backgroundColor: (item.backColors?.[1] ?? item.previewColor) + "28",
+                    }} />
+                  ))}
+                </View>
+              ))}
+            </View>
+            <View style={[styles.tablePreviewCard, {
+              borderColor: (item.backColors?.[1] ?? item.previewColor) + "66",
+              backgroundColor: "rgba(255,255,255,0.08)",
+            }]}>
+              <Text style={{ fontSize: 8, color: "rgba(255,255,255,0.6)", fontWeight: "900" }}>8♥</Text>
+            </View>
           </View>
         ) : item.category === "frame" ? (
           <View style={styles.framePreviewWrap}>
@@ -658,6 +715,58 @@ const styles = StyleSheet.create({
   },
   cardPreviewDot: { fontSize: 16, position: "absolute" },
   cardPreviewDot2: { fontSize: 10, position: "absolute", bottom: 8, right: 8 },
+  cardPreviewInnerBorder: {
+    position: "absolute", top: 3, left: 3, right: 3, bottom: 3,
+    borderWidth: 1, borderRadius: 5,
+  },
+  cardBackPatternWrap: {
+    position: "absolute", top: 4, left: 4, right: 4, bottom: 4,
+    alignItems: "center", justifyContent: "center", gap: 2,
+    overflow: "hidden",
+  },
+  cardBackEmblem: {
+    width: 22, height: 22, borderRadius: 11,
+    alignItems: "center", justifyContent: "center", borderWidth: 1,
+  },
+  cardFaceCornerTL: {
+    position: "absolute", top: 3, left: 4, alignItems: "center",
+  },
+  cardFaceCornerBR: {
+    position: "absolute", bottom: 3, right: 4, alignItems: "center",
+  },
+  cardFaceRank: {
+    fontSize: 9, fontWeight: "900", lineHeight: 11,
+  },
+  cardFaceSuit: {
+    fontSize: 7, lineHeight: 9, marginTop: -1,
+  },
+  cardFaceCenter: {
+    flex: 1, alignItems: "center", justifyContent: "center", gap: 1,
+  },
+  cardFaceBadge: {
+    width: 20, height: 20, borderRadius: 10,
+    alignItems: "center", justifyContent: "center",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3, shadowRadius: 2, elevation: 2,
+  },
+  cardFaceBadgeSuit: {
+    fontSize: 11, color: "#fff", fontWeight: "900",
+  },
+  cardFaceBadgeNum: {
+    fontSize: 10, fontWeight: "900", marginTop: 1,
+  },
+  cardFaceInnerBorder: {
+    position: "absolute", top: 2, left: 2, right: 2, bottom: 2,
+    borderWidth: 0.5, borderRadius: 5,
+  },
+  tablePreviewPattern: {
+    position: "absolute", top: 4, left: 4, right: 4, bottom: 4,
+    alignItems: "center", justifyContent: "center", gap: 3, overflow: "hidden",
+  },
+  tablePreviewCard: {
+    width: 20, height: 28, borderRadius: 3, borderWidth: 1,
+    alignItems: "center", justifyContent: "center",
+  },
   framePreviewWrap: { marginBottom: 8, alignSelf: "flex-start" },
   frameCircleOuter: {
     width: 50, height: 50, borderRadius: 25, borderWidth: 3,
