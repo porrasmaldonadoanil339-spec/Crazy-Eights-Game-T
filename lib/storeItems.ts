@@ -1,5 +1,5 @@
 export type StoreItemId = string;
-export type StoreItemCategory = "card_back" | "avatar" | "effect" | "title" | "frame" | "emote";
+export type StoreItemCategory = "card_back" | "avatar" | "effect" | "title" | "frame" | "emote" | "table_design";
 
 export interface StoreItem {
   id: StoreItemId;
@@ -112,6 +112,26 @@ export const CARD_BACKS: StoreItem[] = [
   // EPIC +5
   { id: "back_solar",     category: "card_back", name: "Solar",           description: "Poder de la estrella más cercana.",              price: 175, preview: "card", previewColor: "#FF9900", rarity: "epic",      backColors: ["#FF9900","#FF6600","#CC4400"], backAccent: "#FFFF00", backPattern: "stars" },
   { id: "back_mirage",    category: "card_back", name: "Espejismo",       description: "Ilusión óptica en la mesa.",                     price: 195, preview: "card", previewColor: "#00CED1", rarity: "epic",      backColors: ["#00CED1","#008B8B","#00FFFF"], backAccent: "#FFFFFF", backPattern: "waves" },
+  { id: "back_neon_future", category: "card_back", name: "Neón Futurista",  description: "Tecnología de punta en tus manos.",               price: 140, preview: "card", previewColor: "#00FFFF", rarity: "rare",      backColors: ["#0D0D2B","#1A1A4A","#0D0D2B"], backAccent: "#00FFFF", backPattern: "hexagons" },
+  { id: "back_space_galaxy", category: "card_back", name: "Galaxia Espacial", description: "Nebulosa morada y azul profundo.",                price: 220, preview: "card", previewColor: "#2C0066", rarity: "legendary", backColors: ["#1A0033","#2C0066","#000033"], backAccent: "#A855F7", backPattern: "stars" },
+  { id: "back_fire_lava",   category: "card_back", name: "Fuego y Lava",    description: "Rojos y naranjas intensos fundidos.",             price: 130, preview: "card", previewColor: "#CF1020", rarity: "rare",      backColors: ["#8B0000","#FF4500","#CF1020"], backAccent: "#FFD700", backPattern: "waves" },
+  { id: "back_ice_glacial", category: "card_back", name: "Hielo Glacial",   description: "Azules claros y blancos gélidos.",                price: 110, preview: "card", previewColor: "#B8DDEF", rarity: "rare",      backColors: ["#B8DDEF","#FFFFFF","#8EC8E8"], backAccent: "#00CED1", backPattern: "diamonds" },
+  { id: "back_cyberpunk",   category: "card_back", name: "Cyberpunk",       description: "Negro y amarillo neón de ciudad futura.",         price: 135, preview: "card", previewColor: "#2B2B2B", rarity: "rare",      backColors: ["#000000","#2B2B2B","#000000"], backAccent: "#FFFF00", backPattern: "crosses" },
+  { id: "back_medieval",    category: "card_back", name: "Medieval",        description: "Café oscuro y dorado antiguo.",                   price: 95,  preview: "card", previewColor: "#4A3010", rarity: "rare",      backColors: ["#4A3010","#6A4A1A","#331A05"], backAccent: "#D4AF37", backPattern: "diamonds" },
+  { id: "back_magic_crystal",category: "card_back", name: "Cristal Mágico",  description: "Azul translúcido y plateado.",                    price: 200, preview: "card", previewColor: "#E0FFFF", rarity: "epic",      backColors: ["#B0E0E6","#E0FFFF","#87CEEB"], backAccent: "#FFFFFF", backPattern: "hexagons" },
+  { id: "back_retro_90s",   category: "card_back", name: "Retro 90s",       description: "Colores vivos magenta, cyan y amarillo.",         price: 180, preview: "card", previewColor: "#FF00FF", rarity: "epic",      backColors: ["#FF00FF","#00FFFF","#FFFF00"], backAccent: "#000000", backPattern: "circles" },
+  { id: "back_tropical_jungle",category: "card_back", name: "Selva Tropical",description: "Verde intenso y amarillo vibrante.",              price: 55,  preview: "card", previewColor: "#1A4A1A", rarity: "common",    backColors: ["#0B5A3E","#1A4A1A","#228800"], backAccent: "#FFFF00", backPattern: "circles" },
+  { id: "back_neon_night",  category: "card_back", name: "Mesa Nocturna Neon", description: "Negro con verde fosforescente.",                  price: 135, preview: "card", previewColor: "#000000", rarity: "rare",      backColors: ["#000000","#1A1A1A","#000000"], backAccent: "#00FF00", backPattern: "hexagons" },
+  { id: "back_deep_space",  category: "card_back", name: "Espacio Profundo", description: "El vacío de las estrellas.",                      price: 220, preview: "card", previewColor: "#050505", rarity: "legendary", backColors: ["#000000","#050505","#0A0A14"], backAccent: "#FFFFFF", backPattern: "stars" },
+  { id: "back_borealis",    category: "card_back", name: "Aurora Boreal",   description: "Luces danzantes del norte.",                      price: 190, preview: "card", previewColor: "#006688", rarity: "epic",      backColors: ["#001A20","#00AA88","#006688"], backAccent: "#00FFCC", backPattern: "waves" },
+  { id: "back_volcano",     category: "card_back", name: "Volcán",          description: "La furia de la tierra fundida.",                   price: 195, preview: "card", previewColor: "#8B0000", rarity: "epic",      backColors: ["#4B0000","#8B0000","#FF4500"], backAccent: "#FFD700", backPattern: "hexagons" },
+  { id: "back_storm_night", category: "card_back", name: "Tormenta Nocturna", description: "Rayos en el cielo oscuro.",                       price: 185, preview: "card", previewColor: "#191970", rarity: "epic",      backColors: ["#000033","#191970","#2F4F4F"], backAccent: "#C0C0C0", backPattern: "crosses" },
+  { id: "back_ocean_deep",  category: "card_back", name: "Océano Profundo", description: "Donde no llega la luz del sol.",                  price: 130, preview: "card", previewColor: "#000080", rarity: "rare",      backColors: ["#000033","#000080","#000050"], backAccent: "#00FFFF", backPattern: "waves" },
+  { id: "back_golden_empire", category: "card_back", name: "Imperio Dorado",  description: "Riqueza de civilizaciones perdidas.",             price: 230, preview: "card", previewColor: "#B8860B", rarity: "epic",      backColors: ["#8B6914","#B8860B","#D4AF37"], backAccent: "#FFFFFF", backPattern: "diamonds" },
+  { id: "back_dark_nebula", category: "card_back", name: "Nebulosa Oscura",   description: "Gases espaciales inquietantes.",                  price: 140, preview: "card", previewColor: "#1A001A", rarity: "rare",      backColors: ["#1A001A","#330033","#000000"], backAccent: "#FF00FF", backPattern: "stars" },
+  { id: "back_emerald_forest", category: "card_back", name: "Bosque Esmeralda", description: "El corazón de la naturaleza.",                  price: 110, preview: "card", previewColor: "#0B5A3E", rarity: "rare",      backColors: ["#0A3D2A","#0B5A3E","#1A7A5A"], backAccent: "#90EE90", backPattern: "circles" },
+  { id: "back_silver_storm", category: "card_back", name: "Tormenta de Plata", description: "Destellos metálicos constantes.",                price: 140, preview: "card", previewColor: "#C0C0C0", rarity: "rare",      backColors: ["#909090","#C0C0C0","#E0E0E0"], backAccent: "#000000", backPattern: "crosses" },
+  { id: "back_royal_purple", category: "card_back", name: "Púrpura Real",     description: "La nobleza en tus cartas.",                       price: 115, preview: "card", previewColor: "#4B0082", rarity: "rare",      backColors: ["#3A1550","#4B0082","#7B3FA0"], backAccent: "#DDA0FF", backPattern: "diamonds" },
   { id: "back_iron_epic", category: "card_back", name: "Hierro Forjado",  description: "Metal templado en batalla.",                     price: 185, preview: "card", previewColor: "#4A4A4A", rarity: "epic",      backColors: ["#4A4A4A","#222222","#6A6A6A"], backAccent: "#FF4500", backPattern: "crosses" },
   { id: "back_orchid",    category: "card_back", name: "Orquídea",        description: "Rareza floral de otro nivel.",                   price: 200, preview: "card", previewColor: "#DA70D6", rarity: "epic",      backColors: ["#DA70D6","#9B2D9B","#FF88FF"], backAccent: "#FFFFFF", backPattern: "circles" },
   { id: "back_thunder2",  category: "card_back", name: "Tormenta Épica",  description: "Más que relámpagos, la furia del cielo.",        price: 210, preview: "card", previewColor: "#364B6E", rarity: "epic",      backColors: ["#364B6E","#1A2840","#4A6090"], backAccent: "#FFFF00", backPattern: "hexagons" },
@@ -586,7 +606,30 @@ export const EMOTES: StoreItem[] = [
   { id: "emote_elfin",    category: "emote", name: "El Fin",      description: "El juego terminó. Yo gané.", price: 400, preview: "infinite",    previewColor: "#2C3E50", rarity: "legendary" },
 ];
 
-export const STORE_ITEMS: StoreItem[] = [...CARD_BACKS, ...AVATARS, ...TITLES, ...AVATAR_FRAMES, ...EFFECTS, ...EMOTES];
+export const TABLE_DESIGNS: StoreItem[] = [
+  { id: "table_casino",   category: "table_design", name: "Mesa Casino Verde", description: "El fieltro clásico del casino.", price: 0, preview: "square", previewColor: "#0B5A3E", rarity: "common", isDefault: true, backColors: ["#0B5A3E", "#1A7A5A"] },
+  { id: "table_wood",     category: "table_design", name: "Mesa Madera Elegante", description: "Madera pulida de alta calidad.", price: 100, preview: "square", previewColor: "#4A3010", rarity: "rare", backColors: ["#4A3010", "#6A4A1A"] },
+  { id: "table_galaxy",   category: "table_design", name: "Mesa Galaxia Espacial", description: "Juega entre las estrellas.", price: 300, preview: "square", previewColor: "#0A0020", rarity: "legendary", backColors: ["#0A0020", "#2C0066"] },
+  { id: "table_lava",     category: "table_design", name: "Mesa Lava Volcánica", description: "Sentirás el calor del juego.", price: 200, preview: "square", previewColor: "#4B0000", rarity: "epic", backColors: ["#4B0000", "#FF4500"] },
+  { id: "table_arctic",   category: "table_design", name: "Mesa Hielo Ártico", description: "Fría y precisa como un glaciar.", price: 150, preview: "square", previewColor: "#8EC8E8", rarity: "rare", backColors: ["#8EC8E8", "#B8DDEF"] },
+  { id: "table_cyber",    category: "table_design", name: "Mesa Cyberpunk", description: "Luces neón y circuitos futuristas.", price: 250, preview: "square", previewColor: "#000000", rarity: "epic", backColors: ["#000000", "#FFFF00"] },
+  { id: "table_royal",    category: "table_design", name: "Mesa Real Púrpura", description: "Digna de la realeza del juego.", price: 200, preview: "square", previewColor: "#4B0082", rarity: "rare", backColors: ["#4B0082", "#7B3FA0"] },
+  { id: "table_sunset",   category: "table_design", name: "Mesa Atardecer", description: "Colores cálidos del crepúsculo.", price: 120, preview: "square", previewColor: "#C0582A", rarity: "rare", backColors: ["#C0582A", "#E07040"] },
+  { id: "table_midnight", category: "table_design", name: "Mesa Medianoche", description: "Oscuridad profunda y elegante.", price: 180, preview: "square", previewColor: "#0D0D1A", rarity: "rare", backColors: ["#0D0D1A", "#1A1A2E"] },
+  { id: "table_ocean",    category: "table_design", name: "Mesa Océano", description: "Profundidades marinas en tu mesa.", price: 150, preview: "square", previewColor: "#003D6B", rarity: "rare", backColors: ["#003D6B", "#006994"] },
+  { id: "table_forest",   category: "table_design", name: "Mesa Bosque", description: "Naturaleza salvaje y calmada.", price: 100, preview: "square", previewColor: "#1A4A1A", rarity: "common", backColors: ["#1A4A1A", "#2D6A2D"] },
+  { id: "table_neon_green",category: "table_design", name: "Mesa Neón Verde", description: "Energía pura fluorescente.", price: 220, preview: "square", previewColor: "#001A00", rarity: "epic", backColors: ["#001A00", "#00CC44"] },
+  { id: "table_crimson",  category: "table_design", name: "Mesa Carmesí", description: "Rojo intenso y dominante.", price: 130, preview: "square", previewColor: "#8B0000", rarity: "rare", backColors: ["#8B0000", "#C0392B"] },
+  { id: "table_gold",     category: "table_design", name: "Mesa Oro Real", description: "Lujo absoluto en cada mano.", price: 500, preview: "square", previewColor: "#B8860B", rarity: "legendary", backColors: ["#B8860B", "#D4AF37"] },
+  { id: "table_obsidian", category: "table_design", name: "Mesa Obsidiana", description: "Piedra volcánica negra pulida.", price: 350, preview: "square", previewColor: "#111111", rarity: "epic", backColors: ["#111111", "#2D2D2D"] },
+  { id: "table_rainbow",  category: "table_design", name: "Mesa Prisma", description: "Todos los colores del espectro.", price: 400, preview: "square", previewColor: "#330022", rarity: "legendary", backColors: ["#330022", "#880044"] },
+  { id: "table_sand",     category: "table_design", name: "Mesa Arena", description: "Calidez del desierto infinito.", price: 80, preview: "square", previewColor: "#C2B280", rarity: "common", backColors: ["#C2B280", "#A6935C"] },
+  { id: "table_slate",    category: "table_design", name: "Mesa Pizarra", description: "Fría y sólida como la roca.", price: 90, preview: "square", previewColor: "#708090", rarity: "common", backColors: ["#708090", "#4682B4"] },
+  { id: "table_carbon",   category: "table_design", name: "Mesa Fibra de Carbón", description: "Alta tecnología resistente.", price: 280, preview: "square", previewColor: "#1C1C1C", rarity: "epic", backColors: ["#1C1C1C", "#3D3D3D"] },
+  { id: "table_nebula",   category: "table_design", name: "Mesa Nebulosa", description: "Nubes de gas estelar coloridas.", price: 320, preview: "square", previewColor: "#4B0082", rarity: "epic", backColors: ["#4B0082", "#8A2BE2"] },
+];
+
+export const STORE_ITEMS: StoreItem[] = [...CARD_BACKS, ...AVATARS, ...TITLES, ...AVATAR_FRAMES, ...EFFECTS, ...EMOTES, ...TABLE_DESIGNS];
 
 export function getItemsByCategory(category: StoreItemCategory): StoreItem[] {
   return STORE_ITEMS.filter((i) => i.category === category);
@@ -598,6 +641,10 @@ export function getItemById(id: StoreItemId): StoreItem | undefined {
 
 export function getCardBackById(id: string): StoreItem {
   return CARD_BACKS.find(b => b.id === id) ?? CARD_BACKS[0];
+}
+
+export function getTableDesignById(id: string): StoreItem {
+  return TABLE_DESIGNS.find(b => b.id === id) ?? TABLE_DESIGNS[0];
 }
 
 // ═══════════════════════════════════════════════════════════════

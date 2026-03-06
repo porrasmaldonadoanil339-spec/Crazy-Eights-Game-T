@@ -100,7 +100,7 @@ export interface PlayerProfile {
   musicEnabled: boolean;
   sfxEnabled: boolean;
   vibrationEnabled: boolean;
-  language: "es" | "en" | "pt";
+  language: "es" | "en" | "pt" | "fr" | "de" | "it" | "tr";
   darkMode: boolean;
   country: string;
   // Friend requests (global, persisted)
@@ -202,7 +202,7 @@ interface ProfileContextValue {
   claimDailyReward: () => DailyReward | null;
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
-  updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt"; darkMode?: boolean }) => void;
+  updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt" | "fr" | "de" | "it" | "tr"; darkMode?: boolean }) => void;
   updateEquippedEmotes: (emoteIds: string[]) => void;
   updateRanked: (delta: number) => void;
   watchAd: () => boolean;
@@ -248,6 +248,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             photoUri: saved.photoUri ?? "",
             country: saved.country ?? "CO",
             equippedEmotes: saved.equippedEmotes ?? DEFAULT_PROFILE.equippedEmotes,
+            language: saved.language ?? "es",
           };
           setProfile(merged);
         }
@@ -433,7 +434,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return reward;
   }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, update]);
 
-  const updateSettings = useCallback((settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt"; darkMode?: boolean }) => {
+  const updateSettings = useCallback((settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt" | "fr" | "de" | "it" | "tr"; darkMode?: boolean }) => {
     update((p) => ({ ...p, ...settings }));
   }, [update]);
 

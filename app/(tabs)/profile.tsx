@@ -20,6 +20,7 @@ import { getRankInfo } from "@/lib/ranked";
 import { playSound } from "@/lib/sounds";
 import { GAME_MODES } from "@/lib/gameModes";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { Lang } from "@/lib/i18n";
 
 const TITLE_ITEMS = STORE_ITEMS.filter((i) => i.category === "title");
 
@@ -287,50 +288,53 @@ function CountryPickerModal({
   onSelect: (code: string) => void; onClose: () => void;
 }) {
   const { profile } = useProfile();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
   const T = useT();
   return (
-    <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
-      <Pressable style={styles.modalBg} onPress={onClose}>
-        <View style={styles.pickerModal}>
-          <View style={styles.pickerHeader}>
-            <Text style={styles.pickerTitle}>{T("selectCountry") || "Seleccionar País"}</Text>
-            <Pressable onPress={onClose}><Ionicons name="close" size={22} color={Colors.textMuted} /></Pressable>
+    <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose} hardwareAccelerated statusBarTranslucent>
+      <View style={{ flex: 1 }}>
+        <Pressable style={[styles.modalBg, { justifyContent: "flex-end" }]} onPress={onClose}>
+          <View style={{ flex: 1 }} />
+          <View style={[styles.pickerModal, { maxHeight: 420 }]}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>{T("selectCountry") || "Seleccionar País"}</Text>
+              <Pressable onPress={onClose}><Ionicons name="close" size={22} color={Colors.textMuted} /></Pressable>
+            </View>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.countryList}>
+              {COUNTRY_SECTIONS.map((section, sIdx) => (
+                <View key={`section-${sIdx}`}>
+                  <Text style={styles.sectionHeader}>
+                    {(section.continent as any)[lang] || section.continent["es"]}
+                  </Text>
+                  {section.countries.map((code) => {
+                    const c = COUNTRIES.find(cnt => cnt.code === code);
+                    if (!c) return null;
+                    return (
+                      <Pressable
+                        key={c.code}
+                        onPress={() => { onSelect(c.code); onClose(); }}
+                        style={[styles.countryItem, c.code === currentCode && styles.countryItemSelected]}
+                      >
+                        <View style={styles.flagContainer}>
+                          {Platform.OS === "web" ? (
+                            <View style={[styles.webFlag, { backgroundColor: Colors.gold + "44" }]}>
+                              <Text style={styles.webFlagText}>{c.code}</Text>
+                            </View>
+                          ) : (
+                            <Text style={styles.flagEmoji}>{c.flag}</Text>
+                          )}
+                        </View>
+                        <Text style={[styles.countryName, c.code === currentCode && { color: Colors.gold }]}>{c.name}</Text>
+                        {c.code === currentCode && <Ionicons name="checkmark" size={20} color={Colors.gold} />}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ))}
+            </ScrollView>
           </View>
-          <ScrollView contentContainerStyle={styles.countryList}>
-            {COUNTRY_SECTIONS.map((section, sIdx) => (
-              <View key={`section-${sIdx}`}>
-                <Text style={styles.sectionHeader}>
-                  {section.continent[lang]}
-                </Text>
-                {section.countries.map((code) => {
-                  const c = COUNTRIES.find(cnt => cnt.code === code);
-                  if (!c) return null;
-                  return (
-                    <Pressable
-                      key={c.code}
-                      onPress={() => { onSelect(c.code); onClose(); }}
-                      style={[styles.countryItem, c.code === currentCode && styles.countryItemSelected]}
-                    >
-                      <View style={styles.flagContainer}>
-                        {Platform.OS === "web" ? (
-                          <View style={[styles.webFlag, { backgroundColor: Colors.gold + "44" }]}>
-                            <Text style={styles.webFlagText}>{c.code}</Text>
-                          </View>
-                        ) : (
-                          <Text style={styles.flagEmoji}>{c.flag}</Text>
-                        )}
-                      </View>
-                      <Text style={[styles.countryName, c.code === currentCode && { color: Colors.gold }]}>{c.name}</Text>
-                      {c.code === currentCode && <Ionicons name="checkmark" size={20} color={Colors.gold} />}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      </Pressable>
+        </Pressable>
+      </View>
     </Modal>
   );
 }
@@ -346,7 +350,7 @@ function StatRow({ label, value, textColor, textMuted }: { label: string; value:
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, level, xpProgress, updateName, updateAvatar, updateTitle, updateFrame, updatePhotoUri, updateCountry } = useProfile();
+  const { profile, level, xpProgress, updateName, updateAvatar, updateTitle, updateFrame, updatePhotoUri, updateCountry, updateSettings } = useProfile();
   const { user, logout } = useAuth();
   const [showEditName, setShowEditName] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
@@ -355,7 +359,7 @@ export default function ProfileScreen() {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
 
   const T = useT();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
   const swipeHandlers = useSwipeTabs(3);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;

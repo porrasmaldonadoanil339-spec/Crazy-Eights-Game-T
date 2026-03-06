@@ -108,28 +108,38 @@ function AnimatedBackground({ isDark }: { isDark: boolean }) {
 }
 
 function RankedPreviewCard({ isDark, lang }: { isDark: boolean; lang: "es" | "en" | "pt" }) {
-  const { profile } = useProfile();
+  const { profile, level } = useProfile();
   const T = useT();
   const rp = profile.rankedProfile;
   const rankInfo = getRankInfo(rp);
   
+  const isLocked = level < 5;
+
   const title = lang === "en" ? "RANKED" : lang === "pt" ? "CLASSIFICATÓRIA" : "CLASIFICATORIA";
-  const subtitle = lang === "en" ? "Win games, earn stars, climb the ranks" : 
-                   lang === "pt" ? "Ganhe partidas, suba estrelas, suba de nível" : 
-                   "Gana partidas, suba estrellas, asciende de rango";
+  const subtitle = isLocked 
+    ? (lang === "en" ? "Unlock at level 5" : lang === "pt" ? "Desbloqueie no nível 5" : "Desbloquea en nivel 5")
+    : (lang === "en" ? "Win games, earn stars, climb the ranks" : 
+       lang === "pt" ? "Ganhe partidas, suba estrelas, suba de nível" : 
+       "Gana partidas, suba estrellas, asciende de rango");
   const playText = lang === "en" ? "PLAY RANKED" : lang === "pt" ? "JOGAR CLASSIFICATÓRIA" : "JUGAR CLASIFICATORIA";
 
   return (
     <Pressable 
-      onPress={() => { playButton().catch(() => {}); router.push("/ranked"); }}
+      onPress={() => { 
+        if (isLocked) return;
+        playButton().catch(() => {}); 
+        router.push("/ranked"); 
+      }}
+      disabled={isLocked}
       style={({ pressed }) => [
         styles.rankedCard, 
-        { borderColor: "#D4AF37", borderWidth: 1.5 },
-        pressed && { transform: [{ scale: 0.98 }] }
+        { borderColor: isLocked ? "#444" : "#D4AF37", borderWidth: 1.5 },
+        pressed && !isLocked && { transform: [{ scale: 0.98 }] },
+        isLocked && { opacity: 0.8 }
       ]}
     >
       <LinearGradient
-        colors={["#1a0a00", "#2a1400", "#1a0a00"]}
+        colors={isLocked ? ["#111", "#1a1a1a", "#111"] : ["#1a0a00", "#2a1400", "#1a0a00"]}
         style={styles.rankedGrad}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
@@ -137,38 +147,42 @@ function RankedPreviewCard({ isDark, lang }: { isDark: boolean; lang: "es" | "en
       <View style={styles.rankedCardContent}>
         <View style={styles.rankedHeader}>
           <View style={styles.rankedIconContainer}>
-            <Ionicons name="trophy" size={32} color="#D4AF37" />
+            <Ionicons name={isLocked ? "lock-closed" : "trophy"} size={32} color={isLocked ? "#666" : "#D4AF37"} />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={styles.rankedTitle}>{title}</Text>
-            <Text style={styles.rankedSubtitle}>{subtitle}</Text>
+            <Text style={[styles.rankedTitle, isLocked && { color: "#888" }]}>{title}</Text>
+            <Text style={[styles.rankedSubtitle, isLocked && { color: "#666" }]}>{subtitle}</Text>
           </View>
         </View>
 
-        <View style={styles.rankedStatus}>
-          <View style={[styles.rankBadge, { backgroundColor: rankInfo.color + "33" }]}>
-            <Text style={[styles.rankBadgeText, { color: rankInfo.color }]}>
-              {T(`rank${RANKS[rp.rank]}` as any) || rankInfo.rankName} {rp.division + 1}
-            </Text>
+        {!isLocked && (
+          <View style={styles.rankedStatus}>
+            <View style={[styles.rankBadge, { backgroundColor: rankInfo.color + "33" }]}>
+              <Text style={[styles.rankBadgeText, { color: rankInfo.color }]}>
+                {T(`rank${RANKS[rp.rank]}` as any) || rankInfo.rankName} {rp.division + 1}
+              </Text>
+            </View>
+            <View style={styles.starsMini}>
+              {Array.from({ length: rp.maxStars }).map((_, i) => (
+                <Ionicons 
+                  key={i} 
+                  name={i < rp.stars ? "star" : "star-outline"} 
+                  size={14} 
+                  color={i < rp.stars ? rankInfo.color : "#D4AF3744"} 
+                />
+              ))}
+            </View>
           </View>
-          <View style={styles.starsMini}>
-            {Array.from({ length: rp.maxStars }).map((_, i) => (
-              <Ionicons 
-                key={i} 
-                name={i < rp.stars ? "star" : "star-outline"} 
-                size={14} 
-                color={i < rp.stars ? rankInfo.color : "#D4AF3744"} 
-              />
-            ))}
-          </View>
-        </View>
+        )}
 
-        <View style={styles.rankedAction}>
-          <LinearGradient colors={["#D4AF37", "#B8860B"]} style={styles.rankedBtnGrad}>
-            <Text style={styles.rankedBtnText}>{playText}</Text>
-            <Ionicons name="chevron-forward" size={16} color="#000" />
-          </LinearGradient>
-        </View>
+        {!isLocked && (
+          <View style={styles.rankedAction}>
+            <LinearGradient colors={["#D4AF37", "#B8860B"]} style={styles.rankedBtnGrad}>
+              <Text style={styles.rankedBtnText}>{playText}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#000" />
+            </LinearGradient>
+          </View>
+        )}
       </View>
     </Pressable>
   );

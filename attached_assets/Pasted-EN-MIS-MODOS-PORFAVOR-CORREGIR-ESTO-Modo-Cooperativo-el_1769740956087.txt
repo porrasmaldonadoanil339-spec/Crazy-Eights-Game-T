@@ -1,0 +1,50 @@
+EN MIS MODOS PORFAVOR CORREGIR ESTO 
+Modo Cooperativo: el jugador y una IA aliada juegan en equipo contra dos CPUs. El objetivo es coordinarse para ganar, ayudando al compañero o bloqueando a los rivales.
+Modo Desafío: incluye retos con reglas especiales diferentes a una partida normal, como límite de turnos, cartas iniciales distintas o restricciones al jugar. Al completar el objetivo el jugador recibe recompensas. Los desafíos deben cambiar regularmente.
+Modo Práctica: sirve para aprender el juego. Debe tener IA más fácil, sugerencias de qué carta jugar y no afectar el ranking ni quitar puntos.
+EN LA INTERFAZ DE LOGROS YA SERIA INNESCERIO COLOCAR LA CALSIFICATORIA AUNQUE ME GUSTE ESO QUE ESTA EN EAS INTERFAZ DE CLASIFICATIRO QUE SALGA MI PERFIL ELLO ESTARIA BUENO QUE LO AGREGUES A LA CLASIFICATORIA DE LA PRIMERA INTREFAZ ADEMAS PONERLO MEJOR DISEÑO REALISTA EN MODO CLASIFICATORIO LO VEO MUY SIMPLE PORFA Y QUE APARTIR DEL NIVEL 5 SE DESBLOQUEE LA OPCION DE CLASIFICATORIA QUE VA APARECER EN LA PRIMEA INTERFAZ Y EN EL RAKING GLOBAL SEAN 10,000 JUGADORES PARA QUE NOTEN REALISTA PORFAAVOR Y CON AVATARE Y PERFILES COMO LOS QUE ME APARECEN CUANDO JUEGO LOS MODOS DE JUEGO PERFILES REALISTAS CON CARA REALES O SINO CON AVATES DE LA TINEDA ALGO ASI . Y QUE EN RAKING SEA DE MENOS A MAS OBVIAMENTE CON UNA LOGICA REALISTA.
+ADEMAS QUE AUN EN LA OPCION DE PERFIL PARA COLOCAR MI PAIS ESTA FALLANDO ESA OPCION PORQUE NO ME PERMITE VER LOS DEMAS PAISES TODOS LOS PAISESSQ QUE HAY. 
+Agrega una pantalla de inicio (splash screen) cuando se abra la aplicación. Debe mostrar el logo de mi estudio "Biyis Prime Studios" centrado en la pantalla durante unos segundos. El logo debe tener una animación suave y reproducir un sonido corto característico cuando aparezca. Después de 2 o 3 segundos, la app debe pasar automáticamente al menú principal del juego.
+EN LA CONFIGURACION Agrega soporte para varios idiomas en mi juego: Inglés, Español, Portugués, Francés, Alemán, Italiano y Turco. El idioma debe detectarse automáticamente según el idioma del dispositivo del jugador cuando abra la app por primera vez. También debe existir una opción en configuración para cambiar el idioma manualmente.
+Cuando el idioma cambie, todo el texto de la aplicación debe traducirse completamente, incluyendo menús, botones, mensajes, tutoriales, modos de juego, configuraciones y ranking. Ninguna palabra debe quedar en otro idioma.
+Agrega diferentes estilos cosméticos para Diseños de Cartas y Mesas de Juego que los jugadores puedan comprar en la tienda. Los estilos deben ser variados, creativos y visualmente atractivos. Cada estilo debe tener un nombre y un diseño único. Continúa generando nuevas ideas similares para ampliar la tienda con el tiempo.
+🎴 Ideas de Diseños de Cartas
+Puedes empezar con estos:
+•	Clásico Casino
+•	Neón Futurista
+•	Galaxia Espacial
+•	Fuego y Lava
+•	Hielo Glacial
+•	Oro Real
+•	Cyberpunk
+•	Medieval
+•	Cristal Mágico
+•	Cartas Retro 90s
+🪑 Ideas de Mesas de Juego
+•	Mesa de Casino Verde
+•	Mesa de Madera Elegante
+•	Mesa Galaxia Espacial
+•	Mesa de Lava Volcánica
+•	Mesa Hielo Ártico
+•	Mesa Futurista Digital
+•	Mesa Real Dorada
+•	Mesa Selva Tropical
+•	Mesa Nocturna Neon
+•	Mesa Cristal Mágico
+DE LOS DISEÑO DE CARTAS QUE SEAN 90 Y LAS MESA DE JUEGO 90 PORAFOVR DE ESTAS QUE TE MANDE COMO EJEMPLO AGREGAS LAS DIFERENCIA PORFAVOR.
+Quiero que el sistema de amigos y solicitudes de amistad sea completo y realista. Los jugadores deben poder enviar, recibir, aceptar o rechazar solicitudes de amistad. Este sistema debe estar bien integrado en todo el juego, incluyendo partidas clasificatorias, perfil del jugador y lista de amigos.
+Cuando termine una partida, los jugadores deben poder enviar solicitud de amistad a los otros jugadores desde la pantalla de resultados. También debe existir una lista de amigos donde se pueda ver quién está en línea, invitar a jugar y ver su perfil.
+El sistema debe mostrar notificaciones cuando llegue una solicitud nueva y permitir aceptarla o rechazarla fácilmente.
+Funciones que debería tener
+•	📩 Enviar solicitud de amistad desde perfil o después de una partida
+•	✅ Aceptar o rechazar solicitud
+•	👥 Lista de amigos
+•	🟢 Ver quién está en línea
+•	🎮 Invitar a jugar
+•	🔔 Notificación de solicitud nueva
+Agrega un sistema de temporadas al juego. Cada temporada debe durar aproximadamente 30 días. Durante cada temporada los jugadores pueden competir en el ranking clasificatorio para subir de rango y ganar recompensas.
+Al terminar la temporada, el ranking se reinicia parcialmente y los jugadores reciben recompensas según el rango que alcanzaron. Después comienza una nueva temporada con nuevas recompensas y posiblemente nuevos cosméticos en la tienda.
+También puedes agregar esto
+Cada temporada debe mostrar:
+•	un contador de tiempo restante
+•	recompensas por rango

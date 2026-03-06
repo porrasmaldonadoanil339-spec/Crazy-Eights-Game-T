@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, Dimensions,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, Dimensions, Modal,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,6 +11,8 @@ import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
 import { getRankInfo, RANKS, RANK_COLORS } from "@/lib/ranked";
 import { getRandomCpuProfile } from "@/lib/cpuProfiles";
+import { getCurrentSeason, getSeasonRewardsForRank } from "@/lib/seasons";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 const { width } = Dimensions.get("window");
 
@@ -21,15 +23,17 @@ export default function RankedScreen() {
   const isDark = profile.darkMode !== false;
   const themeColors = isDark ? Colors : LightColors;
   const rankInfo = useMemo(() => getRankInfo(profile.rankedProfile), [profile.rankedProfile]);
+  const season = useMemo(() => getCurrentSeason(), []);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
 
-  // Simulate top 20 global ranking with CPU profiles
+  // Simulate top 50 global ranking with CPU profiles
   const globalRanking = useMemo(() => {
-    return Array.from({ length: 20 }).map((_, i) => {
+    return Array.from({ length: 50 }).map((_, i) => {
       const cpu = getRandomCpuProfile(i + 100);
-      const rankIdx = Math.max(0, 11 - Math.floor(i / 2));
+      const rankIdx = Math.max(0, 11 - Math.floor(i / 4));
       const divisionIdx = 4 - (i % 5);
       return {
         id: `global_${i}`,
@@ -44,14 +48,14 @@ export default function RankedScreen() {
     });
   }, []);
 
-  const renderStars = (current: number, max: number) => {
+  const renderStars = (current: number, max: number, size = 24) => {
     return (
       <View style={styles.starsRow}>
         {Array.from({ length: max }).map((_, i) => (
           <Ionicons
             key={i}
             name={i < current ? "star" : "star-outline"}
-            size={24}
+            size={size}
             color={i < current ? rankInfo.color : themeColors.textDim}
             style={styles.starIcon}
           />
@@ -60,15 +64,17 @@ export default function RankedScreen() {
     );
   };
 
+  const nextRankProgress = (profile.rankedProfile.stars / profile.rankedProfile.maxStars) * 100;
+
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <LinearGradient
-        colors={isDark ? ["#1a1a2e", "#0f0f1a"] : ["#f0f0f5", "#e6e6f0"]}
+        colors={isDark ? ["#0a0a1a", "#1a0a2e", "#0a0a1a"] : ["#f0f0f5", "#e6e6f0", "#f0f0f5"]}
         style={StyleSheet.absoluteFill}
       />
       
       <ScrollView
-        contentContainerStyle={{ paddingTop: topPad + 20, paddingBottom: botPad + 100 }}
+        contentContainerStyle={{ paddingTop: topPad + 10, paddingBottom: botPad + 100 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Header / Back */}
@@ -80,21 +86,69 @@ export default function RankedScreen() {
           <View style={{ width: 40 }} />
         </View>
 
-        {/* Current Rank Card */}
-        <View style={[styles.rankCard, { backgroundColor: themeColors.card, borderColor: rankInfo.color + "44" }]}>
+        {/* Season Banner */}
+        <View style={styles.seasonBanner}>
           <LinearGradient
-            colors={[rankInfo.color + "22", "transparent"]}
-            style={StyleSheet.absoluteFill}
+            colors={["#D4AF37", "#B8860B"]}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
-          <View style={[styles.rankIconBadge, { backgroundColor: rankInfo.color + "33" }]}>
-            <Ionicons name="trophy" size={64} color={rankInfo.color} />
+            end={{ x: 1, y: 0 }}
+            style={styles.seasonBadge}
+          >
+            <Text style={styles.seasonTitle}>TEMPORADA {season.number}: {season.name.toUpperCase()}</Text>
+          </LinearGradient>
+          <View style={styles.seasonMeta}>
+            <View style={styles.timerRow}>
+              <Ionicons name="time-outline" size={16} color={themeColors.textMuted} />
+              <Text style={[styles.timerText, { color: themeColors.textMuted }]}>
+                {season.daysRemaining} {T("daysRemaining") || "días restantes"}
+              </Text>
+            </View>
+            <Pressable onPress={() => setShowRewardsModal(true)} style={styles.rewardsLink}>
+              <Text style={styles.rewardsLinkText}>{T("viewRewards") || "Ver recompensas"}</Text>
+              <Ionicons name="chevron-forward" size={14} color="#D4AF37" />
+            </Pressable>
           </View>
+        </View>
+
+        {/* Current Rank Card */}
+        <View style={[styles.rankCard, { backgroundColor: themeColors.card, borderColor: rankInfo.color + "66" }]}>
+          <LinearGradient
+            colors={[rankInfo.color + "33", "transparent"]}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+          />
+          
+          <View style={styles.rankCardTop}>
+            <View style={styles.playerAvatarContainer}>
+              <AvatarDisplay
+                avatarId={profile.avatarId}
+                frameId={profile.selectedFrameId}
+                photoUri={profile.photoUri}
+                size={80}
+              />
+            </View>
+            <View style={styles.rankBadgeContainer}>
+              <View style={[styles.rankIconCircle, { backgroundColor: rankInfo.color + "22", borderColor: rankInfo.color }]}>
+                <Ionicons name="trophy" size={50} color={rankInfo.color} />
+              </View>
+            </View>
+          </View>
+
           <Text style={[styles.rankName, { color: rankInfo.color }]}>
-            {T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName} {profile.rankedProfile.division + 1}
+            {(T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName).toUpperCase()} {profile.rankedProfile.division + 1}
           </Text>
-          {renderStars(profile.rankedProfile.stars, profile.rankedProfile.maxStars)}
+          
+          {renderStars(profile.rankedProfile.stars, profile.rankedProfile.maxStars, 28)}
+          
+          <View style={styles.progressContainer}>
+            <View style={[styles.progressBarBg, { backgroundColor: themeColors.surface }]}>
+              <View style={[styles.progressBarFill, { width: `${nextRankProgress}%`, backgroundColor: rankInfo.color }]} />
+            </View>
+            <Text style={[styles.progressText, { color: themeColors.textMuted }]}>
+              {profile.rankedProfile.stars} / {profile.rankedProfile.maxStars} {T("stars") || "estrellas"}
+            </Text>
+          </View>
           
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
@@ -111,26 +165,73 @@ export default function RankedScreen() {
 
         {/* Global Ranking Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{T("globalRanking")}</Text>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="globe-outline" size={20} color={themeColors.text} />
+            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{T("globalRanking")}</Text>
+          </View>
           {globalRanking.map((item, index) => (
             <View key={item.id} style={[styles.rankingItem, { backgroundColor: themeColors.surface }]}>
-              <Text style={[styles.rankNumber, { color: index < 3 ? Colors.gold : themeColors.textMuted }]}>
-                #{index + 1}
-              </Text>
-              <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>
-                <Ionicons name={item.avatarIcon as any} size={14} color="#fff" />
+              <View style={styles.rankingPlace}>
+                {index < 3 ? (
+                  <Ionicons name="medal" size={24} color={index === 0 ? "#FFD700" : index === 1 ? "#C0C0C0" : "#CD7F32"} />
+                ) : (
+                  <Text style={[styles.rankNumber, { color: themeColors.textMuted }]}>
+                    #{index + 1}
+                  </Text>
+                )}
               </View>
+              
+              <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>
+                <Ionicons name={item.avatarIcon as any} size={16} color="#fff" />
+              </View>
+              
               <View style={styles.rankingInfo}>
                 <Text style={[styles.rankingName, { color: themeColors.text }]}>{item.name}</Text>
-                <Text style={[styles.rankingMeta, { color: themeColors.textMuted }]}>
-                  {T(`rank${RANKS[item.rank]}` as any)} {item.division + 1}
-                </Text>
+                <View style={styles.rankingMetaRow}>
+                  <Text style={[styles.rankingMeta, { color: themeColors.textMuted }]}>
+                    {T(`rank${RANKS[item.rank]}` as any)} {item.division + 1}
+                  </Text>
+                </View>
               </View>
-              <Ionicons name="trophy" size={16} color={RANK_COLORS[item.rank]} />
+              
+              <View style={styles.rankBadgeSmall}>
+                 <Ionicons name="trophy" size={14} color={RANK_COLORS[item.rank]} />
+                 <Text style={[styles.rankBadgeTextSmall, { color: RANK_COLORS[item.rank] }]}>{item.level}</Text>
+              </View>
             </View>
           ))}
         </View>
       </ScrollView>
+
+      {/* Rewards Modal */}
+      <Modal visible={showRewardsModal} transparent animationType="fade" onRequestClose={() => setShowRewardsModal(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowRewardsModal(false)}>
+          <View style={[styles.modalContent, { backgroundColor: themeColors.card }]}>
+            <Text style={[styles.modalTitle, { color: themeColors.text }]}>{T("seasonRewards") || "Recompensas de Temporada"}</Text>
+            <ScrollView style={styles.rewardsList}>
+              {RANKS.slice(0, 7).map((rank, idx) => {
+                const reward = getSeasonRewardsForRank(idx);
+                return (
+                  <View key={rank} style={styles.rewardItem}>
+                    <View style={[styles.rewardRankIcon, { backgroundColor: RANK_COLORS[idx] + "22" }]}>
+                      <Ionicons name="trophy" size={20} color={RANK_COLORS[idx]} />
+                    </View>
+                    <View style={styles.rewardInfo}>
+                      <Text style={[styles.rewardRankName, { color: themeColors.text }]}>{T(`rank${rank}` as any) || rank}</Text>
+                      <Text style={[styles.rewardText, { color: themeColors.textMuted }]}>
+                        {reward.coins} coins {reward.items.length > 0 ? "+ Items" : ""} {reward.title ? `+ Título` : ""}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+            <Pressable onPress={() => setShowRewardsModal(false)} style={styles.closeModalBtn}>
+              <Text style={styles.closeModalBtnText}>{T("close") || "Cerrar"}</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
 
       {/* Play Button Fixed Bottom */}
       <View style={[styles.footer, { paddingBottom: botPad + 20, backgroundColor: themeColors.background + "ee" }]}>
@@ -143,7 +244,7 @@ export default function RankedScreen() {
           ]}
         >
           <Ionicons name="play" size={24} color="#000" />
-          <Text style={styles.playBtnText}>{T("playRanked")}</Text>
+          <Text style={styles.playBtnText}>{T("playRanked").toUpperCase()}</Text>
         </Pressable>
       </View>
     </View>
@@ -154,49 +255,103 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingHorizontal: 16, marginBottom: 20,
+    paddingHorizontal: 16, marginBottom: 12,
   },
   backBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   headerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 24 },
+  
+  seasonBanner: {
+    marginHorizontal: 16, marginBottom: 20,
+    alignItems: "center",
+  },
+  seasonBadge: {
+    paddingHorizontal: 16, paddingVertical: 6,
+    borderRadius: 20, marginBottom: 8,
+  },
+  seasonTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: "#000" },
+  seasonMeta: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", paddingHorizontal: 4 },
+  timerRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  timerText: { fontFamily: "Nunito_700Bold", fontSize: 13 },
+  rewardsLink: { flexDirection: "row", alignItems: "center", gap: 2 },
+  rewardsLinkText: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: "#D4AF37" },
+
   rankCard: {
-    marginHorizontal: 16, borderRadius: 24, padding: 24,
+    marginHorizontal: 16, borderRadius: 28, padding: 24,
     alignItems: "center", borderWidth: 1, overflow: "hidden",
-    elevation: 4, shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2, shadowRadius: 8,
+    elevation: 10, shadowColor: "#000", shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4, shadowRadius: 12,
   },
-  rankIconBadge: {
-    width: 120, height: 120, borderRadius: 60,
+  rankCardTop: { flexDirection: "row", alignItems: "center", gap: 20, marginBottom: 16 },
+  playerAvatarContainer: {
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6,
+  },
+  rankBadgeContainer: {
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6,
+  },
+  rankIconCircle: {
+    width: 90, height: 90, borderRadius: 45,
     alignItems: "center", justifyContent: "center",
-    marginBottom: 16,
+    borderWidth: 2,
   },
-  rankName: { fontFamily: "Nunito_900ExtraBold", fontSize: 28, marginBottom: 12 },
-  starsRow: { flexDirection: "row", gap: 8, marginBottom: 24 },
-  starIcon: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 2 },
-  statsRow: { flexDirection: "row", alignItems: "center", gap: 32 },
+  rankName: { fontFamily: "Nunito_900ExtraBold", fontSize: 32, marginBottom: 8 },
+  starsRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
+  starIcon: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3 },
+  
+  progressContainer: { width: "100%", marginBottom: 24, alignItems: "center" },
+  progressBarBg: { width: "100%", height: 10, borderRadius: 5, overflow: "hidden", marginBottom: 6 },
+  progressBarFill: { height: "100%", borderRadius: 5 },
+  progressText: { fontFamily: "Nunito_700Bold", fontSize: 12 },
+
+  statsRow: { flexDirection: "row", alignItems: "center", gap: 40 },
   statItem: { alignItems: "center" },
-  statValue: { fontFamily: "Nunito_900ExtraBold", fontSize: 20 },
-  statLabel: { fontFamily: "Nunito_700Bold", fontSize: 10, letterSpacing: 1 },
-  statDivider: { width: 1, height: 30, backgroundColor: "rgba(255,255,255,0.1)" },
+  statValue: { fontFamily: "Nunito_900ExtraBold", fontSize: 24 },
+  statLabel: { fontFamily: "Nunito_700Bold", fontSize: 11, letterSpacing: 1 },
+  statDivider: { width: 1, height: 36, backgroundColor: "rgba(255,255,255,0.15)" },
+  
   section: { paddingHorizontal: 16, marginTop: 32 },
-  sectionTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, marginBottom: 16 },
+  sectionHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 },
+  sectionTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 20 },
   rankingItem: {
-    flexDirection: "row", alignItems: "center", padding: 12,
-    borderRadius: 16, marginBottom: 8, gap: 12,
+    flexDirection: "row", alignItems: "center", padding: 14,
+    borderRadius: 18, marginBottom: 10, gap: 12,
+    elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 4,
   },
-  rankNumber: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, width: 30 },
-  avatarSmall: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  rankingPlace: { width: 36, alignItems: "center" },
+  rankNumber: { fontFamily: "Nunito_900ExtraBold", fontSize: 16 },
+  avatarSmall: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
   rankingInfo: { flex: 1 },
-  rankingName: { fontFamily: "Nunito_700Bold", fontSize: 14 },
-  rankingMeta: { fontFamily: "Nunito_400Regular", fontSize: 12 },
+  rankingName: { fontFamily: "Nunito_800ExtraBold", fontSize: 16 },
+  rankingMetaRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  rankingMeta: { fontFamily: "Nunito_600SemiBold", fontSize: 13 },
+  rankBadgeSmall: { 
+    flexDirection: "row", alignItems: "center", gap: 4, 
+    backgroundColor: "rgba(0,0,0,0.2)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10
+  },
+  rankBadgeTextSmall: { fontFamily: "Nunito_900ExtraBold", fontSize: 12 },
+  
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center", alignItems: "center", padding: 20 },
+  modalContent: { width: "100%", borderRadius: 24, padding: 24, maxHeight: "80%" },
+  modalTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, marginBottom: 20, textAlign: "center" },
+  rewardsList: { marginBottom: 20 },
+  rewardItem: { flexDirection: "row", alignItems: "center", gap: 16, marginBottom: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.05)" },
+  rewardRankIcon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
+  rewardInfo: { flex: 1 },
+  rewardRankName: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, marginBottom: 2 },
+  rewardText: { fontFamily: "Nunito_600SemiBold", fontSize: 14 },
+  closeModalBtn: { backgroundColor: "#D4AF37", paddingVertical: 14, borderRadius: 16, alignItems: "center" },
+  closeModalBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: "#000" },
+
   footer: {
     position: "absolute", bottom: 0, left: 0, right: 0,
     paddingHorizontal: 20, paddingTop: 16,
   },
   playBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 12, height: 60, borderRadius: 30,
+    gap: 12, height: 64, borderRadius: 32,
     elevation: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 10,
   },
-  playBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: "#000" },
+  playBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: "#000" },
 });
+

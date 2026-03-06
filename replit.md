@@ -17,14 +17,18 @@ No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
 - **State Management**: React Context for profile and game states, with AsyncStorage for persistence.
 - **Styling**: Exclusively uses React Native's `StyleSheet`.
 - **Fonts**: Nunito (400Regular, 700Bold, 900ExtraBold) from `@expo-google-fonts/nunito`.
-- **Internationalization (i18n)**: `lib/i18n.ts` for ES/EN/PT translations, `hooks/useT.ts` for language selection from ProfileContext. `lib/achTranslations.ts` handles localized achievement, emote, mode, and difficulty descriptions.
+- **Internationalization (i18n)**: `lib/i18n.ts` for ES/EN/PT/FR/DE/IT/TR translations (7 languages), `hooks/useT.ts` for language selection from ProfileContext. `lib/achTranslations.ts` handles localized achievement, emote, mode, and difficulty descriptions. Language detection with fallback to Spanish. Language selector moved to `app/settings.tsx`.
 - **Theming**: `hooks/useTheme.ts` dynamically applies `DarkColors` or `LightColors` from `constants/colors.ts` based on `profile.darkMode` setting. The UI adopts a dark casino theme (felt-green with gold accents) with a corresponding light mode.
 - **Core Game Logic**: `lib/gameEngine.ts` implements all card game mechanics, including special card effects (2, 3, 7, 8, 10, J, Joker) and AI strategies tailored across five difficulty levels (Easy to Expert).
 - **Multiplayer**: Supports local pass-device multiplayer (`game-multi.tsx`) and simulated online multiplayer (`game-online.tsx`) with CPU profiles acting as rivals.
 - **Animation**: Utilizes Reanimated for shuffle and deal animations, and Animated Views for particle effects and UI banners.
-- **Store System**: Features 5 categories (card_back, avatar, frame, title, effect) with 70 items each, totaling 350 items, each with rarity levels and translated labels.
+- **Store System**: Features 6 categories (card_back, avatar, frame, title, effect, table_design). Card backs: 90 items. Table designs: 20 items. Total: 400+ store items with rarity levels and translated labels. New TABLE_DESIGNS array in `lib/storeItems.ts`.
 - **Battle Pass & Achievements**: An 800-tier battle pass and 981 achievements with progressive XP requirements and coin/XP rewards.
 - **Audio System**: Manages background music and 18 distinct sound effects using `expo-audio`, with route-based music switching and settings synchronization.
+- **Splash Screen**: Custom in-app Biyis Prime Studios splash with logo animation (fade+spring scale, 2.5s), dark background, gold branding text, played once per session. Logo at `assets/images/biyis-logo.png`. Implemented in `app/_layout.tsx`.
+- **Seasons System**: `lib/seasons.ts` — 30-day competitive seasons. Season 1 "Hierro y Fuego" starts 2026-03-01. Tiered rewards (500–12,000 coins) by rank at season end. `getCurrentSeason()` and `getSeasonRewardsForRank()` utilities.
+- **Ranked/Clasificatoria**: Redesigned `app/ranked.tsx` with season banner, countdown, rewards modal, 50-player global leaderboard. LOCKED until player level 5 via level gate in `app/(tabs)/index.tsx`. Profile card shown at top of ranked screen.
+- **Country Picker**: Fixed modal in `app/(tabs)/profile.tsx` with maxHeight:420, proper flex layout, and ScrollView for all 60+ countries across continents.
 
 ### Backend (Express.js)
 - Runs on port 5000.

@@ -38,8 +38,8 @@ function AnimatedBackground() {
   const icons = [
     { name: "heart", x: SW * 0.2, y: SH * 0.1, delay: 0 },
     { name: "diamond", x: SW * 0.8, y: SH * 0.3, delay: 2000 },
-    { name: "club", x: SW * 0.1, y: SH * 0.7, delay: 4000 },
-    { name: "spade", x: SW * 0.7, y: SH * 0.8, delay: 6000 },
+    { name: "flower", x: SW * 0.1, y: SH * 0.7, delay: 4000 },
+    { name: "leaf", x: SW * 0.7, y: SH * 0.8, delay: 6000 },
   ];
 
   return (

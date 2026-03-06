@@ -2,7 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, View, Text } from "react-native";
+import { Animated, View, Text, Image, StyleSheet, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -16,13 +16,69 @@ import {
   useFonts,
   Nunito_400Regular,
   Nunito_700Bold,
-  Nunito_800ExtraBold as Nunito_900ExtraBold_Asset,
+  Nunito_800ExtraBold as Nunito_800ExtraBold_Asset,
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
 import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, syncSettings } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
+import { playSound } from "@/lib/sounds";
 
 SplashScreen.preventAutoHideAsync();
+
+let splashShownThisSession = false;
+
+function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
+  useEffect(() => {
+    const nativeDriver = Platform.OS !== "web";
+    // Entrance animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: nativeDriver,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: nativeDriver,
+      }),
+    ]).start();
+
+    // Play sound
+    playSound("win").catch(() => {});
+
+    // Exit animation after 2.5s
+    const timer = setTimeout(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: nativeDriver,
+      }).start(() => {
+        onComplete();
+      });
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <Animated.View style={[styles.splashOverlay, { opacity: fadeAnim }]}>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: "center" }}>
+        <Image
+          source={require("@/assets/images/biyis-logo.png")}
+          resizeMode="contain"
+          style={{ width: 200, height: 200 }}
+        />
+        <Text style={styles.splashBrand}>BIYIS PRIME STUDIOS</Text>
+        <Text style={styles.splashPresenta}>presenta</Text>
+      </Animated.View>
+    </Animated.View>
+  );
+}
 
 function AudioManager() {
   const segments = useSegments();
@@ -167,8 +223,10 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_700Bold,
-    Nunito_900ExtraBold: Nunito_900ExtraBold_Asset,
+    Nunito_900ExtraBold_Asset: Nunito_800ExtraBold_Asset,
   });
+
+  const [showSplash, setShowSplash] = useState(!splashShownThisSession);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
@@ -177,6 +235,11 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) return null;
+
+  const handleSplashComplete = () => {
+    splashShownThisSession = true;
+    setShowSplash(false);
+  };
 
   return (
     <ErrorBoundary>
@@ -189,6 +252,9 @@ export default function RootLayout() {
                   <GameProvider>
                     <StatusBar style="light" />
                     <RootLayoutNav />
+                    {showSplash && (
+                      <CustomSplashScreen onComplete={handleSplashComplete} />
+                    )}
                   </GameProvider>
                 </NetworkGuard>
               </ProfileProvider>
@@ -199,3 +265,27 @@ export default function RootLayout() {
     </ErrorBoundary>
   );
 }
+
+const styles = StyleSheet.create({
+  splashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#000000",
+    zIndex: 9999,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  splashBrand: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 18,
+    color: "#D4AF37",
+    letterSpacing: 4,
+    marginTop: 20,
+    textAlign: "center",
+  },
+  splashPresenta: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 14,
+    color: "rgba(255,255,255,0.6)",
+    marginTop: 8,
+  },
+});

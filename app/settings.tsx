@@ -15,6 +15,10 @@ const LANGUAGES = [
   { code: "es" as const, label: "Español", flag: "🇪🇸", subtitle: "Español (Latinoamérica)" },
   { code: "en" as const, label: "English", flag: "🇺🇸", subtitle: "English (USA)" },
   { code: "pt" as const, label: "Português", flag: "🇧🇷", subtitle: "Português (Brasil)" },
+  { code: "fr" as const, label: "Français", flag: "🇫🇷", subtitle: "Français (France)" },
+  { code: "de" as const, label: "Deutsch", flag: "🇩🇪", subtitle: "Deutsch (Deutschland)" },
+  { code: "it" as const, label: "Italiano", flag: "🇮🇹", subtitle: "Italiano (Italia)" },
+  { code: "tr" as const, label: "Türkçe", flag: "🇹🇷", subtitle: "Türkçe (Türkiye)" },
 ];
 
 export default function SettingsScreen() {
@@ -62,7 +66,7 @@ export default function SettingsScreen() {
     if (profile.vibrationEnabled) Vibration.vibrate(40);
   };
 
-  const selectLanguage = (code: "es" | "en" | "pt") => {
+  const selectLanguage = (code: "es" | "en" | "pt" | "fr" | "de" | "it" | "tr") => {
     updateSettings({ language: code });
     setShowLangModal(false);
     if (profile.vibrationEnabled) Vibration.vibrate(40);
