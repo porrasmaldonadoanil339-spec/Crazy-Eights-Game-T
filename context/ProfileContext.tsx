@@ -102,9 +102,23 @@ export interface PlayerProfile {
   musicEnabled: boolean;
   sfxEnabled: boolean;
   vibrationEnabled: boolean;
-  language: "es" | "en" | "pt" | "fr" | "de" | "it" | "tr";
+  language: string;
   darkMode: boolean;
   country: string;
+  // Notification settings
+  notificationsEnabled: boolean;
+  missionNotifications: boolean;
+  rewardNotifications: boolean;
+  eventNotifications: boolean;
+  reminderNotifications: boolean;
+  // Gameplay settings
+  fastAnimations: boolean;
+  confirmSpecialCards: boolean;
+  showTutorials: boolean;
+  // Graphics settings
+  graphicsQuality: "low" | "medium" | "high";
+  specialEffectsEnabled: boolean;
+  animationsEnabled: boolean;
   // Friend requests (global, persisted)
   pendingOutgoingRequests?: OutgoingRequest[];
   // Linked accounts
@@ -169,6 +183,17 @@ const DEFAULT_PROFILE: PlayerProfile = {
   language: "es",
   darkMode: true,
   country: "CO",
+  notificationsEnabled: true,
+  missionNotifications: true,
+  rewardNotifications: true,
+  eventNotifications: true,
+  reminderNotifications: true,
+  fastAnimations: false,
+  confirmSpecialCards: true,
+  showTutorials: true,
+  graphicsQuality: "high" as "low" | "medium" | "high",
+  specialEffectsEnabled: true,
+  animationsEnabled: true,
   rankedProfile: { rank: 0, division: 0, stars: 0, maxStars: 5, totalWins: 0, totalLosses: 0 },
 };
 
@@ -208,7 +233,7 @@ interface ProfileContextValue {
   claimDailyReward: () => DailyReward | null;
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
-  updateSettings: (settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt" | "fr" | "de" | "it" | "tr"; darkMode?: boolean }) => void;
+  updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
   updateEquippedEmotes: (emoteIds: string[]) => void;
   updateRanked: (delta: number) => void;
   watchAd: () => boolean;
@@ -450,7 +475,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return reward;
   }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, update]);
 
-  const updateSettings = useCallback((settings: { musicEnabled?: boolean; sfxEnabled?: boolean; vibrationEnabled?: boolean; language?: "es" | "en" | "pt" | "fr" | "de" | "it" | "tr"; darkMode?: boolean }) => {
+  const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
     update((p) => ({ ...p, ...settings }));
   }, [update]);
 

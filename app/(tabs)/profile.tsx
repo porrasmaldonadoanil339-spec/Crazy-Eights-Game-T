@@ -565,53 +565,6 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={16} color={textMuted} />
         </Pressable>
 
-        {/* Account section */}
-        {user && !user.isGuest ? (
-          <View style={[styles.friendsBtn, { backgroundColor: isDark ? Colors.surface : "#c8e0c0", borderColor: isDark ? Colors.border : "#9ec89a", marginTop: 6 }]}>
-            <View style={[styles.friendsBtnIcon, { backgroundColor: "#27AE6022" }]}>
-              <Ionicons name="checkmark-circle" size={18} color="#27AE60" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.friendsBtnLabel, { color: textColor }]}>
-                {user.username}
-              </Text>
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: textMuted }}>
-                {T("connectedWith") || "Cuenta vinculada"}
-              </Text>
-            </View>
-            <Pressable
-              onPress={() => { logout(); playSound("button_press").catch(() => {}); }}
-              style={{ backgroundColor: "#E74C3C22", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 }}
-            >
-              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: "#E74C3C" }}>
-                {T("signOut") || "Salir"}
-              </Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable
-            style={({ pressed }) => [
-              styles.friendsBtn,
-              { backgroundColor: isDark ? Colors.surface : "#c8e0c0", borderColor: isDark ? Colors.border : "#9ec89a", marginTop: 6 },
-              pressed && { opacity: 0.82 },
-            ]}
-            onPress={() => { playSound("button_press").catch(() => {}); router.push("/login"); }}
-          >
-            <View style={[styles.friendsBtnIcon, { backgroundColor: "#4A90E222" }]}>
-              <Ionicons name="person-circle-outline" size={18} color="#4A90E2" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.friendsBtnLabel, { color: textColor }]}>
-                {T("connectAccount") || "Vincular Cuenta"}
-              </Text>
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: textMuted }}>
-                Google / Facebook / Email
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={textMuted} />
-          </Pressable>
-        )}
-
         {/* Stats */}
         <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("statistics") || "ESTADÍSTICAS"}</Text>
         <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}>

@@ -23,6 +23,7 @@ import { StatusBar } from "expo-status-bar";
 import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, syncSettings } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
 import { playSound } from "@/lib/sounds";
+import { scheduleAllNotifications, requestNotificationPermissions } from "@/lib/notifications";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -95,60 +96,72 @@ function Particle({ delay }: { delay: number }) {
   );
 }
 
+const SPLASH_DURATION = 5000;
+
+const LOADING_MESSAGES = [
+  "Iniciando motor de juego…",
+  "Cargando cartas…",
+  "Preparando la mesa…",
+  "Reuniendo jugadores…",
+  "Cargando perfiles de CPU…",
+  "¡Listo para jugar!",
+];
+
 function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const glowAnim = useRef(new Animated.Value(1)).current;
+  const loadAnim = useRef(new Animated.Value(0)).current;
+  const [loadPct, setLoadPct] = useState(0);
+  const [loadMsg, setLoadMsg] = useState(LOADING_MESSAGES[0]);
 
   useEffect(() => {
     const nativeDriver = Platform.OS !== "web";
-    // Entrance animation
     Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: nativeDriver,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: nativeDriver,
-      }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: nativeDriver }),
+      Animated.spring(scaleAnim, { toValue: 1, friction: 8, tension: 40, useNativeDriver: nativeDriver }),
     ]).start();
 
-    // Glow pulsing animation
     Animated.loop(
       Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 1.4,
-          duration: 1500,
-          useNativeDriver: nativeDriver,
-        }),
-        Animated.timing(glowAnim, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: nativeDriver,
-        }),
+        Animated.timing(glowAnim, { toValue: 1.4, duration: 1500, useNativeDriver: nativeDriver }),
+        Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: nativeDriver }),
       ])
     ).start();
 
-    // Play sound
     playSound("win").catch(() => {});
 
-    // Exit animation after 5s
+    // Loading bar — fill from 0→1 over SPLASH_DURATION - 1.2s (leave 1.2s for exit)
+    Animated.timing(loadAnim, {
+      toValue: 1,
+      duration: SPLASH_DURATION - 1200,
+      useNativeDriver: false,
+    }).start();
+
+    // Progress text steps
+    const stepDuration = (SPLASH_DURATION - 1200) / LOADING_MESSAGES.length;
+    const steps = LOADING_MESSAGES.map((msg, i) =>
+      setTimeout(() => {
+        setLoadMsg(msg);
+        setLoadPct(Math.round(((i + 1) / LOADING_MESSAGES.length) * 100));
+      }, i * stepDuration)
+    );
+
     const timer = setTimeout(() => {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 800,
         useNativeDriver: nativeDriver,
-      }).start(() => {
-        onComplete();
-      });
-    }, 5000);
+      }).start(() => { onComplete(); });
+    }, SPLASH_DURATION);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      steps.forEach(clearTimeout);
+    };
   }, []);
+
+  const loadBarWidth = loadAnim.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] });
 
   return (
     <Animated.View style={[styles.splashOverlay, { opacity: fadeAnim }]}>
@@ -156,23 +169,17 @@ function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
         colors={["#000000", "#0A0A14", "#000000"]}
         style={StyleSheet.absoluteFill}
       />
-      
+
       <View style={styles.particlesContainer}>
         {[...Array(8)].map((_, i) => (
           <Particle key={i} delay={i * 400} />
         ))}
       </View>
 
-      <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: "center", zIndex: 10 }}>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: "center", zIndex: 10, width: "100%" }}>
         <View style={styles.logoContainer}>
-          <Animated.View 
-            style={[
-              styles.glow, 
-              { 
-                transform: [{ scale: glowAnim }],
-                opacity: Animated.multiply(glowAnim, 0.3)
-              }
-            ]} 
+          <Animated.View
+            style={[styles.glow, { transform: [{ scale: glowAnim }], opacity: Animated.multiply(glowAnim, 0.3) }]}
           />
           <Image
             source={require("@/assets/images/biyis-logo.png")}
@@ -183,13 +190,30 @@ function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
 
         <Text style={styles.splashBrand}>BIYIS PRIME STUDIOS</Text>
         <Text style={styles.splashPresenta}>PRESENTA</Text>
-        
         <View style={styles.goldLine} />
-        
         <Text style={styles.splashTitle}>OCHO LOCOS</Text>
+
+        {/* Loading bar */}
+        <View style={styles.loadingBarContainer}>
+          <View style={styles.loadingBarTrack}>
+            <Animated.View style={[styles.loadingBarFill, { width: loadBarWidth }]}>
+              <LinearGradient
+                colors={["#A07800", "#D4AF37", "#F5D76E", "#D4AF37"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.loadingBarShine} />
+            </Animated.View>
+          </View>
+          <View style={styles.loadingBarFooter}>
+            <Text style={styles.loadingMsg}>{loadMsg}</Text>
+            <Text style={styles.loadingPct}>{loadPct}%</Text>
+          </View>
+        </View>
       </Animated.View>
 
-      <Text style={styles.versionText}>Versión 1.0</Text>
+      <Text style={styles.versionText}>Versión 3.0.0</Text>
     </Animated.View>
   );
 }
@@ -233,10 +257,53 @@ function AudioManager() {
   return null;
 }
 
+function NotificationManager() {
+  const { profile, isLoaded } = useProfile();
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (initialized.current) return;
+    initialized.current = true;
+    if (Platform.OS !== "web") {
+      requestNotificationPermissions().catch(() => {});
+      scheduleAllNotifications({
+        notificationsEnabled: profile.notificationsEnabled ?? true,
+        missionNotifications: profile.missionNotifications ?? true,
+        rewardNotifications: profile.rewardNotifications ?? true,
+        eventNotifications: profile.eventNotifications ?? true,
+        reminderNotifications: profile.reminderNotifications ?? true,
+      }).catch(() => {});
+    }
+  }, [isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded || !initialized.current) return;
+    if (Platform.OS !== "web") {
+      scheduleAllNotifications({
+        notificationsEnabled: profile.notificationsEnabled ?? true,
+        missionNotifications: profile.missionNotifications ?? true,
+        rewardNotifications: profile.rewardNotifications ?? true,
+        eventNotifications: profile.eventNotifications ?? true,
+        reminderNotifications: profile.reminderNotifications ?? true,
+      }).catch(() => {});
+    }
+  }, [
+    profile.notificationsEnabled,
+    profile.missionNotifications,
+    profile.rewardNotifications,
+    profile.eventNotifications,
+    profile.reminderNotifications,
+  ]);
+
+  return null;
+}
+
 function RootLayoutNav() {
   return (
     <>
       <AudioManager />
+      <NotificationManager />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="game" options={{ animation: "slide_from_bottom" }} />
@@ -248,6 +315,7 @@ function RootLayoutNav() {
         <Stack.Screen name="friends" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="ranked" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="login" options={{ animation: "slide_from_bottom" }} />
+        <Stack.Screen name="settings" options={{ animation: "slide_from_right", headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
     </>
@@ -454,5 +522,50 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_400Regular",
     fontSize: 12,
     color: "rgba(255,255,255,0.3)",
+  },
+  loadingBarContainer: {
+    width: "70%",
+    alignSelf: "center",
+    marginTop: 28,
+  },
+  loadingBarTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(212,175,55,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.28)",
+    overflow: "hidden",
+  },
+  loadingBarFill: {
+    height: "100%",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  loadingBarShine: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "50%",
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderRadius: 3,
+  },
+  loadingBarFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  loadingMsg: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 10,
+    color: "rgba(212,175,55,0.65)",
+    flex: 1,
+  },
+  loadingPct: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 11,
+    color: "#D4AF37",
+    marginLeft: 8,
   },
 });

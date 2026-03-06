@@ -1,52 +1,153 @@
 import React, { useState } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, Switch, Platform, ScrollView,
-  Modal, Pressable, Vibration,
+  Modal, Pressable, Vibration, Linking, Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useProfile } from "@/context/ProfileContext";
+import { useAuth } from "@/context/AuthContext";
 import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack } from "@/lib/audioManager";
 import { useT } from "@/hooks/useT";
+import { playSound } from "@/lib/sounds";
+import { Colors } from "@/constants/colors";
 
 const LANGUAGES = [
-  { code: "es" as const, label: "Español", flag: "🇪🇸", subtitle: "Español (Latinoamérica)" },
-  { code: "en" as const, label: "English", flag: "🇺🇸", subtitle: "English (USA)" },
-  { code: "pt" as const, label: "Português", flag: "🇧🇷", subtitle: "Português (Brasil)" },
-  { code: "fr" as const, label: "Français", flag: "🇫🇷", subtitle: "Français (France)" },
-  { code: "de" as const, label: "Deutsch", flag: "🇩🇪", subtitle: "Deutsch (Deutschland)" },
-  { code: "it" as const, label: "Italiano", flag: "🇮🇹", subtitle: "Italiano (Italia)" },
-  { code: "tr" as const, label: "Türkçe", flag: "🇹🇷", subtitle: "Türkçe (Türkiye)" },
+  { code: "es",  label: "Español",          subtitle: "Español (Latinoamérica)", flag: "🇲🇽" },
+  { code: "es",  label: "Español (España)",  subtitle: "Español (España)",        flag: "🇪🇸" },
+  { code: "en",  label: "English",           subtitle: "English (USA)",            flag: "🇺🇸" },
+  { code: "en",  label: "English (UK)",      subtitle: "English (UK)",             flag: "🇬🇧" },
+  { code: "pt",  label: "Português",         subtitle: "Português (Brasil)",       flag: "🇧🇷" },
+  { code: "pt",  label: "Português (PT)",    subtitle: "Português (Portugal)",     flag: "🇵🇹" },
+  { code: "fr",  label: "Français",          subtitle: "Français (France)",        flag: "🇫🇷" },
+  { code: "de",  label: "Deutsch",           subtitle: "Deutsch (Deutschland)",    flag: "🇩🇪" },
+  { code: "it",  label: "Italiano",          subtitle: "Italiano (Italia)",        flag: "🇮🇹" },
+  { code: "tr",  label: "Türkçe",            subtitle: "Türkçe (Türkiye)",         flag: "🇹🇷" },
+  { code: "ru",  label: "Русский",           subtitle: "Russian",                  flag: "🇷🇺" },
+  { code: "pl",  label: "Polski",            subtitle: "Polish",                   flag: "🇵🇱" },
+  { code: "nl",  label: "Nederlands",        subtitle: "Dutch",                    flag: "🇳🇱" },
+  { code: "sv",  label: "Svenska",           subtitle: "Swedish",                  flag: "🇸🇪" },
+  { code: "da",  label: "Dansk",             subtitle: "Danish",                   flag: "🇩🇰" },
+  { code: "fi",  label: "Suomi",             subtitle: "Finnish",                  flag: "🇫🇮" },
+  { code: "no",  label: "Norsk",             subtitle: "Norwegian",                flag: "🇳🇴" },
+  { code: "zh",  label: "中文 (简体)",        subtitle: "Chinese (Simplified)",     flag: "🇨🇳" },
+  { code: "zh",  label: "中文 (繁體)",        subtitle: "Chinese (Traditional)",    flag: "🇹🇼" },
+  { code: "ja",  label: "日本語",             subtitle: "Japanese",                 flag: "🇯🇵" },
+  { code: "ko",  label: "한국어",             subtitle: "Korean",                   flag: "🇰🇷" },
+  { code: "hi",  label: "हिन्दी",             subtitle: "Hindi",                    flag: "🇮🇳" },
+  { code: "th",  label: "ไทย",               subtitle: "Thai",                     flag: "🇹🇭" },
+  { code: "vi",  label: "Tiếng Việt",        subtitle: "Vietnamese",               flag: "🇻🇳" },
+  { code: "id",  label: "Bahasa Indonesia",  subtitle: "Indonesian",               flag: "🇮🇩" },
+  { code: "ar",  label: "العربية",            subtitle: "Arabic",                   flag: "🇸🇦" },
 ];
+
+const SECTION_ICONS: Record<string, { name: string; color: string; bg: string }> = {
+  language:      { name: "globe",           color: "#4FC3F7", bg: "#1a2a3a" },
+  sound:         { name: "musical-notes",   color: "#D4AF37", bg: "#1a3a1a" },
+  notifications: { name: "notifications",   color: "#E74C3C", bg: "#3a1a1a" },
+  gameplay:      { name: "game-controller", color: "#27AE60", bg: "#1a3a2a" },
+  graphics:      { name: "color-palette",   color: "#9B59B6", bg: "#2a1a3a" },
+  appearance:    { name: "moon",            color: "#F39C12", bg: "#2a2a1a" },
+  account:       { name: "person-circle",   color: "#4A90E2", bg: "#1a2a3a" },
+  privacy:       { name: "shield-checkmark",color: "#27AE60", bg: "#1a3a1a" },
+  help:          { name: "help-circle",     color: "#E67E22", bg: "#3a2a1a" },
+  info:          { name: "information-circle", color: "#95A5A6", bg: "#2a2a2a" },
+};
+
+function SectionHeader({ icon, label, isDark }: { icon: keyof typeof SECTION_ICONS; label: string; isDark: boolean }) {
+  const ic = SECTION_ICONS[icon];
+  return (
+    <View style={styles.sectionHeaderRow}>
+      <View style={[styles.sectionHeaderIcon, { backgroundColor: ic.bg }]}>
+        <Ionicons name={ic.name as any} size={16} color={ic.color} />
+      </View>
+      <Text style={[styles.sectionHeaderLabel, { color: isDark ? ic.color : "#2a4a2a" }]}>{label}</Text>
+    </View>
+  );
+}
+
+function SettingRow({ label, sub, icon, iconColor, iconBg, right, isDark, onPress, last }: {
+  label: string; sub?: string; icon: string; iconColor: string; iconBg: string;
+  right: React.ReactNode; isDark: boolean; onPress?: () => void; last?: boolean;
+}) {
+  const labelColor = isDark ? "#E8DCC8" : "#1a2e1a";
+  const subColor   = isDark ? "#6B7A5C" : "#4a7a4a";
+  const content = (
+    <View style={[styles.row, !last && styles.rowBorder, { borderBottomColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)" }]}>
+      <View style={styles.rowLeft}>
+        <View style={[styles.iconCircle, { backgroundColor: iconBg }]}>
+          <Ionicons name={icon as any} size={19} color={iconColor} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.rowLabel, { color: labelColor }]}>{label}</Text>
+          {sub ? <Text style={[styles.rowSub, { color: subColor }]}>{sub}</Text> : null}
+        </View>
+      </View>
+      <View style={styles.rowRight}>{right}</View>
+    </View>
+  );
+  if (onPress) {
+    return <TouchableOpacity onPress={onPress} activeOpacity={0.7}>{content}</TouchableOpacity>;
+  }
+  return content;
+}
+
+function QualitySelector({ value, onChange, isDark }: {
+  value: "low" | "medium" | "high"; onChange: (v: "low" | "medium" | "high") => void; isDark: boolean;
+}) {
+  const opts: ("low" | "medium" | "high")[] = ["low", "medium", "high"];
+  const labels = ["Baja", "Media", "Alta"];
+  return (
+    <View style={styles.qualityRow}>
+      {opts.map((opt, i) => (
+        <TouchableOpacity
+          key={opt}
+          onPress={() => onChange(opt)}
+          style={[
+            styles.qualityBtn,
+            value === opt && styles.qualityBtnActive,
+            { borderColor: isDark ? (value === opt ? Colors.gold : "rgba(255,255,255,0.12)") : (value === opt ? "#2a6a2a" : "rgba(0,0,0,0.1)") },
+          ]}
+        >
+          <Text style={[styles.qualityBtnText, { color: isDark ? (value === opt ? Colors.gold : "#6B7A5C") : (value === opt ? "#2a6a2a" : "#4a7a4a") }]}>
+            {labels[i]}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { profile, updateSettings } = useProfile();
+  const { user, logout } = useAuth();
   const T = useT();
   const [showLangModal, setShowLangModal] = useState(false);
+  const [langSearch, setLangSearch] = useState("");
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const isDark = profile.darkMode !== false;
 
-  const bg = isDark ? ["#041008", "#061510", "#041008"] as const : ["#e8f5e2", "#d4edce", "#e8f5e2"] as const;
-  const cardBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
+  const bg      = isDark ? ["#041008", "#061510", "#041008"] as const : ["#e8f5e2", "#d4edce", "#e8f5e2"] as const;
+  const cardBg   = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)";
   const cardBorder = isDark ? "rgba(212,175,55,0.12)" : "rgba(0,100,0,0.12)";
   const titleColor = isDark ? "#D4AF37" : "#1a4a1a";
-  const labelColor = isDark ? "#E8DCC8" : "#1a2e1a";
-  const subColor = isDark ? "#6B7A5C" : "#4a7a4a";
-  const sectionTitleColor = isDark ? "#D4AF37" : "#2a6a2a";
+  const subColor   = isDark ? "#6B7A5C" : "#4a7a4a";
+
+  const sw = (val: boolean, color: string) => ({
+    trackColor: { false: isDark ? "#333" : "#ccc", true: color + "66" },
+    thumbColor: val ? color : isDark ? "#666" : "#aaa",
+  });
 
   const toggleMusic = async () => {
     const next = !profile.musicEnabled;
     updateSettings({ musicEnabled: next });
     syncSettings(next, profile.sfxEnabled);
-    if (!next) {
-      stopMusic().catch(() => {});
-    } else if (getCurrentTrack() === null) {
-      startMenuMusic().catch(() => {});
-    }
+    if (!next) { stopMusic().catch(() => {}); }
+    else if (getCurrentTrack() === null) { startMenuMusic().catch(() => {}); }
   };
 
   const toggleSfx = () => {
@@ -61,14 +162,10 @@ export default function SettingsScreen() {
     if (next) Vibration.vibrate(80);
   };
 
-  const toggleDarkMode = () => {
-    updateSettings({ darkMode: !isDark });
-    if (profile.vibrationEnabled) Vibration.vibrate(40);
-  };
-
-  const selectLanguage = (code: "es" | "en" | "pt" | "fr" | "de" | "it" | "tr") => {
+  const selectLanguage = (code: string) => {
     updateSettings({ language: code });
     setShowLangModal(false);
+    playSound("button_press").catch(() => {});
     if (profile.vibrationEnabled) Vibration.vibrate(40);
   };
 
@@ -77,7 +174,7 @@ export default function SettingsScreen() {
   return (
     <LinearGradient colors={bg} style={StyleSheet.absoluteFill}>
       <ScrollView
-        contentContainerStyle={[styles.container, { paddingTop: topPad + 12, paddingBottom: 60 }]}
+        contentContainerStyle={[styles.container, { paddingTop: topPad + 12, paddingBottom: 80 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -92,149 +189,295 @@ export default function SettingsScreen() {
           <View style={{ width: 44 }} />
         </View>
 
-        {/* Language */}
+        {/* ──── 🌐 IDIOMA ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>{T("language").toUpperCase()}</Text>
-          <TouchableOpacity style={styles.langBtn} onPress={() => setShowLangModal(true)} activeOpacity={0.8}>
-            <View style={styles.langBtnLeft}>
-              <View style={[styles.iconCircle, { backgroundColor: "#1a2a3a" }]}>
-                <Ionicons name="globe" size={20} color="#4FC3F7" />
-              </View>
-              <View>
-                <Text style={[styles.rowLabel, { color: labelColor }]}>{T("selectLanguage")}</Text>
-                <Text style={[styles.rowSub, { color: subColor }]}>
-                  {currentLang.flag} {currentLang.label}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.langChevron}>
-              <Text style={[styles.langValue, { color: titleColor }]}>{currentLang.label}</Text>
-              <Ionicons name="chevron-forward" size={16} color={titleColor} />
-            </View>
-          </TouchableOpacity>
+          <SectionHeader icon="language" label={T("language").toUpperCase()} isDark={isDark} />
+          <SettingRow
+            label={T("selectLanguage")}
+            sub={`${currentLang.flag} ${currentLang.label} — ${currentLang.subtitle}`}
+            icon="globe" iconColor="#4FC3F7" iconBg="#1a2a3a"
+            isDark={isDark} last
+            onPress={() => setShowLangModal(true)}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+          />
         </View>
 
-        {/* Display / Theme */}
+        {/* ──── 🔊 SONIDO ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>{T("display").toUpperCase()}</Text>
-          <View style={styles.row}>
-            <View style={styles.rowLeft}>
-              <View style={[styles.iconCircle, { backgroundColor: isDark ? "#2a1a3a" : "#fff9e6" }]}>
-                <Ionicons name={isDark ? "moon" : "sunny"} size={20} color={isDark ? "#9B59B6" : "#F39C12"} />
-              </View>
-              <View>
-                <Text style={[styles.rowLabel, { color: labelColor }]}>
-                  {isDark ? T("darkMode") : T("lightMode")}
-                </Text>
-                <Text style={[styles.rowSub, { color: subColor }]}>
-                  {isDark ? T("on") : T("off")}
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={isDark}
-              onValueChange={toggleDarkMode}
-              trackColor={{ false: "#ccc", true: "#2a1a3a" }}
-              thumbColor={isDark ? "#9B59B6" : "#F39C12"}
-            />
-          </View>
+          <SectionHeader icon="sound" label={T("audio").toUpperCase()} isDark={isDark} />
+          <SettingRow
+            label={T("music")} sub={T("musicDesc")}
+            icon="musical-notes" iconColor="#D4AF37" iconBg="#1a3a1a"
+            isDark={isDark}
+            right={<Switch value={profile.musicEnabled} onValueChange={toggleMusic} {...sw(profile.musicEnabled, "#D4AF37")} />}
+          />
+          <SettingRow
+            label={T("soundEffects")} sub={T("sfxDesc")}
+            icon="volume-high" iconColor="#4FC3F7" iconBg="#1a2a3a"
+            isDark={isDark}
+            right={<Switch value={profile.sfxEnabled} onValueChange={toggleSfx} {...sw(profile.sfxEnabled, "#4FC3F7")} />}
+          />
+          <SettingRow
+            label={T("vibration")} sub={T("vibrationDesc")}
+            icon="phone-portrait" iconColor="#9B59B6" iconBg="#2a1a3a"
+            isDark={isDark} last
+            right={<Switch value={profile.vibrationEnabled ?? true} onValueChange={toggleVibration} {...sw(profile.vibrationEnabled ?? true, "#9B59B6")} />}
+          />
         </View>
 
-        {/* Audio */}
+        {/* ──── 🔔 NOTIFICACIONES ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>{T("audio")}</Text>
+          <SectionHeader icon="notifications" label="NOTIFICACIONES" isDark={isDark} />
+          <SettingRow
+            label="Activar notificaciones" sub="Recibe avisos del juego"
+            icon="notifications" iconColor="#E74C3C" iconBg="#3a1a1a"
+            isDark={isDark}
+            right={<Switch value={profile.notificationsEnabled ?? true} onValueChange={v => updateSettings({ notificationsEnabled: v })} {...sw(profile.notificationsEnabled ?? true, "#E74C3C")} />}
+          />
+          <SettingRow
+            label="Misiones disponibles" sub="Avisa cuando haya misiones nuevas"
+            icon="list" iconColor="#F39C12" iconBg="#2a2a1a"
+            isDark={isDark}
+            right={<Switch value={(profile.notificationsEnabled ?? true) && (profile.missionNotifications ?? true)} onValueChange={v => updateSettings({ missionNotifications: v })} {...sw(profile.missionNotifications ?? true, "#F39C12")} />}
+          />
+          <SettingRow
+            label="Recompensas para reclamar" sub="Avisa cuando puedas reclamar"
+            icon="gift" iconColor="#27AE60" iconBg="#1a3a1a"
+            isDark={isDark}
+            right={<Switch value={(profile.notificationsEnabled ?? true) && (profile.rewardNotifications ?? true)} onValueChange={v => updateSettings({ rewardNotifications: v })} {...sw(profile.rewardNotifications ?? true, "#27AE60")} />}
+          />
+          <SettingRow
+            label="Eventos especiales" sub="Torneos, eventos limitados"
+            icon="star" iconColor="#D4AF37" iconBg="#2a2a1a"
+            isDark={isDark}
+            right={<Switch value={(profile.notificationsEnabled ?? true) && (profile.eventNotifications ?? true)} onValueChange={v => updateSettings({ eventNotifications: v })} {...sw(profile.eventNotifications ?? true, "#D4AF37")} />}
+          />
+          <SettingRow
+            label="Recordatorios" sub="Si llevas horas sin jugar"
+            icon="time" iconColor="#9B59B6" iconBg="#2a1a3a"
+            isDark={isDark} last
+            right={<Switch value={(profile.notificationsEnabled ?? true) && (profile.reminderNotifications ?? true)} onValueChange={v => updateSettings({ reminderNotifications: v })} {...sw(profile.reminderNotifications ?? true, "#9B59B6")} />}
+          />
+        </View>
 
-          <View style={styles.row}>
-            <View style={styles.rowLeft}>
-              <View style={[styles.iconCircle, { backgroundColor: "#1a3a1a" }]}>
-                <Ionicons name="musical-notes" size={20} color="#D4AF37" />
-              </View>
-              <View>
-                <Text style={[styles.rowLabel, { color: labelColor }]}>{T("music")}</Text>
-                <Text style={[styles.rowSub, { color: subColor }]}>{T("musicDesc")}</Text>
-              </View>
-            </View>
-            <Switch
-              value={profile.musicEnabled}
-              onValueChange={toggleMusic}
-              trackColor={{ false: "#333", true: "#2a5a2a" }}
-              thumbColor={profile.musicEnabled ? "#D4AF37" : "#666"}
-            />
-          </View>
+        {/* ──── 🎮 JUGABILIDAD ──── */}
+        <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          <SectionHeader icon="gameplay" label="JUGABILIDAD" isDark={isDark} />
+          <SettingRow
+            label="Animaciones rápidas" sub="Acelera el ritmo del juego"
+            icon="flash" iconColor="#F1C40F" iconBg="#2a2a1a"
+            isDark={isDark}
+            right={<Switch value={profile.fastAnimations ?? false} onValueChange={v => updateSettings({ fastAnimations: v })} {...sw(profile.fastAnimations ?? false, "#F1C40F")} />}
+          />
+          <SettingRow
+            label="Vibración al jugar" sub="Vibración en acciones importantes"
+            icon="phone-portrait" iconColor="#9B59B6" iconBg="#2a1a3a"
+            isDark={isDark}
+            right={<Switch value={profile.vibrationEnabled ?? true} onValueChange={toggleVibration} {...sw(profile.vibrationEnabled ?? true, "#9B59B6")} />}
+          />
+          <SettingRow
+            label="Confirmar cartas especiales" sub="Pide confirmación antes de jugar"
+            icon="checkmark-circle" iconColor="#27AE60" iconBg="#1a3a1a"
+            isDark={isDark}
+            right={<Switch value={profile.confirmSpecialCards ?? true} onValueChange={v => updateSettings({ confirmSpecialCards: v })} {...sw(profile.confirmSpecialCards ?? true, "#27AE60")} />}
+          />
+          <SettingRow
+            label="Mostrar tutoriales" sub="Muestra ayuda y pistas"
+            icon="help-buoy" iconColor="#4FC3F7" iconBg="#1a2a3a"
+            isDark={isDark} last
+            right={<Switch value={profile.showTutorials ?? true} onValueChange={v => updateSettings({ showTutorials: v })} {...sw(profile.showTutorials ?? true, "#4FC3F7")} />}
+          />
+        </View>
 
-          <View style={[styles.divider, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]} />
-
-          <View style={styles.row}>
-            <View style={styles.rowLeft}>
-              <View style={[styles.iconCircle, { backgroundColor: "#1a2a3a" }]}>
-                <Ionicons name="volume-high" size={20} color="#4FC3F7" />
-              </View>
-              <View>
-                <Text style={[styles.rowLabel, { color: labelColor }]}>{T("soundEffects")}</Text>
-                <Text style={[styles.rowSub, { color: subColor }]}>{T("sfxDesc")}</Text>
-              </View>
-            </View>
-            <Switch
-              value={profile.sfxEnabled}
-              onValueChange={toggleSfx}
-              trackColor={{ false: "#333", true: "#1a3a5a" }}
-              thumbColor={profile.sfxEnabled ? "#4FC3F7" : "#666"}
-            />
-          </View>
-
-          <View style={[styles.divider, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]} />
-
+        {/* ──── 🎨 GRÁFICOS ──── */}
+        <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          <SectionHeader icon="graphics" label="GRÁFICOS" isDark={isDark} />
           <View style={styles.row}>
             <View style={styles.rowLeft}>
               <View style={[styles.iconCircle, { backgroundColor: "#2a1a3a" }]}>
-                <Ionicons name="phone-portrait" size={20} color="#9B59B6" />
+                <Ionicons name="layers" size={19} color="#9B59B6" />
               </View>
-              <View>
-                <Text style={[styles.rowLabel, { color: labelColor }]}>{T("vibration")}</Text>
-                <Text style={[styles.rowSub, { color: subColor }]}>{T("vibrationDesc")}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.rowLabel, { color: isDark ? "#E8DCC8" : "#1a2e1a" }]}>Calidad gráfica</Text>
+                <Text style={[styles.rowSub, { color: subColor }]}>Ajusta el rendimiento visual</Text>
               </View>
             </View>
-            <Switch
-              value={profile.vibrationEnabled ?? true}
-              onValueChange={toggleVibration}
-              trackColor={{ false: "#333", true: "#2a1a3a" }}
-              thumbColor={(profile.vibrationEnabled ?? true) ? "#9B59B6" : "#666"}
-            />
           </View>
+          <QualitySelector
+            value={profile.graphicsQuality ?? "high"}
+            onChange={v => updateSettings({ graphicsQuality: v })}
+            isDark={isDark}
+          />
+          <View style={[styles.divider, { backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", marginVertical: 10 }]} />
+          <SettingRow
+            label="Efectos especiales" sub="Partículas y efectos al jugar cartas"
+            icon="sparkles" iconColor="#D4AF37" iconBg="#2a2a1a"
+            isDark={isDark}
+            right={<Switch value={profile.specialEffectsEnabled ?? true} onValueChange={v => updateSettings({ specialEffectsEnabled: v })} {...sw(profile.specialEffectsEnabled ?? true, "#D4AF37")} />}
+          />
+          <SettingRow
+            label="Animaciones" sub="Animaciones de cartas y UI"
+            icon="film" iconColor="#4FC3F7" iconBg="#1a2a3a"
+            isDark={isDark} last
+            right={<Switch value={profile.animationsEnabled ?? true} onValueChange={v => updateSettings({ animationsEnabled: v })} {...sw(profile.animationsEnabled ?? true, "#4FC3F7")} />}
+          />
         </View>
 
-        {/* Rules */}
+        {/* ──── 🌙 APARIENCIA ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>{T("rules").toUpperCase()}</Text>
-          {[
-            { icon: "timer-outline", color: "#D4AF37", textEs: "Modo Experto: 8 segundos por turno. ¡No pierdas el tiempo!", textEn: "Expert Mode: 8 sec per turn. Don't waste time!", textPt: "Modo Especialista: 8 seg por turno. Não perca tempo!" },
-            { icon: "card-outline", color: "#4FC3F7", textEs: "Cartas especiales: 2, 3, 7, 8, 10, J y Comodín tienen poderes únicos.", textEn: "Special cards: 2, 3, 7, 8, 10, J & Joker have unique powers.", textPt: "Cartas especiais: 2, 3, 7, 8, 10, J e Curinga têm poderes únicos." },
-            { icon: "swap-horizontal", color: "#27AE60", textEs: "10 invierte la dirección. 3 salta. J repite tu turno.", textEn: "10 reverses direction. 3 skips. J repeats your turn.", textPt: "10 inverte a direção. 3 pula. J repete seu turno." },
-            { icon: "layers", color: "#E74C3C", textEs: "2 y 7 obligan a robar — ¡apílalos con el mismo número!", textEn: "2 and 7 force draws — stack them with the same number!", textPt: "2 e 7 forçam compra — empilhe com o mesmo número!" },
-          ].map((item, i) => {
-            const text = profile.language === "en" ? item.textEn : profile.language === "pt" ? item.textPt : item.textEs;
-            return (
-              <View key={i} style={[styles.infoRow, i > 0 && { borderTopWidth: 1, borderTopColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", paddingTop: 10, marginTop: 2 }]}>
-                <Ionicons name={item.icon as any} size={16} color={item.color} />
-                <Text style={[styles.infoText, { color: isDark ? "#9AAA8C" : "#3a5a3a" }]}>{text}</Text>
-              </View>
-            );
-          })}
+          <SectionHeader icon="appearance" label="APARIENCIA" isDark={isDark} />
+          <SettingRow
+            label={isDark ? T("darkMode") : T("lightMode")}
+            sub={isDark ? "Tema oscuro activo" : "Tema claro activo"}
+            icon={isDark ? "moon" : "sunny"} iconColor={isDark ? "#9B59B6" : "#F39C12"} iconBg={isDark ? "#2a1a3a" : "#fff9e6"}
+            isDark={isDark} last
+            right={
+              <Switch
+                value={isDark}
+                onValueChange={() => { updateSettings({ darkMode: !isDark }); if (profile.vibrationEnabled) Vibration.vibrate(40); }}
+                {...sw(isDark, isDark ? "#9B59B6" : "#F39C12")}
+              />
+            }
+          />
         </View>
 
-        {/* About */}
+        {/* ──── 👤 CUENTA ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>{T("about")}</Text>
-          <View style={styles.aboutCard}>
-            <LinearGradient colors={["#D4AF3722", "#D4AF3705"]} style={styles.aboutGrad}>
-              <Text style={styles.gameName}>OCHO LOCOS</Text>
-              <Text style={[styles.gameVer, { color: subColor }]}>{T("version")} 3.0</Text>
-              <Text style={[styles.gameDesc, { color: isDark ? "#9AAA8C" : "#3a5a3a" }]}>{T("gameDescAbout")}</Text>
-            </LinearGradient>
-          </View>
+          <SectionHeader icon="account" label="CUENTA" isDark={isDark} />
+          {user && !user.isGuest ? (
+            <>
+              <SettingRow
+                label={user.username} sub="Cuenta vinculada"
+                icon="checkmark-circle" iconColor="#27AE60" iconBg="#1a3a1a"
+                isDark={isDark}
+                right={
+                  <TouchableOpacity
+                    onPress={() => { Alert.alert("Cerrar sesión", "¿Quieres salir de tu cuenta?", [{ text: "Cancelar", style: "cancel" }, { text: "Salir", style: "destructive", onPress: () => logout() }]); }}
+                    style={[styles.dangerBtn]}
+                  >
+                    <Text style={styles.dangerBtnText}>Salir</Text>
+                  </TouchableOpacity>
+                }
+              />
+              <SettingRow
+                label="Guardar en la nube" sub="Tu progreso está sincronizado"
+                icon="cloud-done" iconColor="#27AE60" iconBg="#1a3a1a"
+                isDark={isDark} last
+                right={<Ionicons name="checkmark-circle" size={20} color="#27AE60" />}
+              />
+            </>
+          ) : (
+            <>
+              <SettingRow
+                label="Iniciar sesión con Google" sub="Vincula tu cuenta de Google"
+                icon="logo-google" iconColor="#E74C3C" iconBg="#3a1a1a"
+                isDark={isDark} onPress={() => router.push("/login")}
+                right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+              />
+              <SettingRow
+                label="Iniciar sesión con Facebook" sub="Vincula tu cuenta de Facebook"
+                icon="logo-facebook" iconColor="#4A90E2" iconBg="#1a2a3a"
+                isDark={isDark} onPress={() => router.push("/login")}
+                right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+              />
+              <SettingRow
+                label="Jugar como invitado" sub="Sin vinculación de cuenta"
+                icon="person-outline" iconColor="#95A5A6" iconBg="#2a2a2a"
+                isDark={isDark}
+                right={user?.isGuest ? <Ionicons name="checkmark-circle" size={20} color="#27AE60" /> : <View />}
+              />
+              <SettingRow
+                label="Guardar progreso en la nube" sub="Requiere cuenta vinculada"
+                icon="cloud-upload" iconColor="#9B59B6" iconBg="#2a1a3a"
+                isDark={isDark} last onPress={() => router.push("/login")}
+                right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+              />
+            </>
+          )}
         </View>
 
-        <Text style={[styles.resetHint, { color: isDark ? "#445544" : "#6a8a6a" }]}>{T("savedLocally")}</Text>
+        {/* ──── 🛡️ PRIVACIDAD ──── */}
+        <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          <SectionHeader icon="privacy" label="PRIVACIDAD" isDark={isDark} />
+          <SettingRow
+            label="Política de privacidad" sub="Cómo usamos tus datos"
+            icon="document-text" iconColor="#27AE60" iconBg="#1a3a1a"
+            isDark={isDark} onPress={() => Alert.alert("Política de privacidad", "Ocho Locos respeta tu privacidad. No compartimos tus datos personales con terceros sin tu consentimiento.")}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+          />
+          <SettingRow
+            label="Permisos del juego" sub="Gestiona los permisos"
+            icon="lock-closed" iconColor="#F39C12" iconBg="#2a2a1a"
+            isDark={isDark} onPress={() => Alert.alert("Permisos", "El juego solicita permisos para notificaciones, vibración y almacenamiento local.")}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+          />
+          <SettingRow
+            label="Gestión de datos" sub="Exporta o elimina tus datos"
+            icon="trash" iconColor="#E74C3C" iconBg="#3a1a1a"
+            isDark={isDark} last onPress={() => Alert.alert("Gestión de datos", "Para solicitar la eliminación de tus datos, contacta a support@biyisprime.com")}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+          />
+        </View>
+
+        {/* ──── ❓ AYUDA ──── */}
+        <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          <SectionHeader icon="help" label="AYUDA" isDark={isDark} />
+          <SettingRow
+            label="Soporte técnico" sub="Contacta con el equipo"
+            icon="headset" iconColor="#E67E22" iconBg="#3a2a1a"
+            isDark={isDark} onPress={() => Linking.openURL("mailto:support@biyisprime.com")}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+          />
+          <SettingRow
+            label="Preguntas frecuentes" sub="Respuestas a tus dudas"
+            icon="help-circle" iconColor="#4FC3F7" iconBg="#1a2a3a"
+            isDark={isDark} onPress={() => Alert.alert("FAQ", "Visita nuestra web para ver las preguntas frecuentes sobre Ocho Locos.")}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+          />
+          <SettingRow
+            label="Reportar un error" sub="Ayúdanos a mejorar el juego"
+            icon="bug" iconColor="#E74C3C" iconBg="#3a1a1a"
+            isDark={isDark} onPress={() => Linking.openURL("mailto:bugs@biyisprime.com?subject=Bug%20Ocho%20Locos")}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+          />
+          <SettingRow
+            label="Reportar jugador" sub="Denuncia comportamiento inapropiado"
+            icon="flag" iconColor="#E74C3C" iconBg="#3a1a1a"
+            isDark={isDark} last onPress={() => Alert.alert("Reportar jugador", "Usa el menú dentro de la partida para reportar a un jugador específico.")}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+          />
+        </View>
+
+        {/* ──── ℹ️ INFORMACIÓN ──── */}
+        <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          <SectionHeader icon="info" label="INFORMACIÓN" isDark={isDark} />
+          <SettingRow
+            label="Versión del juego" sub="Ocho Locos v3.0.0"
+            icon="code-working" iconColor="#95A5A6" iconBg="#2a2a2a"
+            isDark={isDark}
+            right={<Text style={[styles.versionChip, { color: titleColor }]}>v3.0.0</Text>}
+          />
+          <SettingRow
+            label="Créditos" sub="El equipo detrás del juego"
+            icon="people" iconColor="#D4AF37" iconBg="#2a2a1a"
+            isDark={isDark} onPress={() => Alert.alert("Créditos", "Desarrollado por Biyis Prime Studios\n\nDirector: Biyis\nDiseño & Desarrollo: Equipo BP\n\n© 2025 Biyis Prime Studios")}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+          />
+          <SettingRow
+            label="Términos de servicio" sub="Lee los términos de uso"
+            icon="document" iconColor="#9B59B6" iconBg="#2a1a3a"
+            isDark={isDark} last onPress={() => Alert.alert("Términos de servicio", "Al usar Ocho Locos aceptas nuestros términos de servicio. El juego es gratuito y no requiere pagos para disfrutarlo.")}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+          />
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footerCard}>
+          <LinearGradient colors={["#D4AF3722", "#D4AF3705"]} style={styles.footerGrad}>
+            <Text style={styles.footerGame}>OCHO LOCOS</Text>
+            <Text style={[styles.footerStudio, { color: subColor }]}>Biyis Prime Studios · v3.0.0</Text>
+          </LinearGradient>
+        </View>
       </ScrollView>
 
       {/* Language Modal */}
@@ -245,37 +488,33 @@ export default function SettingsScreen() {
             <View style={styles.langModalHeader}>
               <Text style={styles.langModalTitle}>{T("selectLanguage")}</Text>
               <Pressable onPress={() => setShowLangModal(false)} style={styles.langModalClose}>
-                <Ionicons name="close" size={20} color="#6B7A5C" />
+                <Ionicons name="close" size={22} color="#6B7A5C" />
               </Pressable>
             </View>
-            {LANGUAGES.map((lang) => {
-              const selected = (profile.language ?? "es") === lang.code;
-              return (
-                <Pressable
-                  key={lang.code}
-                  onPress={() => selectLanguage(lang.code)}
-                  style={({ pressed }) => [
-                    styles.langOption,
-                    selected && styles.langOptionSelected,
-                    pressed && { opacity: 0.8 },
-                  ]}
-                >
-                  <Text style={styles.langFlag}>{lang.flag}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.langOptionName, selected && { color: "#D4AF37" }]}>
-                      {lang.label}
-                    </Text>
-                    <Text style={styles.langOptionSub}>{lang.subtitle}</Text>
-                  </View>
-                  {selected && <Ionicons name="checkmark-circle" size={22} color="#D4AF37" />}
-                </Pressable>
-              );
-            })}
-            <Text style={styles.langNote}>
-              {T("language") === "Idioma"
-                ? "La traducción se aplica en toda la aplicación."
-                : "Translation applies across the whole app."}
-            </Text>
+            <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false}>
+              {LANGUAGES.map((lang, i) => {
+                const selected = (profile.language ?? "es") === lang.code && LANGUAGES.findIndex(l => l.code === profile.language) === (profile.language === lang.code ? i : -1);
+                const isSelected = (profile.language ?? "es") === lang.code;
+                return (
+                  <Pressable
+                    key={`${lang.code}-${i}`}
+                    onPress={() => selectLanguage(lang.code)}
+                    style={({ pressed }) => [
+                      styles.langOption,
+                      isSelected && i === LANGUAGES.findIndex(l => l.code === lang.code) && styles.langOptionSelected,
+                      pressed && { opacity: 0.8 },
+                    ]}
+                  >
+                    <Text style={styles.langFlag}>{lang.flag}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.langOptionName, isSelected && { color: "#D4AF37" }]}>{lang.label}</Text>
+                      <Text style={styles.langOptionSub}>{lang.subtitle}</Text>
+                    </View>
+                    {isSelected && <Ionicons name="checkmark-circle" size={20} color="#D4AF37" />}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -285,38 +524,51 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 16 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
   backBtn: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", borderWidth: 1 },
   title: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, letterSpacing: 1 },
-  section: { borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 16 },
-  sectionTitle: { fontFamily: "Nunito_700Bold", fontSize: 10, letterSpacing: 2.5, marginBottom: 14 },
-  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 6 },
-  rowLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
+  section: { borderRadius: 18, borderWidth: 1, padding: 16, marginBottom: 14 },
+  sectionHeaderRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 },
+  sectionHeaderIcon: { width: 28, height: 28, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+  sectionHeaderLabel: { fontFamily: "Nunito_900ExtraBold", fontSize: 11, letterSpacing: 2.5 },
+  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 10 },
+  rowBorder: { borderBottomWidth: 1, marginBottom: 2 },
+  rowLeft: { flexDirection: "row", alignItems: "center", flex: 1, gap: 0 },
+  rowRight: { marginLeft: 8 },
   iconCircle: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", marginRight: 12 },
-  rowLabel: { fontFamily: "Nunito_700Bold", fontSize: 15 },
-  rowSub: { fontFamily: "Nunito_400Regular", fontSize: 11, marginTop: 2 },
-  divider: { height: 1, marginVertical: 10 },
-  infoRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 10 },
-  infoText: { fontFamily: "Nunito_400Regular", fontSize: 13, flex: 1, lineHeight: 19 },
-  aboutCard: { borderRadius: 12, overflow: "hidden" },
-  aboutGrad: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 16, borderRadius: 12 },
-  gameName: { fontFamily: "Nunito_900ExtraBold", fontSize: 26, color: "#D4AF37", letterSpacing: 5 },
-  gameVer: { fontFamily: "Nunito_400Regular", fontSize: 11, marginTop: 2, marginBottom: 10 },
-  gameDesc: { fontFamily: "Nunito_400Regular", fontSize: 13, textAlign: "center", lineHeight: 20 },
-  resetHint: { fontFamily: "Nunito_400Regular", fontSize: 11, textAlign: "center", marginTop: 4 },
-  langBtn: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 6 },
-  langBtnLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
-  langChevron: { flexDirection: "row", alignItems: "center", gap: 4 },
-  langValue: { fontFamily: "Nunito_700Bold", fontSize: 13 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end" },
-  langModal: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40, overflow: "hidden", borderTopWidth: 1, borderColor: "rgba(212,175,55,0.2)" },
-  langModalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
+  rowLabel: { fontFamily: "Nunito_700Bold", fontSize: 14 },
+  rowSub: { fontFamily: "Nunito_400Regular", fontSize: 11, marginTop: 1 },
+  divider: { height: 1 },
+  qualityRow: { flexDirection: "row", gap: 8, marginTop: 6, marginBottom: 4, paddingLeft: 50 },
+  qualityBtn: {
+    flex: 1, paddingVertical: 7, borderRadius: 10, borderWidth: 1.5, alignItems: "center",
+  },
+  qualityBtnActive: {},
+  qualityBtnText: { fontFamily: "Nunito_700Bold", fontSize: 12 },
+  dangerBtn: { backgroundColor: "#E74C3C22", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: "#E74C3C55" },
+  dangerBtnText: { fontFamily: "Nunito_700Bold", fontSize: 12, color: "#E74C3C" },
+  versionChip: { fontFamily: "Nunito_900ExtraBold", fontSize: 13 },
+  footerCard: { borderRadius: 14, overflow: "hidden", marginTop: 8 },
+  footerGrad: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 16 },
+  footerGame: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: "#D4AF37", letterSpacing: 5 },
+  footerStudio: { fontFamily: "Nunito_400Regular", fontSize: 11, marginTop: 4 },
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "flex-end" },
+  langModal: {
+    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 44,
+    overflow: "hidden", borderTopWidth: 1, borderColor: "rgba(212,175,55,0.25)",
+  },
+  langModalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 },
   langModalTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: "#D4AF37" },
-  langModalClose: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
-  langOption: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 14, marginBottom: 10, backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
+  langModalClose: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
+  langOption: {
+    flexDirection: "row", alignItems: "center", gap: 12, padding: 14,
+    borderRadius: 14, marginBottom: 8,
+    backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)",
+  },
   langOptionSelected: { backgroundColor: "rgba(212,175,55,0.12)", borderColor: "rgba(212,175,55,0.4)" },
-  langFlag: { fontSize: 30 },
-  langOptionName: { fontFamily: "Nunito_700Bold", fontSize: 17, color: "#E8DCC8" },
-  langOptionSub: { fontFamily: "Nunito_400Regular", fontSize: 12, color: "#6B7A5C", marginTop: 1 },
-  langNote: { fontFamily: "Nunito_400Regular", fontSize: 11, color: "#4A5540", textAlign: "center", marginTop: 12 },
+  langFlag: { fontSize: 26 },
+  langOptionName: { fontFamily: "Nunito_700Bold", fontSize: 15, color: "#E8DCC8" },
+  langOptionSub: { fontFamily: "Nunito_400Regular", fontSize: 11, color: "#6B7A5C", marginTop: 1 },
 });
