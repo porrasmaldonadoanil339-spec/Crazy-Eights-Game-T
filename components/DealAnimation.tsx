@@ -213,9 +213,9 @@ function DealCard({ index, totalCards, target, dealIndex, backColors, backAccent
 }
 
 // ─── Phase 3: Flip reveal ─────────────────────────────────────────────────────
-function FlipCard({ card, index, totalCards, flipDelay, backColors, backAccent, onLastFlipped }: {
+function FlipCard({ card, index, totalCards, flipDelay, backColors, backAccent, cardColors, onLastFlipped }: {
   card: Card; index: number; totalCards: number; flipDelay: number;
-  backColors: [string, string, string]; backAccent: string; onLastFlipped?: () => void;
+  backColors: [string, string, string]; backAccent: string; cardColors?: [string, string, string]; onLastFlipped?: () => void;
 }) {
   const scaleX = useSharedValue(1);
   const [showFront, setShowFront] = useState(false);
@@ -268,7 +268,7 @@ function FlipCard({ card, index, totalCards, flipDelay, backColors, backAccent, 
       ]}
     >
       {showFront ? (
-        <PlayingCard card={card} size="md" />
+        <PlayingCard card={card} size="md" cardColors={cardColors} />
       ) : (
         <CardBack width={FAN_CARD_W} height={FAN_CARD_H} backColors={backColors} backAccent={backAccent} />
       )}
@@ -311,8 +311,8 @@ function AiHandPlaceholder({ count, backColors, backAccent }: {
 }
 
 // ─── Table center: deck pile + starter card shown after flip ──────────────────
-function TableCenter({ starterCard, backColors, backAccent, visible }: {
-  starterCard: Card | null; backColors: [string, string, string]; backAccent: string; visible: boolean;
+function TableCenter({ starterCard, backColors, backAccent, cardColors, visible }: {
+  starterCard: Card | null; backColors: [string, string, string]; backAccent: string; cardColors?: [string, string, string]; visible: boolean;
 }) {
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.75);
@@ -341,7 +341,7 @@ function TableCenter({ starterCard, backColors, backAccent, visible }: {
       {/* Starter card face-up */}
       {starterCard && (
         <View style={{ transform: [{ rotate: "-4deg" }] }}>
-          <PlayingCard card={starterCard} size="md" />
+          <PlayingCard card={starterCard} size="md" cardColors={cardColors} />
         </View>
       )}
     </Animated.View>
@@ -349,9 +349,9 @@ function TableCenter({ starterCard, backColors, backAccent, visible }: {
 }
 
 // ─── Flip phase wrapper ───────────────────────────────────────────────────────
-function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backAccent, onDone, numOpponents }: {
+function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backAccent, cardColors, onDone, numOpponents }: {
   playerCards: Card[]; cardsPerPlayer: number; starterCard: Card | null;
-  backColors: [string, string, string]; backAccent: string; onDone: () => void;
+  backColors: [string, string, string]; backAccent: string; cardColors?: [string, string, string]; onDone: () => void;
   numOpponents: number;
 }) {
   const STAGGER = 110;
@@ -389,7 +389,7 @@ function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backA
         </View>
       ))}
       {/* Deck pile + starter card appear after last card flips */}
-      <TableCenter starterCard={starterCard} backColors={backColors} backAccent={backAccent} visible={tableVisible} />
+      <TableCenter starterCard={starterCard} backColors={backColors} backAccent={backAccent} cardColors={cardColors} visible={tableVisible} />
       {/* Fan centered at screen bottom */}
       <View style={{ position: "absolute", bottom: 24, left: 0, right: 0, height: FAN_CARD_H + 48 }}>
         {playerCards.map((card, i) => (
@@ -401,6 +401,7 @@ function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backA
             flipDelay={i * STAGGER}
             backColors={backColors}
             backAccent={backAccent}
+            cardColors={cardColors}
             onLastFlipped={i === N - 1 ? handleLastFlip : undefined}
           />
         ))}
@@ -416,10 +417,12 @@ export function DealAnimation({
   cardsPerPlayer, playerCards, starterCard = null, onComplete,
   backColors = ["#1E4080", "#0e2248", "#0a1832"],
   backAccent = Colors.gold,
+  cardColors,
   numOpponents = 1,
 }: {
   cardsPerPlayer: number; playerCards: Card[]; starterCard?: Card | null; onComplete: () => void;
   backColors?: [string, string, string]; backAccent?: string;
+  cardColors?: [string, string, string];
   numOpponents?: number;
 }) {
   const [phase, setPhase] = useState<Phase>("shuffle");

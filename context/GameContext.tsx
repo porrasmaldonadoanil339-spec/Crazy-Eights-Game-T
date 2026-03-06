@@ -124,9 +124,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setGameState((prev) => {
       if (!prev) return prev;
       const difficulty = session?.difficulty ?? "normal";
-      return aiTurn(prev, difficulty);
+      const mode = session?.mode ?? "classic";
+      return aiTurn(prev, difficulty, mode);
     });
-  }, [session?.difficulty]);
+  }, [session?.difficulty, session?.mode]);
 
   const startNextTournamentRound = useCallback(() => {
     setSession((prev) => {

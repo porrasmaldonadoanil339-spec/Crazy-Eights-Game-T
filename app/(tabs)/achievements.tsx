@@ -26,7 +26,7 @@ const RARITY_COLORS_MAP: Record<string, string> = {
   legendary: "#D4AF37",
 };
 
-type Tab = "achievements" | "battlepass" | "ranked";
+type Tab = "achievements" | "battlepass";
 
 export default function AchievementsScreen() {
   const insets = useSafeAreaInsets();
@@ -119,19 +119,6 @@ export default function AchievementsScreen() {
           <Ionicons name="star" size={16} color={activeTab === "battlepass" ? themeGold : themeColors.textMuted} />
           <Text style={[styles.tabLabel, { color: activeTab === "battlepass" ? themeGold : themeColors.textMuted }]}>
             {T("battlePass")}
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setActiveTab("ranked")}
-          style={[
-            styles.tabBtn,
-            { backgroundColor: themeColors.surface, borderColor: themeColors.border },
-            activeTab === "ranked" && { borderColor: themeGold, backgroundColor: themeGold + "22" },
-          ]}
-        >
-          <Ionicons name="trophy" size={16} color={activeTab === "ranked" ? themeGold : themeColors.textMuted} />
-          <Text style={[styles.tabLabel, { color: activeTab === "ranked" ? themeGold : themeColors.textMuted }]}>
-            {T("tabAchievements") === "Logros" ? "Clasificatorio" : T("tabAchievements") === "Achievements" ? "Qualifying" : "Classific."}
           </Text>
         </Pressable>
       </View>
@@ -257,128 +244,7 @@ export default function AchievementsScreen() {
               );
             })}
           </>
-        ) : (
-          <View style={styles.rankedSection}>
-            <LinearGradient
-              colors={["#1a0a00", "#2a1400", "#1a0a00"]}
-              style={[styles.playerRankCard, { borderColor: "#D4AF37", borderWidth: 2 }]}
-            >
-              <View style={styles.playerRankHeader}>
-                <AvatarDisplay
-                  avatarId={profile.avatarId}
-                  frameId={profile.selectedFrameId}
-                  photoUri={profile.photoUri}
-                  size={50}
-                />
-                <View style={styles.playerRankInfo}>
-                  <Text style={[styles.playerRankName, { color: "#FFFFFF" }]}>{profile.name}</Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Text style={[styles.rankPlayerMeta, { color: rankInfo.color, fontFamily: "Nunito_700Bold" }]}>
-                      {T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName} {DIVISIONS[profile.rankedProfile.division]}
-                    </Text>
-                    <View style={{ flexDirection: "row", gap: 2 }}>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Ionicons
-                          key={i}
-                          name={i < profile.rankedProfile.stars ? "star" : "star-outline"}
-                          size={12}
-                          color={i < profile.rankedProfile.stars ? rankInfo.color : "#D4AF3766"}
-                        />
-                      ))}
-                    </View>
-                  </View>
-                  <Text style={[styles.rankPlayerMeta, { color: "#BBBBBB" }]}>
-                    {profile.rankedProfile.totalWins} {T("wins")} · {profile.rankedProfile.totalLosses} {T("losses")}
-                  </Text>
-                </View>
-                <View style={styles.worldRankBadge}>
-                  <Text style={styles.worldRankLabel}>RANK</Text>
-                  <Text style={styles.worldRankValue}>#12</Text>
-                </View>
-              </View>
-            </LinearGradient>
-
-            <View style={[styles.rankMiniCard, { backgroundColor: themeColors.surface, borderColor: rankInfo.color + "44" }]}>
-              <View style={[styles.rankMiniIcon, { backgroundColor: rankInfo.color + "22" }]}>
-                <Ionicons name="trophy" size={32} color={rankInfo.color} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.rankMiniLabel, { color: themeColors.textMuted }]}>{T("yourTurn")}</Text>
-                <Text style={[styles.rankMiniName, { color: rankInfo.color }]}>
-                  {T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName} {DIVISIONS[profile.rankedProfile.division]}
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => router.push("/ranked")}
-                style={({ pressed }) => [styles.viewRankBtn, { backgroundColor: themeGold }, pressed && { opacity: 0.8 }]}
-              >
-                <Ionicons name="play" size={20} color="#1a0a00" />
-              </Pressable>
-            </View>
-
-            <View style={[styles.infoBox, { backgroundColor: themeGold + "11", borderColor: themeGold + "33" }]}>
-              <Ionicons name="information-circle" size={20} color={themeGold} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.infoTitle, { color: themeGold }]}>
-                  {lang === "en" ? "How to Rank Up?" : lang === "pt" ? "Como Subir de Rank?" : "¿Cómo ascender?"}
-                </Text>
-                <Text style={[styles.infoText, { color: themeColors.textMuted }]}>
-                  {lang === "en" 
-                    ? `Win matches in Ranked mode to earn stars. Collect ${profile.rankedProfile.maxStars} stars to promote to the next division. Promote to division I to reach the next rank and earn exclusive rewards!`
-                    : lang === "pt"
-                    ? `Ganhe partidas no modo Classificatório para ganhar estrelas. Colete ${profile.rankedProfile.maxStars} estrelas para subir para a próxima divisão. Suba para a divisão I para alcançar el próximo rank e ganhar recompensas exclusivas!`
-                    : `Gana partidas en modo Clasificatoria para ganar estrellas. Colecciona ${profile.rankedProfile.maxStars} estrellas para subir a la siguiente división. ¡Sube de la división I para alcanzar el siguiente rango y ganar recompensas exclusivas!`}
-                </Text>
-              </View>
-            </View>
-            
-            <Text style={[styles.rarityHeader, { color: themeColors.text, marginTop: 12 }]}>
-              {lang === "en" ? "Qualifying Ranking" : lang === "pt" ? "Ranking de Qualificação" : "Ranking Clasificatorio"}
-            </Text>
-            {CPU_PROFILES.map((cpu, i) => {
-              // Seeded random rank based on level and name index
-              const seed = cpu.level + i;
-              const cpuRank = Math.min(11, Math.floor((seed * 13) % 12));
-              const cpuDivision = (seed * 7) % 5;
-              const cpuWins = cpu.level * 5 + (seed % 10);
-              
-              return { cpu, rank: cpuRank, division: cpuDivision, wins: cpuWins };
-            })
-            .sort((a, b) => {
-              if (b.rank !== a.rank) return b.rank - a.rank;
-              return b.wins - a.wins;
-            })
-            .slice(0, 20)
-            .map((item, i) => {
-              const rankInfo = getRankInfo({ 
-                rank: item.rank, 
-                division: item.division, 
-                stars: 0, 
-                maxStars: 5, 
-                totalWins: item.wins, 
-                totalLosses: 0 
-              });
-              
-              return (
-                <View key={i} style={[styles.rankRow, { backgroundColor: themeColors.surface }]}>
-                  <Text style={[styles.rankNum, { color: i < 3 ? themeGold : themeColors.textDim }]}>#{i + 1}</Text>
-                  <View style={styles.rankInfo}>
-                    <Text style={[styles.rankPlayerName, { color: themeColors.text }]}>{item.cpu.name}</Text>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                      <Text style={[styles.rankPlayerMeta, { color: rankInfo.color, fontFamily: "Nunito_700Bold" }]}>
-                         {T(`rank${RANKS[item.rank]}` as any) || rankInfo.rankName} {DIVISIONS[item.division]}
-                      </Text>
-                      <Text style={[styles.rankPlayerMeta, { color: themeColors.textMuted }]}>
-                        · {item.wins} {T("wins")}
-                      </Text>
-                    </View>
-                  </View>
-                  <Ionicons name="trophy" size={16} color={rankInfo.color} />
-                </View>
-              );
-            })}
-          </View>
-        )}
+        ) : null}
         <View style={{ height: 100 }} />
       </ScrollView>
 

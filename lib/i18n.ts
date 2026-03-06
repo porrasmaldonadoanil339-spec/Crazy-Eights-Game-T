@@ -157,7 +157,22 @@ const translations = {
   purchaseSuccess: { es: "¡Comprado con éxito!", en: "Purchased successfully!", pt: "Comprado com sucesso!", fr: "Acheté avec succès !", de: "Erfolgreich gekauft!", it: "Acquistato con successo!", tr: "Başarıyla satın alındı!" },
   default: { es: "Predeterminado", en: "Default", pt: "Padrão", fr: "Par défaut", de: "Standard", it: "Predefinito", tr: "Varsayılan" },
 
-  // ─── Profile Tab ─────────────────────────────────────────────────────────
+  friends: { es: "Amigos", en: "Friends", pt: "Amigos", fr: "Amis", de: "Freunde", it: "Amici", tr: "Arkadaşlar" },
+  statistics: { es: "Estadísticas", en: "Statistics", pt: "Estatísticas", fr: "Statistiques", de: "Statistiken", it: "Statistiche", tr: "İstatistikler" },
+  accountManagement: { es: "Gestión de cuenta", en: "Account Management", pt: "Gestão de conta", fr: "Gestion du compte", de: "Kontoverwaltung", it: "Gestione account", tr: "Hesap Yönetimi" },
+  connectAccount: { es: "Conectar cuenta", en: "Connect Account", pt: "Conectar conta", fr: "Connecter le compte", de: "Konto verbinden", it: "Collega account", tr: "Hesabı Bağla" },
+  signOut: { es: "Cerrar sesión", en: "Sign Out", pt: "Sair", fr: "Déconnexion", de: "Abmelden", it: "Esci", tr: "Oturumu Kapat" },
+  rankProgress: { es: "Progreso de Rango", en: "Rank Progress", pt: "Progresso de Rank", fr: "Progression de rang", de: "Rangfortschritt", it: "Progresso di grado", tr: "Derece İlerlemesi" },
+  notConnected: { es: "No conectado", en: "Not connected", pt: "Não conectado", fr: "Non connecté", de: "Nicht verbunden", it: "Non collegato", tr: "Bağlı değil" },
+  connectedWith: { es: "Conectado con", en: "Connected with", pt: "Conectado com", fr: "Connecté avec", de: "Verbunden mit", it: "Collegato con", tr: "Şununla bağlı:" },
+  rankName: { es: "Rango", en: "Rank", pt: "Rank", fr: "Rang", de: "Rang", it: "Grado", tr: "Derece" },
+  editProfile: { es: "Editar Perfil", en: "Edit Profile", pt: "Editar Perfil", fr: "Modifier le profil", de: "Profil bearbeiten", it: "Modifica profilo", tr: "Profili Düzenle" },
+  support: { es: "Soporte", en: "Support", pt: "Suporte", fr: "Support", de: "Support", it: "Supporto", tr: "Destek" },
+  privacy: { es: "Privacidad", en: "Privacy", pt: "Privacidade", fr: "Confidentialité", de: "Datenschutz", it: "Privacy", tr: "Gizlilik" },
+  terms: { es: "Términos", en: "Terms", pt: "Termos", fr: "Conditions", de: "Bedingungen", it: "Termini", tr: "Şartlar" },
+  categoryCardDesigns: { es: "Cartas", en: "Cards", pt: "Cartas", fr: "Cartes", de: "Karten", it: "Carte", tr: "Kartlar" },
+  categoryTableDesigns: { es: "Mesas", en: "Tables", pt: "Mesas", fr: "Tables", de: "Tische", it: "Tavoli", tr: "Masalar" },
+  selectCountry: { es: "Seleccionar País", en: "Select Country", pt: "Selecionar País", fr: "Choisir le pays", de: "Land wählen", it: "Seleziona paese", tr: "Ülke Seç" },
   profile: { es: "PERFIL", en: "PROFILE", pt: "PERFIL", fr: "PROFIL", de: "PROFIL", it: "PROFILO", tr: "PROFİL" },
   stats: { es: "ESTADÍSTICAS", en: "STATISTICS", pt: "ESTATÍSTICAS", fr: "STATISTIQUES", de: "STATISTIKEN", it: "STATISTICHE", tr: "İSTATİSTİKLER" },
   generalStats: { es: "GENERAL", en: "GENERAL", pt: "GERAL", fr: "GÉNÉRAL", de: "ALLGEMEIN", it: "GENERALE", tr: "GENEL" },
@@ -206,7 +221,7 @@ const translations = {
   selectLanguage: { es: "Seleccionar idioma", en: "Select Language", pt: "Selecionar idioma", fr: "Choisir la langue", de: "Sprache wählen", it: "Seleziona lingua", tr: "Dil seç" },
   darkMode: { es: "Modo oscuro", en: "Dark Mode", pt: "Modo escuro", fr: "Mode sombre", de: "Dunkelmodus", it: "Modalità scura", tr: "Karanlık mod" },
   lightMode: { es: "Modo claro", en: "Light Mode", pt: "Modo claro", fr: "Mode clair", de: "Hellmodus", it: "Modalità chiara", tr: "Aydınlık mod" },
-  theme: { es: "Tema", en: "Theme", pt: "Tema", fr: "Thème", de: "Design", it: "Tema", tr: "Tema" },
+  theme: { es: "Tema", en: "Theme", pt: "Tema", fr: "Thème", de: "Thema", it: "Tema", tr: "Tema" },
   about: { es: "ACERCA DE", en: "ABOUT", pt: "SOBRE", fr: "À PROPOS", de: "ÜBER", it: "INFORMAZIONI", tr: "HAKKINDA" },
   version: { es: "Versión", en: "Version", pt: "Versão", fr: "Version", de: "Version", it: "Versione", tr: "Sürüm" },
   gameDescAbout: { es: "El juego de cartas más popular de América Latina, ahora con torneos, 100+ logros, pase de batalla de 100 niveles y multijugador online.", en: "The most popular card game in Latin America, now with tournaments, 100+ achievements, 100-tier battle pass and online multiplayer.", pt: "O jogo de cartas mais popular da América Latina, agora com torneios, 100+ conquistas, passe de batalha de 100 níveis e multiplayer online.", fr: "Le jeu de cartes le plus populaire d'Amérique latine, maintenant avec des tournois, plus de 100 succès, un pass de combat de 100 niveaux et un multijoueur en ligne.", de: "Das beliebteste Kartenspiel Lateinamerikas, jetzt mit Turnieren, über 100 Erfolgen, einem 100-stufigen Battle Pass und Online-Mehrspieler.", it: "Il gioco di carte più popolare dell'America Latina, ora con tornei, oltre 100 obiettivi, un pass battaglia a 100 livelli e multiplayer online.", tr: "Latin Amerika'nın en popüler kart oyunu, şimdi turnuvalar, 100'den fazla başarı, 100 seviyeli savaş bileti ve çevrimiçi çok oyunculu mod ile." },
@@ -315,8 +330,26 @@ const translations = {
   rankWins: { es: "VICTORIAS", en: "WINS", pt: "VITÓRIAS", fr: "VICTOIRES", de: "SIEGE", it: "VITTORIE", tr: "GALİBİYETLER" },
   rankScore: { es: "PUNTOS", en: "SCORE", pt: "PONTOS", fr: "POINTS", de: "PUNKTE", it: "PUNTI", tr: "PUAN" },
 
+  // ─── Game Messages ───────────────────────────────────────────────────────
+  winMsg0: { es: "¡Una victoria magistral!", en: "A masterly victory!", pt: "Uma vitória magistral!", fr: "Une victoire magistrale !", de: "Ein meisterhafter Sieg!", it: "Una vittoria magistrale!", tr: "Ustalıkla bir zafer!" },
+  winMsg1: { es: "¡Nadie puede detenerte!", en: "Nobody can stop you!", pt: "Ninguém pode te parar!", fr: "Personne ne peut vous arrêter !", de: "Niemand kann dich aufhalten!", it: "Nessuno può fermarti!", tr: "Kimse seni durduramaz!" },
+  winMsg2: { es: "¡Esa jugada fue épica!", en: "That move was epic!", pt: "Essa jugada fue épica!", fr: "Ce coup était épique !", de: "Dieser Spielzug war episch!", it: "Quella mossa è stata epica!", tr: "Bu hamle destansıydı!" },
+  winMsg3: { es: "¡El rey de la mesa!", en: "The king of the table!", pt: "O rei da mesa!", fr: "Le roi de la table !", de: "Der König des Tisches!", it: "Il re del tavolo!", tr: "Masanın kralı!" },
+  winMsg4: { es: "¡Suerte y estrategia!", en: "Luck and strategy!", pt: "Sorte e estratégia!", fr: "Chance et stratégie !", de: "Glück und Strategie!", it: "Fortuna e strategia!", tr: "Şans ve strateji!" },
+  winMsg5: { es: "¡Una partida perfecta!", en: "A perfect game!", pt: "Uma partida perfecta!", fr: "Une partie parfaite !", de: "Ein perfektes Spiel!", it: "Una partida perfetta!", tr: "Mükemmel bir oyun!" },
+  winMsg6: { es: "¡Eres imbatible!", en: "You are unbeatable!", pt: "Você é imbatível!", fr: "Vous êtes imbattable !", de: "Du bist unschlagbar!", it: "Sei imbattibile!", tr: "Yenilmezsin!" },
+  loseMsg0: { es: "No fue tu día...", en: "It wasn't your day...", pt: "Não foi o seu dia...", fr: "Ce n'était pas votre jour...", de: "Es war nicht dein Tag...", it: "Non è stata la tua giornata...", tr: "Senin günün değildi..." },
+  loseMsg1: { es: "¡La próxima será mejor!", en: "Next one will be better!", pt: "A próxima será melhor!", fr: "La prochaine fois sera la bonne !", de: "Nächstes Mal wird es besser!", it: "La prossima andrà meglio!", tr: "Bir dahaki sefere daha iyi olacak!" },
+  loseMsg2: { es: "¡Estuviste cerca!", en: "You were close!", pt: "Você llegó perto!", fr: "Vous étiez proche !", de: "Du warst nah dran!", it: "Ci sei andato vicino!", tr: "Yakındın!" },
+  loseMsg3: { es: "El CPU tuvo suerte...", en: "The CPU got lucky...", pt: "O CPU teve sorte...", fr: "L'IA a eu de la chance...", de: "Die CPU hatte Glück...", it: "La CPU è stata fortunata...", tr: "CPU şanslıydı..." },
+  loseMsg4: { es: "¡Sigue practicando!", en: "Keep practicing!", pt: "Continue praticando!", fr: "Continuez à vous entraîner !", de: "Übe weiter!", it: "Continua a fare pratica!", tr: "Pratik yapmaya devam et!" },
+  loseMsg5: { es: "¡No te rindas!", en: "Don't give up!", pt: "Não desista!", fr: "N'abandonnez pas !", de: "Gib nicht auf!", it: "Non arrenderti!", tr: "Vazgeçme!" },
+  crazy8Hint: { es: "Toca para cambiar el palo", en: "Tap to change the suit", pt: "Toque para mudar o naipe", fr: "Appuyez pour changer la couleur", de: "Tippen, um die Farbe zu ändern", it: "Tocca per cambiare il seme", tr: "Sembolü değiştirmek için dokunun" },
+  jokerChooseSuitHint: { es: "Elige el siguiente palo", en: "Choose the next suit", pt: "Escolha o próximo naipe", fr: "Choisissez la couleur suivante", de: "Wählen Sie die nächste Farbe", it: "Scegli il prossimo seme", tr: "Bir sonraki sembolü seçin" },
+  jokerAddStackHint: { es: "¡Acumula +5! Robará {n}", en: "Stack +5! Will draw {n}", pt: "Acumule +5! Comprará {n}", fr: "Cumul +5 ! Piochera {n}", de: "Stapel +5! Wird {n} ziehen", it: "Accumula +5! Pescherà {n}", tr: "Yığın +5! {n} çekecek" },
+  tapToPlay: { es: "Toca de nuevo para jugar", en: "Tap again to play", pt: "Toque novamente para jogar", fr: "Appuyez à nouveau pour jouer", de: "Nochmal tippen zum Spielen", it: "Tocca ancora per giocare", tr: "Oynamak için tekrar dokunun" },
+
   // ─── Country Selection ───────────────────────────────────────────────────
-  selectCountry: { es: "Seleccionar País", en: "Select Country", pt: "Selecionar País", fr: "Sélectionner le Pays", de: "Land auswählen", it: "Seleziona Paese", tr: "Ülke Seç" },
 };
 
 export type TranslationKey = keyof typeof translations;

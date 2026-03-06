@@ -1,8 +1,8 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useRef, useState } from "react";
-import { Animated, View, Text, Image, StyleSheet, Platform } from "react-native";
+import React, { useEffect, useRef, useState, useMemo } from "react";
+import { Animated, View, Text, Image, StyleSheet, Platform, Dimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -12,6 +12,7 @@ import { ProfileProvider } from "@/context/ProfileContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { NetworkProvider, useNetwork } from "@/context/NetworkContext";
 import { OfflineScreen } from "@/components/OfflineScreen";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   useFonts,
   Nunito_400Regular,
@@ -23,13 +24,81 @@ import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, sy
 import { useProfile } from "@/context/ProfileContext";
 import { playSound } from "@/lib/sounds";
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
 SplashScreen.preventAutoHideAsync();
 
 let splashShownThisSession = false;
 
+function Particle({ delay }: { delay: number }) {
+  const moveAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const sideAnim = useRef(new Animated.Value(0)).current;
+
+  const randomX = useMemo(() => (Math.random() - 0.5) * 300, []);
+  const randomTargetX = useMemo(() => randomX + (Math.random() - 0.5) * 100, []);
+  const duration = useMemo(() => 3000 + Math.random() * 2000, []);
+
+  useEffect(() => {
+    const nativeDriver = Platform.OS !== "web";
+    
+    const startAnimation = () => {
+      moveAnim.setValue(0);
+      opacityAnim.setValue(0);
+      sideAnim.setValue(randomX);
+
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.parallel([
+          Animated.timing(moveAnim, {
+            toValue: -SCREEN_HEIGHT * 0.6,
+            duration: duration,
+            useNativeDriver: nativeDriver,
+          }),
+          Animated.timing(sideAnim, {
+            toValue: randomTargetX,
+            duration: duration,
+            useNativeDriver: nativeDriver,
+          }),
+          Animated.sequence([
+            Animated.timing(opacityAnim, {
+              toValue: 0.6,
+              duration: 500,
+              useNativeDriver: nativeDriver,
+            }),
+            Animated.timing(opacityAnim, {
+              toValue: 0,
+              duration: duration - 500,
+              useNativeDriver: nativeDriver,
+            }),
+          ]),
+        ]),
+      ]).start(() => startAnimation());
+    };
+
+    startAnimation();
+  }, []);
+
+  return (
+    <Animated.View
+      style={[
+        styles.particle,
+        {
+          opacity: opacityAnim,
+          transform: [
+            { translateY: moveAnim },
+            { translateX: sideAnim },
+          ],
+        },
+      ]}
+    />
+  );
+}
+
 function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const glowAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const nativeDriver = Platform.OS !== "web";
@@ -37,7 +106,7 @@ function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
+        duration: 800,
         useNativeDriver: nativeDriver,
       }),
       Animated.spring(scaleAnim, {
@@ -48,34 +117,79 @@ function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
       }),
     ]).start();
 
+    // Glow pulsing animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1.4,
+          duration: 1500,
+          useNativeDriver: nativeDriver,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: nativeDriver,
+        }),
+      ])
+    ).start();
+
     // Play sound
     playSound("win").catch(() => {});
 
-    // Exit animation after 2.5s
+    // Exit animation after 5s
     const timer = setTimeout(() => {
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 400,
+        duration: 800,
         useNativeDriver: nativeDriver,
       }).start(() => {
         onComplete();
       });
-    }, 2500);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <Animated.View style={[styles.splashOverlay, { opacity: fadeAnim }]}>
-      <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: "center" }}>
-        <Image
-          source={require("@/assets/images/biyis-logo.png")}
-          resizeMode="contain"
-          style={{ width: 200, height: 200 }}
-        />
+      <LinearGradient
+        colors={["#000000", "#0A0A14", "#000000"]}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      <View style={styles.particlesContainer}>
+        {[...Array(8)].map((_, i) => (
+          <Particle key={i} delay={i * 400} />
+        ))}
+      </View>
+
+      <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: "center", zIndex: 10 }}>
+        <View style={styles.logoContainer}>
+          <Animated.View 
+            style={[
+              styles.glow, 
+              { 
+                transform: [{ scale: glowAnim }],
+                opacity: Animated.multiply(glowAnim, 0.3)
+              }
+            ]} 
+          />
+          <Image
+            source={require("@/assets/images/biyis-logo.png")}
+            resizeMode="contain"
+            style={{ width: 240, height: 240 }}
+          />
+        </View>
+
         <Text style={styles.splashBrand}>BIYIS PRIME STUDIOS</Text>
-        <Text style={styles.splashPresenta}>presenta</Text>
+        <Text style={styles.splashPresenta}>PRESENTA</Text>
+        
+        <View style={styles.goldLine} />
+        
+        <Text style={styles.splashTitle}>OCHO LOCOS</Text>
       </Animated.View>
+
+      <Text style={styles.versionText}>Versión 1.0</Text>
     </Animated.View>
   );
 }
@@ -269,23 +383,76 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   splashOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#000000",
     zIndex: 9999,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#000000",
+  },
+  particlesContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  particle: {
+    position: "absolute",
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#D4AF37",
+    bottom: "20%",
+  },
+  logoContainer: {
+    width: 240,
+    height: 240,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  glow: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "#D4AF37",
+    shadowColor: "#D4AF37",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 50,
+    elevation: 20,
   },
   splashBrand: {
     fontFamily: "Nunito_800ExtraBold",
-    fontSize: 18,
+    fontSize: 22,
     color: "#D4AF37",
-    letterSpacing: 4,
-    marginTop: 20,
+    letterSpacing: 6,
     textAlign: "center",
   },
   splashPresenta: {
     fontFamily: "Nunito_400Regular",
-    fontSize: 14,
-    color: "rgba(255,255,255,0.6)",
+    fontSize: 11,
+    color: "rgba(255,255,255,0.5)",
+    letterSpacing: 8,
     marginTop: 8,
+    textAlign: "center",
+  },
+  goldLine: {
+    width: 60,
+    height: 1,
+    backgroundColor: "#D4AF37",
+    marginVertical: 12,
+  },
+  splashTitle: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 32,
+    color: "#FFFFFF",
+    letterSpacing: 3,
+    textAlign: "center",
+  },
+  versionText: {
+    position: "absolute",
+    bottom: 40,
+    fontFamily: "Nunito_400Regular",
+    fontSize: 12,
+    color: "rgba(255,255,255,0.3)",
   },
 });

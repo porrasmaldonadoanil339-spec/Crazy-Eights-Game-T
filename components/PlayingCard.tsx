@@ -20,6 +20,7 @@ interface PlayingCardProps {
   size?: "sm" | "md" | "lg";
   backColors?: [string, string, string];
   backAccent?: string;
+  cardColors?: [string, string, string];
 }
 
 const SIZES = {
@@ -31,29 +32,36 @@ const SIZES = {
 const DEFAULT_BACK_COLORS: [string, string, string] = ["#1E4080", "#0e2248", "#0a1832"];
 const DEFAULT_BACK_ACCENT = Colors.gold;
 
-function CardFront({ card, sobj }: { card: Card; sobj: typeof SIZES.md }) {
+function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.md; cardColors?: [string, string, string] }) {
   const isJoker = card.rank === "Joker";
   const isEight = card.rank === "8";
   const isFace = ["J", "Q", "K"].includes(card.rank);
+
+  const customBg = cardColors?.[0];
+  const customSuitColor = cardColors?.[1];
+
   const color = isJoker
     ? (card.suit === "spades" || card.suit === "clubs" ? "#1a1a2e" : "#8B0000")
-    : suitColor(card.suit);
+    : (customSuitColor ?? suitColor(card.suit));
   const sym = isJoker ? "★" : suitSymbol(card.suit);
   const rankDisplay = isJoker ? "★" : card.rank;
 
   if (isJoker) {
+    const jokerColors: [string, string, string] = customBg 
+      ? [customBg, customBg, customBg] 
+      : ["#1a0a2e", "#2d1a4a", "#1a0a2e"];
     return (
       <LinearGradient
-        colors={["#1a0a2e", "#2d1a4a", "#1a0a2e"]}
+        colors={jokerColors}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={[styles.cardFace, { borderRadius: sobj.corner, borderColor: "#A855F7aa" }]}
+        style={[styles.cardFace, { borderRadius: sobj.corner, borderColor: customSuitColor ?? "#A855F7aa" }]}
       >
         <View style={styles.cornerTL}>
-          <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: "#A855F7" }]}>★</Text>
+          <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: customSuitColor ?? "#A855F7" }]}>★</Text>
         </View>
         <View style={styles.cardCenterArea}>
           <LinearGradient
-            colors={["#A855F7", "#7C3AED"]}
+            colors={[customSuitColor ?? "#A855F7", "#7C3AED"]}
             style={[styles.eightBadge, { width: sobj.ss + 10, height: sobj.ss + 10, borderRadius: (sobj.ss + 10) / 2 }]}
           >
             <Text style={[styles.eightSym, { fontSize: sobj.ss - 2 }]}>★</Text>
@@ -61,16 +69,18 @@ function CardFront({ card, sobj }: { card: Card; sobj: typeof SIZES.md }) {
           <Text style={[styles.eightNum, { fontSize: sobj.rs - 2, color: "#D4AF37" }]}>JOKER</Text>
         </View>
         <View style={styles.cornerBR}>
-          <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: "#A855F7", transform: [{ rotate: "180deg" }] }]}>★</Text>
+          <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: customSuitColor ?? "#A855F7", transform: [{ rotate: "180deg" }] }]}>★</Text>
         </View>
-        <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: "#A855F744" }]} />
+        <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: (customSuitColor ?? "#A855F7") + "44" }]} />
       </LinearGradient>
     );
   }
 
-  const faceGradient: [string, string, string] = isFace
-    ? ["#FFF8F0", "#F5EDDA", "#EDE0C4"]
-    : ["#FEFDF4", "#F8F4E6", "#EEE8D0"];
+  const faceGradient: [string, string, string] = customBg
+    ? [customBg, customBg, customBg]
+    : isFace
+      ? ["#FFF8F0", "#F5EDDA", "#EDE0C4"]
+      : ["#FEFDF4", "#F8F4E6", "#EEE8D0"];
 
   return (
     <LinearGradient
@@ -78,7 +88,7 @@ function CardFront({ card, sobj }: { card: Card; sobj: typeof SIZES.md }) {
       start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
       style={[styles.cardFace, {
         borderRadius: sobj.corner,
-        borderColor: isEight ? Colors.gold + "bb" : isFace ? color + "33" : "rgba(0,0,0,0.1)",
+        borderColor: isEight ? (cardColors?.[2] ?? Colors.gold) + "bb" : isFace ? color + "33" : "rgba(0,0,0,0.1)",
         borderWidth: isEight || isFace ? 1.5 : 1,
       }]}
     >
@@ -169,7 +179,7 @@ export function PlayingCard({
   faceDown = false,
   size: sizeKey = "md",
   backColors,
-  backAccent,
+  cardColors,
 }: PlayingCardProps) {
   const sobj = SIZES[sizeKey];
   const ty = useSharedValue(0);
@@ -213,7 +223,7 @@ export function PlayingCard({
       <View style={[styles.cardWrap, { width: sobj.w, height: sobj.h, borderRadius: sobj.corner, ...shadowEl }]}>
         {faceDown
           ? <CardBack sobj={sobj} backColors={backColors} backAccent={backAccent} />
-          : <CardFront card={card} sobj={sobj} />
+          : <CardFront card={card} sobj={sobj} cardColors={cardColors} />
         }
       </View>
 

@@ -23,7 +23,7 @@ import { LevelUpOverlay } from "@/components/LevelUpOverlay";
 import type { Suit } from "@/lib/gameEngine";
 import { suitSymbol, suitName, suitColor, canPlay } from "@/lib/gameEngine";
 import { getModeById, getDifficultyById } from "@/lib/gameModes";
-import { AVATARS, CARD_BACKS } from "@/lib/storeItems";
+import { AVATARS, CARD_BACKS, getCardDesignById, getTableDesignById } from "@/lib/storeItems";
 import type { Card } from "@/lib/gameEngine";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
@@ -501,9 +501,11 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile 
 }
 
 // ─── AI hand display ──────────────────────────────────────────────────────────
-function AiHand({ count, isThinking, cpuProfile, backColors, backAccent }: {
+function AiHand({ count, isThinking, cpuProfile, backColors, backAccent, cardColors, isCoop }: {
   count: number; isThinking: boolean; cpuProfile: CpuProfile | null;
   backColors: [string, string, string]; backAccent: string;
+  cardColors?: [string, string, string];
+  isCoop?: boolean;
 }) {
   const T = useT();
   const pulse = useSharedValue(1);
@@ -538,6 +540,11 @@ function AiHand({ count, isThinking, cpuProfile, backColors, backAccent }: {
             Nv.{cpuProfile?.level ?? "?"} · {cpuProfile?.titleId?.replace("title_", "").replace(/_/g, " ") ?? "CPU"}
           </Text>
         </View>
+        {isCoop && (
+          <View style={[styles.modePill, { backgroundColor: "#27AE6022", borderColor: "#27AE6088", marginLeft: 8 }]}>
+            <Text style={{ fontSize: 9, fontFamily: "Nunito_800ExtraBold", color: "#27AE60" }}>ALIADO</Text>
+          </View>
+        )}
         <View style={[styles.turnDot, { backgroundColor: isThinking ? Colors.gold : "rgba(255,255,255,0.1)" }]} />
         {isThinking && <Text style={styles.thinkingText}>{T("thinking")}</Text>}
       </View>
@@ -607,6 +614,13 @@ export default function GameScreen() {
   const backColors = (cardBack.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];
   const backAccent = cardBack.backAccent ?? Colors.gold;
 
+  const cardDesign = getCardDesignById(profile.cardDesignId ?? "face_default");
+  const cardColors = (cardDesign.backColors ?? ["#F8F4E8", "#2C2C2C", "#D4AF37"]) as [string, string, string];
+
+  const tableDesign = getTableDesignById(profile.tableDesignId ?? "table_casino");
+  const tableBg = tableDesign.backColors?.[0] ?? "#061510";
+  const tableAccent = tableDesign.backColors?.[1] ?? "#08180d";
+
   const aiThinking = useRef(false);
   const resultRecorded = useRef(false);
   const gameStartTimeRef = useRef<number>(Date.now());
@@ -625,8 +639,16 @@ export default function GameScreen() {
   const [playerEmote, setPlayerEmote] = useState<Emote | null>(null);
   const [cpuEmote, setCpuEmote] = useState<Emote | null>(null);
   const [showLastCardBanner, setShowLastCardBanner] = useState(false);
+  const [activeChallenges, setActiveChallenges] = useState<Challenge[]>([]);
+
   const [lastPlayerEmoteTime, setLastPlayerEmoteTime] = useState(0);
   const lastCardBannerAnim = useSharedValue(0);
+
+  useEffect(() => {
+    if (session?.mode === "challenge") {
+      getDailyChallenges(level).then(setActiveChallenges);
+    }
+  }, [session?.mode]);
 
   const lastCardBannerStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: withSpring(showLastCardBanner ? 0 : -100) }],
@@ -676,6 +698,7 @@ export default function GameScreen() {
   const timerTotal = 8;
 
   const activeCpu = session?.cpuProfile ?? null;
+  const isCoop = session?.mode === "coop";
 
   const currentModeConfig = session?.mode ? getModeById(session.mode) : null;
   const modeName = currentModeConfig ? T(`mode${currentModeConfig.id.charAt(0).toUpperCase() + currentModeConfig.id.slice(1)}` as any) : "";
@@ -1016,11 +1039,11 @@ export default function GameScreen() {
   const isJokerSelected = selectedCard?.rank === "Joker";
 
   return (
-    <View style={[styles.container, { paddingTop: topPad, paddingBottom: botPad }]}>
+    <View style={[styles.container, { paddingTop: topPad, paddingBottom: botPad, backgroundColor: tableBg }]}>
       {/* Casino felt background */}
       <LinearGradient
-        colors={["#061510", "#08180d", "#0a1a0f", "#08180d", "#061510"]}
-        locations={[0, 0.25, 0.5, 0.75, 1]}
+        colors={[tableBg, tableAccent, tableBg]}
+        locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
       />
       <AnimatedBackground />
@@ -1035,6 +1058,32 @@ export default function GameScreen() {
           <Text style={styles.lastCardBannerText}>¡ÚLTIMA CARTA!</Text>
         </LinearGradient>
       </Animated.View>
+
+      {/* Challenge HUD */}
+      {session?.mode === "challenge" && activeChallenges.length > 0 && (
+        <View style={styles.challengeHud}>
+          <LinearGradient colors={["rgba(0,0,0,0.8)", "rgba(0,0,0,0.4)"]} style={styles.challengeHudInner}>
+            <Ionicons name="trophy" size={14} color={Colors.gold} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.challengeHudTitle} numberOfLines={1}>{activeChallenges[0].title}</Text>
+              <View style={styles.challengeHudProgress}>
+                <View style={[styles.challengeHudBar, { width: `${(activeChallenges[0].progress / activeChallenges[0].target) * 100}%` }]} />
+              </View>
+            </View>
+            <Text style={styles.challengeHudValue}>{activeChallenges[0].progress}/{activeChallenges[0].target}</Text>
+          </LinearGradient>
+        </View>
+      )}
+
+      {/* Practice Mode Advice */}
+      {session?.mode === "practice" && adviceCardId && isPlayerTurn && (
+        <Animated.View entering={FadeIn.delay(1000)} style={styles.practiceHintOverlay}>
+          <LinearGradient colors={["#D4AF37", "#A07800"]} style={styles.practiceHintInner}>
+            <Ionicons name="bulb" size={16} color="#1a0a00" />
+            <Text style={styles.practiceHintText}>CONSEJO: Juega esta carta</Text>
+          </LinearGradient>
+        </Animated.View>
+      )}
 
       {/* Epic Result Overlay */}
       {showEpicResult && (
@@ -1082,7 +1131,7 @@ export default function GameScreen() {
 
       {/* AI section with CPU emote */}
       <View style={styles.aiSectionWrapper}>
-        <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={activeCpu} backColors={backColors} backAccent={backAccent} />
+        <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={activeCpu} backColors={backColors} backAccent={backAccent} cardColors={cardColors} isCoop={isCoop} />
         <EmoteBubble emote={cpuEmote} side="cpu" muted={muteCpuEmotes} />
       </View>
 
@@ -1150,7 +1199,7 @@ export default function GameScreen() {
 
           {/* Discard pile */}
           <View style={styles.discardPile}>
-            {topCard && <PlayingCard card={topCard} size="lg" />}
+            {topCard && <PlayingCard card={topCard} size="lg" cardColors={cardColors} />}
           </View>
         </View>
 
@@ -1240,6 +1289,9 @@ export default function GameScreen() {
                   isPlayable={playable}
                   isSelected={selected}
                   size="md"
+                  cardColors={cardColors}
+                  backColors={backColors}
+                  backAccent={backAccent}
                 />
                 {adviceCardId === card.id && <AdviceBadge card={card} T={T} />}
               </View>
@@ -1257,6 +1309,7 @@ export default function GameScreen() {
           onComplete={() => setDealAnimationDone(true)}
           backColors={backColors}
           backAccent={backAccent}
+          cardColors={cardColors}
         />
       )}
 
@@ -1628,5 +1681,66 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_900ExtraBold",
     fontSize: 24,
     color: "#1a0a00",
+  },
+  challengeHud: {
+    position: "absolute",
+    top: 100,
+    left: 20,
+    right: 20,
+    zIndex: 1000,
+  },
+  challengeHudInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.3)",
+    gap: 12,
+  },
+  challengeHudTitle: {
+    color: "#fff",
+    fontFamily: "Nunito_700Bold",
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  challengeHudProgress: {
+    height: 4,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  challengeHudBar: {
+    height: "100%",
+    backgroundColor: Colors.gold,
+  },
+  challengeHudValue: {
+    color: Colors.gold,
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 12,
+  },
+  practiceHintOverlay: {
+    position: "absolute",
+    bottom: 220,
+    alignSelf: "center",
+    zIndex: 1000,
+  },
+  practiceHintInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  practiceHintText: {
+    color: "#1a0a00",
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 12,
   },
 });

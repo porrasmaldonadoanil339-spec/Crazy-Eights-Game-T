@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, Dimensions, Modal,
+  View, Text, StyleSheet, Pressable, Platform, Dimensions, Modal, FlatList, ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,11 +10,66 @@ import { Colors, LightColors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
 import { getRankInfo, RANKS, RANK_COLORS } from "@/lib/ranked";
-import { getRandomCpuProfile } from "@/lib/cpuProfiles";
 import { getCurrentSeason, getSeasonRewardsForRank } from "@/lib/seasons";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 const { width } = Dimensions.get("window");
+
+// Pseudo-random generator seeded
+function seededRand(seed: number): number {
+  let x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+const FIRST_NAMES = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Jamie", "Quinn", "Avery", "Peyton", "Skyler", "Charlie", "Sacha", "Robin", "René", "Mika", "Dani", "Chris", "Pat", "Terry"];
+const LAST_NAMES = ["Ace", "King", "Queen", "Joker", "Card", "Pro", "Star", "Wolf", "Dragon", "Shadow", "Blade", "Flash", "Zen", "Neo", "Max", "Rex", "Bolt", "Titan", "Alpha", "Omega"];
+const SUFFIXES = ["99", "Pro", "X", "_", "77", "Killer", "Master", "Elite", "Legend", "123", "007", "Ace", "Winner", "King"];
+
+const AVATAR_ICONS = ["cut", "sparkles", "flame", "shield", "book", "sunny", "trophy", "hardware-chip", "bag", "moon", "heart", "eye-off", "skull", "star", "game-controller", "happy", "bonfire", "diamond", "ribbon", "paw"];
+const AVATAR_COLORS = ["#E74C3C", "#9B59B6", "#E67E22", "#95A5A6", "#4A90D9", "#D4AF37", "#C0392B", "#00D4FF", "#8B7355", "#1a0020", "#E91E8C", "#2C3E50"];
+
+function generatePlayer(index: number) {
+  const seed = index + 12345;
+  const firstName = FIRST_NAMES[Math.floor(seededRand(seed * 1) * FIRST_NAMES.length)];
+  const lastName = LAST_NAMES[Math.floor(seededRand(seed * 2) * LAST_NAMES.length)];
+  const suffix = seededRand(seed * 3) > 0.6 ? SUFFIXES[Math.floor(seededRand(seed * 4) * SUFFIXES.length)] : "";
+  const name = `${firstName}${lastName}${suffix}`;
+
+  const avatarIcon = AVATAR_ICONS[Math.floor(seededRand(seed * 5) * AVATAR_ICONS.length)];
+  const avatarColor = AVATAR_COLORS[Math.floor(seededRand(seed * 6) * AVATAR_COLORS.length)];
+  
+  // Rank distribution
+  let rankIdx = 0;
+  let level = 1;
+  if (index < 10) {
+    rankIdx = seededRand(seed * 7) > 0.5 ? 11 : 10; // Divino or Legendario
+    level = Math.floor(seededRand(seed * 8) * 50) + 150;
+  } else if (index < 100) {
+    rankIdx = Math.floor(seededRand(seed * 7) * 3) + 8; // Maestro, GM, Legendario
+    level = Math.floor(seededRand(seed * 8) * 50) + 100;
+  } else if (index < 1000) {
+    rankIdx = Math.floor(seededRand(seed * 7) * 4) + 5; // Diamante to Maestro
+    level = Math.floor(seededRand(seed * 8) * 60) + 40;
+  } else if (index < 5000) {
+    rankIdx = Math.floor(seededRand(seed * 7) * 4) + 2; // Plata to Diamante
+    level = Math.floor(seededRand(seed * 8) * 40) + 10;
+  } else {
+    rankIdx = Math.floor(seededRand(seed * 7) * 3); // Hierro to Plata
+    level = Math.floor(seededRand(seed * 8) * 20) + 1;
+  }
+
+  return {
+    id: `global_${index}`,
+    name,
+    avatarIcon,
+    avatarColor,
+    rank: rankIdx,
+    division: Math.floor(seededRand(seed * 9) * 5),
+    stars: Math.floor(seededRand(seed * 10) * 5) + 1,
+    level,
+    position: index + 1,
+  };
+}
 
 export default function RankedScreen() {
   const insets = useSafeAreaInsets();
@@ -25,28 +80,22 @@ export default function RankedScreen() {
   const rankInfo = useMemo(() => getRankInfo(profile.rankedProfile), [profile.rankedProfile]);
   const season = useMemo(() => getCurrentSeason(), []);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
+  
+  const [visibleCount, setVisibleCount] = useState(50);
+  const totalPlayers = 10000;
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
 
-  // Simulate top 50 global ranking with CPU profiles
-  const globalRanking = useMemo(() => {
-    return Array.from({ length: 50 }).map((_, i) => {
-      const cpu = getRandomCpuProfile(i + 100);
-      const rankIdx = Math.max(0, 11 - Math.floor(i / 4));
-      const divisionIdx = 4 - (i % 5);
-      return {
-        id: `global_${i}`,
-        name: cpu.name,
-        avatarIcon: cpu.avatarIcon,
-        avatarColor: cpu.avatarColor,
-        rank: rankIdx,
-        division: divisionIdx,
-        stars: 3,
-        level: cpu.level,
-      };
-    });
-  }, []);
+  const visiblePlayers = useMemo(() => {
+    return Array.from({ length: Math.min(visibleCount, totalPlayers) }).map((_, i) => generatePlayer(i));
+  }, [visibleCount]);
+
+  const loadMore = useCallback(() => {
+    if (visibleCount < totalPlayers) {
+      setVisibleCount(prev => Math.min(prev + 50, totalPlayers));
+    }
+  }, [visibleCount]);
 
   const renderStars = (current: number, max: number, size = 24) => {
     return (
@@ -66,6 +115,136 @@ export default function RankedScreen() {
 
   const nextRankProgress = (profile.rankedProfile.stars / profile.rankedProfile.maxStars) * 100;
 
+  const renderItem = ({ item, index }: { item: any; index: number }) => (
+    <View key={item.id} style={[styles.rankingItem, { backgroundColor: themeColors.surface }]}>
+      <View style={styles.rankingPlace}>
+        {index < 3 ? (
+          <Ionicons name="medal" size={24} color={index === 0 ? "#D4AF37" : index === 1 ? "#C0C0C0" : "#CD7F32"} />
+        ) : (
+          <Text style={[styles.rankNumber, { color: themeColors.textMuted }]}>
+            #{item.position}
+          </Text>
+        )}
+      </View>
+      
+      <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>
+        <Ionicons name={item.avatarIcon as any} size={16} color="#fff" />
+      </View>
+      
+      <View style={styles.rankingInfo}>
+        <Text style={[styles.rankingName, { color: themeColors.text }]}>{item.name}</Text>
+        <View style={styles.rankingMetaRow}>
+          <Text style={[styles.rankingMeta, { color: themeColors.textMuted }]}>
+            {T(`rank${RANKS[item.rank]}` as any)} {item.division + 1}
+          </Text>
+        </View>
+      </View>
+      
+      <View style={styles.rankBadgeSmall}>
+         <Ionicons name="trophy" size={14} color={RANK_COLORS[item.rank]} />
+         <Text style={[styles.rankBadgeTextSmall, { color: RANK_COLORS[item.rank] }]}>{item.level}</Text>
+      </View>
+    </View>
+  );
+
+  const Header = () => (
+    <>
+      {/* Header / Back */}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={28} color={themeColors.text} />
+        </Pressable>
+        <Text style={[styles.headerTitle, { color: themeColors.text }]}>{T("rankedMode")}</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      {/* Season Banner */}
+      <View style={styles.seasonBanner}>
+        <LinearGradient
+          colors={["#D4AF37", "#B8860B"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.seasonBadge}
+        >
+          <Text style={styles.seasonTitle}>TEMPORADA {season.number}: {season.name.toUpperCase()}</Text>
+        </LinearGradient>
+        <View style={styles.seasonMeta}>
+          <View style={styles.timerRow}>
+            <Ionicons name="time-outline" size={16} color={themeColors.textMuted} />
+            <Text style={[styles.timerText, { color: themeColors.textMuted }]}>
+              {season.daysRemaining} {T("daysRemaining") || "días restantes"}
+            </Text>
+          </View>
+          <Pressable onPress={() => setShowRewardsModal(true)} style={styles.rewardsLink}>
+            <Text style={styles.rewardsLinkText}>{T("viewRewards") || "Ver recompensas"}</Text>
+            <Ionicons name="chevron-forward" size={14} color="#D4AF37" />
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Current Rank Card */}
+      <View style={[styles.rankCard, { backgroundColor: themeColors.card, borderColor: "#D4AF37", borderWidth: 2 }]}>
+        <LinearGradient
+          colors={[rankInfo.color + "33", "transparent"]}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        />
+        
+        <View style={styles.rankCardTop}>
+          <View style={styles.playerAvatarContainer}>
+            <AvatarDisplay
+              avatarId={profile.avatarId}
+              frameId={profile.selectedFrameId}
+              photoUri={profile.photoUri}
+              size={80}
+            />
+          </View>
+          <View style={styles.rankBadgeContainer}>
+            <View style={[styles.rankIconCircle, { backgroundColor: rankInfo.color + "22", borderColor: rankInfo.color }]}>
+              <Ionicons name="trophy" size={50} color={rankInfo.color} />
+            </View>
+          </View>
+        </View>
+
+        <Text style={[styles.rankName, { color: rankInfo.color }]}>
+          {(T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName).toUpperCase()} {profile.rankedProfile.division + 1}
+        </Text>
+        
+        {renderStars(profile.rankedProfile.stars, profile.rankedProfile.maxStars, 28)}
+        
+        <View style={styles.progressContainer}>
+          <View style={[styles.progressBarBg, { backgroundColor: themeColors.surface }]}>
+            <View style={[styles.progressBarFill, { width: `${nextRankProgress}%`, backgroundColor: rankInfo.color }]} />
+          </View>
+          <Text style={[styles.progressText, { color: themeColors.textMuted }]}>
+            {profile.rankedProfile.stars} / {profile.rankedProfile.maxStars} {T("stars") || "estrellas"}
+          </Text>
+        </View>
+        
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={[styles.statValue, { color: themeColors.text }]}>{profile.rankedProfile.totalWins}</Text>
+            <Text style={[styles.statLabel, { color: themeColors.textMuted }]}>{T("wins").toUpperCase()}</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={[styles.statValue, { color: themeColors.text }]}>{profile.rankedProfile.totalLosses}</Text>
+            <Text style={[styles.statLabel, { color: themeColors.textMuted }]}>{T("losses").toUpperCase()}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Global Ranking Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Ionicons name="globe-outline" size={20} color={themeColors.text} />
+          <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{T("globalRanking")}</Text>
+        </View>
+      </View>
+    </>
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <LinearGradient
@@ -73,146 +252,36 @@ export default function RankedScreen() {
         style={StyleSheet.absoluteFill}
       />
       
-      <ScrollView
+      <FlatList
+        data={visiblePlayers}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
         contentContainerStyle={{ paddingTop: topPad + 10, paddingBottom: botPad + 100 }}
         showsVerticalScrollIndicator={false}
-      >
-        {/* Header / Back */}
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={28} color={themeColors.text} />
-          </Pressable>
-          <Text style={[styles.headerTitle, { color: themeColors.text }]}>{T("rankedMode")}</Text>
-          <View style={{ width: 40 }} />
-        </View>
-
-        {/* Season Banner */}
-        <View style={styles.seasonBanner}>
-          <LinearGradient
-            colors={["#D4AF37", "#B8860B"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.seasonBadge}
-          >
-            <Text style={styles.seasonTitle}>TEMPORADA {season.number}: {season.name.toUpperCase()}</Text>
-          </LinearGradient>
-          <View style={styles.seasonMeta}>
-            <View style={styles.timerRow}>
-              <Ionicons name="time-outline" size={16} color={themeColors.textMuted} />
-              <Text style={[styles.timerText, { color: themeColors.textMuted }]}>
-                {season.daysRemaining} {T("daysRemaining") || "días restantes"}
-              </Text>
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListHeaderComponent={Header}
+        ListFooterComponent={
+          visibleCount < totalPlayers ? (
+            <View style={{ padding: 20, alignItems: "center" }}>
+              <ActivityIndicator color={themeColors.primary} />
             </View>
-            <Pressable onPress={() => setShowRewardsModal(true)} style={styles.rewardsLink}>
-              <Text style={styles.rewardsLinkText}>{T("viewRewards") || "Ver recompensas"}</Text>
-              <Ionicons name="chevron-forward" size={14} color="#D4AF37" />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Current Rank Card */}
-        <View style={[styles.rankCard, { backgroundColor: themeColors.card, borderColor: rankInfo.color + "66" }]}>
-          <LinearGradient
-            colors={[rankInfo.color + "33", "transparent"]}
-            style={StyleSheet.absoluteFill}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-          />
-          
-          <View style={styles.rankCardTop}>
-            <View style={styles.playerAvatarContainer}>
-              <AvatarDisplay
-                avatarId={profile.avatarId}
-                frameId={profile.selectedFrameId}
-                photoUri={profile.photoUri}
-                size={80}
-              />
-            </View>
-            <View style={styles.rankBadgeContainer}>
-              <View style={[styles.rankIconCircle, { backgroundColor: rankInfo.color + "22", borderColor: rankInfo.color }]}>
-                <Ionicons name="trophy" size={50} color={rankInfo.color} />
-              </View>
-            </View>
-          </View>
-
-          <Text style={[styles.rankName, { color: rankInfo.color }]}>
-            {(T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName).toUpperCase()} {profile.rankedProfile.division + 1}
-          </Text>
-          
-          {renderStars(profile.rankedProfile.stars, profile.rankedProfile.maxStars, 28)}
-          
-          <View style={styles.progressContainer}>
-            <View style={[styles.progressBarBg, { backgroundColor: themeColors.surface }]}>
-              <View style={[styles.progressBarFill, { width: `${nextRankProgress}%`, backgroundColor: rankInfo.color }]} />
-            </View>
-            <Text style={[styles.progressText, { color: themeColors.textMuted }]}>
-              {profile.rankedProfile.stars} / {profile.rankedProfile.maxStars} {T("stars") || "estrellas"}
-            </Text>
-          </View>
-          
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: themeColors.text }]}>{profile.rankedProfile.totalWins}</Text>
-              <Text style={[styles.statLabel, { color: themeColors.textMuted }]}>{T("wins").toUpperCase()}</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: themeColors.text }]}>{profile.rankedProfile.totalLosses}</Text>
-              <Text style={[styles.statLabel, { color: themeColors.textMuted }]}>{T("losses").toUpperCase()}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Global Ranking Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="globe-outline" size={20} color={themeColors.text} />
-            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{T("globalRanking")}</Text>
-          </View>
-          {globalRanking.map((item, index) => (
-            <View key={item.id} style={[styles.rankingItem, { backgroundColor: themeColors.surface }]}>
-              <View style={styles.rankingPlace}>
-                {index < 3 ? (
-                  <Ionicons name="medal" size={24} color={index === 0 ? "#FFD700" : index === 1 ? "#C0C0C0" : "#CD7F32"} />
-                ) : (
-                  <Text style={[styles.rankNumber, { color: themeColors.textMuted }]}>
-                    #{index + 1}
-                  </Text>
-                )}
-              </View>
-              
-              <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>
-                <Ionicons name={item.avatarIcon as any} size={16} color="#fff" />
-              </View>
-              
-              <View style={styles.rankingInfo}>
-                <Text style={[styles.rankingName, { color: themeColors.text }]}>{item.name}</Text>
-                <View style={styles.rankingMetaRow}>
-                  <Text style={[styles.rankingMeta, { color: themeColors.textMuted }]}>
-                    {T(`rank${RANKS[item.rank]}` as any)} {item.division + 1}
-                  </Text>
-                </View>
-              </View>
-              
-              <View style={styles.rankBadgeSmall}>
-                 <Ionicons name="trophy" size={14} color={RANK_COLORS[item.rank]} />
-                 <Text style={[styles.rankBadgeTextSmall, { color: RANK_COLORS[item.rank] }]}>{item.level}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+          ) : null
+        }
+      />
 
       {/* Rewards Modal */}
       <Modal visible={showRewardsModal} transparent animationType="fade" onRequestClose={() => setShowRewardsModal(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowRewardsModal(false)}>
           <View style={[styles.modalContent, { backgroundColor: themeColors.card }]}>
             <Text style={[styles.modalTitle, { color: themeColors.text }]}>{T("seasonRewards") || "Recompensas de Temporada"}</Text>
-            <ScrollView style={styles.rewardsList}>
-              {RANKS.slice(0, 7).map((rank, idx) => {
+            <FlatList
+              data={RANKS.slice(0, 7)}
+              keyExtractor={item => item}
+              renderItem={({ item: rank, index: idx }) => {
                 const reward = getSeasonRewardsForRank(idx);
                 return (
-                  <View key={rank} style={styles.rewardItem}>
+                  <View style={styles.rewardItem}>
                     <View style={[styles.rewardRankIcon, { backgroundColor: RANK_COLORS[idx] + "22" }]}>
                       <Ionicons name="trophy" size={20} color={RANK_COLORS[idx]} />
                     </View>
@@ -224,8 +293,9 @@ export default function RankedScreen() {
                     </View>
                   </View>
                 );
-              })}
-            </ScrollView>
+              }}
+              style={styles.rewardsList}
+            />
             <Pressable onPress={() => setShowRewardsModal(false)} style={styles.closeModalBtn}>
               <Text style={styles.closeModalBtnText}>{T("close") || "Cerrar"}</Text>
             </Pressable>

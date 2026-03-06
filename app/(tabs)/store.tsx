@@ -34,6 +34,8 @@ function useRarityLabel() {
 
   const CATEGORIES: { id: StoreItemCategory; icon: string; count: number }[] = [
     { id: "card_back", icon: "card",          count: STORE_ITEMS.filter(i => i.category === "card_back").length },
+    { id: "card_design", icon: "layers",      count: STORE_ITEMS.filter(i => i.category === "card_design").length },
+    { id: "table_design", icon: "square",      count: STORE_ITEMS.filter(i => i.category === "table_design").length },
     { id: "avatar",    icon: "person-circle", count: STORE_ITEMS.filter(i => i.category === "avatar").length },
     { id: "frame",     icon: "ellipse",       count: STORE_ITEMS.filter(i => i.category === "frame").length },
     { id: "title",     icon: "ribbon",        count: STORE_ITEMS.filter(i => i.category === "title").length },
@@ -109,6 +111,10 @@ function InfoModal({
     previewText = T("profileInfoPreview") ?? "Personaliza tu perfil con este item.";
   } else if (item.category === "card_back") {
     previewText = T("cardBackInfoPreview") ?? "Cambia el diseño del dorso de tus cartas.";
+  } else if (item.category === "card_design") {
+    previewText = T("cardDesignInfoPreview") ?? "Cambia el diseño frontal de tus cartas.";
+  } else if (item.category === "table_design") {
+    previewText = T("tableDesignInfoPreview") ?? "Cambia el diseño de la mesa de juego.";
   } else if (item.category === "title") {
     previewText = T("titleInfoPreview") ?? "Se muestra bajo tu nombre en el perfil.";
   }
@@ -251,7 +257,7 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
         <View style={[styles.rarityBadgeSmall]}>
           <Text style={[styles.rarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
         </View>
-        {item.category === "card_back" ? (
+        {item.category === "card_back" || item.category === "card_design" ? (
           <LinearGradient
             colors={(item.backColors ?? [item.previewColor, item.previewColor + "88"]) as [string, string]}
             style={styles.cardPreview}
@@ -259,6 +265,10 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
             <Text style={[styles.cardPreviewDot, { color: item.backAccent ?? Colors.gold }]}>◆</Text>
             <Text style={[styles.cardPreviewDot2, { color: item.backAccent ?? Colors.gold, opacity: 0.3 }]}>◆</Text>
           </LinearGradient>
+        ) : item.category === "table_design" ? (
+          <View style={[styles.cardPreview, { backgroundColor: item.backColors?.[0] ?? item.previewColor, borderRadius: 4 }]}>
+             <View style={{ flex: 1, margin: 4, borderWidth: 1, borderColor: (item.backColors?.[1] ?? item.previewColor) + "44", borderRadius: 2 }} />
+          </View>
         ) : item.category === "frame" ? (
           <View style={styles.framePreviewWrap}>
             <View style={[styles.frameCircleOuter, { borderColor: (item.backColors?.[0] ?? item.previewColor) }]}>
@@ -363,7 +373,7 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, onPress, onToggle, 
 
 export default function StoreScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, buyItem, updateCardBack, updateAvatar, updateTitle, updateFrame, updateEffect, updateEquippedEmotes } = useProfile();
+  const { profile, buyItem, updateCardBack, updateCardDesign, updateTableDesign, updateAvatar, updateTitle, updateFrame, updateEffect, updateEquippedEmotes } = useProfile();
   const [category, setCategory] = useState<StoreItemCategory>("card_back");
   const [confirmItem, setConfirmItem] = useState<StoreItem | null>(null);
   const [infoItem, setInfoItem] = useState<StoreItem | null>(null);
@@ -391,6 +401,8 @@ export default function StoreScreen() {
 
   const CATEGORY_LABELS: Record<StoreItemCategory, string> = {
     card_back: T("categoryCardBacks"),
+    card_design: T("categoryCardDesigns"),
+    table_design: T("categoryTableDesigns"),
     avatar: T("categoryAvatars"),
     frame: T("categoryFrames"),
     title: T("categoryTitles"),
@@ -405,6 +417,8 @@ export default function StoreScreen() {
 
   function getEquippedId(cat: StoreItemCategory): string {
     if (cat === "card_back") return profile.cardBackId ?? "back_default";
+    if (cat === "card_design") return profile.cardDesignId ?? "face_default";
+    if (cat === "table_design") return profile.tableDesignId ?? "table_casino";
     if (cat === "avatar") return profile.avatarId ?? "avatar_knight";
     if (cat === "title") return profile.titleId ?? "title_novice";
     if (cat === "frame") return profile.selectedFrameId ?? "frame_gold";
@@ -415,6 +429,8 @@ export default function StoreScreen() {
   function equipItem(item: StoreItem) {
     playSound("equip").catch(() => {});
     if (item.category === "card_back") updateCardBack(item.id);
+    else if (item.category === "card_design") updateCardDesign(item.id);
+    else if (item.category === "table_design") updateTableDesign(item.id);
     else if (item.category === "avatar") updateAvatar(item.id);
     else if (item.category === "title") updateTitle(item.id);
     else if (item.category === "frame") updateFrame(item.id);
@@ -452,6 +468,8 @@ export default function StoreScreen() {
     if (success) {
       await playSound("purchase");
       if (confirmItem.category === "card_back") updateCardBack(confirmItem.id);
+      if (confirmItem.category === "card_design") updateCardDesign(confirmItem.id);
+      if (confirmItem.category === "table_design") updateTableDesign(confirmItem.id);
       if (confirmItem.category === "avatar") updateAvatar(confirmItem.id);
       if (confirmItem.category === "title") updateTitle(confirmItem.id);
       if (confirmItem.category === "frame") updateFrame(confirmItem.id);

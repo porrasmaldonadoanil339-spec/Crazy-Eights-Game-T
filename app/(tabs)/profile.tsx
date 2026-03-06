@@ -178,7 +178,7 @@ function AvatarPickerModal({
       <Pressable style={styles.modalBg} onPress={onClose}>
         <View style={styles.pickerModal}>
           <View style={styles.pickerHeader}>
-            <Text style={styles.pickerTitle}>Elegir Avatar</Text>
+            <Text style={styles.pickerTitle}>{T("changeAvatar") || "Elegir Avatar"}</Text>
             <Pressable onPress={onClose}><Ionicons name="close" size={22} color={Colors.textMuted} /></Pressable>
           </View>
 
@@ -186,21 +186,21 @@ function AvatarPickerModal({
           <View style={styles.photoRow}>
             <Pressable style={styles.photoBtn} onPress={onTakePhoto}>
               <Ionicons name="camera" size={20} color={Colors.gold} />
-              <Text style={styles.photoBtnText}>Cámara</Text>
+              <Text style={styles.photoBtnText}>{T("takePhoto") || "Cámara"}</Text>
             </Pressable>
             <Pressable style={styles.photoBtn} onPress={onPickPhoto}>
               <Ionicons name="images" size={20} color={Colors.gold} />
-              <Text style={styles.photoBtnText}>Galería</Text>
+              <Text style={styles.photoBtnText}>{T("gallery") || "Galería"}</Text>
             </Pressable>
             {photoUri ? (
               <Pressable style={[styles.photoBtn, styles.photoBtnDanger]} onPress={onClearPhoto}>
                 <Ionicons name="trash" size={20} color="#E74C3C" />
-                <Text style={[styles.photoBtnText, { color: "#E74C3C" }]}>Quitar foto</Text>
+                <Text style={[styles.photoBtnText, { color: "#E74C3C" }]}>{T("removePhoto") || "Quitar foto"}</Text>
               </Pressable>
             ) : null}
           </View>
 
-          <Text style={styles.orDivider}>— o elige un avatar —</Text>
+          <Text style={styles.orDivider}>— {T("orChooseAvatar") || "o elige un avatar"} —</Text>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.avatarRow}>
             {AVATARS.map((item) => {
@@ -238,7 +238,7 @@ function FramePickerModal({
       <Pressable style={styles.modalBg} onPress={onClose}>
         <View style={styles.pickerModal}>
           <View style={styles.pickerHeader}>
-            <Text style={styles.pickerTitle}>Marco de Avatar</Text>
+            <Text style={styles.pickerTitle}>{T("changeFrame") || "Marco de Avatar"}</Text>
             <Pressable onPress={onClose}><Ionicons name="close" size={22} color={Colors.textMuted} /></Pressable>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.avatarRow}>
@@ -475,7 +475,7 @@ export default function ProfileScreen() {
             <Pressable onPress={() => setShowFramePicker(true)} style={styles.frameBadge}>
               <Ionicons name="ellipse" size={10} color={frameItem?.previewColor ?? Colors.gold} />
               <Text style={[styles.frameBadgeText, { color: frameItem?.previewColor ?? Colors.gold }]}>
-                {frameItem?.name ?? "Marco"}
+                {frameItem?.name ?? T("noFrame")}
               </Text>
             </Pressable>
           </View>
@@ -502,7 +502,7 @@ export default function ProfileScreen() {
 
             <View style={styles.badgeRow}>
               <Pressable onPress={() => setShowTitlePicker(true)} style={[styles.titleBadge, { backgroundColor: themeGold + "22", borderColor: themeGold + "44" }]}>
-                <Text style={[styles.titleText, { color: themeGold }]}>{titleItem?.name ?? "Novato"}</Text>
+                <Text style={[styles.titleText, { color: themeGold }]}>{titleItem?.name ?? T("noTitle")}</Text>
                 <Ionicons name="chevron-down" size={12} color={themeGold} />
               </Pressable>
 
@@ -536,13 +536,13 @@ export default function ProfileScreen() {
           <View style={[styles.resourceCard, { backgroundColor: surfaceColor, borderColor: isDark ? Colors.border : "#aacfa0" }]}>
             <Ionicons name="star" size={20} color={themeGold} />
             <Text style={[styles.resourceVal, { color: themeGold }]}>{profile.totalXp}</Text>
-            <Text style={[styles.resourceLbl, { color: textMuted }]}>XP Total</Text>
+            <Text style={[styles.resourceLbl, { color: textMuted }]}>XP {T("total") || "Total"}</Text>
           </View>
           <View style={[styles.resourceCard, { backgroundColor: surfaceColor, borderColor: isDark ? Colors.border : "#aacfa0" }]}>
             <View style={[styles.miniCard, { backgroundColor: cardBackItem?.previewColor ?? "#1A3A6A" }]}>
               <Text style={{ color: Colors.gold, fontSize: 10 }}>◆</Text>
             </View>
-            <Text style={[styles.resourceVal, { color: themeGold, fontSize: 12 }]} numberOfLines={1}>{cardBackItem?.name ?? "Clásico"}</Text>
+            <Text style={[styles.resourceVal, { color: themeGold, fontSize: 12 }]} numberOfLines={1}>{cardBackItem?.name ?? T("default")}</Text>
             <Text style={[styles.resourceLbl, { color: textMuted }]}>{T("cardBackLabel")}</Text>
           </View>
         </View>
@@ -559,7 +559,7 @@ export default function ProfileScreen() {
           <View style={[styles.friendsBtnIcon, { backgroundColor: Colors.gold + "22" }]}>
             <Ionicons name="people" size={18} color={themeGold} />
           </View>
-          <Text style={[styles.friendsBtnLabel, { color: textColor }]}>Amigos</Text>
+          <Text style={[styles.friendsBtnLabel, { color: textColor }]}>{T("friends")}</Text>
           <Ionicons name="chevron-forward" size={16} color={textMuted} />
         </Pressable>
 
@@ -574,7 +574,7 @@ export default function ProfileScreen() {
                 {user.username}
               </Text>
               <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: textMuted }}>
-                {lang === "en" ? "Linked account" : lang === "pt" ? "Conta vinculada" : "Cuenta vinculada"}
+                {T("connectedWith") || "Cuenta vinculada"}
               </Text>
             </View>
             <Pressable
@@ -582,7 +582,7 @@ export default function ProfileScreen() {
               style={{ backgroundColor: "#E74C3C22", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 }}
             >
               <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: "#E74C3C" }}>
-                {lang === "en" ? "Logout" : lang === "pt" ? "Sair" : "Salir"}
+                {T("signOut") || "Salir"}
               </Text>
             </Pressable>
           </View>
@@ -600,10 +600,10 @@ export default function ProfileScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.friendsBtnLabel, { color: textColor }]}>
-                {lang === "en" ? "Link Account" : lang === "pt" ? "Vincular Conta" : "Vincular Cuenta"}
+                {T("connectAccount") || "Vincular Cuenta"}
               </Text>
               <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: textMuted }}>
-                {lang === "en" ? "Google / Facebook / Email" : lang === "pt" ? "Google / Facebook / Email" : "Google / Facebook / Email"}
+                Google / Facebook / Email
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={textMuted} />
@@ -611,7 +611,7 @@ export default function ProfileScreen() {
         )}
 
         {/* Stats */}
-        <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("generalStats")}</Text>
+        <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("statistics") || "ESTADÍSTICAS"}</Text>
         <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}>
           <StatRow label={T("gamesPlayed")} value={profile.stats.totalGames} textColor={textColor} textMuted={textMuted} />
           <StatRow label={T("wins")} value={profile.stats.totalWins} textColor={textColor} textMuted={textMuted} />
@@ -641,7 +641,8 @@ export default function ProfileScreen() {
                 <View style={[styles.modeIconSm, { backgroundColor: mode.color + "33" }]}>
                   <Ionicons name={mode.icon as any} size={14} color={mode.color} />
                 </View>
-                <Text style={[styles.modeStatName, { color: textMuted }]}>{mode.name}</Text>
+                <Text style={[styles.modeStatName, { color: textMuted }]}>{T(`mode${mode.id.charAt(0).toUpperCase() + mode.id.slice(1)}` as any) || mode.name}</Text>
+                <Text style={[styles.modeStatName, { color: textMuted, flex: 0, marginLeft: 8 }]}>LVL {profile.stats.levelByMode?.[mode.id] ?? 1}</Text>
                 <Text style={[styles.modeStatVal, { color: themeGold }]}>{wins}/{games}</Text>
               </View>
             );

@@ -78,6 +78,8 @@ export interface PlayerProfile {
   avatarId: string;
   titleId: string;
   cardBackId: string;
+  cardDesignId: string;
+  tableDesignId: string;
   selectedFrameId: string;
   photoUri: string;
   selectedEffect: string;
@@ -139,6 +141,8 @@ const DEFAULT_PROFILE: PlayerProfile = {
   avatarId: "avatar_knight",
   titleId: "title_novice",
   cardBackId: "back_default",
+  cardDesignId: "face_default",
+  tableDesignId: "table_casino",
   selectedFrameId: "frame_gold",
   photoUri: "",
   selectedEffect: "none",
@@ -176,6 +180,8 @@ interface ProfileContextValue {
   updateAvatar: (avatarId: string) => void;
   updateTitle: (titleId: string) => void;
   updateCardBack: (cardBackId: string) => void;
+  updateCardDesign: (cardDesignId: string) => void;
+  updateTableDesign: (tableDesignId: string) => void;
   updateFrame: (frameId: string) => void;
   updateEffect: (effectId: string) => void;
   updatePhotoUri: (uri: string) => void;
@@ -244,6 +250,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             dailyRewardIndex: saved.dailyRewardIndex ?? 0,
             musicEnabled: saved.musicEnabled ?? true,
             sfxEnabled: saved.sfxEnabled ?? true,
+            cardDesignId: saved.cardDesignId ?? "face_default",
+            tableDesignId: saved.tableDesignId ?? "table_casino",
             selectedFrameId: saved.selectedFrameId ?? "frame_gold",
             photoUri: saved.photoUri ?? "",
             country: saved.country ?? "CO",
@@ -287,6 +295,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const updateCardBack = useCallback((cardBackId: string) => {
     update((p) => ({ ...p, cardBackId }));
+  }, [update]);
+
+  const updateCardDesign = useCallback((cardDesignId: string) => {
+    update((p) => ({ ...p, cardDesignId }));
+  }, [update]);
+
+  const updateTableDesign = useCallback((tableDesignId: string) => {
+    update((p) => ({ ...p, tableDesignId }));
   }, [update]);
 
   const updateFrame = useCallback((frameId: string) => {
@@ -579,6 +595,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         updateAvatar,
         updateTitle,
         updateCardBack,
+        updateCardDesign,
+        updateTableDesign,
         updateFrame,
         updateEffect,
         updatePhotoUri,
