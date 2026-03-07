@@ -570,7 +570,10 @@ export function suitSymbol(suit: Suit): string {
 }
 
 export function suitColor(suit: Suit): string {
-  return suit === "hearts" || suit === "diamonds" ? "#C0392B" : "#111111";
+  if (suit === "hearts")   return "#E53935"; // vivid red
+  if (suit === "diamonds") return "#E53935"; // vivid red
+  if (suit === "clubs")    return "#1A1A2E"; // deep navy-black
+  return "#1A1A2E"; // spades: deep navy-black
 }
 
 export function rankLabel(rank: Rank): string {

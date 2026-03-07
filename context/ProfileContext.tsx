@@ -261,10 +261,29 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const saved = JSON.parse(raw) as PlayerProfile;
+          // Merge saved ranked profile, ensuring all required fields exist
+          const savedRanked = saved.rankedProfile ?? {};
+          const mergedRanked: RankedProfile = {
+            ...DEFAULT_PROFILE.rankedProfile,
+            ...savedRanked,
+            // Clamp to valid ranges
+            rank: Math.max(0, Math.min(11, savedRanked.rank ?? 0)),
+            division: Math.max(0, Math.min(4, savedRanked.division ?? 0)),
+            stars: Math.max(0, savedRanked.stars ?? 0),
+            maxStars: savedRanked.maxStars ?? 5,
+            totalWins: savedRanked.totalWins ?? 0,
+            totalLosses: savedRanked.totalLosses ?? 0,
+          };
+          // Migration: fresh players (no wins/losses, no stars) always start at Hierro V (division 0)
+          if (mergedRanked.totalWins === 0 && mergedRanked.totalLosses === 0 && mergedRanked.stars === 0 && mergedRanked.rank === 0) {
+            mergedRanked.division = 0;
+          }
+
           const merged: PlayerProfile = {
             ...DEFAULT_PROFILE,
             ...saved,
             stats: { ...DEFAULT_STATS, ...saved.stats },
+            rankedProfile: mergedRanked,
             achievementProgress: ACHIEVEMENTS.map((a) => {
               const existing = saved.achievementProgress?.find((p) => p.id === a.id);
               return existing ?? { id: a.id, progress: 0, unlocked: false, claimedReward: false };

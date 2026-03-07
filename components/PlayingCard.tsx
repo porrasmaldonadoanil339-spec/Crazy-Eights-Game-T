@@ -87,13 +87,31 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
     );
   }
 
+  // Clean white face for default; tinted if custom design
   const faceGradient: [string, string, string] = customBg
     ? isDarkCard
-      ? [customBg, (customSuitColor ?? "#FFFFFF") + "18", customBg]
+      ? [customBg, (customSuitColor ?? "#FFFFFF") + "22", customBg]
       : [customBg, customBg, customBg]
     : isFace
-      ? ["#FFF8F0", "#F5EDDA", "#EDE0C4"]
-      : ["#FEFDF4", "#F8F4E6", "#EEE8D0"];
+      ? ["#FFFFFF", "#F8F8FF", "#F5F5FF"]
+      : ["#FFFFFF", "#FAFAFA", "#F5F5F5"];
+
+  // On light cards, add strong drop shadow to rank text so it pops
+  const rankShadow = isDarkCard
+    ? { textShadowColor: "rgba(0,0,0,0.95)", textShadowRadius: 5, textShadowOffset: { width: 0, height: 1 } }
+    : { textShadowColor: "rgba(0,0,0,0.08)", textShadowRadius: 1, textShadowOffset: { width: 0, height: 1 } };
+
+  const suitShadow = isDarkCard
+    ? { textShadowColor: "rgba(0,0,0,0.9)", textShadowRadius: 4, textShadowOffset: { width: 0, height: 1 } }
+    : {};
+
+  // Card border: crisp thin outline for clean look
+  const cardBorderColor = isEight
+    ? (cardColors?.[2] ?? color) + "cc"
+    : isFace
+      ? color + "40"
+      : color + "22";
+  const cardBorderWidth = isEight ? 2 : 1;
 
   return (
     <LinearGradient
@@ -101,43 +119,46 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
       start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
       style={[styles.cardFace, {
         borderRadius: sobj.corner,
-        borderColor: isEight ? (cardColors?.[2] ?? Colors.gold) + "bb" : isFace ? color + "33" : "rgba(0,0,0,0.1)",
-        borderWidth: isEight || isFace ? 1.5 : 1,
+        borderColor: cardBorderColor,
+        borderWidth: cardBorderWidth,
       }]}
     >
+      {/* Top-left corner: rank + suit */}
       <View style={styles.cornerTL}>
-        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: rankTextColor, fontWeight: "900", textShadowColor: isDarkCard ? "rgba(0,0,0,0.95)" : "rgba(255,255,255,0.3)", textShadowRadius: isDarkCard ? 4 : 1, textShadowOffset: { width: 0, height: 1 } }]}>{rankDisplay}</Text>
-        <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color, textShadowColor: isDarkCard ? "rgba(0,0,0,0.9)" : "transparent", textShadowRadius: isDarkCard ? 3 : 0, textShadowOffset: { width: 0, height: 1 } }]}>{sym}</Text>
+        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: rankTextColor, fontWeight: "900" }, rankShadow]}>{rankDisplay}</Text>
+        <Text style={[styles.suitTxt, { fontSize: sobj.rs, color }, suitShadow]}>{sym}</Text>
       </View>
 
+      {/* Center */}
       <View style={styles.cardCenterArea}>
         {isEight ? (
           <>
             <LinearGradient
-              colors={[color, color + "cc"]}
-              style={[styles.eightBadge, { width: sobj.ss + 12, height: sobj.ss + 12, borderRadius: (sobj.ss + 12) / 2 }]}
+              colors={[color, isDarkCard ? color + "bb" : color + "dd"]}
+              style={[styles.eightBadge, { width: sobj.ss + 14, height: sobj.ss + 14, borderRadius: (sobj.ss + 14) / 2 }]}
             >
-              <Text style={[styles.eightSym, { fontSize: sobj.ss }]}>{sym}</Text>
+              <Text style={[styles.eightSym, { fontSize: sobj.ss + 2 }]}>{sym}</Text>
             </LinearGradient>
-            <Text style={[styles.eightNum, { fontSize: sobj.rs, color }]}>8</Text>
+            <Text style={[styles.eightNum, { fontSize: sobj.rs + 1, color }]}>8</Text>
           </>
         ) : isFace ? (
-          <View style={[styles.faceBadge, { borderColor: color + "44", backgroundColor: color + "08" }]}>
-            <Text style={[styles.faceRankLarge, { color: rankTextColor, fontSize: sobj.ss + 6 }]}>{rankDisplay}</Text>
-            <Text style={[styles.faceSuitSmall, { color, fontSize: sobj.rs - 2 }]}>{sym}</Text>
+          <View style={[styles.faceBadge, { borderColor: color + "55", backgroundColor: color + "0D" }]}>
+            <Text style={[styles.faceRankLarge, { color: rankTextColor, fontSize: sobj.ss + 8, fontWeight: "900" }]}>{rankDisplay}</Text>
+            <Text style={[styles.faceSuitSmall, { color, fontSize: sobj.rs }]}>{sym}</Text>
           </View>
         ) : (
-          <Text style={[styles.centerSuitText, { fontSize: sobj.ss + 6, color }]}>{sym}</Text>
+          <Text style={[styles.centerSuitText, { fontSize: sobj.ss + 8, color }]}>{sym}</Text>
         )}
       </View>
 
+      {/* Bottom-right corner (rotated) */}
       <View style={styles.cornerBR}>
-        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: rankTextColor, transform: [{ rotate: "180deg" }], fontWeight: "900", textShadowColor: isDarkCard ? "rgba(0,0,0,0.95)" : "rgba(255,255,255,0.3)", textShadowRadius: isDarkCard ? 4 : 1, textShadowOffset: { width: 0, height: 1 } }]}>{rankDisplay}</Text>
-        <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color, transform: [{ rotate: "180deg" }], textShadowColor: isDarkCard ? "rgba(0,0,0,0.9)" : "transparent", textShadowRadius: isDarkCard ? 3 : 0, textShadowOffset: { width: 0, height: 1 } }]}>{sym}</Text>
+        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: rankTextColor, transform: [{ rotate: "180deg" }], fontWeight: "900" }, rankShadow]}>{rankDisplay}</Text>
+        <Text style={[styles.suitTxt, { fontSize: sobj.rs, color, transform: [{ rotate: "180deg" }] }, suitShadow]}>{sym}</Text>
       </View>
 
       {(isEight || isFace) && (
-        <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: color + "20" }]} />
+        <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: color + "18" }]} />
       )}
     </LinearGradient>
   );
@@ -272,20 +293,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   cornerTL: {
-    position: "absolute", top: 4, left: 5,
+    position: "absolute", top: 3, left: 4,
     alignItems: "center",
   },
   cornerBR: {
-    position: "absolute", bottom: 4, right: 5,
+    position: "absolute", bottom: 3, right: 4,
     alignItems: "center",
   },
   rankTxt: {
-    lineHeight: 16,
+    lineHeight: 17,
     letterSpacing: -0.5,
+    fontWeight: "900",
   },
   suitTxt: {
-    lineHeight: 13,
-    marginTop: -1,
+    lineHeight: 14,
+    marginTop: -2,
+    fontWeight: "700",
   },
   cardCenterArea: {
     flex: 1,

@@ -1,0 +1,73 @@
+MODO COOPERATIVO 
+Quiero que modifiques la descripción y funcionamiento del Modo Cooperativo.
+El modo cooperativo debe ser 2 vs 2 con jugadores reales.
+Funcionamiento:
+•	Equipo 1: Yo + un jugador real (mi compañero).
+•	Equipo 2: Dos jugadores rivales.
+Cada equipo comparte la misma baraja de 8 cartas. Es decir, mi compañero y yo jugamos usando las mismas cartas del equipo, y los rivales también comparten su propia baraja.
+Orden de turnos:
+1.	Yo juego primero.
+2.	Luego juega mi compañero (el jugador que está arriba).
+3.	Después juega el rival de abajo.
+4.	Luego juega el otro rival.
+Así todos los jugadores participan en orden durante la partida.
+Pantalla de espera:
+En la pantalla de espera antes de empezar la partida debe mostrarse:
+•	Mi perfil junto al perfil de mi compañero (nuestro equipo).
+•	Frente a nosotros, los dos perfiles de los jugadores rivales.
+Debe verse visualmente como:
+Mi perfil + perfil de mi compañero VS los dos perfiles del equipo rival.
+Quiero que el modo Clasificatoria tenga un sistema de sala similar a Mobile Legends.
+Funcionamiento:
+1.	Cuando entro al modo Clasificatoria, aparece una sala de equipo antes de buscar partida.
+2.	En esa sala se muestra:
+•	Mi perfil.
+•	Un botón “+” al costado para invitar amigos.
+3.	Al presionar el “+”, se abre una lista de amigos donde puedo ver:
+•	Qué amigos están conectados.
+•	Cuáles están jugando una partida.
+•	Cuáles están disponibles.
+4.	Los amigos disponibles pueden aceptar la invitación y unirse a mi sala.
+5.	La sala debe permitir:
+•	Mínimo 3 jugadores para iniciar partida.
+•	Máximo 4 jugadores en total.
+6.	Cuando ya hay suficientes jugadores, se activa el botón “Buscar partida”.
+7.	El sistema empieza a buscar rivales con ranking similar para iniciar la partida clasificatoria.
+8.	En la sala deben verse los perfiles de los jugadores de mi equipo antes de comenzar la partida.
+
+MODO COOPERATIVO Quiero que el modo Cooperativo tenga un sistema de sala similar a Mobile Legends, pero adaptado al cooperativo.
+Funcionamiento:
+1.	Cuando entro al modo Cooperativo, aparece una sala de equipo antes de iniciar la partida.
+2.	En la sala se muestra:
+•	Mi perfil
+•	Un botón “+” al costado para invitar amigos.
+3.	Al presionar el botón “+”, se abre la lista de amigos donde puedo ver:
+•	Amigos en línea
+•	Amigos jugando una partida
+•	Amigos disponibles
+4.	Los amigos disponibles pueden aceptar la invitación y unirse a mi sala.
+5.	En la sala deben verse los perfiles así:
+Mi perfil + perfil de mi compañero
+VS
+2 jugadores rivales
+6.	La partida debe iniciar cuando haya:
+•	Mínimo 3 jugadores
+•	Máximo 4 jugadores
+7.	Cuando ya estén los jugadores necesarios, se activa el botón “Iniciar partida” o “Buscar partida”.
+8.	Antes de comenzar la partida debe mostrarse la pantalla de equipo con los perfiles de los jugadores:
+Mi equipo vs equipo rival.
+
+
+Quiero que el sistema de idiomas de mi juego funcione correctamente.
+Cuando el jugador cambie el idioma en la configuración, todo el juego debe cambiar completamente al nuevo idioma.
+Esto incluye:
+•	Menús
+•	Botones
+•	Descripciones de modos de juego
+•	Mensajes del sistema
+•	Notificaciones
+•	Ajustes
+•	Ranking y rangos
+•	Pantallas de carga
+•	Mensajes de victoria o derrota
+Nada debe quedarse en el idioma anterior, excepto el título del juego, que debe permanecer igual.
