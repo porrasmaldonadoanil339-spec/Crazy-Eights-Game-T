@@ -276,7 +276,7 @@ export function MatchmakingScreen({
       {/* Bottom searching status */}
       {phase === "searching" && (
         <View style={styles.searchStatus}>
-          <Text style={styles.searchStatusTxt}>Buscando en todo el mundo</Text>
+          <Text style={styles.searchStatusTxt}>{T("searchingWorld")}</Text>
           <View style={styles.searchDots}>
             {[0, 1, 2].map(i => (
               <View key={i} style={[styles.dot, { opacity: 0.3 + i * 0.3 }]} />

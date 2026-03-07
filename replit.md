@@ -33,7 +33,7 @@ No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
 - **Tournament System**: TournamentModal tracks round results with star scoring (⭐ per win), "ROUND FINAL" message on 1-1 tie, round-result messages with animated entrance.
 - **Ranked Stars**: RankedResultOverlay shown after ranked matches for promotion/demotion with star animation and descriptive messages.
 - **Login Flow**: Google/Facebook buttons open email modal (setOauthProvider); email validated with full regex; handleOAuthSubmit tries login() then register() as fallback; linkAccount() called on success.
-- **i18n**: 7 languages (ES/EN/PT/FR/DE/IT/TR). All texts connected to translation system including "Amigos" button, profile screen labels, store categories (categoryCardDesigns, categoryTableDesigns).
+- **i18n**: 22 languages fully supported. All texts connected to translation system including matchmaking UI, lobby screens, ranking screen. Missing keys fixed: `youLabel`, `searchingRival`, `rivalFound`, `myPosition`. Hardcoded Spanish strings eliminated from MatchmakingScreen.tsx and ranking.tsx.
 - **Country Picker**: Fixed modal in `app/(tabs)/profile.tsx` with maxHeight:420, proper flex layout, and ScrollView for all 60+ countries across continents.
 
 ### Backend (Express.js)

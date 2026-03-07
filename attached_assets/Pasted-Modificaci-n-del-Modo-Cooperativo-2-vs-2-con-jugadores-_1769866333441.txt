@@ -1,0 +1,125 @@
+Modificación del Modo Cooperativo (2 vs 2 con jugadores reales)
+Quiero que modifiques completamente el funcionamiento y la descripción del Modo Cooperativo.
+1. Tipo de partida
+El Modo Cooperativo debe ser 2 vs 2 con jugadores reales, no bots.
+•	Equipo 1: Yo + un jugador real (mi compañero).
+•	Equipo 2: Dos jugadores rivales reales.
+Cuando el juego encuentre partida, en la pantalla debe mostrarse claramente los dos equipos, exactamente igual a como aparecerán dentro de la partida.
+Ejemplo visual antes de iniciar la partida:
+Equipo 1
+•	Yo (jugador)
+•	Mi compañero (jugador real)
+VS
+Equipo 2
+•	Rival 1
+•	Rival 2
+Los mismos jugadores que aparecen en el emparejamiento deben verse también dentro de la partida, sin cambiar nombres ni posiciones.
+2. Sistema de barajas
+Cada equipo debe usar una sola baraja compartida de 8 cartas.
+•	Equipo 1: comparte una baraja de 8 cartas (yo y mi compañero usamos las mismas cartas).
+•	Equipo 2: comparte otra baraja de 8 cartas (los dos rivales usan esas cartas).
+Esto significa que los dos jugadores del mismo equipo utilizan exactamente las mismas cartas durante la partida.
+3. Orden de turnos
+El sistema de turnos debe ser en este orden exacto:
+1.	Yo juego primero
+2.	Luego juega mi compañero (el jugador que está arriba)
+3.	Después juega el rival de abajo
+4.	Luego juega el otro rival
+Después de eso el ciclo se repite.
+Esto asegura que los 4 jugadores participen en orden durante toda la partida.
+4. Visual dentro de la partida
+En la partida debe verse claramente:
+Arriba:
+•	Mi compañero
+•	Rival superior
+Abajo:
+•	Yo
+•	Rival inferior
+También debe verse claramente qué jugador está jugando en ese turno.
+5. Importante
+Quiero que este sistema se implemente exactamente así dentro de la jugabilidad real del modo cooperativo, no solo en la descripción.
+  Modificación del sistema de partida y emparejamiento
+Quiero que mejores el sistema de partidas para que funcione correctamente tanto en Modo Clasificatoria como en Modo Cooperativo, similar a cómo funcionan los juegos competitivos como Mobile Legends: Bang Bang o Clash Royale.
+1. Emparejamiento con amigos (Clasificatoria):
+•	Si entro solo, el juego debe buscar jugadores reales online y completar la partida automáticamente.
+•	Si invito 1 amigo, ese amigo debe aparecer en mi mismo equipo dentro de la partida. El sistema debe buscar jugadores online para completar los demás espacios.
+•	Si invito 2 amigos, todos debemos aparecer juntos en el mismo equipo, y el sistema debe rellenar automáticamente con jugadores online el resto de jugadores necesarios.
+Muy importante:
+Los jugadores que invite siempre deben salir conmigo en la partida, nunca separados.
+2. Modo Cooperativo (2 vs 2):
+El modo cooperativo debe ser 2 vs 2 con jugadores reales.
+•	Equipo 1: Yo + mi compañero.
+•	Equipo 2: Dos rivales.
+Cada equipo comparte una misma baraja de 8 cartas.
+Orden de turnos:
+1.	Yo juego primero.
+2.	Luego mi compañero.
+3.	Después el rival 1.
+4.	Luego el rival 2.
+Y el ciclo se repite durante toda la partida.
+3. Pantalla de partida:
+Cuando el juego encuentre partida:
+•	Deben mostrarse los mismos jugadores que estarán dentro de la partida real.
+•	Si invité amigos, ellos deben aparecer conmigo en el mismo equipo.
+Objetivo:
+Quiero que el sistema de emparejamiento y partidas funcione de forma automática, con jugadores online reales y con equipos correctos, como en los juegos competitivos profesionales.
+Mejoras generales del juego (muy importante)
+Quiero que mejores y optimices todo el sistema del juego al 100%, además de los cambios que ya te pedí anteriormente sobre el modo cooperativo, clasificatoria y emparejamiento.
+1. Mejora de textos dentro del juego
+Hay varios textos que están mal escritos o aparecen juntos.
+Por ejemplo en la pantalla de búsqueda de partida aparece algo como:
+YOULABLSEARCHINGRIVAL
+Eso está mal. Quiero que lo modifiques para que:
+•	Los textos estén separados correctamente.
+•	Se vean profesionales y claros.
+•	Tengan espacios correctos y buena ortografía.
+Ejemplo correcto:
+•	Tu perfil
+•	Buscando rival...
+También quiero que revises todos los textos del juego para que no haya palabras pegadas, errores o textos mal mostrados.
+2. Pantalla de carga de partida
+Cuando se está buscando partida o cargando una partida:
+•	Debe verse mi perfil correctamente.
+•	Debe mostrarse el rival o los equipos de forma clara.
+•	Todo debe estar bien alineado y separado, no textos juntos o desordenados.
+3. Sistema de idioma
+El sistema de idioma debe funcionar al 100% en todo el juego.
+Cuando el jugador cambie el idioma, TODO el juego debe cambiar automáticamente, incluyendo:
+•	Menús
+•	Ajustes
+•	Modos de juego
+•	Descripciones
+•	Mensajes del sistema
+•	Pantalla de partida
+•	Notificaciones
+•	Textos de botones
+Idiomas que quiero usar:
+•	Español (España)
+•	Inglés (UK)
+El cambio de idioma debe afectar toda la aplicación completa, excepto el nombre del juego si es necesario.
+4. Optimización general
+Quiero que revises toda la interfaz del juego y mejores:
+•	Diseño visual
+•	Textos
+•	Espaciado
+•	Nombres de botones
+•	Organización de pantallas
+•	Experiencia del jugador
+El objetivo es que todo se vea limpio, profesional y bien organizado, como en juegos populares tipo Clash Royale o Mobile Legends: Bang Bang.
+En resumen:
+Revisa todo el juego y mejora al máximo los textos, el idioma, la interfaz, el emparejamiento y las pantallas de partida para que funcione correctamente y se vea profesional.
+ 5. Mejora del Ranking de Clasificatoria
+Quiero que mejores el Ranking de Clasificatoria, porque actualmente todos los jugadores aparecen con avatares simples, y eso no tiene sentido.
+Lo que quiero es que en el ranking:
+•	Se puedan ver los perfiles reales de los jugadores.
+•	Se muestren sus avatares reales o sus fotos de perfil, no avatares simples genéricos.
+•	Los perfiles del ranking deben verse igual que cuando aparecen en las partidas reales.
+Cada jugador en el ranking debe mostrar:
+•	Foto de perfil o avatar real
+•	Nombre del jugador
+•	Rango actual
+•	Puntos o trofeos
+•	Posición en el ranking
+Además, quiero que al tocar el perfil de un jugador en el ranking, se pueda abrir su perfil para ver más información.
+Objetivo
+El ranking debe verse realista y profesional, con perfiles de jugadores reales y no con avatares genéricos simples, similar a los sistemas de ranking de juegos como Clash Royale o Mobile Legends: Bang Bang.

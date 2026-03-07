@@ -70,7 +70,7 @@ export default function RankedLobbyScreen() {
     id: "me",
     name: profile.name || "Tú",
     avatarColor: AVATAR_COLORS[0],
-    avatarIcon: profile.avatarIcon || "person",
+    avatarIcon: "person",
     level: level || 1,
     winRate: Math.min(88, 40 + (level || 1)),
     isMe: true,

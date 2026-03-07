@@ -89,7 +89,7 @@ export default function CoopLobbyScreen() {
 
   const mySlot: LobbySlot = {
     name: profile.name || "Tú",
-    avatarIcon: profile.avatarIcon || "person",
+    avatarIcon: "person",
     avatarColor: AVATAR_COLORS[0],
     level: level || 1,
     winRate: Math.min(88, 40 + (level || 1)),

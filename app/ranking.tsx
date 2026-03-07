@@ -69,7 +69,8 @@ function buildLeaderboard(
   playerName: string,
   playerLevel: number,
   playerWins: number,
-  period: Period
+  period: Period,
+  playerPhotoUrl?: string
 ): RankEntry[] {
   const multiplier = period === "alltime" ? 1 : period === "monthly" ? 0.12 : 0.03;
 
@@ -106,6 +107,7 @@ function buildLeaderboard(
     wins: playerWinsAdjusted,
     avatarIcon: "person",
     avatarColor: Colors.gold,
+    photoUrl: playerPhotoUrl,
     isPlayer: true,
   };
 
@@ -137,7 +139,7 @@ function RankRow({ entry, theme, onPress }: { entry: RankEntry; theme: any; onPr
           </Text>
         )}
       </View>
-      {entry.photoUrl && !entry.isPlayer ? (
+      {entry.photoUrl ? (
         <Image source={{ uri: entry.photoUrl }} style={[styles.avatarPhoto, { borderColor: entry.avatarColor + "66" }]} />
       ) : (
         <View style={[styles.avatarDot, { backgroundColor: entry.avatarColor + "33", borderColor: entry.avatarColor + "66" }]}>
@@ -180,7 +182,8 @@ export default function RankingScreen() {
     level,
     profile.stats.totalWins,
     period,
-  ), [profile.name, level, profile.stats.totalWins, period]);
+    profile.photoUri || undefined,
+  ), [profile.name, level, profile.stats.totalWins, period, profile.photoUri]);
 
   const playerEntry = leaderboard.find((e) => e.isPlayer);
 
@@ -188,10 +191,10 @@ export default function RankingScreen() {
     ? ["#041008", "#0a1a0f"]
     : ["#d4edd0", "#e8f5e2"];
 
-  const PERIODS: { id: Period; label: string }[] = [
-    { id: "alltime", label: `🌍 ${T("allTime")}` },
-    { id: "monthly", label: `📅 ${T("monthly")}` },
-    { id: "weekly", label: `⚡ ${T("weekly")}` },
+  const PERIODS: { id: Period; icon: string; label: string }[] = [
+    { id: "alltime", icon: "globe-outline", label: T("allTime") },
+    { id: "monthly", icon: "calendar-outline", label: T("monthly") },
+    { id: "weekly", icon: "flash-outline", label: T("weekly") },
   ];
 
   const openPlayerProfile = (entry: RankEntry) => {
@@ -222,7 +225,7 @@ export default function RankingScreen() {
           <Text style={[styles.title, { color: theme.gold }]}>{T("worldRanking")}</Text>
           {playerEntry && (
             <Text style={[styles.myRankText, { color: theme.textMuted }]}>
-              Tu posición: #{playerEntry.rank} de {leaderboard.length.toLocaleString()} jugadores
+              {T("myPosition")}: #{playerEntry.rank} {T("of")} {leaderboard.length.toLocaleString()} {T("rankPlayers")}
             </Text>
           )}
         </View>
@@ -241,6 +244,7 @@ export default function RankingScreen() {
               { borderColor: period === p.id ? theme.gold : theme.border, backgroundColor: period === p.id ? theme.gold + "22" : "transparent" },
             ]}
           >
+            <Ionicons name={p.icon as any} size={12} color={period === p.id ? theme.gold : theme.textMuted} />
             <Text style={[styles.tabText, { color: period === p.id ? theme.gold : theme.textMuted }]}>
               {p.label}
             </Text>
@@ -312,7 +316,7 @@ const styles = StyleSheet.create({
   tabRow: { flexDirection: "row", gap: 6, paddingHorizontal: 14, marginBottom: 8 },
   tabBtn: {
     flex: 1, paddingVertical: 8, borderRadius: 10, borderWidth: 1,
-    alignItems: "center",
+    alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 4,
   },
   tabText: { fontFamily: "Nunito_700Bold", fontSize: 11 },
   colHeaders: {
