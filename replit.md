@@ -28,7 +28,11 @@ No emojis in UI or code. Use @expo/vector-icons (Ionicons) for all icons.
 - **Splash Screen**: Epic Clash of Clans style splash (5 seconds). Logo 240x240, pulsating golden glow, "BIYIS PRIME STUDIOS" in gold, "PRESENTA" subtitle, "OCHO LOCOS" title, gold separator, floating gold particles, "Versión 1.0" footer. Dark gradient bg. Implemented in `app/_layout.tsx`.
 - **Seasons System**: `lib/seasons.ts` — 30-day competitive seasons. Season 1 "Hierro y Fuego" starts 2026-03-01. Tiered rewards (500–12,000 coins) by rank at season end.
 - **Ranked/Clasificatoria**: `app/ranked.tsx` with 10,000 deterministic players (seeded generation, FlatList pagination - 50 per load). Season banner, countdown, rewards modal. LOCKED until player level 5. Profile card shown at top. Gold/silver/bronze colors for top 3.
-- **Game Modes**: Coop - player+ally CPU vs 2 rival CPUs with "ALIADO" badge UI. Challenge - HUD with progress bar. Practice - hint overlay, AI always difficulty 0. Card and table designs applied in game.
+- **Game Modes**: Coop - player+ally CPU vs 2 rival CPUs with "ALIADO" badge UI. Challenge - HUD with progress bar + random rules from `lib/challengeRules.ts` (10 rule types); ChallengeRulesModal shown on game start. Practice - hint overlay, AI always difficulty 0. Card and table designs applied in game.
+- **Turn Timer**: Inactivity bar in game.tsx appears after 4s idle (0s in Lightning mode). Countdown shown next to bar. Lightning timeout = 5s; Practice = 30s; Default = 20s. LightningBanner component shows "MODO RELÁMPAGO" for 3s on deal.
+- **Tournament System**: TournamentModal tracks round results with star scoring (⭐ per win), "ROUND FINAL" message on 1-1 tie, round-result messages with animated entrance.
+- **Ranked Stars**: RankedResultOverlay shown after ranked matches for promotion/demotion with star animation and descriptive messages.
+- **Login Flow**: Google/Facebook buttons open email modal (setOauthProvider); email validated with full regex; handleOAuthSubmit tries login() then register() as fallback; linkAccount() called on success.
 - **i18n**: 7 languages (ES/EN/PT/FR/DE/IT/TR). All texts connected to translation system including "Amigos" button, profile screen labels, store categories (categoryCardDesigns, categoryTableDesigns).
 - **Country Picker**: Fixed modal in `app/(tabs)/profile.tsx` with maxHeight:420, proper flex layout, and ScrollView for all 60+ countries across continents.
 

@@ -46,7 +46,7 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
   const isFace = ["J", "Q", "K"].includes(card.rank);
 
   const customBg = isJoker ? undefined : cardColors?.[0];
-  const isDarkCard = customBg ? hexLuminance(customBg) < 0.18 : false;
+  const isDarkCard = customBg ? hexLuminance(customBg) < 0.30 : false;
   const customSuitColor = isJoker ? undefined : isDarkCard ? (cardColors?.[2] ?? "#FFFFFF") : cardColors?.[1];
 
   const color = isJoker
@@ -102,8 +102,8 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
       }]}
     >
       <View style={styles.cornerTL}>
-        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color, fontWeight: "900" }]}>{rankDisplay}</Text>
-        <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color }]}>{sym}</Text>
+        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color, fontWeight: "900", textShadowColor: isDarkCard ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.3)", textShadowRadius: isDarkCard ? 3 : 1, textShadowOffset: { width: 0, height: 1 } }]}>{rankDisplay}</Text>
+        <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color, textShadowColor: isDarkCard ? "rgba(0,0,0,0.9)" : "transparent", textShadowRadius: isDarkCard ? 3 : 0, textShadowOffset: { width: 0, height: 1 } }]}>{sym}</Text>
       </View>
 
       <View style={styles.cardCenterArea}>
@@ -128,8 +128,8 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
       </View>
 
       <View style={styles.cornerBR}>
-        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color, transform: [{ rotate: "180deg" }], fontWeight: "900" }]}>{rankDisplay}</Text>
-        <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color, transform: [{ rotate: "180deg" }] }]}>{sym}</Text>
+        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color, transform: [{ rotate: "180deg" }], fontWeight: "900", textShadowColor: isDarkCard ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.3)", textShadowRadius: isDarkCard ? 3 : 1, textShadowOffset: { width: 0, height: 1 } }]}>{rankDisplay}</Text>
+        <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color, transform: [{ rotate: "180deg" }], textShadowColor: isDarkCard ? "rgba(0,0,0,0.9)" : "transparent", textShadowRadius: isDarkCard ? 3 : 0, textShadowOffset: { width: 0, height: 1 } }]}>{sym}</Text>
       </View>
 
       {(isEight || isFace) && (

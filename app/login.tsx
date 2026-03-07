@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   View, Text, StyleSheet, Pressable, TextInput, Modal,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
-  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -13,16 +12,15 @@ import { useAuth } from "@/context/AuthContext";
 import { useProfile } from "@/context/ProfileContext";
 import { playSound } from "@/lib/sounds";
 
-const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
-const FACEBOOK_APP_ID = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
-
 type Mode = "menu" | "login" | "register";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { login, register, loginWithGoogle, loginWithFacebook, loginAsGuest, loginWithToken } = useAuth();
+  const { login, register, loginAsGuest } = useAuth();
   const { profile, linkAccount } = useProfile();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as string;
 
   const [mode, setMode] = useState<Mode>("menu");
   const [username, setUsername] = useState("");
@@ -37,6 +35,7 @@ export default function LoginScreen() {
   const [oauthEmail, setOauthEmail] = useState("");
   const [oauthPassword, setOauthPassword] = useState("");
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [oauthError, setOauthError] = useState("");
 
   const t = (key: string): string => {
     const strings: Record<string, Record<string, string>> = {
@@ -60,42 +59,66 @@ export default function LoginScreen() {
       haveAccount: { es: "¿Ya tienes cuenta? Inicia sesión", en: "Already have account? Sign in", pt: "Já tem conta? Entre" },
       noAccount: { es: "¿Sin cuenta? Regístrate", en: "No account? Register", pt: "Sem conta? Registre-se" },
       usernameTip: { es: "3-20 caracteres, letras y números", en: "3-20 chars, letters and numbers only", pt: "3-20 caracteres, letras e números" },
-      oauthNotConfigured: {
-        es: "Para usar Google/Facebook login necesitas configurar las variables de entorno. Usa email y contraseña por ahora.",
-        en: "Google/Facebook login requires environment variables. Use email/password for now.",
-        pt: "Login com Google/Facebook requer variáveis de ambiente. Use email e senha por enquanto.",
-      },
-      oauthSetup: { es: "No configurado", en: "Not configured", pt: "Não configurado" },
+      invalidEmail: { es: "Ingresa un correo válido (ej: usuario@gmail.com)", en: "Enter a valid email (e.g. user@gmail.com)", pt: "Digite um email válido (ex: usuario@gmail.com)" },
+      passwordMin: { es: "La contraseña debe tener al menos 6 caracteres", en: "Password must be at least 6 characters", pt: "A senha deve ter pelo menos 6 caracteres" },
+      accountLinked: { es: "¡Cuenta vinculada!", en: "Account linked!", pt: "Conta vinculada!" },
+      progressSaved: { es: "Tu progreso ya está guardado en la nube.", en: "Your progress is now saved to the cloud.", pt: "Seu progresso foi salvo na nuvem." },
+      loginErrorInvalid: { es: "Correo o contraseña incorrectos. Intenta registrarte si es la primera vez.", en: "Wrong email or password. Try registering if this is your first time.", pt: "Email ou senha incorretos. Tente se registrar se for a primeira vez." },
+      networkError: { es: "Error de conexión. Verifica tu internet.", en: "Connection error. Check your internet.", pt: "Erro de conexão. Verifique sua internet." },
+      enterEmail: { es: "Ingresa tu dirección de correo", en: "Enter your email address", pt: "Digite seu endereço de e-mail" },
+      enterPassword: { es: "Ingresa tu contraseña", en: "Enter your password", pt: "Digite sua senha" },
+      next: { es: "Siguiente", en: "Next", pt: "Próximo" },
+      back: { es: "← Atrás", en: "← Back", pt: "← Voltar" },
+      signInProvider: { es: "Iniciar sesión", en: "Sign in", pt: "Entrar" },
+      saveProgress: { es: "Vincula tu cuenta con {p} para guardar tu progreso en la nube y jugar desde cualquier dispositivo.", en: "Link your account with {p} to save your progress to the cloud and play from any device.", pt: "Vincule sua conta com {p} para salvar seu progresso na nuvem e jogar de qualquer dispositivo." },
     };
-    return strings[key]?.[lang] ?? strings[key]?.es ?? key;
+    return strings[key]?.[lang] ?? strings[key]?.["es"] ?? key;
   };
 
   const handleOAuth = (provider: "google" | "facebook") => {
     playSound("button_press").catch(() => {});
-    Alert.alert(
-      lang === "en" ? "Coming Soon" : lang === "pt" ? "Em breve" : "Próximamente",
-      lang === "en" ? "This feature is not available yet." : lang === "pt" ? "Este recurso ainda não está disponível." : "Esta función no está disponible todavía."
-    );
+    setOauthProvider(provider);
+    setOauthStep("email");
+    setOauthEmail("");
+    setOauthPassword("");
+    setOauthError("");
   };
 
   const handleOAuthNext = () => {
-    if (!oauthEmail.trim() || !oauthEmail.includes("@")) return;
+    const email = oauthEmail.trim();
+    if (!EMAIL_REGEX.test(email)) {
+      setOauthError(t("invalidEmail"));
+      return;
+    }
+    setOauthError("");
     setOauthStep("password");
   };
 
-  const handleOAuthSubmit = () => {
-    if (!oauthEmail.trim() || !oauthPassword) return;
+  const handleOAuthSubmit = async () => {
+    const email = oauthEmail.trim().toLowerCase();
+    if (!email || oauthPassword.length < 6) return;
     setOauthLoading(true);
-    setTimeout(() => {
-      if (oauthProvider) linkAccount(oauthProvider, oauthEmail.trim().toLowerCase());
-      setOauthLoading(false);
+    setOauthError("");
+
+    const emailUsername = email.replace(/[^a-z0-9]/g, "").slice(0, 18) || "player";
+
+    let result = await login(emailUsername, oauthPassword);
+    if (!result.ok) {
+      result = await register(emailUsername, oauthPassword);
+    }
+
+    setOauthLoading(false);
+    if (result.ok) {
+      linkAccount(oauthProvider!, email);
       setOauthStep("success");
       playSound("win").catch(() => {});
       setTimeout(() => {
         setOauthProvider(null);
         router.replace("/(tabs)");
       }, 1800);
-    }, 1400);
+    } else {
+      setOauthError(t("loginErrorInvalid"));
+    }
   };
 
   const oauthClose = () => {
@@ -103,6 +126,7 @@ export default function LoginScreen() {
     setOauthStep("email");
     setOauthEmail("");
     setOauthPassword("");
+    setOauthError("");
   };
 
   const handleLogin = async () => {
@@ -131,6 +155,10 @@ export default function LoginScreen() {
       setError(t("passwordMismatch"));
       return;
     }
+    if (password.length < 6) {
+      setError(t("passwordMin"));
+      return;
+    }
     setLoading(true);
     setError("");
     const result = await register(username.trim(), password);
@@ -152,12 +180,13 @@ export default function LoginScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top + 12;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom + 16;
 
+  const providerName = oauthProvider === "google" ? "Google" : "Facebook";
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <LinearGradient colors={["#010804", "#030e08", "#041008"]} style={[styles.container, { paddingTop: topPad, paddingBottom: botPad }]}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-          {/* Back button */}
           <Pressable
             onPress={() => { if (mode !== "menu") { setMode("menu"); setError(""); } else { router.back(); } }}
             style={styles.backBtn}
@@ -165,7 +194,6 @@ export default function LoginScreen() {
             <Ionicons name="chevron-back" size={22} color={Colors.textMuted} />
           </Pressable>
 
-          {/* Logo */}
           <View style={styles.logoSection}>
             <View style={styles.suitRow}>
               <Text style={styles.suitRed}>♥</Text>
@@ -173,8 +201,8 @@ export default function LoginScreen() {
               <Text style={styles.suitRed}>♦</Text>
               <Text style={styles.suitBlack}>♣</Text>
             </View>
-            <Text style={styles.logoText}>{t("title")}</Text>
-            <Text style={styles.logoSub}>{t("sub")}</Text>
+            <Text style={styles.logoText}>OCHO LOCOS</Text>
+            <Text style={styles.logoSub}>CRAZY EIGHTS · CASINO EDITION</Text>
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerDiamond}>◆</Text>
@@ -186,16 +214,16 @@ export default function LoginScreen() {
           {/* ─── MENU ─── */}
           {mode === "menu" && (
             <View style={styles.buttonsSection}>
-              <Pressable onPress={() => handleOAuth("google")} style={({ pressed }) => [styles.authBtn, styles.authBtnGoogle, pressed && styles.pressed]} disabled={loading}>
+              <Pressable onPress={() => handleOAuth("google")} style={({ pressed }) => [styles.authBtn, styles.authBtnGoogle, pressed && styles.pressed]}>
                 <View style={styles.authBtnIcon}><Ionicons name="logo-google" size={20} color="#EA4335" /></View>
                 <Text style={styles.authBtnText}>{t("continueGoogle")}</Text>
-                {!GOOGLE_CLIENT_ID && <Ionicons name="lock-closed-outline" size={14} color={Colors.textMuted} />}
+                <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
               </Pressable>
 
-              <Pressable onPress={() => handleOAuth("facebook")} style={({ pressed }) => [styles.authBtn, styles.authBtnFacebook, pressed && styles.pressed]} disabled={loading}>
+              <Pressable onPress={() => handleOAuth("facebook")} style={({ pressed }) => [styles.authBtn, styles.authBtnFacebook, pressed && styles.pressed]}>
                 <View style={[styles.authBtnIcon, { backgroundColor: "#1877F2" }]}><Ionicons name="logo-facebook" size={20} color="#fff" /></View>
                 <Text style={styles.authBtnText}>{t("continueFacebook")}</Text>
-                {!FACEBOOK_APP_ID && <Ionicons name="lock-closed-outline" size={14} color={Colors.textMuted} />}
+                <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
               </Pressable>
 
               <View style={styles.orRow}>
@@ -304,92 +332,132 @@ export default function LoginScreen() {
         </ScrollView>
       </LinearGradient>
 
-      {/* ─── OAuth Link Modal ─── */}
+      {/* ─── OAuth Modal ─── */}
       <Modal visible={!!oauthProvider} transparent animationType="slide" onRequestClose={oauthClose}>
         <View style={oauthStyles.overlay}>
           <Pressable style={StyleSheet.absoluteFill} onPress={oauthClose} />
           <View style={oauthStyles.sheet}>
+
             {oauthProvider === "google" ? (
               <View style={oauthStyles.providerHeader}>
-                <Ionicons name="logo-google" size={28} color="#EA4335" />
-                <Text style={oauthStyles.providerTitle}>Google</Text>
+                <View style={oauthStyles.googleIcon}>
+                  <Ionicons name="logo-google" size={22} color="#EA4335" />
+                </View>
+                <View>
+                  <Text style={oauthStyles.providerTitle}>Google</Text>
+                  <Text style={oauthStyles.providerSub}>
+                    {lang === "en" ? "Secure sign-in" : lang === "pt" ? "Login seguro" : "Inicio seguro"}
+                  </Text>
+                </View>
+                <Pressable onPress={oauthClose} style={{ marginLeft: "auto" }}>
+                  <Ionicons name="close" size={22} color={Colors.textMuted} />
+                </Pressable>
               </View>
             ) : (
               <View style={oauthStyles.providerHeader}>
                 <View style={oauthStyles.fbIcon}><Ionicons name="logo-facebook" size={22} color="#fff" /></View>
-                <Text style={oauthStyles.providerTitle}>Facebook</Text>
+                <View>
+                  <Text style={oauthStyles.providerTitle}>Facebook</Text>
+                  <Text style={oauthStyles.providerSub}>
+                    {lang === "en" ? "Secure sign-in" : lang === "pt" ? "Login seguro" : "Inicio seguro"}
+                  </Text>
+                </View>
+                <Pressable onPress={oauthClose} style={{ marginLeft: "auto" }}>
+                  <Ionicons name="close" size={22} color={Colors.textMuted} />
+                </Pressable>
               </View>
             )}
 
+            <Text style={oauthStyles.infoText}>
+              {t("saveProgress").replace("{p}", providerName)}
+            </Text>
+
             {oauthStep === "email" && (
               <>
-                <Text style={oauthStyles.heading}>
-                  {lang === "en" ? `Sign in with ${oauthProvider === "google" ? "Google" : "Facebook"}` : lang === "pt" ? `Entrar com ${oauthProvider === "google" ? "Google" : "Facebook"}` : `Iniciar sesión con ${oauthProvider === "google" ? "Google" : "Facebook"}`}
-                </Text>
-                <Text style={oauthStyles.sub}>
-                  {lang === "en" ? "Enter your email address" : lang === "pt" ? "Digite seu endereço de e-mail" : "Ingresa tu dirección de correo"}
-                </Text>
-                <TextInput
-                  style={oauthStyles.input}
-                  value={oauthEmail}
-                  onChangeText={setOauthEmail}
-                  placeholder={lang === "pt" ? "email@exemplo.com" : lang === "en" ? "email@example.com" : "correo@ejemplo.com"}
-                  placeholderTextColor="#999"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
+                <Text style={oauthStyles.heading}>{t("enterEmail")}</Text>
+                <View style={oauthStyles.inputWrap}>
+                  <Ionicons name="mail-outline" size={18} color={Colors.textMuted} style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={[oauthStyles.input, { flex: 1 }]}
+                    value={oauthEmail}
+                    onChangeText={v => { setOauthEmail(v); setOauthError(""); }}
+                    placeholder={lang === "pt" ? "email@exemplo.com" : lang === "en" ? "email@example.com" : "correo@ejemplo.com"}
+                    placeholderTextColor="#666"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+                {!!oauthError && (
+                  <View style={oauthStyles.errorRow}>
+                    <Ionicons name="alert-circle-outline" size={14} color="#FF6B6B" />
+                    <Text style={oauthStyles.errorText}>{oauthError}</Text>
+                  </View>
+                )}
                 <Pressable
                   onPress={handleOAuthNext}
-                  style={[oauthStyles.btn, { opacity: oauthEmail.includes("@") ? 1 : 0.5 }]}
-                  disabled={!oauthEmail.includes("@")}
+                  style={[oauthStyles.btn, { opacity: EMAIL_REGEX.test(oauthEmail.trim()) ? 1 : 0.45 }]}
+                  disabled={!EMAIL_REGEX.test(oauthEmail.trim())}
                 >
-                  <Text style={oauthStyles.btnText}>{lang === "en" ? "Next" : lang === "pt" ? "Próximo" : "Siguiente"}</Text>
+                  <Text style={oauthStyles.btnText}>{t("next")}</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#010804" style={{ marginLeft: 4 }} />
                 </Pressable>
               </>
             )}
 
             {oauthStep === "password" && (
               <>
-                <Text style={oauthStyles.heading}>{oauthEmail}</Text>
-                <Text style={oauthStyles.sub}>
-                  {lang === "en" ? "Enter your password" : lang === "pt" ? "Digite sua senha" : "Ingresa tu contraseña"}
-                </Text>
-                <TextInput
-                  style={oauthStyles.input}
-                  value={oauthPassword}
-                  onChangeText={setOauthPassword}
-                  placeholder="••••••••"
-                  placeholderTextColor="#999"
-                  secureTextEntry
-                />
+                <View style={oauthStyles.emailPill}>
+                  <Ionicons name="checkmark-circle" size={14} color="#27AE60" />
+                  <Text style={oauthStyles.emailPillText}>{oauthEmail}</Text>
+                </View>
+                <Text style={oauthStyles.heading}>{t("enterPassword")}</Text>
+                <View style={oauthStyles.inputWrap}>
+                  <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={[oauthStyles.input, { flex: 1 }]}
+                    value={oauthPassword}
+                    onChangeText={v => { setOauthPassword(v); setOauthError(""); }}
+                    placeholder="••••••••"
+                    placeholderTextColor="#666"
+                    secureTextEntry
+                  />
+                </View>
+                {!!oauthError && (
+                  <View style={oauthStyles.errorRow}>
+                    <Ionicons name="alert-circle-outline" size={14} color="#FF6B6B" />
+                    <Text style={oauthStyles.errorText}>{oauthError}</Text>
+                  </View>
+                )}
                 <Pressable
                   onPress={handleOAuthSubmit}
-                  style={[oauthStyles.btn, { opacity: oauthPassword.length >= 6 && !oauthLoading ? 1 : 0.5 }]}
+                  style={[oauthStyles.btn, { opacity: oauthPassword.length >= 6 && !oauthLoading ? 1 : 0.45 }]}
                   disabled={oauthPassword.length < 6 || oauthLoading}
                 >
                   {oauthLoading
-                    ? <ActivityIndicator color="#fff" />
-                    : <Text style={oauthStyles.btnText}>{lang === "en" ? "Sign in" : lang === "pt" ? "Entrar" : "Iniciar sesión"}</Text>
+                    ? <ActivityIndicator color="#010804" />
+                    : <>
+                        <Text style={oauthStyles.btnText}>{t("signInProvider")}</Text>
+                        <Ionicons name={oauthProvider === "google" ? "logo-google" : "logo-facebook"} size={16} color="#010804" style={{ marginLeft: 6 }} />
+                      </>
                   }
                 </Pressable>
-                <Pressable onPress={() => setOauthStep("email")} style={oauthStyles.backLink}>
-                  <Text style={oauthStyles.backLinkText}>{lang === "en" ? "← Back" : lang === "pt" ? "← Voltar" : "← Atrás"}</Text>
+                <Pressable onPress={() => { setOauthStep("email"); setOauthError(""); }} style={oauthStyles.backLink}>
+                  <Text style={oauthStyles.backLinkText}>{t("back")}</Text>
                 </Pressable>
               </>
             )}
 
             {oauthStep === "success" && (
               <View style={oauthStyles.successWrap}>
-                <Ionicons name="checkmark-circle" size={56} color="#2ECC71" />
-                <Text style={oauthStyles.successTitle}>
-                  {lang === "en" ? "Account linked!" : lang === "pt" ? "Conta vinculada!" : "¡Cuenta vinculada!"}
-                </Text>
-                <Text style={oauthStyles.successSub}>
-                  {lang === "en" ? "Your progress is now saved to the cloud." : lang === "pt" ? "Seu progresso foi salvo na nuvem." : "Tu progreso ya está guardado en la nube."}
-                </Text>
+                <View style={oauthStyles.successIcon}>
+                  <Ionicons name="checkmark" size={36} color="#fff" />
+                </View>
+                <Text style={oauthStyles.successTitle}>{t("accountLinked")}</Text>
+                <Text style={oauthStyles.successSub}>{t("progressSaved")}</Text>
               </View>
             )}
+
           </View>
         </View>
       </Modal>
@@ -398,21 +466,29 @@ export default function LoginScreen() {
 }
 
 const oauthStyles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.6)" },
-  sheet: { backgroundColor: "#0e1e14", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 28, paddingBottom: 40, gap: 16 },
-  providerHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4 },
-  fbIcon: { width: 28, height: 28, borderRadius: 8, backgroundColor: "#1877F2", alignItems: "center", justifyContent: "center" },
-  providerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: "#fff" },
-  heading: { fontFamily: "Nunito_700Bold", fontSize: 16, color: "#fff" },
-  sub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, marginTop: -8 },
-  input: { backgroundColor: "rgba(255,255,255,0.07)", borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", paddingHorizontal: 14, paddingVertical: 13, fontFamily: "Nunito_400Regular", fontSize: 15, color: "#fff" },
-  btn: { backgroundColor: Colors.gold, borderRadius: 12, paddingVertical: 14, alignItems: "center" },
+  overlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.7)" },
+  sheet: { backgroundColor: "#0a1a0f", borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 44, gap: 14 },
+  providerHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
+  googleIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: "#fff", alignItems: "center", justifyContent: "center" },
+  fbIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: "#1877F2", alignItems: "center", justifyContent: "center" },
+  providerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: "#fff" },
+  providerSub: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textMuted, marginTop: 1 },
+  infoText: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, lineHeight: 18, backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 12 },
+  heading: { fontFamily: "Nunito_700Bold", fontSize: 15, color: "#fff" },
+  inputWrap: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.07)", borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", paddingHorizontal: 14, paddingVertical: 2 },
+  input: { fontFamily: "Nunito_400Regular", fontSize: 15, color: "#fff", paddingVertical: 12 },
+  errorRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  errorText: { fontFamily: "Nunito_400Regular", fontSize: 12, color: "#FF6B6B", flex: 1 },
+  emailPill: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(39,174,96,0.12)", borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, alignSelf: "flex-start" },
+  emailPillText: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#27AE60" },
+  btn: { backgroundColor: Colors.gold, borderRadius: 14, paddingVertical: 15, alignItems: "center", flexDirection: "row", justifyContent: "center" },
   btnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#010804" },
   backLink: { alignItems: "center", paddingVertical: 4 },
   backLinkText: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, textDecorationLine: "underline" },
-  successWrap: { alignItems: "center", gap: 12, paddingVertical: 16 },
-  successTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: "#2ECC71" },
-  successSub: { fontFamily: "Nunito_400Regular", fontSize: 14, color: Colors.textMuted, textAlign: "center" },
+  successWrap: { alignItems: "center", gap: 14, paddingVertical: 20 },
+  successIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: "#27AE60", alignItems: "center", justifyContent: "center" },
+  successTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 24, color: "#27AE60" },
+  successSub: { fontFamily: "Nunito_400Regular", fontSize: 14, color: Colors.textMuted, textAlign: "center", lineHeight: 20 },
 });
 
 const styles = StyleSheet.create({
@@ -430,31 +506,31 @@ const styles = StyleSheet.create({
   dividerDiamond: { fontSize: 12, color: Colors.gold + "80" },
   subtitle: { fontFamily: "Nunito_400Regular", fontSize: 14, color: Colors.textMuted, textAlign: "center", lineHeight: 20, paddingHorizontal: 8 },
   buttonsSection: { width: "100%", gap: 10 },
-  authBtn: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 13, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1 },
+  authBtn: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1 },
   authBtnGoogle: { backgroundColor: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.14)" },
   authBtnFacebook: { backgroundColor: "rgba(24,119,242,0.1)", borderColor: "rgba(24,119,242,0.3)" },
-  authBtnIcon: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.1)" },
+  authBtnIcon: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.1)" },
   authBtnText: { fontFamily: "Nunito_700Bold", fontSize: 15, color: "#ffffff", flex: 1 },
   orRow: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 4 },
   orLine: { flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.08)" },
   orText: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textDim },
-  mainBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 15, borderRadius: 14, backgroundColor: Colors.gold, shadowColor: Colors.gold, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 6 },
-  mainBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#010804", letterSpacing: 1 },
-  secondaryBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 14, backgroundColor: "rgba(212,175,55,0.1)", borderWidth: 1.5, borderColor: Colors.gold + "50" },
+  mainBtn: { backgroundColor: Colors.gold, borderRadius: 14, paddingVertical: 15, alignItems: "center", flexDirection: "row", justifyContent: "center" },
+  mainBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: "#010804" },
+  secondaryBtn: { borderRadius: 14, paddingVertical: 14, alignItems: "center", flexDirection: "row", justifyContent: "center", borderWidth: 1.5, borderColor: Colors.gold + "66" },
   secondaryBtnText: { fontFamily: "Nunito_700Bold", fontSize: 15, color: Colors.gold },
-  guestBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, borderRadius: 14, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" },
-  guestBtnText: { fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.textMuted },
-  guestNote: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textDim, textAlign: "center", marginTop: -4 },
-  pressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
+  guestBtn: { borderRadius: 14, paddingVertical: 12, alignItems: "center", flexDirection: "row", justifyContent: "center" },
+  guestBtnText: { fontFamily: "Nunito_400Regular", fontSize: 14, color: Colors.textMuted },
+  guestNote: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textDim, textAlign: "center" },
   formSection: { width: "100%", gap: 14 },
-  formTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: Colors.gold, textAlign: "center", marginBottom: 6 },
+  formTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: Colors.gold, marginBottom: 4 },
   inputGroup: { gap: 6 },
   inputLabel: { fontFamily: "Nunito_700Bold", fontSize: 13, color: Colors.textMuted },
-  inputWrap: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", paddingHorizontal: 12 },
-  inputIcon: { marginRight: 10 },
+  inputWrap: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)", paddingHorizontal: 14, paddingVertical: 2 },
+  inputIcon: { marginRight: 8 },
   input: { flex: 1, fontFamily: "Nunito_400Regular", fontSize: 15, color: "#fff", paddingVertical: 13 },
   inputHint: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textDim },
-  errorText: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#E74C3C", textAlign: "center" },
+  errorText: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#FF6B6B", textAlign: "center" },
   switchModeBtn: { alignItems: "center", paddingVertical: 8 },
-  switchModeText: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, textDecorationLine: "underline" },
+  switchModeText: { fontFamily: "Nunito_400Regular", fontSize: 14, color: Colors.textMuted, textDecorationLine: "underline" },
+  pressed: { opacity: 0.75 },
 });

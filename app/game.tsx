@@ -26,6 +26,7 @@ import { getModeById, getDifficultyById } from "@/lib/gameModes";
 import { AVATARS, CARD_BACKS, getCardDesignById, getTableDesignById } from "@/lib/storeItems";
 import type { Card } from "@/lib/gameEngine";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
+import { generateChallengeRules, getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
@@ -270,36 +271,264 @@ function SuitPicker({ visible, onSelect, isJoker }: {
   );
 }
 
+// ─── Lightning mode banner ────────────────────────────────────────────────────
+function LightningBanner() {
+  const sc = useSharedValue(0.6);
+  const op = useSharedValue(0);
+  const pulse = useSharedValue(1);
+  useEffect(() => {
+    sc.value = withSpring(1, { damping: 9 });
+    op.value = withTiming(1, { duration: 200 });
+    pulse.value = withRepeat(
+      withSequence(withTiming(1.04, { duration: 300 }), withTiming(1, { duration: 300 })), 5
+    );
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: sc.value * pulse.value }],
+    opacity: op.value,
+  }));
+  return (
+    <Animated.View style={[lightStyles.overlay, { pointerEvents: "none" } as any]}>
+      <Animated.View style={[lightStyles.banner, animStyle]}>
+        <LinearGradient colors={["#1a0040", "#3d0099", "#1a0040"]} style={lightStyles.bannerGrad}>
+          <Text style={lightStyles.bolt}>⚡</Text>
+          <View style={lightStyles.textWrap}>
+            <Text style={lightStyles.title}>MODO RELÁMPAGO</Text>
+            <Text style={lightStyles.sub}>ACTIVADO — 5s por turno</Text>
+          </View>
+          <Text style={lightStyles.bolt}>⚡</Text>
+        </LinearGradient>
+      </Animated.View>
+    </Animated.View>
+  );
+}
+const lightStyles = StyleSheet.create({
+  overlay: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", zIndex: 200 },
+  banner: { borderRadius: 20, overflow: "hidden", borderWidth: 2, borderColor: "#9B59B6", shadowColor: "#9B59B6", shadowOpacity: 0.8, shadowRadius: 20, elevation: 20 },
+  bannerGrad: { flexDirection: "row", alignItems: "center", paddingHorizontal: 24, paddingVertical: 20, gap: 12 },
+  bolt: { fontSize: 36 },
+  textWrap: { alignItems: "center", gap: 4 },
+  title: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: "#FFD700", letterSpacing: 3 },
+  sub: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#C39BD3" },
+});
+
+// ─── Challenge rules modal ────────────────────────────────────────────────────
+function ChallengeRulesModal({ rules, lang, onClose }: {
+  rules: ActiveChallengeRules; lang: string; onClose: () => void;
+}) {
+  const T = useT();
+  const sc = useSharedValue(0.7);
+  const op = useSharedValue(0);
+  useEffect(() => {
+    sc.value = withSpring(1, { damping: 12 });
+    op.value = withTiming(1, { duration: 300 });
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
+
+  return (
+    <View style={crStyles.overlay}>
+      <Animated.View style={[crStyles.modal, animStyle]}>
+        <LinearGradient colors={["#0A1E1A", "#061510"]} style={crStyles.grad}>
+          <View style={crStyles.header}>
+            <Ionicons name="warning" size={22} color={Colors.gold} />
+            <Text style={crStyles.title}>Reglas Especiales</Text>
+          </View>
+          <Text style={crStyles.sub}>Este desafío tiene reglas únicas:</Text>
+          {rules.rules.map(rule => (
+            <View key={rule.id} style={[crStyles.ruleRow, { borderColor: rule.color + "44" }]}>
+              <View style={[crStyles.ruleIcon, { backgroundColor: rule.color + "22" }]}>
+                <Ionicons name={rule.icon as any} size={20} color={rule.color} />
+              </View>
+              <View style={crStyles.ruleText}>
+                <Text style={[crStyles.ruleName, { color: rule.color }]}>{getRuleTitle(rule, lang)}</Text>
+                <Text style={crStyles.ruleDesc}>{getRuleDesc(rule, lang)}</Text>
+              </View>
+            </View>
+          ))}
+          <Pressable onPress={onClose} style={crStyles.btn}>
+            <Ionicons name="flash" size={16} color="#010804" />
+            <Text style={crStyles.btnText}>¡Acepto el Desafío!</Text>
+          </Pressable>
+        </LinearGradient>
+      </Animated.View>
+    </View>
+  );
+}
+const crStyles = StyleSheet.create({
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", zIndex: 300 },
+  modal: { width: 320, borderRadius: 24, overflow: "hidden", borderWidth: 1.5, borderColor: Colors.gold + "44" },
+  grad: { padding: 24, gap: 14 },
+  header: { flexDirection: "row", alignItems: "center", gap: 10 },
+  title: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: Colors.gold },
+  sub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted },
+  ruleRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 14, padding: 12, borderWidth: 1 },
+  ruleIcon: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  ruleText: { flex: 1, gap: 4 },
+  ruleName: { fontFamily: "Nunito_700Bold", fontSize: 14 },
+  ruleDesc: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textMuted, lineHeight: 17 },
+  btn: { backgroundColor: Colors.gold, borderRadius: 14, paddingVertical: 15, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8, marginTop: 4 },
+  btnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#010804" },
+});
+
+// ─── Ranked promotion/demotion overlay ────────────────────────────────────────
+function RankedResultOverlay({ type, onDone }: { type: "promotion" | "demotion"; onDone: () => void }) {
+  const sc = useSharedValue(0.5);
+  const op = useSharedValue(0);
+  const isPromo = type === "promotion";
+  const accentColor = isPromo ? Colors.gold : "#E74C3C";
+  useEffect(() => {
+    sc.value = withSpring(1, { damping: 11 });
+    op.value = withTiming(1, { duration: 300 });
+    const t = setTimeout(onDone, 3200);
+    return () => clearTimeout(t);
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
+  return (
+    <View style={rrStyles.overlay}>
+      <Animated.View style={[rrStyles.card, { borderColor: accentColor + "55" }, animStyle]}>
+        <LinearGradient colors={isPromo ? ["#1A1200", "#221800", "#1A1200"] : ["#1A0000", "#220000", "#1A0000"]} style={rrStyles.grad}>
+          <Ionicons name={isPromo ? "trending-up" : "trending-down"} size={52} color={accentColor} />
+          <Text style={[rrStyles.title, { color: accentColor }]}>
+            {isPromo ? "¡Ascendido de Rango!" : "Bajaste de División"}
+          </Text>
+          <Text style={rrStyles.sub}>
+            {isPromo ? "Has demostrado tu habilidad. ¡Bienvenido a la élite!" : "Sigue practicando para recuperar tu posición."}
+          </Text>
+          <View style={rrStyles.starsRow}>
+            {[0, 1, 2, 3, 4].map(i => (
+              <Ionicons key={i} name={isPromo ? "star" : "star-outline"} size={22} color={isPromo ? Colors.gold : "#E74C3C66"} style={{ opacity: isPromo ? 1 : 0.5 }} />
+            ))}
+          </View>
+        </LinearGradient>
+      </Animated.View>
+    </View>
+  );
+}
+const rrStyles = StyleSheet.create({
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.8)", alignItems: "center", justifyContent: "center", zIndex: 250 },
+  card: { width: 300, borderRadius: 24, overflow: "hidden", borderWidth: 2 },
+  grad: { padding: 28, alignItems: "center", gap: 12 },
+  title: { fontFamily: "Nunito_900ExtraBold", fontSize: 26, textAlign: "center" },
+  sub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: "rgba(255,255,255,0.6)", textAlign: "center", lineHeight: 18 },
+  starsRow: { flexDirection: "row", gap: 8 },
+});
+
 // ─── Tournament modal ─────────────────────────────────────────────────────────
-function TournamentModal({ scores, round, onContinue, onQuit }: {
-  scores: [number, number]; round: number; onContinue: () => void; onQuit: () => void;
+function TournamentModal({ scores, round, onContinue, onQuit, lastRoundWon }: {
+  scores: [number, number]; round: number; onContinue: () => void; onQuit: () => void; lastRoundWon?: boolean;
 }) {
   const T = useT();
   const isOver = scores[0] >= 2 || scores[1] >= 2;
   const playerWon = scores[0] >= 2;
+  const lastRound = round - 1;
+  const isFinalRound = scores[0] === 1 && scores[1] === 1;
+  const sc = useSharedValue(0.7);
+  const op = useSharedValue(0);
+  useEffect(() => {
+    sc.value = withSpring(1, { damping: 13 });
+    op.value = withTiming(1, { duration: 350 });
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
+
+  const accentColor = isOver ? (playerWon ? Colors.gold : Colors.red) : (lastRoundWon ? "#27AE60" : "#E74C3C");
+  const bgColors: [string, string, string] = isOver
+    ? playerWon ? ["#0A2010", "#122218", "#0A1A10"] : ["#1E0A0A", "#221212", "#1A0D0D"]
+    : lastRoundWon ? ["#0A1E10", "#122218", "#0A1A10"] : ["#1A1010", "#20100C", "#1A0A0A"];
+
+  const roundResultMsg = isOver
+    ? (playerWon ? T("champion") : T("defeat"))
+    : isFinalRound
+    ? (lastRoundWon !== false ? "¡ROUND FINAL!" : "¡ROUND FINAL!")
+    : lastRoundWon
+    ? `${T("you")} — Round ${lastRound}`
+    : `CPU — Round ${lastRound}`;
+
   return (
     <View style={styles.endOverlay}>
-      <View style={styles.endModal}>
-        <LinearGradient colors={isOver && playerWon ? ["#1a2e1a", Colors.surface] : ["#1a1a2e", Colors.surface]} style={styles.endGrad}>
-          <Ionicons name="trophy" size={44} color={Colors.gold} />
-          <Text style={styles.endTitle}>{isOver ? (playerWon ? T("champion") : T("defeat")) : `${T("round")} ${round - 1}`}</Text>
-          <View style={styles.tScoreRow}>
-            <View style={styles.tScoreTeam}><Text style={styles.tScoreLbl}>{T("you")}</Text><Text style={styles.tScoreNum}>{scores[0]}</Text></View>
-            <Text style={styles.tScoreSep}>VS</Text>
-            <View style={styles.tScoreTeam}><Text style={styles.tScoreLbl}>{T("cpu")}</Text><Text style={styles.tScoreNum}>{scores[1]}</Text></View>
+      <Animated.View style={[styles.endModal, { borderColor: accentColor + "55" }, animStyle]}>
+        <LinearGradient colors={bgColors} style={styles.endGrad}>
+
+          {/* Icon */}
+          <View style={[styles.endIconOuter, { borderColor: accentColor + "40", shadowColor: accentColor }]}>
+            <View style={[styles.endIconInner, { borderColor: accentColor + "66", backgroundColor: accentColor + "18" }]}>
+              {isOver
+                ? <Ionicons name={playerWon ? "trophy" : "skull"} size={46} color={accentColor} />
+                : isFinalRound
+                ? <Ionicons name="flash" size={46} color="#FFD700" />
+                : <Ionicons name={lastRoundWon ? "checkmark-circle" : "close-circle"} size={46} color={accentColor} />
+              }
+            </View>
           </View>
-          {!isOver && <Text style={styles.endSub}>{T("firstToWinRounds")}</Text>}
+
+          {/* Round result label */}
+          <View style={{ alignItems: "center", gap: 4 }}>
+            {!isOver && (
+              <Text style={[tStyles.roundLabel, { color: accentColor + "AA" }]}>
+                {isFinalRound ? "⚡ DECISIVO" : lastRoundWon !== false ? "▲ VICTORIA" : "▼ DERROTA"}
+              </Text>
+            )}
+            <Text style={[styles.endTitle, { color: accentColor, fontSize: isFinalRound ? 26 : 28 }]}>
+              {roundResultMsg}
+            </Text>
+            {isFinalRound && (
+              <Text style={tStyles.finalRoundSub}>El que gane esta ronda es el campeón</Text>
+            )}
+          </View>
+
+          {/* Star score */}
+          <View style={tStyles.starScoreWrap}>
+            <View style={tStyles.starScoreTeam}>
+              <Text style={tStyles.starTeamLabel}>{T("you")}</Text>
+              <View style={tStyles.starsRow}>
+                {[0, 1].map(i => (
+                  <Ionicons key={i} name={i < scores[0] ? "star" : "star-outline"} size={28} color={i < scores[0] ? Colors.gold : "rgba(255,255,255,0.2)"} />
+                ))}
+              </View>
+            </View>
+            <View style={tStyles.starVsDivider}>
+              <View style={{ width: 1, height: 32, backgroundColor: "rgba(255,255,255,0.1)" }} />
+              <Text style={tStyles.starVsText}>VS</Text>
+              <View style={{ width: 1, height: 32, backgroundColor: "rgba(255,255,255,0.1)" }} />
+            </View>
+            <View style={tStyles.starScoreTeam}>
+              <Text style={tStyles.starTeamLabel}>{T("cpu")}</Text>
+              <View style={tStyles.starsRow}>
+                {[0, 1].map(i => (
+                  <Ionicons key={i} name={i < scores[1] ? "star" : "star-outline"} size={28} color={i < scores[1] ? "#E74C3C" : "rgba(255,255,255,0.2)"} />
+                ))}
+              </View>
+            </View>
+          </View>
+
+          {/* Buttons */}
           <View style={styles.endBtns}>
-            {!isOver && <Pressable onPress={onContinue} style={styles.btnPrimary}><Text style={styles.btnPrimaryTxt}>{T("continueRound")}</Text></Pressable>}
+            {!isOver && (
+              <Pressable onPress={onContinue} style={[styles.btnPrimary, { backgroundColor: accentColor }]}>
+                <Ionicons name={isFinalRound ? "flash" : "arrow-forward"} size={16} color="#1a0a00" />
+                <Text style={styles.btnPrimaryTxt}>{isFinalRound ? "¡Round Final!" : T("continueRound")}</Text>
+              </Pressable>
+            )}
             <Pressable onPress={onQuit} style={[styles.btnSecondary, isOver && { flex: 1 }]}>
-              <Text style={styles.btnSecondaryTxt}>{isOver ? T("returnMenu") : T("abandon")}</Text>
+              <Ionicons name={isOver ? "home" : "flag"} size={14} color={accentColor} />
+              <Text style={[styles.btnSecondaryTxt, { color: accentColor }]}>{isOver ? T("returnMenu") : T("abandon")}</Text>
             </Pressable>
           </View>
+
         </LinearGradient>
-      </View>
+      </Animated.View>
     </View>
   );
 }
+const tStyles = StyleSheet.create({
+  roundLabel: { fontFamily: "Nunito_700Bold", fontSize: 11, letterSpacing: 2 },
+  finalRoundSub: { fontFamily: "Nunito_400Regular", fontSize: 12, color: "rgba(255,255,255,0.5)", textAlign: "center" },
+  starScoreWrap: { flexDirection: "row", alignItems: "center", gap: 16, backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 16, padding: 16, width: "100%", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
+  starScoreTeam: { flex: 1, alignItems: "center", gap: 8 },
+  starTeamLabel: { fontFamily: "Nunito_700Bold", fontSize: 12, color: "rgba(255,255,255,0.6)" },
+  starsRow: { flexDirection: "row", gap: 6 },
+  starVsDivider: { alignItems: "center", gap: 4 },
+  starVsText: { fontFamily: "Nunito_900ExtraBold", fontSize: 11, color: "rgba(255,255,255,0.3)" },
+});
 
 // ─── End modal ────────────────────────────────────────────────────────────────
 function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile }: {
@@ -635,6 +864,7 @@ export default function GameScreen() {
   const [showTournamentModal, setShowTournamentModal] = useState(false);
   const [tournamentScores, setTournamentScores] = useState<[number, number]>([0, 0]);
   const [tournamentRound, setTournamentRound] = useState(1);
+  const [lastTournamentRoundWon, setLastTournamentRoundWon] = useState<boolean | undefined>(undefined);
   const [endCoins, setEndCoins] = useState(0);
   const [endXp, setEndXp] = useState(0);
   const [isAiThinkingVis, setIsAiThinkingVis] = useState(false);
@@ -643,6 +873,11 @@ export default function GameScreen() {
   const [cpuEmote, setCpuEmote] = useState<Emote | null>(null);
   const [showLastCardBanner, setShowLastCardBanner] = useState(false);
   const [activeChallenges, setActiveChallenges] = useState<Challenge[]>([]);
+  const [showLightningBanner, setShowLightningBanner] = useState(false);
+  const [activeChallengeRules, setActiveChallengeRules] = useState<ActiveChallengeRules | null>(null);
+  const [showChallengeRulesModal, setShowChallengeRulesModal] = useState(false);
+  const [showInactivityBar, setShowInactivityBar] = useState(false);
+  const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
 
   const [lastPlayerEmoteTime, setLastPlayerEmoteTime] = useState(0);
   const lastCardBannerAnim = useSharedValue(0);
@@ -652,6 +887,24 @@ export default function GameScreen() {
       getDailyChallenges(level).then(setActiveChallenges);
     }
   }, [session?.mode]);
+
+  // Lightning mode intro banner
+  useEffect(() => {
+    if (session?.mode === "lightning" && dealAnimationDone) {
+      setShowLightningBanner(true);
+      const t = setTimeout(() => setShowLightningBanner(false), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [dealAnimationDone, session?.mode]);
+
+  // Challenge mode random rules on start
+  useEffect(() => {
+    if (session?.mode === "challenge" && dealAnimationDone && !activeChallengeRules) {
+      const rules = generateChallengeRules();
+      setActiveChallengeRules(rules);
+      setShowChallengeRulesModal(true);
+    }
+  }, [dealAnimationDone, session?.mode]);
 
   const lastCardBannerStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: withSpring(showLastCardBanner ? 0 : -100) }],
@@ -861,6 +1114,7 @@ export default function GameScreen() {
         : [tournamentScores[0], tournamentScores[1] + 1];
       setTournamentScores(newScores);
       setTournamentRound((r) => r + 1);
+      setLastTournamentRoundWon(won);
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
       setTimeout(() => {
         setShowEpicResult(null);
@@ -869,7 +1123,13 @@ export default function GameScreen() {
     } else {
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
       if (session.mode === "ranked") {
+        const beforeRanked = profile.rankedStars ?? 0;
+        const beforeRank = Math.floor(beforeRanked / 20);
         updateRanked(won ? 2 : -1);
+        const afterRanked = beforeRanked + (won ? 2 : -1);
+        const afterRank = Math.floor(Math.max(0, afterRanked) / 20);
+        if (afterRank > beforeRank) setRankedPromotion("promotion");
+        else if (afterRank < beforeRank) setRankedPromotion("demotion");
       }
       setTimeout(() => {
         setShowEpicResult(null);
@@ -915,7 +1175,8 @@ export default function GameScreen() {
   }, [gameState?.phase]);
 
   // ─── Inactivity auto-draw timer ──────────────────────────────────────────
-  const INACTIVITY_TIMEOUT = session?.mode === "lightning" ? 10 : session?.mode === "practice" ? 30 : 20;
+  const INACTIVITY_TIMEOUT = session?.mode === "lightning" ? 5 : session?.mode === "practice" ? 30 : 20;
+  const INACTIVITY_SHOW_DELAY = session?.mode === "lightning" ? 0 : 4;
   useEffect(() => {
     const isActive =
       gameState?.currentPlayer === "player" &&
@@ -926,14 +1187,21 @@ export default function GameScreen() {
 
     if (isActive) {
       lastActionTime.current = Date.now();
+      setShowInactivityBar(false);
+      setInactivityProgress(1);
       if (inactivityRef.current) clearInterval(inactivityRef.current);
       inactivityRef.current = setInterval(() => {
         const elapsed = (Date.now() - lastActionTime.current) / 1000;
         const prog = Math.max(0, 1 - elapsed / INACTIVITY_TIMEOUT);
         setInactivityProgress(prog);
+        // Show bar only after idle delay
+        if (elapsed >= INACTIVITY_SHOW_DELAY) {
+          setShowInactivityBar(true);
+        }
         if (prog <= 0 && inactivityRef.current) {
           clearInterval(inactivityRef.current);
           inactivityRef.current = null;
+          setShowInactivityBar(false);
           handleDraw();
         }
       }, 100);
@@ -943,6 +1211,7 @@ export default function GameScreen() {
         inactivityRef.current = null;
       }
       setInactivityProgress(1);
+      setShowInactivityBar(false);
     }
     return () => {
       if (inactivityRef.current) {
@@ -1256,22 +1525,29 @@ export default function GameScreen() {
             <EmotePanel onSendEmote={handleSendEmote} lastEmoteTime={lastPlayerEmoteTime} />
           </View>
         </View>
-        {/* Inactivity countdown bar — visible only on player's turn */}
-        {isPlayerTurn && (
-          <View style={styles.inactivityBar}>
-            <View
-              style={[
-                styles.inactivityFill,
-                {
-                  width: `${Math.round(inactivityProgress * 100)}%` as any,
-                  backgroundColor: inactivityProgress > 0.5
-                    ? Colors.gold
-                    : inactivityProgress > 0.25
-                    ? "#FF9500"
-                    : "#FF3B30",
-                },
-              ]}
-            />
+        {/* Inactivity countdown bar — visible only after idle delay */}
+        {isPlayerTurn && showInactivityBar && (
+          <View style={styles.inactivityBarWrap}>
+            <View style={styles.inactivityBar}>
+              <View
+                style={[
+                  styles.inactivityFill,
+                  {
+                    width: `${Math.round(inactivityProgress * 100)}%` as any,
+                    backgroundColor: inactivityProgress > 0.5
+                      ? Colors.gold
+                      : inactivityProgress > 0.25
+                      ? "#FF9500"
+                      : "#FF3B30",
+                  },
+                ]}
+              />
+            </View>
+            <Text style={[styles.inactivityCountdown, {
+              color: inactivityProgress > 0.5 ? Colors.gold : inactivityProgress > 0.25 ? "#FF9500" : "#FF3B30",
+            }]}>
+              {Math.ceil(inactivityProgress * INACTIVITY_TIMEOUT)}s
+            </Text>
           </View>
         )}
         {/* Player emote bubble */}
@@ -1380,8 +1656,26 @@ export default function GameScreen() {
         <TournamentModal
           scores={tournamentScores}
           round={tournamentRound}
+          lastRoundWon={lastTournamentRoundWon}
           onContinue={() => { setShowTournamentModal(false); startNextTournamentRound(); }}
           onQuit={() => { setShowTournamentModal(false); router.back(); }}
+        />
+      )}
+
+      {showLightningBanner && <LightningBanner />}
+
+      {showChallengeRulesModal && activeChallengeRules && (
+        <ChallengeRulesModal
+          rules={activeChallengeRules}
+          lang={profile.language ?? "es"}
+          onClose={() => setShowChallengeRulesModal(false)}
+        />
+      )}
+
+      {!!rankedPromotion && (
+        <RankedResultOverlay
+          type={rankedPromotion}
+          onDone={() => setRankedPromotion(null)}
         />
       )}
     </View>
@@ -1532,11 +1826,18 @@ const styles = StyleSheet.create({
   playerTurnDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#27AE60" },
 
   // Inactivity bar
-  inactivityBar: {
-    width: "92%", height: 3, backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: 2, overflow: "hidden", marginBottom: 2,
+  inactivityBarWrap: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    width: "92%", marginBottom: 2,
   },
-  inactivityFill: { height: 3, borderRadius: 2 },
+  inactivityBar: {
+    flex: 1, height: 4, backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 2, overflow: "hidden",
+  },
+  inactivityFill: { height: 4, borderRadius: 2 },
+  inactivityCountdown: {
+    fontFamily: "Nunito_900ExtraBold", fontSize: 11, minWidth: 22, textAlign: "right",
+  },
 
   // Player hand
   playerSection: { paddingBottom: 6, gap: 5, alignItems: "center" },
