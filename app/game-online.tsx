@@ -352,6 +352,65 @@ function ResultOverlay({ isWin, winnerName, winnerColor, onClose, onPlayAgain }:
   );
 }
 
+// ─── Rival abandoned overlay ──────────────────────────────────────────────
+function RivalAbandonedOverlay({ rivalName, onClaim, onPlayAgain }: {
+  rivalName: string; onClaim: () => void; onPlayAgain: () => void;
+}) {
+  const T = useT();
+  const sc = useSharedValue(0.8);
+  const op = useSharedValue(0);
+  useEffect(() => {
+    sc.value = withSpring(1, { damping: 12 });
+    op.value = withTiming(1, { duration: 350 });
+  }, []);
+  const aStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
+  return (
+    <View style={raStyles.overlay}>
+      <Animated.View style={[raStyles.card, aStyle]}>
+        <LinearGradient colors={["#041A04", "#062206", "#041A04"]} style={raStyles.grad}>
+          <View style={raStyles.iconWrap}>
+            <Ionicons name="exit" size={44} color="#E74C3C" />
+          </View>
+          <Text style={raStyles.rivalTxt}>{rivalName}</Text>
+          <Text style={raStyles.mainTitle}>{T("rivalAbandoned")}</Text>
+          <Text style={raStyles.autoVic}>{T("autoVictory")}</Text>
+          <Text style={raStyles.sub}>{T("rivalAbandonedSub")}</Text>
+          <View style={raStyles.trophyRow}>
+            {[0, 1, 2].map(i => (
+              <Ionicons key={i} name="trophy" size={26} color={Colors.gold} />
+            ))}
+          </View>
+          <Pressable onPress={onClaim} style={raStyles.claimBtn}>
+            <LinearGradient colors={[Colors.gold, "#A07800"]} style={raStyles.claimGrad}>
+              <Ionicons name="checkmark-circle" size={18} color="#1a0a00" />
+              <Text style={raStyles.claimTxt}>{T("autoVictory")}</Text>
+            </LinearGradient>
+          </Pressable>
+          <Pressable onPress={onPlayAgain} style={raStyles.againBtn}>
+            <Text style={raStyles.againTxt}>{T("playAgain")}</Text>
+          </Pressable>
+        </LinearGradient>
+      </Animated.View>
+    </View>
+  );
+}
+const raStyles = StyleSheet.create({
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.85)", alignItems: "center", justifyContent: "center", zIndex: 200 },
+  card: { width: 300, borderRadius: 24, overflow: "hidden", borderWidth: 2, borderColor: Colors.gold + "44" },
+  grad: { padding: 28, alignItems: "center", gap: 10 },
+  iconWrap: { width: 72, height: 72, borderRadius: 36, backgroundColor: "#E74C3C22", borderWidth: 2, borderColor: "#E74C3C44", alignItems: "center", justifyContent: "center", marginBottom: 4 },
+  rivalTxt: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1 },
+  mainTitle: { fontFamily: "Nunito_700Bold", fontSize: 16, color: "rgba(255,255,255,0.8)", textAlign: "center" },
+  autoVic: { fontFamily: "Nunito_900ExtraBold", fontSize: 26, color: Colors.gold, textAlign: "center" },
+  sub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: "rgba(255,255,255,0.55)", textAlign: "center" },
+  trophyRow: { flexDirection: "row", gap: 12, marginVertical: 4 },
+  claimBtn: { width: "100%", borderRadius: 14, overflow: "hidden", marginTop: 4 },
+  claimGrad: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14 },
+  claimTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: "#1a0a00" },
+  againBtn: { paddingVertical: 10 },
+  againTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "rgba(255,255,255,0.45)" },
+});
+
 // ─── Main screen ──────────────────────────────────────────────────────────
 export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
@@ -390,6 +449,7 @@ export default function OnlineGameScreen() {
   const [lobbyPhase, setLobbyPhase] = useState<"searching" | "found" | "countdown" | "dealing" | "game" | "result">("searching");
   const [joinedCount, setJoinedCount] = useState(0);
   const [countdown, setCountdown] = useState(3);
+  const [rivalAbandoned, setRivalAbandoned] = useState(false);
 
   // Game state
   const [gameState, setGameState] = useState<MultiGameState | null>(null);
@@ -447,6 +507,17 @@ export default function OnlineGameScreen() {
   const handleDealingComplete = useCallback(() => {
     setLobbyPhase("game");
   }, []);
+
+  // ─── Rival abandoned: ~8% chance a CPU rival "disconnects" 10-25s into game ──
+  useEffect(() => {
+    if (lobbyPhase !== "game" || rivalAbandoned) return;
+    if (Math.random() > 0.08) return; // 8% chance per game
+    const delay = 10000 + Math.random() * 15000; // 10-25 seconds in
+    const t = setTimeout(() => {
+      if (lobbyPhase === "game") setRivalAbandoned(true);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [lobbyPhase]);
 
   // ─── CPU auto-play ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -871,12 +942,21 @@ export default function OnlineGameScreen() {
       )}
 
       {/* Result overlay */}
-      {gs.phase === "game_over" && gs.winnerIndex !== null && (
+      {gs.phase === "game_over" && gs.winnerIndex !== null && !rivalAbandoned && (
         <ResultOverlay
           isWin={gs.winnerIndex === 0}
           winnerName={allNames[gs.winnerIndex]}
           winnerColor={PLAYER_COLORS[gs.winnerIndex % PLAYER_COLORS.length]}
           onClose={() => { playButton().catch(() => {}); router.back(); }}
+          onPlayAgain={handlePlayAgain}
+        />
+      )}
+
+      {/* Rival abandoned overlay */}
+      {rivalAbandoned && (
+        <RivalAbandonedOverlay
+          rivalName={currentCpuProfiles[0]?.name ?? "Rival"}
+          onClaim={() => { playWin().catch(() => {}); router.back(); }}
           onPlayAgain={handlePlayAgain}
         />
       )}

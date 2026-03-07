@@ -52,6 +52,10 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
   const color = isJoker
     ? (card.suit === "spades" || card.suit === "clubs" ? "#1a1a2e" : "#8B0000")
     : (customSuitColor ?? suitColor(card.suit));
+
+  // For dark card designs, rank text (numbers/letters) must be white for readability.
+  // Suit symbols keep the accent color for visual identity.
+  const rankTextColor = isDarkCard ? "#FFFFFF" : color;
   const sym = isJoker ? "★" : suitSymbol(card.suit);
   const rankDisplay = isJoker ? "★" : card.rank;
 
@@ -102,7 +106,7 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
       }]}
     >
       <View style={styles.cornerTL}>
-        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color, fontWeight: "900", textShadowColor: isDarkCard ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.3)", textShadowRadius: isDarkCard ? 3 : 1, textShadowOffset: { width: 0, height: 1 } }]}>{rankDisplay}</Text>
+        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: rankTextColor, fontWeight: "900", textShadowColor: isDarkCard ? "rgba(0,0,0,0.95)" : "rgba(255,255,255,0.3)", textShadowRadius: isDarkCard ? 4 : 1, textShadowOffset: { width: 0, height: 1 } }]}>{rankDisplay}</Text>
         <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color, textShadowColor: isDarkCard ? "rgba(0,0,0,0.9)" : "transparent", textShadowRadius: isDarkCard ? 3 : 0, textShadowOffset: { width: 0, height: 1 } }]}>{sym}</Text>
       </View>
 
@@ -119,7 +123,7 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
           </>
         ) : isFace ? (
           <View style={[styles.faceBadge, { borderColor: color + "44", backgroundColor: color + "08" }]}>
-            <Text style={[styles.faceRankLarge, { color, fontSize: sobj.ss + 6 }]}>{rankDisplay}</Text>
+            <Text style={[styles.faceRankLarge, { color: rankTextColor, fontSize: sobj.ss + 6 }]}>{rankDisplay}</Text>
             <Text style={[styles.faceSuitSmall, { color, fontSize: sobj.rs - 2 }]}>{sym}</Text>
           </View>
         ) : (
@@ -128,7 +132,7 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
       </View>
 
       <View style={styles.cornerBR}>
-        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color, transform: [{ rotate: "180deg" }], fontWeight: "900", textShadowColor: isDarkCard ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.3)", textShadowRadius: isDarkCard ? 3 : 1, textShadowOffset: { width: 0, height: 1 } }]}>{rankDisplay}</Text>
+        <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: rankTextColor, transform: [{ rotate: "180deg" }], fontWeight: "900", textShadowColor: isDarkCard ? "rgba(0,0,0,0.95)" : "rgba(255,255,255,0.3)", textShadowRadius: isDarkCard ? 4 : 1, textShadowOffset: { width: 0, height: 1 } }]}>{rankDisplay}</Text>
         <Text style={[styles.suitTxt, { fontSize: sobj.rs - 2, color, transform: [{ rotate: "180deg" }], textShadowColor: isDarkCard ? "rgba(0,0,0,0.9)" : "transparent", textShadowRadius: isDarkCard ? 3 : 0, textShadowOffset: { width: 0, height: 1 } }]}>{sym}</Text>
       </View>
 

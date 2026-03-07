@@ -413,6 +413,70 @@ const rrStyles = StyleSheet.create({
   starsRow: { flexDirection: "row", gap: 8 },
 });
 
+// ─── Exit confirm modal ────────────────────────────────────────────────────────
+function ExitConfirmModal({ visible, isRanked, onCancel, onConfirm }: {
+  visible: boolean; isRanked: boolean; onCancel: () => void; onConfirm: () => void;
+}) {
+  const T = useT();
+  const sc = useSharedValue(0.85);
+  const op = useSharedValue(0);
+  useEffect(() => {
+    if (visible) {
+      sc.value = withSpring(1, { damping: 14 });
+      op.value = withTiming(1, { duration: 200 });
+    } else {
+      sc.value = withTiming(0.85, { duration: 150 });
+      op.value = withTiming(0, { duration: 150 });
+    }
+  }, [visible]);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
+  if (!visible) return null;
+  return (
+    <View style={ecStyles.overlay}>
+      <Animated.View style={[ecStyles.card, animStyle]}>
+        <LinearGradient colors={["#1A0800", "#250E00", "#1A0800"]} style={ecStyles.grad}>
+          <View style={ecStyles.iconRow}>
+            <Ionicons name="warning" size={32} color="#E74C3C" />
+          </View>
+          <Text style={ecStyles.title}>{T("exitGameTitle")}</Text>
+          <Text style={ecStyles.warning}>{T("exitGameWarning")}</Text>
+          {isRanked && (
+            <View style={ecStyles.rankedRow}>
+              <Ionicons name="trophy" size={14} color={Colors.gold} />
+              <Text style={ecStyles.rankedTxt}>{T("exitRankedWarning")}</Text>
+            </View>
+          )}
+          <View style={ecStyles.btns}>
+            <Pressable onPress={onCancel} style={ecStyles.cancelBtn}>
+              <Ionicons name="arrow-back" size={16} color="#FFFFFF" />
+              <Text style={ecStyles.cancelTxt}>{T("cancel")}</Text>
+            </Pressable>
+            <Pressable onPress={onConfirm} style={ecStyles.exitBtn}>
+              <Ionicons name="exit" size={16} color="#FFFFFF" />
+              <Text style={ecStyles.exitTxt}>{T("exitGameBtn")}</Text>
+            </Pressable>
+          </View>
+        </LinearGradient>
+      </Animated.View>
+    </View>
+  );
+}
+const ecStyles = StyleSheet.create({
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.75)", alignItems: "center", justifyContent: "center", zIndex: 300 },
+  card: { width: 310, borderRadius: 20, overflow: "hidden", borderWidth: 1.5, borderColor: "#E74C3C55" },
+  grad: { padding: 24, gap: 12 },
+  iconRow: { alignItems: "center", marginBottom: 4 },
+  title: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: "#FFFFFF", textAlign: "center" },
+  warning: { fontFamily: "Nunito_400Regular", fontSize: 14, color: "rgba(255,255,255,0.7)", textAlign: "center", lineHeight: 20 },
+  rankedRow: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: Colors.gold + "18", borderRadius: 8, padding: 8, borderWidth: 1, borderColor: Colors.gold + "33" },
+  rankedTxt: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.gold, flex: 1 },
+  btns: { flexDirection: "row", gap: 10, marginTop: 4 },
+  cancelBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 12, paddingVertical: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" },
+  cancelTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "#FFFFFF" },
+  exitBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 12 },
+  exitTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "#FFFFFF" },
+});
+
 // ─── Tournament modal ─────────────────────────────────────────────────────────
 function TournamentModal({ scores, round, onContinue, onQuit, lastRoundWon }: {
   scores: [number, number]; round: number; onContinue: () => void; onQuit: () => void; lastRoundWon?: boolean;
@@ -878,6 +942,7 @@ export default function GameScreen() {
   const [showChallengeRulesModal, setShowChallengeRulesModal] = useState(false);
   const [showInactivityBar, setShowInactivityBar] = useState(false);
   const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const [lastPlayerEmoteTime, setLastPlayerEmoteTime] = useState(0);
   const lastCardBannerAnim = useSharedValue(0);
@@ -1371,7 +1436,13 @@ export default function GameScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => { playSound("button_press").catch(() => {}); router.back(); }} style={styles.backBtn}>
+        <Pressable
+          onPress={() => {
+            playSound("button_press").catch(() => {});
+            if (isGameOver) { router.back(); } else { setShowExitConfirm(true); }
+          }}
+          style={styles.backBtn}
+        >
           <Ionicons name="arrow-back" size={20} color={Colors.gold} />
         </Pressable>
         <View style={styles.headerCenter}>
@@ -1678,6 +1749,13 @@ export default function GameScreen() {
           onDone={() => setRankedPromotion(null)}
         />
       )}
+
+      <ExitConfirmModal
+        visible={showExitConfirm}
+        isRanked={session?.mode === "ranked"}
+        onCancel={() => setShowExitConfirm(false)}
+        onConfirm={() => { setShowExitConfirm(false); router.back(); }}
+      />
     </View>
   );
 }

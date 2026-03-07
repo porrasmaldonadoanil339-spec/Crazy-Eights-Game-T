@@ -1,0 +1,113 @@
+1.	Neón Azul
+2.	Neón Verde
+3.	Neón Rojo
+4.	Galaxia
+5.	Cyberpunk
+6.	Lava Volcánica
+7.	Tóxico
+8.	Sombra Oscura
+9.	Amatista
+10.	Zafiro Oscuro
+11.	Rubí
+12.	Jade Imperial
+13.	Aurora Boreal
+14.	Plasma
+15.	Abismo
+16.	Atardecer Épico
+17.	Tormenta Eléctrica
+18.	Fuego y Hielo
+19.	Matriz Digital
+20.	Obsidiana
+21.	Espacio Profundo
+22.	Oro Neón
+23.	Vórtice
+24.	Llamas
+25.	Prisma
+26.	Oro Real
+27.	Luna de Sangre
+28.	Inframundo
+29.	El Vacío
+30.	Singularidad
+31.	Celestial
+32.	Fuego del Averno
+33.	Nirvana
+34.	Titán
+35.	Supernova
+36.	Mitología
+37.	Arcano
+38.	Eterno
+39.	Divino
+40.	Omega
+(El diseño de las cartas está muy bien y me gusta mucho cómo se ven.
+Solo hay un pequeño problema: el color del número es muy parecido al color de la carta, entonces no se distingue bien el número al jugar. (ME REFIERO QUE CAMBIES DE COLOR DEL NUMERO DE LAS CARTAS QUE TE HE MENCIONADO ESAS 40 CARTAS PORQUE NO SE DISTINGE BIEN PORFAVOR
+MODO COOPERATIVO 
+Quiero que modifiques la descripción y funcionamiento del Modo Cooperativo.
+El modo cooperativo debe ser 2 vs 2 con jugadores reales.
+Funcionamiento:
+•	Equipo 1: Yo + un jugador real (mi compañero).
+•	Equipo 2: Dos jugadores rivales.
+Cada equipo comparte la misma baraja de 8 cartas. Es decir, mi compañero y yo jugamos usando las mismas cartas del equipo, y los rivales también comparten su propia baraja.
+Orden de turnos:
+1.	Yo juego primero.
+2.	Luego juega mi compañero (el jugador que está arriba).
+3.	Después juega el rival de abajo.
+4.	Luego juega el otro rival.
+Así todos los jugadores participan en orden durante la partida.
+Pantalla de espera:
+En la pantalla de espera antes de empezar la partida debe mostrarse:
+•	Mi perfil junto al perfil de mi compañero (nuestro equipo).
+•	Frente a nosotros, los dos perfiles de los jugadores rivales.
+Debe verse visualmente como:
+Mi perfil + perfil de mi compañero VS los dos perfiles del equipo rival.
+
+Quiero que el modo Clasificatoria tenga un sistema de sala similar a Mobile Legends.
+Funcionamiento:
+1.	Cuando entro al modo Clasificatoria, aparece una sala de equipo antes de buscar partida.
+2.	En esa sala se muestra:
+•	Mi perfil.
+•	Un botón “+” al costado para invitar amigos.
+3.	Al presionar el “+”, se abre una lista de amigos donde puedo ver:
+•	Qué amigos están conectados.
+•	Cuáles están jugando una partida.
+•	Cuáles están disponibles.
+4.	Los amigos disponibles pueden aceptar la invitación y unirse a mi sala.
+5.	La sala debe permitir:
+•	Mínimo 3 jugadores para iniciar partida.
+•	Máximo 4 jugadores en total.
+6.	Cuando ya hay suficientes jugadores, se activa el botón “Buscar partida”.
+7.	El sistema empieza a buscar rivales con ranking similar para iniciar la partida clasificatoria.
+8.	En la sala deben verse los perfiles de los jugadores de mi equipo antes de comenzar la partida.
+
+MODO COOPERATIVO Quiero que el modo Cooperativo tenga un sistema de sala similar a Mobile Legends, pero adaptado al cooperativo.
+Funcionamiento:
+1.	Cuando entro al modo Cooperativo, aparece una sala de equipo antes de iniciar la partida.
+2.	En la sala se muestra:
+•	Mi perfil
+•	Un botón “+” al costado para invitar amigos.
+3.	Al presionar el botón “+”, se abre la lista de amigos donde puedo ver:
+•	Amigos en línea
+•	Amigos jugando una partida
+•	Amigos disponibles
+4.	Los amigos disponibles pueden aceptar la invitación y unirse a mi sala.
+5.	En la sala deben verse los perfiles así:
+Mi perfil + perfil de mi compañero
+VS
+2 jugadores rivales
+6.	La partida debe iniciar cuando haya:
+•	Mínimo 3 jugadores
+•	Máximo 4 jugadores
+7.	Cuando ya estén los jugadores necesarios, se activa el botón “Iniciar partida” o “Buscar partida”.
+8.	Antes de comenzar la partida debe mostrarse la pantalla de equipo con los perfiles de los jugadores:
+Mi equipo vs equipo rival.
+Quiero mejorar el sistema de temporizador de turnos en todos los modos del juego.
+Funcionamiento que quiero:
+1.	Cuando empiece el turno de un jugador, no debe aparecer el temporizador inmediatamente.
+El jugador debe tener unos segundos para pensar sin que el temporizador sea visible.
+2.	Si el jugador no hace ninguna acción durante unos segundos, entonces debe aparecer un temporizador visible con cuenta regresiva.
+3.	La cuenta regresiva puede ser por ejemplo:
+3... 2... 1...
+4.	Si el jugador sigue sin jugar cuando el temporizador llegue a 0, el sistema debe poner automáticamente una carta válida al azar desde su mano para que la partida continúe.
+5.	Esto debe funcionar en todos los modos del juego, para evitar que la partida se quede detenida si un jugador está inactivo.
+6.	Cuando el temporizador aparezca, agrega un efecto visual para que el jugador se dé cuenta (por ejemplo brillo rojo o advertencia de tiempo).
+La idea es que el juego se sienta fluido y real, evitando que los jugadores se queden inactivos y bloqueen la partida.
+
