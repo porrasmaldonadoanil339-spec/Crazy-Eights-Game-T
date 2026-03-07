@@ -399,6 +399,11 @@ export default function PlayScreen() {
   const handleModePress = async (modeId: GameModeId) => {
     const mode = GAME_MODES.find((m) => m.id === modeId);
     if (!mode) return;
+    if (modeId === "coop") {
+      await playSound("mode_select").catch(() => {});
+      router.push("/coop-lobby");
+      return;
+    }
     if (!mode.hasDifficulty) {
       await playSound("mode_select").catch(() => {});
       startGame(modeId, "normal");

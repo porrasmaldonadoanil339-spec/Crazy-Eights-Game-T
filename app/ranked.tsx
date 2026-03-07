@@ -353,7 +353,7 @@ export default function RankedScreen() {
       {/* Play Button Fixed Bottom */}
       <View style={[styles.footer, { paddingBottom: botPad + 20, backgroundColor: themeColors.background + "ee" }]}>
         <Pressable
-          onPress={() => router.push({ pathname: "/game-online", params: { mode: "ranked" } })}
+          onPress={() => router.push("/ranked-lobby")}
           style={({ pressed }) => [
             styles.playBtn,
             { backgroundColor: rankInfo.color },
