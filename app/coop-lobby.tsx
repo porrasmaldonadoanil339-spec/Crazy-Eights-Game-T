@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Platform,
+  View, Text, StyleSheet, Pressable, Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  useSharedValue, useAnimatedStyle, withSpring, withTiming,
-  FadeIn, FadeInDown,
-} from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
@@ -35,22 +32,10 @@ interface LobbySlot {
   winRate: number;
   isMe?: boolean;
   joined: boolean;
-  isSearching?: boolean;
 }
 
-function SlotCard({ slot, label, accentColor }: { slot: LobbySlot | null; label: string; accentColor: string }) {
+function SlotCard({ slot, accentColor }: { slot: LobbySlot | null; accentColor: string }) {
   const T = useT();
-  const sc = useSharedValue(slot?.joined ? 1 : 0.85);
-  const op = useSharedValue(slot?.joined ? 1 : 0.4);
-
-  useEffect(() => {
-    if (slot?.joined) {
-      sc.value = withSpring(1, { damping: 12 });
-      op.value = withTiming(1, { duration: 300 });
-    }
-  }, [slot?.joined]);
-
-  const aStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
 
   if (!slot) {
     return (
@@ -62,7 +47,7 @@ function SlotCard({ slot, label, accentColor }: { slot: LobbySlot | null; label:
   }
 
   return (
-    <Animated.View style={[styles.slotCard, { borderColor: accentColor + "88" }, aStyle]}>
+    <Animated.View entering={FadeIn.duration(300)} style={[styles.slotCard, { borderColor: slot.joined ? accentColor + "88" : accentColor + "44" }]}>
       <LinearGradient
         colors={[accentColor + "22", accentColor + "08"]}
         style={StyleSheet.absoluteFill}
@@ -126,26 +111,11 @@ export default function CoopLobbyScreen() {
       joined,
     });
 
-    const t1 = setTimeout(() => {
-      setPartner(makeSlot(cpus[0], false));
-    }, 600);
-
-    const t2 = setTimeout(() => {
-      setPartner(prev => prev ? { ...prev, joined: true } : prev);
-    }, 1800);
-
-    const t3 = setTimeout(() => {
-      setRival1(makeSlot(cpus[1], false));
-    }, 1200);
-
-    const t4 = setTimeout(() => {
-      setRival1(prev => prev ? { ...prev, joined: true } : prev);
-    }, 2400);
-
-    const t5 = setTimeout(() => {
-      setRival2(makeSlot(cpus[2], false));
-    }, 1800);
-
+    const t1 = setTimeout(() => setPartner(makeSlot(cpus[0], false)), 600);
+    const t2 = setTimeout(() => setPartner(prev => prev ? { ...prev, joined: true } : prev), 1800);
+    const t3 = setTimeout(() => setRival1(makeSlot(cpus[1], false)), 1200);
+    const t4 = setTimeout(() => setRival1(prev => prev ? { ...prev, joined: true } : prev), 2400);
+    const t5 = setTimeout(() => setRival2(makeSlot(cpus[2], false)), 1800);
     const t6 = setTimeout(() => {
       setRival2(prev => prev ? { ...prev, joined: true } : prev);
       setPhase("ready");
@@ -203,8 +173,8 @@ export default function CoopLobbyScreen() {
             <Ionicons name="shield-checkmark" size={14} color={TEAM_COLOR} />
             <Text style={[styles.teamLabel, { color: TEAM_COLOR }]}>EQUIPO 1</Text>
           </View>
-          <SlotCard slot={mySlot} label="Tú" accentColor={TEAM_COLOR} />
-          <SlotCard slot={partner} label="Compañero" accentColor={TEAM_COLOR} />
+          <SlotCard slot={mySlot} accentColor={TEAM_COLOR} />
+          <SlotCard slot={partner} accentColor={TEAM_COLOR} />
           <View style={styles.teamDesc}>
             <Text style={styles.teamDescTxt}>Turno: <Text style={{ color: TEAM_COLOR }}>1ro y 2do</Text></Text>
           </View>
@@ -224,8 +194,8 @@ export default function CoopLobbyScreen() {
             <Ionicons name="skull" size={14} color={RIVAL_COLOR} />
             <Text style={[styles.teamLabel, { color: RIVAL_COLOR }]}>RIVALES</Text>
           </View>
-          <SlotCard slot={rival1} label="Rival 1" accentColor={RIVAL_COLOR} />
-          <SlotCard slot={rival2} label="Rival 2" accentColor={RIVAL_COLOR} />
+          <SlotCard slot={rival1} accentColor={RIVAL_COLOR} />
+          <SlotCard slot={rival2} accentColor={RIVAL_COLOR} />
           <View style={styles.teamDesc}>
             <Text style={styles.teamDescTxt}>Turno: <Text style={{ color: RIVAL_COLOR }}>3ro y 4to</Text></Text>
           </View>
@@ -237,10 +207,10 @@ export default function CoopLobbyScreen() {
         <Text style={styles.turnStripTitle}>ORDEN DE TURNOS</Text>
         <View style={styles.turnRow}>
           {[
-            { label: "Tú", color: TEAM_COLOR, icon: "person" },
-            { label: partner?.name?.split(" ")[0] ?? "Compañero", color: TEAM_COLOR, icon: "person" },
-            { label: rival1?.name?.split(" ")[0] ?? "Rival 1", color: RIVAL_COLOR, icon: "person" },
-            { label: rival2?.name?.split(" ")[0] ?? "Rival 2", color: RIVAL_COLOR, icon: "person" },
+            { label: "Tú", color: TEAM_COLOR },
+            { label: partner?.name?.split(" ")[0] ?? "Comp.", color: TEAM_COLOR },
+            { label: rival1?.name?.split(" ")[0] ?? "Rival 1", color: RIVAL_COLOR },
+            { label: rival2?.name?.split(" ")[0] ?? "Rival 2", color: RIVAL_COLOR },
           ].map((item, i) => (
             <React.Fragment key={i}>
               <View style={styles.turnItem}>

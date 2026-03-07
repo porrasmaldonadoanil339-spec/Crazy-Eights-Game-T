@@ -5,10 +5,7 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat,
-  withSequence, Easing, FadeIn, FadeInDown,
-} from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
