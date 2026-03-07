@@ -32,13 +32,22 @@ const SIZES = {
 const DEFAULT_BACK_COLORS: [string, string, string] = ["#1E4080", "#0e2248", "#0a1832"];
 const DEFAULT_BACK_ACCENT = Colors.gold;
 
+function hexLuminance(hex: string): number {
+  if (!hex || hex.length < 7) return 1;
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
 function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.md; cardColors?: [string, string, string] }) {
   const isJoker = card.rank === "Joker";
   const isEight = card.rank === "8";
   const isFace = ["J", "Q", "K"].includes(card.rank);
 
   const customBg = isJoker ? undefined : cardColors?.[0];
-  const customSuitColor = isJoker ? undefined : cardColors?.[1];
+  const isDarkCard = customBg ? hexLuminance(customBg) < 0.18 : false;
+  const customSuitColor = isJoker ? undefined : isDarkCard ? (cardColors?.[2] ?? "#FFFFFF") : cardColors?.[1];
 
   const color = isJoker
     ? (card.suit === "spades" || card.suit === "clubs" ? "#1a1a2e" : "#8B0000")
@@ -75,7 +84,9 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
   }
 
   const faceGradient: [string, string, string] = customBg
-    ? [customBg, customBg, customBg]
+    ? isDarkCard
+      ? [customBg, (customSuitColor ?? "#FFFFFF") + "18", customBg]
+      : [customBg, customBg, customBg]
     : isFace
       ? ["#FFF8F0", "#F5EDDA", "#EDE0C4"]
       : ["#FEFDF4", "#F8F4E6", "#EEE8D0"];

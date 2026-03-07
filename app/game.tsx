@@ -89,14 +89,15 @@ function FloatingIcon({ icon, SW, SH }: { icon: any; SW: number; SH: number }) {
 }
 
 // ─── Epic Victory/Defeat Overlay ──────────────────────────────────────────────
-function EpicResultOverlay({ type, coins }: { type: "win" | "lose"; coins: number }) {
+function EpicResultOverlay({ type, coins, quality }: { type: "win" | "lose"; coins: number; quality?: string }) {
   const T = useT();
   const scale = useSharedValue(0.5);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    scale.value = withSpring(1, { damping: 8, stiffness: 100 });
-    opacity.value = withTiming(1, { duration: 400 });
+    const dur = quality === "low" ? 200 : 400;
+    scale.value = withSpring(1, { damping: quality === "high" ? 6 : 8, stiffness: 100 });
+    opacity.value = withTiming(1, { duration: dur });
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -111,15 +112,15 @@ function EpicResultOverlay({ type, coins }: { type: "win" | "lose"; coins: numbe
     <View style={[StyleSheet.absoluteFill, styles.epicOverlay]}>
       <Animated.View style={[styles.epicContent, animatedStyle]}>
         <Text style={[styles.epicTitle, { color: mainColor }]}>
-          {isWin ? "¡VICTORIA!" : "DERROTA"}
+          {isWin ? T("youWon") : T("defeat")}
         </Text>
         {isWin && (
           <Text style={styles.epicCoins}>
-            +{coins.toLocaleString()} 💰
+            +{coins.toLocaleString()} {T("coins")}
           </Text>
         )}
       </Animated.View>
-      {isWin && <WinParticles />}
+      {isWin && <WinParticles quality={quality} />}
     </View>
   );
 }
@@ -128,21 +129,22 @@ const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 
 // ─── Particle confetti for win ───────────────────────────────────────────────
 const PARTICLE_SYMS = ["♠","♥","♦","♣"];
-function WinParticle({ index, total }: { index: number; total: number }) {
+function WinParticle({ index, total, quality }: { index: number; total: number; quality: string }) {
   const x = useSharedValue(SW * 0.5);
   const y = useSharedValue(300);
   const op = useSharedValue(0);
   const sc = useSharedValue(0);
   useEffect(() => {
     const angle = (index / total) * Math.PI * 2;
-    const dist = 80 + Math.random() * 100;
+    const dist = quality === "high" ? 100 + Math.random() * 130 : 80 + Math.random() * 80;
     const tx = SW * 0.5 + Math.cos(angle) * dist;
-    const ty = 300 + Math.sin(angle) * dist - 120;
-    op.value = withTiming(1, { duration: 100 });
-    sc.value = withSpring(1.2, { damping: 10 });
-    x.value = withTiming(tx, { duration: 700, easing: Easing.out(Easing.quad) });
-    y.value = withTiming(ty, { duration: 700, easing: Easing.out(Easing.quad) });
-    setTimeout(() => { op.value = withTiming(0, { duration: 300 }); }, 600);
+    const ty = 300 + Math.sin(angle) * dist - 140;
+    const dur = quality === "low" ? 400 : quality === "high" ? 900 : 700;
+    op.value = withTiming(1, { duration: 80 });
+    sc.value = withSpring(quality === "high" ? 1.5 : 1.2, { damping: quality === "high" ? 8 : 12 });
+    x.value = withTiming(tx, { duration: dur, easing: Easing.out(Easing.quad) });
+    y.value = withTiming(ty, { duration: dur, easing: Easing.out(Easing.quad) });
+    setTimeout(() => { op.value = withTiming(0, { duration: quality === "low" ? 150 : 300 }); }, dur - 150);
   }, []);
   const s = useAnimatedStyle(() => ({
     position: "absolute", left: x.value - 6, top: y.value - 6,
@@ -150,18 +152,18 @@ function WinParticle({ index, total }: { index: number; total: number }) {
   }));
   const isRed = index % 4 === 1 || index % 4 === 2;
   return (
-    <Animated.Text style={[s, { fontSize: 14, color: isRed ? "#C0392B" : Colors.gold }]}>
+    <Animated.Text style={[s, { fontSize: quality === "high" ? 18 : 14, color: isRed ? "#C0392B" : Colors.gold }]}>
       {PARTICLE_SYMS[index % 4]}
     </Animated.Text>
   );
 }
 
-function WinParticles() {
-  const total = 14;
+function WinParticles({ quality = "high" }: { quality?: string }) {
+  const total = quality === "low" ? 4 : quality === "medium" ? 8 : 16;
   return (
     <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" } as any]}>
       {Array.from({ length: total }).map((_, i) => (
-        <WinParticle key={i} index={i} total={total} />
+        <WinParticle key={i} index={i} total={total} quality={quality} />
       ))}
     </View>
   );
@@ -172,7 +174,7 @@ function AdviceBadge({ card, T }: { card: Card; T: any }) {
   return (
     <Animated.View entering={FadeIn.duration(400)} style={adviceStyles.badge}>
       <Ionicons name="bulb" size={12} color="#1a0a00" />
-      <Text style={adviceStyles.text}>Sugerida</Text>
+      <Text style={adviceStyles.text}>{T("practiceHint")}</Text>
     </Animated.View>
   );
 }
@@ -1065,7 +1067,11 @@ export default function GameScreen() {
           <LinearGradient colors={["rgba(0,0,0,0.8)", "rgba(0,0,0,0.4)"]} style={styles.challengeHudInner}>
             <Ionicons name="trophy" size={14} color={Colors.gold} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.challengeHudTitle} numberOfLines={1}>{activeChallenges[0].title}</Text>
+              <Text style={styles.challengeHudTitle} numberOfLines={1}>
+                {(profile.language === "en" && activeChallenges[0].titleEn) ? activeChallenges[0].titleEn
+                  : (profile.language === "pt" && activeChallenges[0].titlePt) ? activeChallenges[0].titlePt
+                  : activeChallenges[0].title}
+              </Text>
               <View style={styles.challengeHudProgress}>
                 <View style={[styles.challengeHudBar, { width: `${(activeChallenges[0].progress / activeChallenges[0].target) * 100}%` }]} />
               </View>
@@ -1080,7 +1086,7 @@ export default function GameScreen() {
         <Animated.View entering={FadeIn.delay(1000)} style={styles.practiceHintOverlay}>
           <LinearGradient colors={["#D4AF37", "#A07800"]} style={styles.practiceHintInner}>
             <Ionicons name="bulb" size={16} color="#1a0a00" />
-            <Text style={styles.practiceHintText}>CONSEJO: Juega esta carta</Text>
+            <Text style={styles.practiceHintText}>{T("practiceHintPlay")}</Text>
           </LinearGradient>
         </Animated.View>
       )}
@@ -1090,6 +1096,7 @@ export default function GameScreen() {
         <EpicResultOverlay
           type={showEpicResult}
           coins={endCoins}
+          quality={profile.graphicsQuality ?? "high"}
         />
       )}
 
@@ -1108,6 +1115,12 @@ export default function GameScreen() {
           )}
           {session?.mode === "tournament" && (
             <Text style={styles.tournamentScore}>{tournamentScores[0]} — {tournamentScores[1]}</Text>
+          )}
+          {session?.mode === "practice" && (
+            <View style={[styles.modePill, { borderColor: "#00AA6644", backgroundColor: "#00AA6618" }]}>
+              <Ionicons name="shield-checkmark" size={10} color="#00AA66" />
+              <Text style={[styles.modeLabel, { color: "#00AA66" }]}>{T("practiceNoRanking")}</Text>
+            </View>
           )}
         </View>
         <View style={styles.headerRight}>
@@ -1157,7 +1170,7 @@ export default function GameScreen() {
         <Animated.View style={[styles.messageBubble, msgStyle]}>
           <Text style={styles.messageText} numberOfLines={2}>
             {session?.mode === "practice" && isPlayerTurn && adviceCardId 
-              ? `Consejo: Puedes jugar ${suitName(gameState.playerHand.find(c => c.id === adviceCardId)!.suit)} ${gameState.playerHand.find(c => c.id === adviceCardId)!.rank}`
+              ? `${T("practiceHint")}: ${suitName(gameState.playerHand.find(c => c.id === adviceCardId)!.suit)} ${gameState.playerHand.find(c => c.id === adviceCardId)!.rank}`
               : dealAnimationDone ? gameState.message : T("dealingCards")}
           </Text>
         </Animated.View>

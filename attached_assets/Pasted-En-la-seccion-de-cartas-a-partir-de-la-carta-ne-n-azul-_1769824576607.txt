@@ -1,0 +1,65 @@
+En la seccion de cartas a partir de la carta neón azul hasta el omega no se logra ver bien el numero de la cartas debería ponerle un color que se vea esos números porfavor para que se logre apreciar modifica ellos. A las que se ven oscuras ponles un color blanco a los números y las cartas blancas un color negro al numero
+El modo cooperativo funciona así : simple YO + un bot aliado
+VS 2 bots enemigos (que la jugabilidad sea así tal cual).
+El modo desafio funcione así: Desafío sea un modo de juego con retos especiales. Cada desafío debe tener reglas diferentes a la partida normal, como límite de turnos, cartas iniciales distintas o restricciones al jugar cartas. El jugador debe completar el objetivo para ganar el desafío y recibir recompensas. Los desafíos deben cambiar regularmente para que el modo sea interesante y no se sienta como una partida clásica.
+El modo practico funcione así: debe ayudar al jugador a aprender el juego. Debe incluir pistas, explicaciones de jugadas recomendadas y sin penalización de ranking. La IA debe ser más sencilla y el sistema puede sugerir qué carta jugar.
+Características:
+•	Sugerencias de jugadas
+•	IA más fácil
+•	sin perder puntos de ranking
+MODIFICAR TODO ELLO EN LA JUGABILIDAD PROFAVOR.
+•	ADEMAS EN EL RANKIG DE CLASIFICATORIA  Cada rango tendrá 5 divisiones (V, IV, III, II, I).
+El orden de rangos será: Hierro, Bronce, Plata, Oro, Platino, Diamante, Épico, Mítico, Maestro, Gran Maestro, Legendario y Divino.
+Los jugadores empezarán en el rango más bajo y subirán progresivamente ganando partidas.
+Deberia empezar en el Hierro 5 con ninguna estrella de 5 estrellals que hay y  se debe completar las 5 estrellas para pasar al Hierro 4 y así sucesivamente cada 5 partidas ganadas es una estrella. Ademas en el ranking global los perfiles de los jugadores tiene que ser con caras reales así como los perfiles de los jugadores que aparecen en mis modos de juegos clásicos así la cantidad de jugadores es 10,000 y yo debo estar incluido en el ultimo para aparecer profavor, además algunos perfiles aparte de tener caras reales puede tener avateares de la tienda eso agrega. Necesito que el sistema de idiomas de mi juego funcione en todo el juego, no solo en el menú de opciones.
+ Actualmente cuando cambio el idioma, solo se traducen algunas partes, pero los textos dentro de recuadros, botones, cartas, mensajes y pantallas del juego siguen apareciendo en español. Quiero que se traduzca bien.
+1.	Inicio de sesión con Google y Facebook
+Quiero que el login con Google y Facebook funcione correctamente, similar a juegos como Clash Royale.
+Los jugadores deben poder iniciar sesión o vincular su cuenta para guardar su progreso en la nube y recuperarlo en cualquier dispositivo.
+También quiero que funcione la opción de jugar como invitado y luego poder vincular la cuenta después.
+2.	Pantalla de inicio del juego
+Cuando el jugador abra el juego quiero que aparezca primero:
+•	El logo de mi desarrolladora en pantalla.
+•	Solo un efecto de sonido suave, sin música.
+•	Una animación corta de unos segundos.
+3.	Pantalla de carga
+Después del logo quiero una pantalla de carga profesional como en Clash Royale o Brawl Stars:
+•	Una barra de carga que vaya de 1% a 100%.
+•	Que la carga pueda variar de tiempo para que parezca real (no instantánea).
+•	Mostrar mensajes como “Cargando recursos”, “Conectando al servidor”, etc.
+•	Cuando llegue al 100%, recién entrar al menú principal del juego.
+4.	Transición
+Quiero que la transición entre el logo, la pantalla de carga y el menú principal sea suave y con animaciones, para que el inicio del juego se vea profesional.
+Quiero que todas las opciones del menú de Ajustes funcionen correctamente, incluyendo las opciones que están dentro de cada sección.
+Actualmente cuando entro a Privacidad, Ayuda o Información, algunas opciones internas no hacen nada cuando se presionan. Necesito que todas tengan una función real.
+Por ejemplo:
+•	En Privacidad: que funcionen las opciones como política de privacidad, gestión de datos, permisos, etc.
+•	En Ayuda: que funcionen las opciones como soporte, preguntas frecuentes, reportar problema o contactar ayuda.
+•	En Información: que funcionen las opciones como versión del juego, créditos, términos de servicio, desarrolladora, etc.
+Cada botón o opción debe abrir su pantalla correspondiente o mostrar la información, no debe quedarse sin hacer nada.
+Quiero que todo el menú de ajustes sea completamente funcional y profesional, donde cada opción que el jugador presione tenga una acción o contenido.
+
+Quiero mejorar el sistema de calidad gráfica de mi juego.
+Actualmente existen opciones como Baja, Media y Alta, pero necesito que se note claramente la diferencia visual cuando el jugador cambie entre ellas.
+Implementa lo siguiente:
+Gráficos Bajos
+•	Reducir efectos visuales.
+•	Menos partículas y animaciones.
+•	Sombras desactivadas o muy simples.
+•	Resolución de texturas más baja.
+•	Menos efectos de iluminación.
+Gráficos Medios
+•	Cantidad moderada de efectos.
+•	Algunas partículas activadas.
+•	Sombras simples.
+•	Texturas de calidad media.
+Gráficos Altos
+•	Todos los efectos visuales activados.
+•	Más partículas y animaciones.
+•	Sombras completas y mejor iluminación.
+•	Texturas en alta calidad.
+•	Animaciones más suaves.
+También quiero que cuando el jugador cambie la calidad gráfica en ajustes, los cambios se apliquen inmediatamente en el juego para que se note claramente la diferencia entre baja, media y alta.
+
+Además modiicar la opción donde dice watchAd que se llame Ver video para recompensa. 
+EN LA PARTE DE RANKING DE LA PRIMERA INTERFAZ QUE SE CAMBIA A  RANKING MUNDIAL MEJOR . SI PUEDE AGREGAR QUE APAREZCA DE QUE PAIS ES CADA JUGADOR PARA QUE SE NOTE MAS REALISTA SERIA BUENO

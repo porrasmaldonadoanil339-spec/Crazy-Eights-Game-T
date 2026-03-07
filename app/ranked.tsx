@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
-import { getRankInfo, RANKS, RANK_COLORS } from "@/lib/ranked";
+import { getRankInfo, RANKS, RANK_COLORS, DIVISIONS } from "@/lib/ranked";
 import { getCurrentSeason, getSeasonRewardsForRank } from "@/lib/seasons";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 
@@ -28,6 +28,19 @@ const SUFFIXES = ["99", "Pro", "X", "_", "77", "Killer", "Master", "Elite", "Leg
 const AVATAR_ICONS = ["cut", "sparkles", "flame", "shield", "book", "sunny", "trophy", "hardware-chip", "bag", "moon", "heart", "eye-off", "skull", "star", "game-controller", "happy", "bonfire", "diamond", "ribbon", "paw"];
 const AVATAR_COLORS = ["#E74C3C", "#9B59B6", "#E67E22", "#95A5A6", "#4A90D9", "#D4AF37", "#C0392B", "#00D4FF", "#8B7355", "#1a0020", "#E91E8C", "#2C3E50"];
 
+const COUNTRIES = [
+  { code: "MX", name: "México" }, { code: "CO", name: "Colombia" }, { code: "AR", name: "Argentina" },
+  { code: "US", name: "EE.UU." }, { code: "ES", name: "España" }, { code: "BR", name: "Brasil" },
+  { code: "VE", name: "Venezuela" }, { code: "PE", name: "Perú" }, { code: "CL", name: "Chile" },
+  { code: "EC", name: "Ecuador" }, { code: "GT", name: "Guatemala" }, { code: "BO", name: "Bolivia" },
+  { code: "DO", name: "R. Dom." }, { code: "HN", name: "Honduras" }, { code: "CR", name: "Costa Rica" },
+  { code: "PA", name: "Panamá" }, { code: "UY", name: "Uruguay" }, { code: "PY", name: "Paraguay" },
+  { code: "FR", name: "Francia" }, { code: "DE", name: "Alemania" }, { code: "IT", name: "Italia" },
+  { code: "PT", name: "Portugal" }, { code: "TR", name: "Turquía" }, { code: "RU", name: "Rusia" },
+  { code: "JP", name: "Japón" }, { code: "KR", name: "Corea" }, { code: "CN", name: "China" },
+  { code: "IN", name: "India" }, { code: "PH", name: "Filipinas" }, { code: "ID", name: "Indonesia" },
+];
+
 function generatePlayer(index: number) {
   const seed = index + 12345;
   const firstName = FIRST_NAMES[Math.floor(seededRand(seed * 1) * FIRST_NAMES.length)];
@@ -37,24 +50,25 @@ function generatePlayer(index: number) {
 
   const avatarIcon = AVATAR_ICONS[Math.floor(seededRand(seed * 5) * AVATAR_ICONS.length)];
   const avatarColor = AVATAR_COLORS[Math.floor(seededRand(seed * 6) * AVATAR_COLORS.length)];
+  const country = COUNTRIES[Math.floor(seededRand(seed * 11) * COUNTRIES.length)];
   
   // Rank distribution
   let rankIdx = 0;
   let level = 1;
   if (index < 10) {
-    rankIdx = seededRand(seed * 7) > 0.5 ? 11 : 10; // Divino or Legendario
+    rankIdx = seededRand(seed * 7) > 0.5 ? 11 : 10;
     level = Math.floor(seededRand(seed * 8) * 50) + 150;
   } else if (index < 100) {
-    rankIdx = Math.floor(seededRand(seed * 7) * 3) + 8; // Maestro, GM, Legendario
+    rankIdx = Math.floor(seededRand(seed * 7) * 3) + 8;
     level = Math.floor(seededRand(seed * 8) * 50) + 100;
   } else if (index < 1000) {
-    rankIdx = Math.floor(seededRand(seed * 7) * 4) + 5; // Diamante to Maestro
+    rankIdx = Math.floor(seededRand(seed * 7) * 4) + 5;
     level = Math.floor(seededRand(seed * 8) * 60) + 40;
   } else if (index < 5000) {
-    rankIdx = Math.floor(seededRand(seed * 7) * 4) + 2; // Plata to Diamante
+    rankIdx = Math.floor(seededRand(seed * 7) * 4) + 2;
     level = Math.floor(seededRand(seed * 8) * 40) + 10;
   } else {
-    rankIdx = Math.floor(seededRand(seed * 7) * 3); // Hierro to Plata
+    rankIdx = Math.floor(seededRand(seed * 7) * 3);
     level = Math.floor(seededRand(seed * 8) * 20) + 1;
   }
 
@@ -63,6 +77,7 @@ function generatePlayer(index: number) {
     name,
     avatarIcon,
     avatarColor,
+    country,
     rank: rankIdx,
     division: Math.floor(seededRand(seed * 9) * 5),
     stars: Math.floor(seededRand(seed * 10) * 5) + 1,
@@ -73,7 +88,7 @@ function generatePlayer(index: number) {
 
 export default function RankedScreen() {
   const insets = useSafeAreaInsets();
-  const { profile } = useProfile();
+  const { profile, level } = useProfile();
   const T = useT();
   const isDark = profile.darkMode !== false;
   const themeColors = isDark ? Colors : LightColors;
@@ -87,9 +102,26 @@ export default function RankedScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
 
+  const MY_POSITION = 9487;
   const visiblePlayers = useMemo(() => {
-    return Array.from({ length: Math.min(visibleCount, totalPlayers) }).map((_, i) => generatePlayer(i));
-  }, [visibleCount]);
+    const players = Array.from({ length: Math.min(visibleCount, totalPlayers) }).map((_, i) => generatePlayer(i));
+    if (visibleCount >= MY_POSITION + 1) {
+      players[MY_POSITION] = {
+        id: "player_me",
+        name: profile.name || "Tú",
+        avatarIcon: "person",
+        avatarColor: AVATAR_COLORS[2],
+        country: { code: "MX", name: "México" },
+        rank: profile.rankedProfile.rank,
+        division: profile.rankedProfile.division,
+        stars: profile.rankedProfile.stars,
+        level: level ?? 1,
+        position: MY_POSITION + 1,
+        isMe: true,
+      };
+    }
+    return players;
+  }, [visibleCount, profile.name, profile.rankedProfile, level]);
 
   const loadMore = useCallback(() => {
     if (visibleCount < totalPlayers) {
@@ -115,37 +147,52 @@ export default function RankedScreen() {
 
   const nextRankProgress = (profile.rankedProfile.stars / profile.rankedProfile.maxStars) * 100;
 
-  const renderItem = ({ item, index }: { item: any; index: number }) => (
-    <View key={item.id} style={[styles.rankingItem, { backgroundColor: themeColors.surface }]}>
-      <View style={styles.rankingPlace}>
-        {index < 3 ? (
-          <Ionicons name="medal" size={24} color={index === 0 ? "#D4AF37" : index === 1 ? "#C0C0C0" : "#CD7F32"} />
-        ) : (
-          <Text style={[styles.rankNumber, { color: themeColors.textMuted }]}>
-            #{item.position}
-          </Text>
-        )}
-      </View>
-      
-      <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>
-        <Ionicons name={item.avatarIcon as any} size={16} color="#fff" />
-      </View>
-      
-      <View style={styles.rankingInfo}>
-        <Text style={[styles.rankingName, { color: themeColors.text }]}>{item.name}</Text>
-        <View style={styles.rankingMetaRow}>
-          <Text style={[styles.rankingMeta, { color: themeColors.textMuted }]}>
-            {T(`rank${RANKS[item.rank]}` as any)} {item.division + 1}
-          </Text>
+  const renderItem = ({ item, index }: { item: any; index: number }) => {
+    const isMe = item.isMe === true;
+    return (
+      <View key={item.id} style={[
+        styles.rankingItem,
+        { backgroundColor: isMe ? RANK_COLORS[item.rank] + "22" : themeColors.surface },
+        isMe && { borderWidth: 1.5, borderColor: RANK_COLORS[item.rank] + "88" },
+      ]}>
+        <View style={styles.rankingPlace}>
+          {index < 3 && !isMe ? (
+            <Ionicons name="medal" size={24} color={index === 0 ? "#D4AF37" : index === 1 ? "#C0C0C0" : "#CD7F32"} />
+          ) : (
+            <Text style={[styles.rankNumber, { color: isMe ? RANK_COLORS[item.rank] : themeColors.textMuted }]}>
+              #{item.position}
+            </Text>
+          )}
+        </View>
+        
+        <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>
+          <Ionicons name={item.avatarIcon as any} size={16} color="#fff" />
+        </View>
+        
+        <View style={styles.rankingInfo}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Text style={[styles.rankingName, { color: isMe ? RANK_COLORS[item.rank] : themeColors.text }]}>{item.name}</Text>
+            {isMe && <Ionicons name="person" size={11} color={RANK_COLORS[item.rank]} />}
+          </View>
+          <View style={styles.rankingMetaRow}>
+            <Text style={[styles.rankingMeta, { color: themeColors.textMuted }]}>
+              {T(`rank${RANKS[item.rank]}` as any)} {DIVISIONS[item.division]}
+            </Text>
+            {item.country && (
+              <View style={[styles.countryBadge, { backgroundColor: themeColors.surface === themeColors.background ? "#ffffff18" : "#00000015" }]}>
+                <Text style={[styles.countryCode, { color: themeColors.textMuted }]}>{item.country.code}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+        
+        <View style={styles.rankBadgeSmall}>
+          <Ionicons name="trophy" size={14} color={RANK_COLORS[item.rank]} />
+          <Text style={[styles.rankBadgeTextSmall, { color: RANK_COLORS[item.rank] }]}>Lv.{item.level}</Text>
         </View>
       </View>
-      
-      <View style={styles.rankBadgeSmall}>
-         <Ionicons name="trophy" size={14} color={RANK_COLORS[item.rank]} />
-         <Text style={[styles.rankBadgeTextSmall, { color: RANK_COLORS[item.rank] }]}>{item.level}</Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   const Header = () => (
     <>
@@ -154,7 +201,7 @@ export default function RankedScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={28} color={themeColors.text} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>{T("rankedMode")}</Text>
+        <Text style={[styles.headerTitle, { color: themeColors.text }]}>{T("worldRanking") || "RANKING MUNDIAL"}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -208,7 +255,7 @@ export default function RankedScreen() {
         </View>
 
         <Text style={[styles.rankName, { color: rankInfo.color }]}>
-          {(T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName).toUpperCase()} {profile.rankedProfile.division + 1}
+          {(T(`rank${RANKS[profile.rankedProfile.rank]}` as any) || rankInfo.rankName).toUpperCase()} {rankInfo.divisionName}
         </Text>
         
         {renderStars(profile.rankedProfile.stars, profile.rankedProfile.maxStars, 28)}
@@ -238,8 +285,8 @@ export default function RankedScreen() {
       {/* Global Ranking Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Ionicons name="globe-outline" size={20} color={themeColors.text} />
-          <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{T("globalRanking")}</Text>
+          <Ionicons name="globe" size={20} color="#D4AF37" />
+          <Text style={[styles.sectionTitle, { color: themeColors.text }]}>{T("worldRanking") || "RANKING MUNDIAL"}</Text>
         </View>
       </View>
     </>
@@ -399,6 +446,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.2)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10
   },
   rankBadgeTextSmall: { fontFamily: "Nunito_900ExtraBold", fontSize: 12 },
+  countryBadge: { paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, alignItems: "center", justifyContent: "center" },
+  countryCode: { fontFamily: "Nunito_700Bold", fontSize: 10, letterSpacing: 0.5 },
   
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center", alignItems: "center", padding: 20 },
   modalContent: { width: "100%", borderRadius: 24, padding: 24, maxHeight: "80%" },

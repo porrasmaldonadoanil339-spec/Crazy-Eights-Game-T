@@ -97,25 +97,36 @@ function SettingRow({ label, sub, icon, iconColor, iconBg, right, isDark, onPres
 function QualitySelector({ value, onChange, isDark }: {
   value: "low" | "medium" | "high"; onChange: (v: "low" | "medium" | "high") => void; isDark: boolean;
 }) {
+  const T = useT();
   const opts: ("low" | "medium" | "high")[] = ["low", "medium", "high"];
-  const labels = ["Baja", "Media", "Alta"];
+  const labels = [T("qualityLow"), T("qualityMedium"), T("qualityHigh")];
+  const icons: any[] = ["speedometer-outline", "speedometer", "flame"];
   return (
     <View style={styles.qualityRow}>
-      {opts.map((opt, i) => (
-        <TouchableOpacity
-          key={opt}
-          onPress={() => onChange(opt)}
-          style={[
-            styles.qualityBtn,
-            value === opt && styles.qualityBtnActive,
-            { borderColor: isDark ? (value === opt ? Colors.gold : "rgba(255,255,255,0.12)") : (value === opt ? "#2a6a2a" : "rgba(0,0,0,0.1)") },
-          ]}
-        >
-          <Text style={[styles.qualityBtnText, { color: isDark ? (value === opt ? Colors.gold : "#6B7A5C") : (value === opt ? "#2a6a2a" : "#4a7a4a") }]}>
-            {labels[i]}
-          </Text>
-        </TouchableOpacity>
-      ))}
+      {opts.map((opt, i) => {
+        const active = value === opt;
+        const activeBg = isDark ? (opt === "low" ? "#1a4020" : opt === "medium" ? "#1a3a18" : "#1a2a10") : (opt === "low" ? "#e8f5e9" : opt === "medium" ? "#c8e6c9" : "#a5d6a7");
+        const activeColor = isDark ? Colors.gold : "#1b5e20";
+        const inactiveColor = isDark ? "#6B7A5C" : "#4a7a4a";
+        return (
+          <TouchableOpacity
+            key={opt}
+            onPress={() => onChange(opt)}
+            style={[
+              styles.qualityBtn,
+              {
+                borderColor: isDark ? (active ? Colors.gold : "rgba(255,255,255,0.12)") : (active ? "#2a6a2a" : "rgba(0,0,0,0.1)"),
+                backgroundColor: active ? activeBg : "transparent",
+              },
+            ]}
+          >
+            <Ionicons name={icons[i]} size={14} color={active ? activeColor : inactiveColor} style={{ marginBottom: 2 }} />
+            <Text style={[styles.qualityBtnText, { color: active ? activeColor : inactiveColor }]}>
+              {labels[i]}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -227,33 +238,33 @@ export default function SettingsScreen() {
 
         {/* ──── 🔔 NOTIFICACIONES ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <SectionHeader icon="notifications" label="NOTIFICACIONES" isDark={isDark} />
+          <SectionHeader icon="notifications" label={T("notificationsSection")} isDark={isDark} />
           <SettingRow
-            label="Activar notificaciones" sub="Recibe avisos del juego"
+            label={T("enableNotifications")} sub={T("enableNotificationsDesc")}
             icon="notifications" iconColor="#E74C3C" iconBg="#3a1a1a"
             isDark={isDark}
             right={<Switch value={profile.notificationsEnabled ?? true} onValueChange={v => updateSettings({ notificationsEnabled: v })} {...sw(profile.notificationsEnabled ?? true, "#E74C3C")} />}
           />
           <SettingRow
-            label="Misiones disponibles" sub="Avisa cuando haya misiones nuevas"
+            label={T("missionAvailable")} sub={T("missionAvailableDesc")}
             icon="list" iconColor="#F39C12" iconBg="#2a2a1a"
             isDark={isDark}
             right={<Switch value={(profile.notificationsEnabled ?? true) && (profile.missionNotifications ?? true)} onValueChange={v => updateSettings({ missionNotifications: v })} {...sw(profile.missionNotifications ?? true, "#F39C12")} />}
           />
           <SettingRow
-            label="Recompensas para reclamar" sub="Avisa cuando puedas reclamar"
+            label={T("rewardsToClaim")} sub={T("rewardsToClaimDesc")}
             icon="gift" iconColor="#27AE60" iconBg="#1a3a1a"
             isDark={isDark}
             right={<Switch value={(profile.notificationsEnabled ?? true) && (profile.rewardNotifications ?? true)} onValueChange={v => updateSettings({ rewardNotifications: v })} {...sw(profile.rewardNotifications ?? true, "#27AE60")} />}
           />
           <SettingRow
-            label="Eventos especiales" sub="Torneos, eventos limitados"
+            label={T("specialEvents")} sub={T("specialEventsDesc")}
             icon="star" iconColor="#D4AF37" iconBg="#2a2a1a"
             isDark={isDark}
             right={<Switch value={(profile.notificationsEnabled ?? true) && (profile.eventNotifications ?? true)} onValueChange={v => updateSettings({ eventNotifications: v })} {...sw(profile.eventNotifications ?? true, "#D4AF37")} />}
           />
           <SettingRow
-            label="Recordatorios" sub="Si llevas horas sin jugar"
+            label={T("reminders")} sub={T("remindersDesc")}
             icon="time" iconColor="#9B59B6" iconBg="#2a1a3a"
             isDark={isDark} last
             right={<Switch value={(profile.notificationsEnabled ?? true) && (profile.reminderNotifications ?? true)} onValueChange={v => updateSettings({ reminderNotifications: v })} {...sw(profile.reminderNotifications ?? true, "#9B59B6")} />}
@@ -262,27 +273,21 @@ export default function SettingsScreen() {
 
         {/* ──── 🎮 JUGABILIDAD ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <SectionHeader icon="gameplay" label="JUGABILIDAD" isDark={isDark} />
+          <SectionHeader icon="gameplay" label={T("gameplaySection")} isDark={isDark} />
           <SettingRow
-            label="Animaciones rápidas" sub="Acelera el ritmo del juego"
+            label={T("fastAnimations")} sub={T("fastAnimationsDesc")}
             icon="flash" iconColor="#F1C40F" iconBg="#2a2a1a"
             isDark={isDark}
             right={<Switch value={profile.fastAnimations ?? false} onValueChange={v => updateSettings({ fastAnimations: v })} {...sw(profile.fastAnimations ?? false, "#F1C40F")} />}
           />
           <SettingRow
-            label="Vibración al jugar" sub="Vibración en acciones importantes"
-            icon="phone-portrait" iconColor="#9B59B6" iconBg="#2a1a3a"
-            isDark={isDark}
-            right={<Switch value={profile.vibrationEnabled ?? true} onValueChange={toggleVibration} {...sw(profile.vibrationEnabled ?? true, "#9B59B6")} />}
-          />
-          <SettingRow
-            label="Confirmar cartas especiales" sub="Pide confirmación antes de jugar"
+            label={T("confirmSpecialCards")} sub={T("confirmSpecialDesc")}
             icon="checkmark-circle" iconColor="#27AE60" iconBg="#1a3a1a"
             isDark={isDark}
             right={<Switch value={profile.confirmSpecialCards ?? true} onValueChange={v => updateSettings({ confirmSpecialCards: v })} {...sw(profile.confirmSpecialCards ?? true, "#27AE60")} />}
           />
           <SettingRow
-            label="Mostrar tutoriales" sub="Muestra ayuda y pistas"
+            label={T("showTutorials")} sub={T("showTutorialsDesc")}
             icon="help-buoy" iconColor="#4FC3F7" iconBg="#1a2a3a"
             isDark={isDark} last
             right={<Switch value={profile.showTutorials ?? true} onValueChange={v => updateSettings({ showTutorials: v })} {...sw(profile.showTutorials ?? true, "#4FC3F7")} />}
@@ -291,15 +296,15 @@ export default function SettingsScreen() {
 
         {/* ──── 🎨 GRÁFICOS ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <SectionHeader icon="graphics" label="GRÁFICOS" isDark={isDark} />
+          <SectionHeader icon="graphics" label={T("graphicsSection")} isDark={isDark} />
           <View style={styles.row}>
             <View style={styles.rowLeft}>
               <View style={[styles.iconCircle, { backgroundColor: "#2a1a3a" }]}>
                 <Ionicons name="layers" size={19} color="#9B59B6" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.rowLabel, { color: isDark ? "#E8DCC8" : "#1a2e1a" }]}>Calidad gráfica</Text>
-                <Text style={[styles.rowSub, { color: subColor }]}>Ajusta el rendimiento visual</Text>
+                <Text style={[styles.rowLabel, { color: isDark ? "#E8DCC8" : "#1a2e1a" }]}>{T("graphicsQuality")}</Text>
+                <Text style={[styles.rowSub, { color: subColor }]}>{T("graphicsQualityDesc")}</Text>
               </View>
             </View>
           </View>
@@ -310,13 +315,13 @@ export default function SettingsScreen() {
           />
           <View style={[styles.divider, { backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", marginVertical: 10 }]} />
           <SettingRow
-            label="Efectos especiales" sub="Partículas y efectos al jugar cartas"
+            label={T("specialEffects")} sub={T("specialEffectsDesc")}
             icon="sparkles" iconColor="#D4AF37" iconBg="#2a2a1a"
             isDark={isDark}
             right={<Switch value={profile.specialEffectsEnabled ?? true} onValueChange={v => updateSettings({ specialEffectsEnabled: v })} {...sw(profile.specialEffectsEnabled ?? true, "#D4AF37")} />}
           />
           <SettingRow
-            label="Animaciones" sub="Animaciones de cartas y UI"
+            label={T("animationsEnabled")} sub={T("animationsDesc")}
             icon="film" iconColor="#4FC3F7" iconBg="#1a2a3a"
             isDark={isDark} last
             right={<Switch value={profile.animationsEnabled ?? true} onValueChange={v => updateSettings({ animationsEnabled: v })} {...sw(profile.animationsEnabled ?? true, "#4FC3F7")} />}
@@ -325,10 +330,10 @@ export default function SettingsScreen() {
 
         {/* ──── 🌙 APARIENCIA ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <SectionHeader icon="appearance" label="APARIENCIA" isDark={isDark} />
+          <SectionHeader icon="appearance" label={T("appearanceSection")} isDark={isDark} />
           <SettingRow
             label={isDark ? T("darkMode") : T("lightMode")}
-            sub={isDark ? "Tema oscuro activo" : "Tema claro activo"}
+            sub={isDark ? T("darkThemeActive") : T("lightThemeActive")}
             icon={isDark ? "moon" : "sunny"} iconColor={isDark ? "#9B59B6" : "#F39C12"} iconBg={isDark ? "#2a1a3a" : "#fff9e6"}
             isDark={isDark} last
             right={
@@ -343,24 +348,24 @@ export default function SettingsScreen() {
 
         {/* ──── 👤 CUENTA ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <SectionHeader icon="account" label="CUENTA" isDark={isDark} />
+          <SectionHeader icon="account" label={T("accountSection")} isDark={isDark} />
           {user && !user.isGuest ? (
             <>
               <SettingRow
-                label={user.username} sub="Cuenta vinculada"
+                label={user.username} sub={T("accountLinked")}
                 icon="checkmark-circle" iconColor="#27AE60" iconBg="#1a3a1a"
                 isDark={isDark}
                 right={
                   <TouchableOpacity
-                    onPress={() => { Alert.alert("Cerrar sesión", "¿Quieres salir de tu cuenta?", [{ text: "Cancelar", style: "cancel" }, { text: "Salir", style: "destructive", onPress: () => logout() }]); }}
+                    onPress={() => { Alert.alert(T("signOut"), T("confirmSignOut"), [{ text: T("cancel"), style: "cancel" }, { text: T("signOut"), style: "destructive", onPress: () => logout() }]); }}
                     style={[styles.dangerBtn]}
                   >
-                    <Text style={styles.dangerBtnText}>Salir</Text>
+                    <Text style={styles.dangerBtnText}>{T("signOut")}</Text>
                   </TouchableOpacity>
                 }
               />
               <SettingRow
-                label="Guardar en la nube" sub="Tu progreso está sincronizado"
+                label={T("cloudSave")} sub={T("cloudSynced")}
                 icon="cloud-done" iconColor="#27AE60" iconBg="#1a3a1a"
                 isDark={isDark} last
                 right={<Ionicons name="checkmark-circle" size={20} color="#27AE60" />}
@@ -369,25 +374,25 @@ export default function SettingsScreen() {
           ) : (
             <>
               <SettingRow
-                label="Iniciar sesión con Google" sub="Vincula tu cuenta de Google"
+                label={T("loginGoogle")} sub={T("linkGoogleDesc")}
                 icon="logo-google" iconColor="#E74C3C" iconBg="#3a1a1a"
                 isDark={isDark} onPress={() => router.push("/login")}
                 right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
               />
               <SettingRow
-                label="Iniciar sesión con Facebook" sub="Vincula tu cuenta de Facebook"
+                label={T("loginFacebook")} sub={T("linkFacebookDesc")}
                 icon="logo-facebook" iconColor="#4A90E2" iconBg="#1a2a3a"
                 isDark={isDark} onPress={() => router.push("/login")}
                 right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
               />
               <SettingRow
-                label="Jugar como invitado" sub="Sin vinculación de cuenta"
+                label={T("playAsGuest")} sub={T("noAccountDesc")}
                 icon="person-outline" iconColor="#95A5A6" iconBg="#2a2a2a"
                 isDark={isDark}
                 right={user?.isGuest ? <Ionicons name="checkmark-circle" size={20} color="#27AE60" /> : <View />}
               />
               <SettingRow
-                label="Guardar progreso en la nube" sub="Requiere cuenta vinculada"
+                label={T("cloudSave")} sub={T("requiresAccount")}
                 icon="cloud-upload" iconColor="#9B59B6" iconBg="#2a1a3a"
                 isDark={isDark} last onPress={() => router.push("/login")}
                 right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
@@ -398,75 +403,75 @@ export default function SettingsScreen() {
 
         {/* ──── 🛡️ PRIVACIDAD ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <SectionHeader icon="privacy" label="PRIVACIDAD" isDark={isDark} />
+          <SectionHeader icon="privacy" label={T("privacy").toUpperCase()} isDark={isDark} />
           <SettingRow
-            label="Política de privacidad" sub="Cómo usamos tus datos"
+            label={T("privacyPolicy")} sub={T("privacyPolicyDesc")}
             icon="document-text" iconColor="#27AE60" iconBg="#1a3a1a"
-            isDark={isDark} onPress={() => Alert.alert("Política de privacidad", "Ocho Locos respeta tu privacidad. No compartimos tus datos personales con terceros sin tu consentimiento.")}
+            isDark={isDark} onPress={() => Alert.alert(T("privacyPolicy"), "Ocho Locos respeta tu privacidad. No compartimos tus datos personales con terceros sin tu consentimiento.")}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
-            label="Permisos del juego" sub="Gestiona los permisos"
+            label={T("gamePermissions")} sub={T("permissionsDesc")}
             icon="lock-closed" iconColor="#F39C12" iconBg="#2a2a1a"
-            isDark={isDark} onPress={() => Alert.alert("Permisos", "El juego solicita permisos para notificaciones, vibración y almacenamiento local.")}
+            isDark={isDark} onPress={() => Alert.alert(T("gamePermissions"), "El juego solicita permisos para notificaciones, vibración y almacenamiento local.")}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
-            label="Gestión de datos" sub="Exporta o elimina tus datos"
+            label={T("dataManagement")} sub={T("dataManagementDesc")}
             icon="trash" iconColor="#E74C3C" iconBg="#3a1a1a"
-            isDark={isDark} last onPress={() => Alert.alert("Gestión de datos", "Para solicitar la eliminación de tus datos, contacta a support@biyisprime.com")}
+            isDark={isDark} last onPress={() => Alert.alert(T("dataManagement"), "Para solicitar la eliminación de tus datos, contacta a support@biyisprime.com")}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
         </View>
 
         {/* ──── ❓ AYUDA ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <SectionHeader icon="help" label="AYUDA" isDark={isDark} />
+          <SectionHeader icon="help" label={T("help")} isDark={isDark} />
           <SettingRow
-            label="Soporte técnico" sub="Contacta con el equipo"
+            label={T("techSupport")} sub={T("contactTeam")}
             icon="headset" iconColor="#E67E22" iconBg="#3a2a1a"
             isDark={isDark} onPress={() => Linking.openURL("mailto:support@biyisprime.com")}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
-            label="Preguntas frecuentes" sub="Respuestas a tus dudas"
+            label={T("faq")} sub={T("faqDesc")}
             icon="help-circle" iconColor="#4FC3F7" iconBg="#1a2a3a"
-            isDark={isDark} onPress={() => Alert.alert("FAQ", "Visita nuestra web para ver las preguntas frecuentes sobre Ocho Locos.")}
+            isDark={isDark} onPress={() => Alert.alert(T("faq"), "Visita nuestra web para ver las preguntas frecuentes sobre Ocho Locos.")}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
-            label="Reportar un error" sub="Ayúdanos a mejorar el juego"
+            label={T("reportBug")} sub={T("helpImprove")}
             icon="bug" iconColor="#E74C3C" iconBg="#3a1a1a"
             isDark={isDark} onPress={() => Linking.openURL("mailto:bugs@biyisprime.com?subject=Bug%20Ocho%20Locos")}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
-            label="Reportar jugador" sub="Denuncia comportamiento inapropiado"
+            label={T("reportPlayer")} sub={T("reportPlayerDesc")}
             icon="flag" iconColor="#E74C3C" iconBg="#3a1a1a"
-            isDark={isDark} last onPress={() => Alert.alert("Reportar jugador", "Usa el menú dentro de la partida para reportar a un jugador específico.")}
+            isDark={isDark} last onPress={() => Alert.alert(T("reportPlayer"), "Usa el menú dentro de la partida para reportar a un jugador específico.")}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
         </View>
 
         {/* ──── ℹ️ INFORMACIÓN ──── */}
         <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <SectionHeader icon="info" label="INFORMACIÓN" isDark={isDark} />
+          <SectionHeader icon="info" label={T("infoSection")} isDark={isDark} />
           <SettingRow
-            label="Versión del juego" sub="Ocho Locos v3.0.0"
+            label={T("gameVersion")} sub="Ocho Locos v3.0.0"
             icon="code-working" iconColor="#95A5A6" iconBg="#2a2a2a"
             isDark={isDark}
             right={<Text style={[styles.versionChip, { color: titleColor }]}>v3.0.0</Text>}
           />
           <SettingRow
-            label="Créditos" sub="El equipo detrás del juego"
+            label={T("credits")} sub={T("creditsDesc")}
             icon="people" iconColor="#D4AF37" iconBg="#2a2a1a"
-            isDark={isDark} onPress={() => Alert.alert("Créditos", "Desarrollado por Biyis Prime Studios\n\nDirector: Biyis\nDiseño & Desarrollo: Equipo BP\n\n© 2025 Biyis Prime Studios")}
+            isDark={isDark} onPress={() => Alert.alert(T("credits"), "Desarrollado por Biyis Prime Studios\n\nDirector: Biyis\nDiseño & Desarrollo: Equipo BP\n\n© 2025 Biyis Prime Studios")}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
-            label="Términos de servicio" sub="Lee los términos de uso"
+            label={T("termsOfService")} sub={T("termsDesc")}
             icon="document" iconColor="#9B59B6" iconBg="#2a1a3a"
-            isDark={isDark} last onPress={() => Alert.alert("Términos de servicio", "Al usar Ocho Locos aceptas nuestros términos de servicio. El juego es gratuito y no requiere pagos para disfrutarlo.")}
+            isDark={isDark} last onPress={() => Alert.alert(T("termsOfService"), "Al usar Ocho Locos aceptas nuestros términos de servicio. El juego es gratuito y no requiere pagos para disfrutarlo.")}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
         </View>
@@ -541,7 +546,7 @@ const styles = StyleSheet.create({
   divider: { height: 1 },
   qualityRow: { flexDirection: "row", gap: 8, marginTop: 6, marginBottom: 4, paddingLeft: 50 },
   qualityBtn: {
-    flex: 1, paddingVertical: 7, borderRadius: 10, borderWidth: 1.5, alignItems: "center",
+    flex: 1, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, alignItems: "center", justifyContent: "center",
   },
   qualityBtnActive: {},
   qualityBtnText: { fontFamily: "Nunito_700Bold", fontSize: 12 },
