@@ -43,8 +43,8 @@ function FaceDownMini({ angle = 0 }: { angle?: number }) {
 }
 
 // ─── Opponent hand (horizontal fan) ─────────────────────────────────────
-function OpponentFan({ count, name, color, highlight }: {
-  count: number; name: string; color: string; highlight?: boolean;
+function OpponentFan({ count, name, color, highlight, iconName }: {
+  count: number; name: string; color: string; highlight?: boolean; iconName?: string;
 }) {
   const maxCards = Math.min(count, 8);
   return (
@@ -61,7 +61,9 @@ function OpponentFan({ count, name, color, highlight }: {
         ))}
       </View>
       <View style={styles.opponentFanLabel}>
-        <View style={[styles.opponentDot, { backgroundColor: color, ...(highlight ? { shadowColor: color, shadowRadius: 6, shadowOpacity: 0.8 } : {}) }]} />
+        <View style={[styles.opponentAvatarRing, { borderColor: color + (highlight ? "cc" : "55"), backgroundColor: color + "18" }]}>
+          <Ionicons name={(iconName ?? "person") as any} size={11} color={color} />
+        </View>
         <Text style={[styles.opponentName, { color: highlight ? color : Colors.textMuted }]} numberOfLines={1}>{name}</Text>
         <View style={[styles.opponentCountBadge, { backgroundColor: color + "33", borderColor: color + "66" }]}>
           <Text style={[styles.opponentCountText, { color }]}>{count}</Text>
@@ -72,8 +74,8 @@ function OpponentFan({ count, name, color, highlight }: {
 }
 
 // ─── Side opponent (vertical fan) ────────────────────────────────────────
-function SideOpponentFan({ count, name, color, side }: {
-  count: number; name: string; color: string; side: "left" | "right";
+function SideOpponentFan({ count, name, color, side, iconName }: {
+  count: number; name: string; color: string; side: "left" | "right"; iconName?: string;
 }) {
   const maxCards = Math.min(count, 6);
   return (
@@ -86,7 +88,9 @@ function SideOpponentFan({ count, name, color, side }: {
         ))}
       </View>
       <View style={styles.sideOpponentLabel}>
-        <View style={[styles.opponentDot, { backgroundColor: color }]} />
+        <View style={[styles.opponentAvatarRing, { borderColor: color + "66", backgroundColor: color + "18" }]}>
+          <Ionicons name={(iconName ?? "person") as any} size={10} color={color} />
+        </View>
         <Text style={[styles.sideOpponentName, { color }]} numberOfLines={1}>{name}</Text>
         <View style={[styles.opponentCountBadge, { backgroundColor: color + "33", borderColor: color + "66" }]}>
           <Text style={[styles.opponentCountText, { color }]}>{count}</Text>
@@ -453,15 +457,15 @@ export default function MultiGameScreen() {
           if (op.pos === "left" || op.pos === "right") {
             return (
               <View key={op.idx} style={posStyles[op.pos]}>
-                <SideOpponentFan count={handCount} name={op.name} color={op.color} side={op.pos} />
-                {isSkipped && <Text style={styles.skipLabel}>⊗ SKIP</Text>}
+                <SideOpponentFan count={handCount} name={op.name} color={op.color} side={op.pos} iconName={PLAYER_ICONS[op.idx % PLAYER_ICONS.length]} />
+                {isSkipped && <Text style={styles.skipLabel}>⊗ {T("action_skip")}</Text>}
               </View>
             );
           }
           return (
             <View key={op.idx} style={posStyles[op.pos]}>
-              <OpponentFan count={handCount} name={op.name} color={op.color} highlight={isSkipped} />
-              {isSkipped && <Text style={styles.skipLabel}>⊗ TURNO PERDIDO</Text>}
+              <OpponentFan count={handCount} name={op.name} color={op.color} highlight={isSkipped} iconName={PLAYER_ICONS[op.idx % PLAYER_ICONS.length]} />
+              {isSkipped && <Text style={styles.skipLabel}>⊗ {T("action_skip")}</Text>}
             </View>
           );
         })}
@@ -469,7 +473,9 @@ export default function MultiGameScreen() {
         {/* ─── Current player hand ─── */}
         <View style={[styles.playerZone, { top: tableCenterY + tableH / 2 + 10 }]}>
           <View style={styles.playerLabel}>
-            <View style={[styles.playerDot, { backgroundColor: currentColor }]} />
+            <View style={[styles.opponentAvatarRing, { borderColor: currentColor, backgroundColor: currentColor + "22", width: 22, height: 22, borderRadius: 11 }]}>
+              <Ionicons name={PLAYER_ICONS[pidx % PLAYER_ICONS.length]} size={13} color={currentColor} />
+            </View>
             <Text style={[styles.playerName, { color: currentColor }]} numberOfLines={1}>
               {playerNames[pidx]} · {currentHand.length} {T("cards")}
             </Text>
@@ -608,6 +614,7 @@ const styles = StyleSheet.create({
   opponentFanCards: { flexDirection: "row", alignItems: "flex-end" },
   opponentFanLabel: { flexDirection: "row", alignItems: "center", gap: 5 },
   opponentDot: { width: 7, height: 7, borderRadius: 3.5 },
+  opponentAvatarRing: { width: 20, height: 20, borderRadius: 10, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   opponentName: { fontFamily: "Nunito_700Bold", fontSize: 10, maxWidth: 80 },
   opponentCountBadge: {
     paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, borderWidth: 1,

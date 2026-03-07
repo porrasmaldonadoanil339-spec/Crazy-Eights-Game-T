@@ -1,0 +1,152 @@
+Mejoras y modificaciones importantes en los modos de juego
+Quiero que revises y mejores el funcionamiento del Modo Cooperativo, Modo Local, Clasificatoria y Ranking, para que todo funcione correctamente y se vea realista.
+________________________________________
+1. Modo Cooperativo (Reglas y funcionamiento)
+El Modo Cooperativo debe ser una partida 2 vs 2 con jugadores reales.
+Equipos:
+•	Equipo 1: Yo + mi compañero.
+•	Equipo 2: Dos jugadores rivales.
+Los jugadores que aparecen antes de la partida deben ser los mismos que juegan dentro de la partida.
+Barajas
+Cada equipo debe usar una sola baraja compartida de 8 cartas.
+•	Yo y mi compañero usamos la misma baraja.
+•	Los dos rivales usan su propia baraja compartida.
+Orden de turnos
+El orden de turnos debe ser exactamente así:
+1.	Yo juego primero.
+2.	Luego juega mi compañero.
+3.	Después juega el rival 1.
+4.	Luego juega el rival 2.
+Después de eso el ciclo se repite durante toda la partida.
+Así todos los jugadores participan en orden.
+Visual dentro de la partida
+En la partida debe verse claramente:
+Arriba:
+•	Mi compañero
+•	Rival superior
+Abajo:
+•	Yo
+•	Rival inferior
+También debe verse qué jugador está jugando en cada turno.
+________________________________________
+2. Modo Local
+En el Modo Local:
+•	Los jugadores que se agreguen deben aparecer dentro de la partida real.
+•	No deben desaparecer ni cambiar cuando empieza la partida.
+•	Deben verse claramente los perfiles de los jugadores.
+________________________________________
+3. Clasificatoria con amigos
+En Modo Clasificatoria:
+•	Si agrego amigos o jugadores al equipo, ellos deben entrar conmigo directamente a la partida.
+•	Si el equipo ya está completo, el juego no debe seguir buscando jugadores.
+•	La partida debe empezar directamente con los jugadores que ya están en el equipo.
+Esto es importante para que el sistema se sienta realista.
+________________________________________
+4. Ranking de Clasificatoria (Perfiles)
+El Ranking de Clasificatoria debe mostrar perfiles realistas.
+Actualmente todos los jugadores aparecen con avatares simples, y eso no tiene sentido.
+Quiero que:
+•	Los jugadores tengan avatares reales o fotos de perfil.
+•	Algunos jugadores también puedan tener avatares estándar de la tienda.
+•	Los perfiles del ranking se vean igual que los perfiles que aparecen en las partidas reales. (COMO LOS PERFILES DE LOS MODOS CLASICO O ASI PARECIDO PARA QUE TE GUIES)
+El ranking debe mostrar:
+•	Foto o avatar del jugador
+•	Nombre del jugador
+•	Rango
+•	Puntos o trofeos
+________________________________________
+5. Mejora general del juego
+También quiero que revises todo el juego para:
+•	Corregir textos mal escritos o pegados.
+•	Mejorar la interfaz y organización visual.
+•	Hacer que el sistema de idioma funcione al 100% en toda la aplicación.
+El objetivo es que el juego se vea profesional y realista, similar a juegos competitivos como Clash Royale y Mobile Legends: Bang Bang.
+________________________________________
+Importante
+Quiero que todos los cambios que envié se implementen exactamente como los describí, sin omitir nada.
+Por favor revisa todo el proyecto y mejora el juego al máximo nivel posible cumpliendo todas las instrucciones.
+
+Modificación del Modo Desafíos – Integración en la partida
+Quiero que el Modo Desafíos funcione dentro de las partidas reales, para que tenga sentido y sea una experiencia más interesante y profesional para el jugador.
+1. Desafíos integrados en la partida
+•	Cada partida en este modo tiene un desafío específico asignado.
+•	Los desafíos deben ser objetivos que se cumplen jugando la partida, no metas externas.
+•	Ejemplo de desafíos:
+o	Ganar la partida usando solo ciertas cartas.
+o	Derrotar al rival antes de cierto número de turnos.
+o	Proteger una zona específica o eliminar cierto objetivo dentro del turno.
+•	Tanto tú como tu rival están afectados por el desafío:
+o	Si cumples el desafío, puedes ganar o recibir ventajas.
+o	Si no cumples el desafío, puedes perder la partida aunque normalmente tu equipo esté arriba.
+o	Esto aplica a ambos equipos, haciendo la partida más estratégica y emocionante.
+2. Adaptación dinámica
+•	Los desafíos deben adaptarse al desarrollo de la partida, para que siempre tengan sentido según las cartas, estrategias y jugadores que participan.
+•	Cada desafío debe sentirse integrado en la acción del juego, no como algo separado o desconectado.
+3. Experiencia del jugador
+•	El jugador debe sentir que el desafío afecta directamente su partida y decisiones, haciendo que cada partida sea más dinámica y divertida.
+•	Se debe mostrar visualmente en la partida:
+o	Qué desafío se está jugando
+o	Progreso en tiempo real
+o	Consecuencias de cumplir o fallar el desafío
+4. Objetivo
+Hacer que el Modo Desafíos sea emocionante y estratégico, similar a sistemas de misiones dentro de las partidas en juegos competitivos como Clash Royale y Mobile Legends: Bang Bang, donde los desafíos influyen directamente en la jugabilidad.
+________________________________________
+Cambio total de idioma en la aplicación
+Actualmente el sistema de idioma no se cambia al 100%, hay textos y partes de la aplicación que permanecen en el idioma anterior.
+Quiero que cuando el jugador cambie el idioma:
+1.	TODO el juego se actualice automáticamente al idioma seleccionado. Esto incluye:
+o	Menús
+o	Ajustes
+o	Descripciones de modos de juego
+o	Mensajes del sistema
+o	Pantalla de partidas
+o	Ranking
+o	Botones
+o	Notificaciones
+o	Cualquier texto visible al jugador
+2.	El nombre del juego puede permanecer igual si es necesario, pero todo lo demás debe reflejar el idioma seleccionado.
+3.	Esto debe funcionar al 100%, sin dejar ninguna parte en el idioma anterior.
+________________________________________
+Modificación de la descripción del Modo Cooperativo
+Quiero que la descripción y funcionamiento del Modo Cooperativo sea clara y profesional, explicando cómo funciona el juego 2 vs 2 con jugadores reales, tal como te lo describí antes:
+•	Equipo 1: Yo + un compañero real
+•	Equipo 2: Dos rivales reales
+•	Cada equipo comparte una sola baraja de 8 cartas
+•	
+Explicación detallada al presionar los modos de juego
+Quiero que cuando el jugador presione un modo de juego en grande en el menú, se muestre una explicación detallada de ese modo, similar a lo que hacen los juegos profesionales.
+1. Modos de juego
+Esto debe aplicarse a todos los modos de juego, incluyendo:
+•	Modo Cooperativo
+•	Modo Local
+•	Clasificatoria / Multijugador
+•	Modo Desafíos
+•	Cualquier otro modo disponible
+2. Información mostrada
+Al presionar el modo, debe aparecer una ventana o sección con la información completa, que incluya:
+•	Cómo se juega ese modo
+•	Número de jugadores por equipo
+•	Funcionamiento de turnos o reglas especiales
+•	Qué se gana o cuáles son los objetivos
+•	Cualquier detalle relevante que ayude a entender el modo
+3. Niveles de dificultad
+Lo mismo debe aplicarse a los niveles de dificultad dentro de cada modo:
+•	Fácil
+•	Normal
+•	Intermedio
+•	Difícil
+•	Experto
+Cuando el jugador presione un nivel de dificultad, debe verse una explicación detallada de cómo afecta la partida, por ejemplo:
+•	Qué cambios se aplican en la IA o enemigos
+•	Cambios en los puntos, cartas o recompensas
+•	Reglas especiales de ese nivel
+4. Multijugador
+Esto también debe funcionar para modos multijugador, mostrando:
+•	Cómo se emparejan los jugadores
+•	Número de jugadores en cada equipo
+•	Cómo funcionan los turnos
+•	Objetivos y recompensas
+5. Objetivo
+El objetivo es que el jugador pueda entender perfectamente cualquier modo y dificultad antes de entrar, haciendo la experiencia más profesional y clara, igual que juegos como Clash Royale o Mobile Legends: Bang Bang.
+
+

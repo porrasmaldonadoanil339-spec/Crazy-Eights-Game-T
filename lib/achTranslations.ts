@@ -1992,18 +1992,18 @@ export function emoteLabel(id: string, lang: Lang): string {
 }
 
 const modeDescs: Record<string, { es: string; en: string; pt: string }> = {
-  classic:      { es: "Reglas completas: 2, 3, 7, 8, 10, J y Comodín activos.", en: "Full rules: 2, 3, 7, 8, 10, J and Joker active.", pt: "Regras completas: 2, 3, 7, 8, 10, J e Curinga ativos." },
-  lightning:    { es: "5 cartas, partida rápida. ¡El primero en vaciar gana!", en: "5 cards, fast game. First to empty hand wins!", pt: "5 cartas, partida rápida. Quem esvaziar a mão primeiro vence!" },
-  tournament:   { es: "Gana 2 de 3 rondas para llevarte el trofeo.", en: "Win 2 of 3 rounds to take the trophy.", pt: "Vença 2 de 3 rodadas para levar o troféu." },
-  coop:         { es: "Aliado IA vs 2 CPUs. Coordínate para ganar.", en: "AI ally vs 2 CPUs. Coordinate to win.", pt: "Aliado IA vs 2 CPUs. Coordene-se para vencer." },
-  challenge:    { es: "Retos diarios con reglas especiales y recompensas únicas.", en: "Daily challenges with special rules and unique rewards.", pt: "Desafios diários com regras especiais e recompensas únicas." },
-  practice:     { es: "Aprende sin presión. Pistas y sin penalización.", en: "Learn without pressure. Hints and no penalties.", pt: "Aprenda sem pressão. Dicas e sem penalização." },
-  clasico:      { es: "Reglas completas: 2, 3, 7, 8, 10, J y Comodín activos.", en: "Full rules: 2, 3, 7, 8, 10, J and Joker active.", pt: "Regras completas: 2, 3, 7, 8, 10, J e Curinga ativos." },
-  relampago:    { es: "5 cartas, partida rápida. ¡El primero en vaciar gana!", en: "5 cards, fast game. First to empty hand wins!", pt: "5 cartas, partida rápida. Quem esvaziar a mão primeiro vence!" },
-  torneo:       { es: "Gana 2 de 3 rondas para llevarte el trofeo.", en: "Win 2 of 3 rounds to take the trophy.", pt: "Vença 2 de 3 rodadas para levar o troféu." },
-  cooperativo:  { es: "Aliado IA vs 2 CPUs. Coordínate para ganar.", en: "AI ally vs 2 CPUs. Coordinate to win.", pt: "Aliado IA vs 2 CPUs. Coordene-se para vencer." },
-  desafios:     { es: "Retos diarios con reglas especiales y recompensas únicas.", en: "Daily challenges with special rules and unique rewards.", pt: "Desafios diários com regras especiais e recompensas únicas." },
-  practica:     { es: "Aprende sin presión. Pistas y sin penalización.", en: "Learn without pressure. Hints and no penalties.", pt: "Aprenda sem pressão. Dicas e sem penalização." },
+  classic:      { es: "1 vs 1. Todas las cartas especiales activas. El primero en vaciar su mano gana.", en: "1 vs 1. All special cards active. First to empty hand wins.", pt: "1 vs 1. Todas as cartas especiais ativas. Quem esvaziar a mão primeiro vence." },
+  lightning:    { es: "5 cartas, partida exprés. ¡Velocidad y reflejos al límite!", en: "5 cards, express match. Speed and reflexes to the limit!", pt: "5 cartas, partida expresso. Velocidade e reflexos no limite!" },
+  tournament:   { es: "Mejor de 3 rondas. Gana 2 rondas para llevarte el trofeo.", en: "Best of 3 rounds. Win 2 rounds to take the trophy.", pt: "Melhor de 3 rodadas. Vença 2 rodadas para levar o troféu." },
+  coop:         { es: "2 vs 2: Tú + Aliado vs 2 rivales. Turnos: Tú → Aliado → Rival 1 → Rival 2.", en: "2 vs 2: You + Ally vs 2 rivals. Turns: You → Ally → Rival 1 → Rival 2.", pt: "2 vs 2: Você + Aliado vs 2 rivais. Turnos: Você → Aliado → Rival 1 → Rival 2." },
+  challenge:    { es: "Reglas mutantes por partida. Completa desafíos diarios para recompensas únicas.", en: "Mutant rules each match. Complete daily challenges for unique rewards.", pt: "Regras mutantes por partida. Complete desafios diários para recompensas únicas." },
+  practice:     { es: "IA fácil + pistas visuales. Aprende sin presión ni penalización.", en: "Easy AI + visual hints. Learn without pressure or penalties.", pt: "IA fácil + dicas visuais. Aprenda sem pressão ou penalidades." },
+  clasico:      { es: "1 vs 1. Todas las cartas especiales activas. El primero en vaciar su mano gana.", en: "1 vs 1. All special cards active. First to empty hand wins.", pt: "1 vs 1. Todas as cartas especiais ativas. Quem esvaziar a mão primeiro vence." },
+  relampago:    { es: "5 cartas, partida exprés. ¡Velocidad y reflejos al límite!", en: "5 cards, express match. Speed and reflexes to the limit!", pt: "5 cartas, partida expresso. Velocidade e reflexos no limite!" },
+  torneo:       { es: "Mejor de 3 rondas. Gana 2 rondas para llevarte el trofeo.", en: "Best of 3 rounds. Win 2 rounds to take the trophy.", pt: "Melhor de 3 rodadas. Vença 2 rodadas para levar o troféu." },
+  cooperativo:  { es: "2 vs 2: Tú + Aliado vs 2 rivales. Turnos: Tú → Aliado → Rival 1 → Rival 2.", en: "2 vs 2: You + Ally vs 2 rivals. Turns: You → Ally → Rival 1 → Rival 2.", pt: "2 vs 2: Você + Aliado vs 2 rivais. Turnos: Você → Aliado → Rival 1 → Rival 2." },
+  desafios:     { es: "Reglas mutantes por partida. Completa desafíos diarios para recompensas únicas.", en: "Mutant rules each match. Complete daily challenges for unique rewards.", pt: "Regras mutantes por partida. Complete desafios diários para recompensas únicas." },
+  practica:     { es: "IA fácil + pistas visuales. Aprende sin presión ni penalización.", en: "Easy AI + visual hints. Learn without pressure or penalties.", pt: "IA fácil + dicas visuais. Aprenda sem pressão ou penalidades." },
 };
 
 export function modeDesc(id: string, lang: Lang): string {

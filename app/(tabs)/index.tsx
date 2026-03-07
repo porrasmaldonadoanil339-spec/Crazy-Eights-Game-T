@@ -20,11 +20,12 @@ import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
 import { playButton, syncSettings } from "@/lib/audioManager";
 import { playSound } from "@/lib/sounds";
-import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName } from "@/lib/achTranslations";
+import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName, diffDesc as getDiffDesc } from "@/lib/achTranslations";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
 import { getRankInfo, RANKS } from "@/lib/ranked";
 import { FlatList } from "react-native";
+import { ModeInfoModal } from "@/components/ModeInfoModal";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -204,7 +205,21 @@ function DifficultyModal({ visible, onClose, onSelect, modeName, lang = "es" }: 
   const RARITY_COLORS: Record<Difficulty, string> = {
     easy: "#95A5A6", normal: "#2196F3", intermediate: "#27AE60", hard: "#E74C3C", expert: "#A855F7",
   };
+  const DIFF_ICONS: Record<Difficulty, string> = {
+    easy: "leaf-outline", normal: "shield-outline", intermediate: "flame-outline",
+    hard: "skull-outline", expert: "nuclear-outline",
+  };
+  const DIFF_DETAILS: Record<Difficulty, { es: string; en: string; pt: string }> = {
+    easy:         { es: "IA lenta y aleatoria. Sin presión. Ideal para aprender.", en: "Slow, random AI. No pressure. Perfect for learning.", pt: "IA lenta e aleatória. Sem pressão. Ideal para aprender." },
+    normal:       { es: "IA equilibrada. Juega de forma inteligente pero con errores.", en: "Balanced AI. Plays smart but makes mistakes.", pt: "IA equilibrada. Joga bem mas comete erros." },
+    intermediate: { es: "IA estratégica. Planifica jugadas y usa combos básicos.", en: "Strategic AI. Plans moves and uses basic combos.", pt: "IA estratégica. Planeja jogadas e usa combos básicos." },
+    hard:         { es: "IA experta. Juega de forma óptima, pocas concesiones.", en: "Expert AI. Near-optimal play, few concessions.", pt: "IA especialista. Jogo quase ótimo, poucas concessões." },
+    expert:       { es: "IA máxima + timer de 8 seg por turno. Solo para élites.", en: "Maximum AI + 8-second turn timer. Elite players only.", pt: "IA máxima + timer de 8 seg por turno. Só para élites." },
+  };
   const subtitle = lang === "en" ? "Select difficulty" : lang === "pt" ? "Selecione a dificuldade" : "Selecciona la dificultad";
+  const rewardLabel = lang === "en" ? "Reward" : lang === "pt" ? "Recompensa" : "Recompensa";
+  const timerLabel = lang === "en" ? "8s timer" : lang === "pt" ? "Timer 8s" : "Timer 8s";
+
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.modalBg} onPress={onClose}>
@@ -213,33 +228,47 @@ function DifficultyModal({ visible, onClose, onSelect, modeName, lang = "es" }: 
             <View style={styles.diffModalHandle} />
             <Text style={styles.diffTitle}>{modeName}</Text>
             <Text style={styles.diffSub}>{subtitle}</Text>
-            <View style={styles.diffGrid}>
-              {DIFFICULTIES.map((d) => (
-                <Pressable
-                  key={d.id}
-                  onPress={() => onSelect(d.id)}
-                  style={({ pressed }) => [styles.diffOption, pressed && styles.diffOptionPressed,
-                    { borderColor: RARITY_COLORS[d.id] + "55" }]}
-                >
-                  <LinearGradient
-                    colors={[RARITY_COLORS[d.id] + "18", "transparent"]}
-                    style={styles.diffOptionGrad}
+            <View style={styles.diffList}>
+              {DIFFICULTIES.map((d) => {
+                const color = RARITY_COLORS[d.id];
+                const detail = DIFF_DETAILS[d.id]?.[lang === "pt" ? "pt" : lang === "en" ? "en" : "es"] ?? "";
+                return (
+                  <Pressable
+                    key={d.id}
+                    onPress={() => onSelect(d.id)}
+                    style={({ pressed }) => [
+                      styles.diffRow,
+                      { borderColor: color + "44", backgroundColor: color + "0a" },
+                      pressed && { opacity: 0.75, transform: [{ scale: 0.98 }] },
+                    ]}
                   >
-                    <StarRating stars={d.stars} />
-                    <Text style={[styles.diffName, { color: RARITY_COLORS[d.id] }]}>{getDiffName(d.id, lang) || d.name}</Text>
-                    <View style={styles.diffReward}>
-                      <Ionicons name="cash" size={10} color={Colors.gold} />
-                      <Text style={styles.diffRewardText}>x{d.coinMultiplier}</Text>
+                    <LinearGradient colors={[color + "20", "transparent"]} style={StyleSheet.absoluteFill} />
+                    <View style={[styles.diffRowIcon, { backgroundColor: color + "22", borderColor: color + "44" }]}>
+                      <Ionicons name={DIFF_ICONS[d.id] as any} size={22} color={color} />
                     </View>
-                    {d.id === "expert" && (
-                      <View style={styles.expertBadge}>
-                        <Ionicons name="timer" size={9} color="#A855F7" />
-                        <Text style={styles.expertBadgeText}>8s</Text>
+                    <View style={styles.diffRowContent}>
+                      <View style={styles.diffRowTop}>
+                        <Text style={[styles.diffName, { color }]}>{getDiffName(d.id, lang) || d.name}</Text>
+                        <StarRating stars={d.stars} />
                       </View>
-                    )}
-                  </LinearGradient>
-                </Pressable>
-              ))}
+                      <Text style={styles.diffRowDesc}>{detail}</Text>
+                      <View style={styles.diffRowBottom}>
+                        <View style={styles.diffReward}>
+                          <Ionicons name="cash" size={10} color={Colors.gold} />
+                          <Text style={styles.diffRewardText}>{rewardLabel} x{d.coinMultiplier}</Text>
+                        </View>
+                        {d.id === "expert" && (
+                          <View style={[styles.expertBadge, { backgroundColor: color + "20" }]}>
+                            <Ionicons name="timer" size={9} color={color} />
+                            <Text style={[styles.expertBadgeText, { color }]}>{timerLabel}</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={color + "88"} />
+                  </Pressable>
+                );
+              })}
             </View>
           </LinearGradient>
         </View>
@@ -329,6 +358,8 @@ export default function PlayScreen() {
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
+  const [showModeInfo, setShowModeInfo] = useState(false);
+  const [selectedModeForInfo, setSelectedModeForInfo] = useState<GameModeId | null>(null);
   const [showMultiModal, setShowMultiModal] = useState(false);
   const [showOnlineModal, setShowOnlineModal] = useState(false);
   const [multiPlayerCount, setMultiPlayerCount] = useState(2);
@@ -397,6 +428,15 @@ export default function PlayScreen() {
   }, []);
 
   const handleModePress = async (modeId: GameModeId) => {
+    await playSound("menu_open").catch(() => {});
+    setSelectedModeForInfo(modeId);
+    setShowModeInfo(true);
+  };
+
+  const handleModeInfoPlay = async () => {
+    setShowModeInfo(false);
+    const modeId = selectedModeForInfo;
+    if (!modeId) return;
     const mode = GAME_MODES.find((m) => m.id === modeId);
     if (!mode) return;
     if (modeId === "coop") {
@@ -778,6 +818,25 @@ export default function PlayScreen() {
         <View style={{ height: 110 }} />
       </ScrollView>
 
+      {(() => {
+        const infoMode = selectedModeForInfo ? GAME_MODES.find((m) => m.id === selectedModeForInfo) : null;
+        return (
+          <ModeInfoModal
+            visible={showModeInfo}
+            modeId={selectedModeForInfo}
+            modeName={infoMode ? (getModeName(infoMode.id, lang) || infoMode.name) : ""}
+            modeColor={infoMode?.color ?? Colors.gold}
+            modeIcon={infoMode?.icon ?? "card-outline"}
+            coins={infoMode?.coinsReward ?? 0}
+            xp={infoMode?.xpReward ?? 0}
+            hasDifficulty={infoMode?.hasDifficulty ?? false}
+            lang={lang}
+            onClose={() => setShowModeInfo(false)}
+            onPlay={handleModeInfoPlay}
+          />
+        );
+      })()}
+
       <DifficultyModal
         visible={showDiffModal}
         onClose={() => setShowDiffModal(false)}
@@ -1141,7 +1200,7 @@ const styles = StyleSheet.create({
 
   // Difficulty modal
   modalBg: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end" },
-  diffModal: { borderTopLeftRadius: 26, borderTopRightRadius: 26, overflow: "hidden" },
+  diffModal: { borderTopLeftRadius: 26, borderTopRightRadius: 26, overflow: "hidden", maxHeight: "85%" },
   diffModalGrad: { padding: 22, paddingBottom: 36 },
   diffModalHandle: {
     width: 38, height: 4, backgroundColor: Colors.border, borderRadius: 2,
@@ -1156,15 +1215,27 @@ const styles = StyleSheet.create({
   },
   diffOptionPressed: { opacity: 0.75, transform: [{ scale: 0.96 }] },
   diffOptionGrad: { padding: 10, alignItems: "center", gap: 5 },
-  diffName: { fontFamily: "Nunito_700Bold", fontSize: 11 },
+  diffList: { gap: 8 },
+  diffRow: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    borderRadius: 14, borderWidth: 1, padding: 12, overflow: "hidden",
+  },
+  diffRowIcon: {
+    width: 46, height: 46, borderRadius: 12, borderWidth: 1,
+    alignItems: "center", justifyContent: "center", flexShrink: 0,
+  },
+  diffRowContent: { flex: 1, gap: 3 },
+  diffRowTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  diffRowDesc: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textMuted, lineHeight: 16 },
+  diffRowBottom: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 },
+  diffName: { fontFamily: "Nunito_700Bold", fontSize: 15 },
   diffReward: { flexDirection: "row", alignItems: "center", gap: 3 },
-  diffRewardText: { fontFamily: "Nunito_400Regular", fontSize: 9, color: Colors.textMuted },
+  diffRewardText: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted },
   expertBadge: {
     flexDirection: "row", alignItems: "center", gap: 2,
-    backgroundColor: "rgba(168,85,247,0.2)", borderRadius: 5,
-    paddingHorizontal: 4, paddingVertical: 1,
+    borderRadius: 5, paddingHorizontal: 6, paddingVertical: 2,
   },
-  expertBadgeText: { fontFamily: "Nunito_700Bold", fontSize: 8, color: "#A855F7" },
+  expertBadgeText: { fontFamily: "Nunito_700Bold", fontSize: 10 },
 
   // Daily reward modal
   dailyOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.85)", alignItems: "center", justifyContent: "center" },

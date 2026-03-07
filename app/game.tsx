@@ -325,15 +325,19 @@ function ChallengeRulesModal({ rules, lang, onClose }: {
   }, []);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
 
+  const title = lang === "en" ? "Special Rules" : lang === "pt" ? "Regras Especiais" : "Reglas Especiales";
+  const sub = lang === "en" ? "This challenge has unique rules:" : lang === "pt" ? "Este desafio tem regras únicas:" : "Este desafío tiene reglas únicas:";
+  const acceptLabel = lang === "en" ? "Accept Challenge!" : lang === "pt" ? "Aceito o Desafio!" : "¡Acepto el Desafío!";
+
   return (
     <View style={crStyles.overlay}>
       <Animated.View style={[crStyles.modal, animStyle]}>
         <LinearGradient colors={["#0A1E1A", "#061510"]} style={crStyles.grad}>
           <View style={crStyles.header}>
             <Ionicons name="warning" size={22} color={Colors.gold} />
-            <Text style={crStyles.title}>Reglas Especiales</Text>
+            <Text style={crStyles.title}>{title}</Text>
           </View>
-          <Text style={crStyles.sub}>Este desafío tiene reglas únicas:</Text>
+          <Text style={crStyles.sub}>{sub}</Text>
           {rules.rules.map(rule => (
             <View key={rule.id} style={[crStyles.ruleRow, { borderColor: rule.color + "44" }]}>
               <View style={[crStyles.ruleIcon, { backgroundColor: rule.color + "22" }]}>
@@ -347,7 +351,7 @@ function ChallengeRulesModal({ rules, lang, onClose }: {
           ))}
           <Pressable onPress={onClose} style={crStyles.btn}>
             <Ionicons name="flash" size={16} color="#010804" />
-            <Text style={crStyles.btnText}>¡Acepto el Desafío!</Text>
+            <Text style={crStyles.btnText}>{acceptLabel}</Text>
           </Pressable>
         </LinearGradient>
       </Animated.View>
@@ -1396,21 +1400,35 @@ export default function GameScreen() {
       </Animated.View>
 
       {/* Challenge HUD */}
-      {session?.mode === "challenge" && activeChallenges.length > 0 && (
+      {session?.mode === "challenge" && (
         <View style={styles.challengeHud}>
-          <LinearGradient colors={["rgba(0,0,0,0.8)", "rgba(0,0,0,0.4)"]} style={styles.challengeHudInner}>
-            <Ionicons name="trophy" size={14} color={Colors.gold} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.challengeHudTitle} numberOfLines={1}>
-                {(profile.language === "en" && activeChallenges[0].titleEn) ? activeChallenges[0].titleEn
-                  : (profile.language === "pt" && activeChallenges[0].titlePt) ? activeChallenges[0].titlePt
-                  : activeChallenges[0].title}
-              </Text>
-              <View style={styles.challengeHudProgress}>
-                <View style={[styles.challengeHudBar, { width: `${(activeChallenges[0].progress / activeChallenges[0].target) * 100}%` }]} />
+          <LinearGradient colors={["rgba(0,0,0,0.85)", "rgba(0,0,0,0.55)"]} style={styles.challengeHudInner}>
+            {/* Active mutant rule badge */}
+            {activeChallengeRules && activeChallengeRules.rules.length > 0 && (
+              <View style={[styles.challengeRuleBadge, { borderColor: activeChallengeRules.rules[0].color + "66" }]}>
+                <Ionicons name={activeChallengeRules.rules[0].icon as any} size={12} color={activeChallengeRules.rules[0].color} />
+                <Text style={[styles.challengeRuleBadgeText, { color: activeChallengeRules.rules[0].color }]} numberOfLines={1}>
+                  {getRuleTitle(activeChallengeRules.rules[0], profile.language ?? "es")}
+                </Text>
               </View>
-            </View>
-            <Text style={styles.challengeHudValue}>{activeChallenges[0].progress}/{activeChallenges[0].target}</Text>
+            )}
+            {/* Daily challenge progress */}
+            {activeChallenges.length > 0 && (
+              <>
+                <Ionicons name="ribbon" size={14} color={Colors.gold} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.challengeHudTitle} numberOfLines={1}>
+                    {(profile.language === "en" && activeChallenges[0].titleEn) ? activeChallenges[0].titleEn
+                      : (profile.language === "pt" && activeChallenges[0].titlePt) ? activeChallenges[0].titlePt
+                      : activeChallenges[0].title}
+                  </Text>
+                  <View style={styles.challengeHudProgress}>
+                    <View style={[styles.challengeHudBar, { width: `${Math.min(1, activeChallenges[0].progress / activeChallenges[0].target) * 100}%` }]} />
+                  </View>
+                </View>
+                <Text style={styles.challengeHudValue}>{activeChallenges[0].progress}/{activeChallenges[0].target}</Text>
+              </>
+            )}
           </LinearGradient>
         </View>
       )}
@@ -2080,6 +2098,23 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     zIndex: 1000,
+    gap: 6,
+  },
+  challengeRuleBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(0,0,0,0.75)",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+  },
+  challengeRuleBadgeText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 11,
+    maxWidth: 180,
   },
   challengeHudInner: {
     flexDirection: "row",
