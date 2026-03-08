@@ -16,7 +16,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { STORE_ITEMS, AVATARS, AVATAR_FRAMES } from "@/lib/storeItems";
 import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS } from "@/lib/battlePass";
-import { getRankInfo } from "@/lib/ranked";
+import { getLocalizedRankInfo, RANK_COLORS, RANK_ICONS, RANKS, DIVISIONS } from "@/lib/ranked";
 import { playSound } from "@/lib/sounds";
 import { GAME_MODES } from "@/lib/gameModes";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -369,7 +369,7 @@ export default function ProfileScreen() {
   const titleItem = STORE_ITEMS.find((i) => i.id === profile.titleId);
   const cardBackItem = STORE_ITEMS.find((i) => i.id === profile.cardBackId);
   const frameItem = AVATAR_FRAMES.find((f) => f.id === profile.selectedFrameId);
-  const rankInfo = getRankInfo(profile.rankedProfile);
+  const rankInfo = getLocalizedRankInfo(profile.rankedProfile, lang);
   const country = COUNTRIES.find(c => c.code === profile.country) ?? COUNTRIES[0];
 
   const handleSaveName = async (name: string) => {
@@ -597,11 +597,53 @@ export default function ProfileScreen() {
                   <Ionicons name={mode.icon as any} size={14} color={mode.color} />
                 </View>
                 <Text style={[styles.modeStatName, { color: textMuted }]}>{T(`mode${mode.id.charAt(0).toUpperCase() + mode.id.slice(1)}` as any) || mode.name}</Text>
-                <Text style={[styles.modeStatName, { color: textMuted, flex: 0, marginLeft: 8 }]}>LVL {profile.stats.levelByMode?.[mode.id] ?? 1}</Text>
+                <Text style={[styles.modeStatName, { color: textMuted, flex: 0, marginLeft: 8 }]}>{wins > 0 ? `${Math.round(wins / Math.max(games, 1) * 100)}%` : "—"}</Text>
                 <Text style={[styles.modeStatVal, { color: themeGold }]}>{wins}/{games}</Text>
               </View>
             );
           })}
+        </View>
+
+        {/* Rank Progression */}
+        <Text style={[styles.sectionLabel, { color: themeGold }]}>{lang === "en" ? "RANK PROGRESSION" : lang === "pt" ? "PROGRESSÃO DE RANK" : "PROGRESIÓN DE RANGO"}</Text>
+        <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0", paddingVertical: 12, paddingHorizontal: 12 }]}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
+            {RANKS.map((_, rankIdx) => {
+              const color = RANK_COLORS[rankIdx];
+              const icon = RANK_ICONS[rankIdx] ?? "trophy";
+              const localNames = getLocalizedRankInfo({ rank: rankIdx, division: 0, stars: 0, maxStars: 5, totalWins: 0, totalLosses: 0 }, lang);
+              const isCurrent = profile.rankedProfile.rank === rankIdx;
+              const isUnlocked = profile.rankedProfile.rank > rankIdx || isCurrent;
+              return (
+                <View
+                  key={rankIdx}
+                  style={{
+                    width: "22%",
+                    alignItems: "center",
+                    paddingVertical: 10,
+                    paddingHorizontal: 4,
+                    borderRadius: 12,
+                    borderWidth: isCurrent ? 2 : 1,
+                    borderColor: isCurrent ? color : (isUnlocked ? color + "55" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)")),
+                    backgroundColor: isCurrent ? color + "22" : (isUnlocked ? color + "10" : "transparent"),
+                    opacity: isUnlocked ? 1 : 0.4,
+                  }}
+                >
+                  <Ionicons name={icon as any} size={22} color={isUnlocked ? color : (isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)")} />
+                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: isUnlocked ? color : textMuted, textAlign: "center", marginTop: 4 }} numberOfLines={1}>
+                    {localNames.rankName}
+                  </Text>
+                  {isCurrent && (
+                    <View style={{ backgroundColor: color, borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1, marginTop: 3 }}>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 7, color: "#000" }}>
+                        {DIVISIONS[profile.rankedProfile.division]}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
         </View>
 
         <View style={{ height: 100 }} />

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Ocho Locos is a mobile card game application, a Spanish-language adaptation of "Crazy Eights," developed using Expo (React Native) for the frontend and Express.js for the backend. The game offers extensive features including 6 game modes, local and online multiplayer, a customizable store with over 420 items, 981 achievements, an 800-tier battle pass, daily rewards, and an emote system. The app also supports avatar customization, a 3-language switcher (ES/EN/PT-BR), swipe tab navigation, and light/dark mode. A key design principle is that all core game logic executes on-device, with the backend primarily serving as an API scaffold and static asset server. The project aims to deliver a "Free Fire-style epic update" experience, focusing on realistic social interactions (friend requests, chat), competitive rankings with distinct tiers, and an immersive UI with dramatic victory/defeat overlays and animated card play effects.
+Ocho Locos is a mobile card game application, a Spanish-language adaptation of "Crazy Eights," developed using Expo (React Native) for the frontend and Express.js for the backend. The game offers extensive features including 7 game modes, local and online multiplayer (2–6 players), a customizable store with 500+ items, 981 achievements, an 800-tier battle pass, daily rewards, and an emote system. The app supports 22-language i18n, avatar customization, swipe tab navigation, and light/dark mode. A key design principle is that all core game logic executes on-device, with the backend primarily serving as an API scaffold and static asset server.
 
 ## User Preferences
 

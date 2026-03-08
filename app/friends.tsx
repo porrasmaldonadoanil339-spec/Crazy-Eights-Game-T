@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View, Text, StyleSheet, FlatList, Pressable, TextInput,
-  Modal, Image, Platform, Animated,
+  Modal, Image, Platform, Animated, Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -140,6 +140,8 @@ export default function FriendsScreen() {
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const chatListRef = useRef<FlatList<ChatMessage>>(null);
+  const [deleteMsgId, setDeleteMsgId] = useState<string | null>(null);
+  const [showDeleteConvConfirm, setShowDeleteConvConfirm] = useState(false);
   const friendsRef = useRef<Friend[]>([]);
   const requestsRef = useRef<FriendRequest[]>([]);
 
@@ -768,6 +770,21 @@ export default function FriendsScreen() {
                 <Text style={[styles.friendSub, { color: textMuted }]}>{chatFriend.online ? "En línea" : chatFriend.lastSeen}</Text>
               </View>
               <Pressable
+                onPress={() => {
+                  Alert.alert(
+                    "Eliminar conversación",
+                    "¿Borrar todos los mensajes con este amigo?",
+                    [
+                      { text: "Cancelar", style: "cancel" },
+                      { text: "Eliminar", style: "destructive", onPress: () => { setChatMessages([]); } },
+                    ]
+                  );
+                }}
+                style={[styles.inviteBtn, { backgroundColor: "#E74C3C22", borderRadius: 18, width: 36, height: 36, alignItems: "center", justifyContent: "center", marginRight: 4 }]}
+              >
+                <Ionicons name="trash-outline" size={15} color="#E74C3C" />
+              </Pressable>
+              <Pressable
                 onPress={() => { setChatFriend(null); handleInvite(chatFriend); }}
                 style={[styles.inviteBtn, { marginRight: 4 }]}
               >
@@ -784,17 +801,32 @@ export default function FriendsScreen() {
               keyExtractor={m => m.id}
               contentContainerStyle={{ padding: 14, gap: 10, paddingBottom: 8 }}
               renderItem={({ item: msg }) => (
-                <View style={[
-                  styles.chatBubble,
-                  msg.fromMe
-                    ? { alignSelf: "flex-end", backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "44" }
-                    : { alignSelf: "flex-start", backgroundColor: isDark ? "#1a3a1a" : "#c8e6c0", borderColor: borderColor },
-                ]}>
-                  <Text style={[styles.chatBubbleTxt, { color: textColor }]}>{msg.text}</Text>
-                  <Text style={[styles.chatBubbleTime, { color: textMuted }]}>
-                    {new Date(msg.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </Text>
-                </View>
+                <Pressable
+                  onLongPress={() => {
+                    Alert.alert(
+                      "Eliminar mensaje",
+                      "¿Eliminar este mensaje?",
+                      [
+                        { text: "Cancelar", style: "cancel" },
+                        { text: "Eliminar", style: "destructive", onPress: () => setChatMessages(prev => prev.filter(m => m.id !== msg.id)) },
+                      ]
+                    );
+                  }}
+                  delayLongPress={400}
+                >
+                  <View style={[
+                    styles.chatBubble,
+                    msg.fromMe
+                      ? { alignSelf: "flex-end", backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "44" }
+                      : { alignSelf: "flex-start", backgroundColor: isDark ? "#1a3a1a" : "#c8e6c0", borderColor: borderColor },
+                    deleteMsgId === msg.id && { opacity: 0.5 },
+                  ]}>
+                    <Text style={[styles.chatBubbleTxt, { color: textColor }]}>{msg.text}</Text>
+                    <Text style={[styles.chatBubbleTime, { color: textMuted }]}>
+                      {new Date(msg.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </Text>
+                  </View>
+                </Pressable>
               )}
               ListFooterComponent={isTyping ? (
                 <View style={[styles.chatBubble, { alignSelf: "flex-start", backgroundColor: isDark ? "#1a3a1a" : "#c8e6c0", borderColor, marginTop: 10 }]}>

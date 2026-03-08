@@ -87,8 +87,9 @@ export default function CoopLobbyScreen() {
   const [countdownVal, setCountdownVal] = useState(3);
   const [cpus] = useState(() => pickLocalCpus(3, level || 1));
 
+  const myName = profile.name || T("you") || "Tú";
   const mySlot: LobbySlot = {
-    name: profile.name || "Tú",
+    name: myName,
     avatarIcon: "person",
     avatarColor: AVATAR_COLORS[0],
     level: level || 1,
@@ -152,7 +153,7 @@ export default function CoopLobbyScreen() {
           <Ionicons name="arrow-back" size={20} color={Colors.gold} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>COOPERATIVO</Text>
+          <Text style={styles.headerTitle}>{T("modeCoop") || "COOPERATIVO"}</Text>
           <Text style={styles.headerSub}>2 vs 2</Text>
         </View>
         <View style={{ width: 36 }} />
@@ -171,12 +172,12 @@ export default function CoopLobbyScreen() {
         <View style={styles.teamColumn}>
           <View style={[styles.teamBadge, { borderColor: TEAM_COLOR + "88", backgroundColor: TEAM_COLOR + "15" }]}>
             <Ionicons name="shield-checkmark" size={14} color={TEAM_COLOR} />
-            <Text style={[styles.teamLabel, { color: TEAM_COLOR }]}>EQUIPO 1</Text>
+            <Text style={[styles.teamLabel, { color: TEAM_COLOR }]}>{T("teamOne") || "EQUIPO 1"}</Text>
           </View>
           <SlotCard slot={mySlot} accentColor={TEAM_COLOR} />
           <SlotCard slot={partner} accentColor={TEAM_COLOR} />
           <View style={styles.teamDesc}>
-            <Text style={styles.teamDescTxt}>Turno: <Text style={{ color: TEAM_COLOR }}>1ro y 2do</Text></Text>
+            <Text style={styles.teamDescTxt}>{T("turnOrder") || "Turno"}: <Text style={{ color: TEAM_COLOR }}>{T("firstAndSecond") || "1ro y 2do"}</Text></Text>
           </View>
         </View>
 
@@ -192,22 +193,22 @@ export default function CoopLobbyScreen() {
         <View style={styles.teamColumn}>
           <View style={[styles.teamBadge, { borderColor: RIVAL_COLOR + "88", backgroundColor: RIVAL_COLOR + "15" }]}>
             <Ionicons name="skull" size={14} color={RIVAL_COLOR} />
-            <Text style={[styles.teamLabel, { color: RIVAL_COLOR }]}>RIVALES</Text>
+            <Text style={[styles.teamLabel, { color: RIVAL_COLOR }]}>{T("rivals") || "RIVALES"}</Text>
           </View>
           <SlotCard slot={rival1} accentColor={RIVAL_COLOR} />
           <SlotCard slot={rival2} accentColor={RIVAL_COLOR} />
           <View style={styles.teamDesc}>
-            <Text style={styles.teamDescTxt}>Turno: <Text style={{ color: RIVAL_COLOR }}>3ro y 4to</Text></Text>
+            <Text style={styles.teamDescTxt}>{T("turnOrder") || "Turno"}: <Text style={{ color: RIVAL_COLOR }}>{T("thirdAndFourth") || "3ro y 4to"}</Text></Text>
           </View>
         </View>
       </View>
 
       {/* Turn order strip */}
       <Animated.View entering={FadeInDown.delay(3400).duration(400)} style={styles.turnStrip}>
-        <Text style={styles.turnStripTitle}>ORDEN DE TURNOS</Text>
+        <Text style={styles.turnStripTitle}>{T("turnOrderTitle") || "ORDEN DE TURNOS"}</Text>
         <View style={styles.turnRow}>
           {[
-            { label: "Tú", color: TEAM_COLOR },
+            { label: T("you") || "Tú", color: TEAM_COLOR },
             { label: partner?.name?.split(" ")[0] ?? "Comp.", color: TEAM_COLOR },
             { label: rival1?.name?.split(" ")[0] ?? "Rival 1", color: RIVAL_COLOR },
             { label: rival2?.name?.split(" ")[0] ?? "Rival 2", color: RIVAL_COLOR },

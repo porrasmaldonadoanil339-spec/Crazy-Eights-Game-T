@@ -19,7 +19,7 @@ import {
   initMultiGame, multiCanPlay, multiPlayCard, multiDraw, multiChooseSuit, multiConfirmTurn,
   suitName, suitSymbol, suitColor, multiGetTopCard,
 } from "@/lib/multiplayerEngine";
-import { playCardFlip, playCardDraw, playButton } from "@/lib/audioManager";
+import { playCardFlip, playCardDraw, playButton, stopMusic } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS } from "@/lib/storeItems";
 
@@ -218,6 +218,12 @@ export default function MultiGameScreen() {
 
   const [gameStarted, setGameStarted] = useState(false);
   const [playerCountSelect, setPlayerCountSelect] = useState(3);
+
+  useEffect(() => {
+    if (gameState.phase === "game_over") {
+      stopMusic().catch(() => {});
+    }
+  }, [gameState.phase]);
 
   const [gameState, setGameState] = useState<MultiGameState>(() => initMultiGame(playerNames.slice(0, playerCountSelect)));
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
@@ -550,7 +556,7 @@ export default function MultiGameScreen() {
         <WinOverlay
           winnerName={playerNames[gameState.winnerIndex]}
           winnerColor={PLAYER_COLORS[gameState.winnerIndex % PLAYER_COLORS.length]}
-          onClose={() => { playButton().catch(() => {}); router.back(); }}
+          onClose={() => { stopMusic().catch(() => {}); playButton().catch(() => {}); router.back(); }}
         />
       )}
     </View>

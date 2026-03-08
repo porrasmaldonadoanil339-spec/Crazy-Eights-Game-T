@@ -364,7 +364,7 @@ export default function PlayScreen() {
   const [showOnlineModal, setShowOnlineModal] = useState(false);
   const [multiPlayerCount, setMultiPlayerCount] = useState(2);
   const [onlinePlayerCount, setOnlinePlayerCount] = useState(2);
-  const [multiPlayerNames, setMultiPlayerNames] = useState(["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4"]);
+  const [multiPlayerNames, setMultiPlayerNames] = useState(["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4", "Jugador 5", "Jugador 6"]);
   const [showAdModal, setShowAdModal] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
   const [adComplete, setAdComplete] = useState(false);
@@ -720,7 +720,7 @@ export default function PlayScreen() {
               <Text style={styles.multiCardDesc}>{T("multiLocalDesc")}</Text>
               <View style={[styles.multiCardBadge, { backgroundColor: "#2ECC7122", borderColor: "#2ECC7144" }]}>
                 <Ionicons name="people" size={10} color="#2ECC71" />
-                <Text style={[styles.multiCardBadgeText, { color: "#2ECC71" }]}>2 – 4 {T("players")}</Text>
+                <Text style={[styles.multiCardBadgeText, { color: "#2ECC71" }]}>2 – 6 {T("players")}</Text>
               </View>
             </LinearGradient>
           </Pressable>
@@ -987,7 +987,7 @@ export default function PlayScreen() {
 
             <Text style={[styles.multiModalSectionLabel, { color: theme.textDim }]}>{T("howManyPlayersLocal")}</Text>
             <View style={styles.multiCountRow}>
-              {[2, 3, 4].map(n => (
+              {[2, 3, 4, 6].map(n => (
                 <Pressable
                   key={n}
                   onPress={() => setMultiPlayerCount(n)}
@@ -997,7 +997,7 @@ export default function PlayScreen() {
                     {n}
                   </Text>
                   <Text style={[styles.multiCountBtnSub, multiPlayerCount === n ? { color: "#63B3ED" } : { color: theme.textDim }]}>
-                    {n === 2 ? "1vs1" : n === 3 ? "3 amigos" : "4 amigos"}
+                    {n === 2 ? "1vs1" : n === 3 ? "3p" : n === 4 ? "4p" : "6p"}
                   </Text>
                 </Pressable>
               ))}

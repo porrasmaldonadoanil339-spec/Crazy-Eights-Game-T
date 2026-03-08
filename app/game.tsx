@@ -29,6 +29,7 @@ import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge 
 import { generateChallengeRules, getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
+import { stopMusic } from "@/lib/audioManager";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -667,6 +668,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile 
     glowOp.value = withTiming(1, { duration: 600 });
     titleY.value = withDelay(200, withSpring(0, { damping: 14 }));
     titleOp.value = withDelay(200, withTiming(1, { duration: 400 }));
+    stopMusic().catch(() => {});
     if (isWin) playSound("win").catch(() => {});
     else playSound("lose").catch(() => {});
   }, []);
@@ -913,6 +915,7 @@ export default function GameScreen() {
   const cardBack = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
   const backColors = (cardBack.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];
   const backAccent = cardBack.backAccent ?? Colors.gold;
+  const backPattern = (cardBack.backPattern ?? "diamonds") as "diamonds" | "stars" | "circles" | "crosses" | "waves" | "hexagons";
 
   const cardDesign = getCardDesignById(profile.cardDesignId ?? "face_default");
   const cardColors = cardDesign.isDefault ? undefined : (cardDesign.backColors ?? undefined) as [string, string, string] | undefined;
@@ -1670,6 +1673,7 @@ export default function GameScreen() {
                   cardColors={cardColors}
                   backColors={backColors}
                   backAccent={backAccent}
+                  backPattern={backPattern}
                 />
                 {adviceCardId === card.id && <AdviceBadge card={card} T={T} />}
               </View>

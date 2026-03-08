@@ -11,7 +11,7 @@ import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
 import { playButton, stopMusic, startGameMusic } from "@/lib/audioManager";
-import { getRankInfo } from "@/lib/ranked";
+import { getLocalizedRankInfo } from "@/lib/ranked";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 
 const AVATAR_COLORS = ["#E74C3C","#9B59B6","#E67E22","#2ECC71","#1A8FC1","#D4AF37","#C0392B","#27AE60","#8E44AD","#F39C12"];
@@ -56,7 +56,8 @@ export default function RankedLobbyScreen() {
   const { profile, level } = useProfile();
   const T = useT();
 
-  const rankInfo = getRankInfo(profile.rankedProfile);
+  const lang = profile.language ?? "es";
+  const rankInfo = getLocalizedRankInfo(profile.rankedProfile, lang);
   const ACCENT = rankInfo.color;
 
   const [slots, setSlots] = useState<(FriendSlot | null)[]>([null, null, null]);

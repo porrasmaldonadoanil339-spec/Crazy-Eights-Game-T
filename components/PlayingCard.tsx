@@ -20,6 +20,7 @@ interface PlayingCardProps {
   size?: "sm" | "md" | "lg";
   backColors?: [string, string, string];
   backAccent?: string;
+  backPattern?: "diamonds" | "stars" | "circles" | "crosses" | "waves" | "hexagons";
   cardColors?: [string, string, string];
 }
 
@@ -164,13 +165,36 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
   );
 }
 
-function CardBack({ sobj, backColors, backAccent }: {
+const PATTERN_SYMBOLS: Record<string, string> = {
+  diamonds: "◆",
+  stars: "★",
+  circles: "●",
+  crosses: "✚",
+  waves: "≋",
+  hexagons: "⬡",
+};
+const PATTERN_CENTER: Record<string, string> = {
+  diamonds: "◆",
+  stars: "✦",
+  circles: "◉",
+  crosses: "✛",
+  waves: "〰",
+  hexagons: "⬢",
+};
+
+function CardBack({ sobj, backColors, backAccent, backPattern }: {
   sobj: typeof SIZES.md;
   backColors?: [string, string, string];
   backAccent?: string;
+  backPattern?: string;
 }) {
   const colors = backColors ?? DEFAULT_BACK_COLORS;
   const accent = backAccent ?? DEFAULT_BACK_ACCENT;
+  const pat = backPattern ?? "diamonds";
+  const sym = PATTERN_SYMBOLS[pat] ?? "◆";
+  const centerSym = PATTERN_CENTER[pat] ?? "◆";
+  const isWave = pat === "waves";
+  const isCross = pat === "crosses";
 
   return (
     <LinearGradient
@@ -178,12 +202,19 @@ function CardBack({ sobj, backColors, backAccent }: {
       start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
       style={[styles.cardFace, { borderRadius: sobj.corner, borderColor: accent + "88" }]}
     >
-      {/* Diagonal dot pattern */}
+      {/* Pattern grid */}
       <View style={styles.backPatternWrap}>
         {[0,1,2,3].map(row => (
-          <View key={row} style={styles.backPatternRow}>
+          <View key={row} style={[styles.backPatternRow, isWave && { marginLeft: row % 2 === 0 ? 4 : 0 }]}>
             {[0,1,2,3,4].map(col => (
-              <Text key={col} style={[styles.backDot, { fontSize: sobj.ss * 0.42, color: accent }]}>◆</Text>
+              <Text
+                key={col}
+                style={[
+                  styles.backDot,
+                  { fontSize: sobj.ss * (isCross ? 0.38 : isWave ? 0.45 : 0.42), color: accent },
+                  (row + col) % 2 === 0 ? { opacity: 0.9 } : { opacity: 0.45 },
+                ]}
+              >{sym}</Text>
             ))}
           </View>
         ))}
@@ -191,12 +222,12 @@ function CardBack({ sobj, backColors, backAccent }: {
       {/* Center emblem */}
       <View style={styles.backCenterWrap}>
         <View style={[styles.backEmblemCircle, {
-          width: sobj.ss + 8, height: sobj.ss + 8,
-          borderRadius: (sobj.ss + 8) / 2,
-          borderColor: accent + "88",
-          backgroundColor: accent + "18",
+          width: sobj.ss + 10, height: sobj.ss + 10,
+          borderRadius: (sobj.ss + 10) / 2,
+          borderColor: accent + "99",
+          backgroundColor: accent + "22",
         }]}>
-          <Text style={[styles.backEmblemText, { fontSize: sobj.ss - 1, color: accent }]}>◆</Text>
+          <Text style={[styles.backEmblemText, { fontSize: sobj.ss, color: accent }]}>{centerSym}</Text>
         </View>
       </View>
       {/* Inner border frame */}
@@ -214,6 +245,7 @@ export function PlayingCard({
   size: sizeKey = "md",
   backColors,
   backAccent,
+  backPattern,
   cardColors,
 }: PlayingCardProps) {
   const sobj = SIZES[sizeKey];
@@ -257,7 +289,7 @@ export function PlayingCard({
 
       <View style={[styles.cardWrap, { width: sobj.w, height: sobj.h, borderRadius: sobj.corner, ...shadowEl }]}>
         {faceDown
-          ? <CardBack sobj={sobj} backColors={backColors} backAccent={backAccent} />
+          ? <CardBack sobj={sobj} backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
           : <CardFront card={card} sobj={sobj} cardColors={cardColors} />
         }
       </View>

@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
 import { GameModeId } from "@/lib/gameModes";
 import { useT } from "@/hooks/useT";
-import { Lang } from "@/lib/i18n";
+import { Lang, t as i18nT } from "@/lib/i18n";
 
 interface ModeRule {
   icon: string;
@@ -43,6 +43,15 @@ interface ModeContent {
 function getModeContent(id: GameModeId, lang: Lang): ModeContent {
   const isEn = lang !== "es" && lang !== "pt";
   const isPt = lang === "pt";
+  const isOther = lang !== "es" && lang !== "pt" && lang !== "en";
+
+  const descKey: Partial<Record<GameModeId, "modeClassicDesc"|"modeRankedDesc"|"modeCoopDesc"|"modeLightningDesc"|"modeTournamentDesc"|"modeChallengeDesc"|"modePracticeDesc">> = {
+    classic: "modeClassicDesc", ranked: "modeRankedDesc", coop: "modeCoopDesc",
+    lightning: "modeLightningDesc", tournament: "modeTournamentDesc",
+    challenge: "modeChallengeDesc", practice: "modePracticeDesc",
+  };
+  const dKey = descKey[id];
+  const i18nDesc = isOther && dKey ? i18nT(dKey, lang) : null;
 
   const data: Record<GameModeId, { es: ModeContent; en: ModeContent; pt: ModeContent }> = {
     classic: {
@@ -510,6 +519,10 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
 
   const entry = data[id];
   if (!entry) return data.classic.en;
+  if (isOther && i18nDesc) {
+    const base = entry.en;
+    return { ...base, description: i18nDesc };
+  }
   if (isEn) return entry.en;
   if (isPt) return entry.pt;
   return entry.es;
