@@ -1,0 +1,44 @@
+Por favor mejora completamente la **pantalla inicial y el menú de carga de mi juego** para que se vea más profesional y creativo.
+
+1. **Logo de la desarrolladora**
+
+* Cuando el jugador abra la app, primero debe aparecer el **logo de mi desarrolladora “Biyis Prime Studios”**.
+* El logo debe estar **perfectamente centrado en la pantalla**.
+* Debe aparecer con una **animación suave** y un **sonido corto tipo juegos profesionales**.
+* El logo debe permanecer aproximadamente **3 a 4 segundos**.
+
+2. **Transición al menú de carga**
+
+* Después del logo debe haber una **transición suave y profesional** hacia el menú de carga.
+* No debe cambiar de forma brusca, debe verse como en los juegos modernos.
+
+3. **Fondo del menú de carga**
+
+* El fondo debe verse **más claro y más visible**, porque ahora casi no se aprecia.
+* Ajusta el **brillo, contraste o iluminación del fondo** para que se note mejor el arte del juego.
+* El fondo debe tener relación con mi juego **“Ocho Locos”**.
+
+4. **Elementos creativos en la pantalla de carga**
+   Agrega algunos elementos visuales relacionados con el juego para que la pantalla se vea más viva, por ejemplo:
+
+* cartas animadas
+* efectos de brillo
+* partículas suaves
+* pequeños movimientos o animaciones en el fondo
+* barra de carga animada
+
+5. **Pantalla de carga más profesional**
+
+* Agrega una **barra de carga clara y animada**.
+* Puede aparecer un pequeño **mensaje de carga como “Cargando partida…”**.
+* Todo debe verse moderno y bien organizado.
+
+6. **Transición al menú principal**
+
+* Cuando termine la carga debe haber una **transición suave hacia el menú principal del juego**.
+* La transición debe verse fluida y profesional, no un cambio brusco.
+
+7. **Objetivo**
+   Quiero que toda esta parte del inicio del juego se vea **muy profesional, fluida y bien diseñada**, similar a los juegos modernos.
+
+Por favor implementa **todo exactamente como lo pedí**, mejora el diseño visual al máximo y asegúrate de que el menú de carga sea creativo, claro y relacionado con el juego.

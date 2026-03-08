@@ -1,0 +1,44 @@
+Por favor modifica y mejora completamente el sistema del **Modo Cooperativo (2 vs 2)** y del **Modo Clasificatoria** en mi juego.
+
+Actualmente el sistema está mal, porque cuando entro a la partida todavía está buscando a mi compañero, y eso no tiene lógica. El juego primero debe encontrar a todos los jugadores y luego iniciar la partida.
+
+Quiero que el sistema funcione exactamente así:
+
+1. Cuando el jugador presione **Jugar**, el sistema debe iniciar el **matchmaking** y buscar automáticamente a los demás jugadores.
+
+2. El juego debe encontrar a los **4 jugadores necesarios** antes de empezar la partida.
+
+3. Cuando los 4 jugadores ya estén encontrados, debe aparecer una **pantalla de carga previa a la partida**.
+
+4. En esa pantalla de carga deben mostrarse claramente los **perfiles de los 4 jugadores**, incluyendo su **foto o avatar de perfil**.
+
+Debe verse de esta manera:
+
+EQUIPO 1
+
+* Mi foto de perfil
+* Foto de perfil de mi compañero
+
+VS
+
+EQUIPO 2
+
+* Foto de perfil del rival 1
+* Foto de perfil del rival 2
+
+5. Esta pantalla debe mostrar claramente quién es **mi compañero** y quiénes son **los dos rivales** antes de que empiece la partida.
+
+6. La pantalla debe tener una **animación de VS entre los dos equipos**, una **barra de carga**, y una presentación visual clara para que el juego se vea profesional.
+
+7. Después de que termine la pantalla de carga, recién debe empezar la partida.
+
+8. El sistema actual que busca a mi compañero dentro de la partida debe **eliminarse completamente**, porque el matchmaking debe completarse antes de iniciar el juego.
+
+9. Esto debe funcionar exactamente igual en:
+
+* **Modo Cooperativo (2 vs 2)**
+* **Modo Clasificatoria**
+
+10. También quiero que el diseño de esta pantalla se vea **moderno y profesional**, similar a juegos competitivos, mostrando claramente los avatares, los equipos y el enfrentamiento antes de empezar la partida.
+
+Por favor implementa **todo exactamente como lo pedí**, sin omitir nada, y mejora el sistema al máximo para que funcione correctamente y tenga lógica dentro del juego.

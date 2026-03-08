@@ -27,6 +27,70 @@ import {
 import { CARD_BACKS } from "@/lib/storeItems";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
+import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
+
+interface ServerGameState {
+  discardTop: Card;
+  drawPileSize: number;
+  currentPlayerIndex: number;
+  currentSuit: Suit;
+  phase: MultiGameState["phase"];
+  winnerIndex: number | null;
+  playerNames: string[];
+  handSizes: number[];
+  message: string;
+  direction: 1 | -1;
+  pendingDraw: number;
+  pendingDrawType: "two" | "seven" | null;
+  jActive: boolean;
+  jSuit: Suit | null;
+  myHand: Card[];
+  myPlayerIndex: number;
+}
+
+const DUMMY_CARD: Card = { id: "xx", rank: "2", suit: "hearts" };
+
+function buildLocalState(srv: ServerGameState): MultiGameState {
+  const n = srv.playerNames.length;
+  const myPidx = srv.myPlayerIndex;
+  const hands: Card[][] = [];
+  for (let i = 0; i < n; i++) {
+    if (i === myPidx) {
+      hands.push([...srv.myHand]);
+    } else {
+      hands.push(Array(srv.handSizes[i] ?? 0).fill(DUMMY_CARD));
+    }
+  }
+  const localCurrPidx = (srv.currentPlayerIndex - myPidx + n) % n;
+  const rotatedNames = Array.from({ length: n }, (_, i) => srv.playerNames[(i + myPidx) % n]);
+  const rotatedHands = Array.from({ length: n }, (_, i) => hands[(i + myPidx) % n]);
+  const rotatedHandSizes = Array.from({ length: n }, (_, i) => srv.handSizes[(i + myPidx) % n] ?? 0);
+
+  let rotatedWinner: number | null = null;
+  if (srv.winnerIndex !== null && srv.winnerIndex !== undefined) {
+    rotatedWinner = (srv.winnerIndex - myPidx + n) % n;
+  }
+
+  return {
+    hands: rotatedHands,
+    drawPile: Array(srv.drawPileSize).fill(DUMMY_CARD),
+    discardPile: [srv.discardTop],
+    currentSuit: srv.currentSuit,
+    currentPlayerIndex: localCurrPidx,
+    playerCount: n,
+    playerNames: rotatedNames,
+    phase: srv.phase,
+    winnerIndex: rotatedWinner,
+    message: srv.message,
+    direction: srv.direction,
+    turnId: Date.now(),
+    pendingDraw: srv.pendingDraw,
+    pendingDrawType: srv.pendingDrawType,
+    pendingDrawSuit: null,
+    jActive: srv.jActive,
+    jSuit: srv.jSuit,
+  };
+}
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 
@@ -415,9 +479,14 @@ const raStyles = StyleSheet.create({
 export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
-  const params = useLocalSearchParams<{ count?: string; rivalName?: string }>();
+  const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string }>();
   const { profile, level: playerLevel } = useProfile();
   const T = useT();
+
+  const isOnline = !!params.code;
+  const onlineCode = params.code ?? "";
+  const serverPidx = parseInt(params.pidx ?? "0", 10);
+  const socketRef = useRef<ReturnType<typeof getSocket> | null>(null);
 
   const cardBack = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
   const backColors = (cardBack.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];
@@ -431,7 +500,7 @@ export default function OnlineGameScreen() {
   const tableH = tableW * 0.55;
   const tableCenterY = zoneH * 0.44;
 
-  const playerCount = Math.min(4, Math.max(3, parseInt(params.count ?? "3", 10)));
+  const playerCount = Math.min(4, Math.max(2, parseInt(params.count ?? "3", 10)));
 
   const [currentCpuProfiles, setCurrentCpuProfiles] = useState<CpuProfile[]>(() => {
     const profiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
@@ -445,8 +514,10 @@ export default function OnlineGameScreen() {
   // All player names: human is index 0, CPUs are 1..n
   const allNames = [humanName, ...currentCpuProfiles.map(c => c.name)];
 
-  // Lobby state
-  const [lobbyPhase, setLobbyPhase] = useState<"searching" | "found" | "countdown" | "dealing" | "game" | "result">("searching");
+  // Lobby state — online games start directly in "dealing" phase
+  const [lobbyPhase, setLobbyPhase] = useState<"searching" | "found" | "countdown" | "dealing" | "game" | "result">(
+    isOnline ? "dealing" : "searching"
+  );
   const [joinedCount, setJoinedCount] = useState(0);
   const [countdown, setCountdown] = useState(3);
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
@@ -458,6 +529,43 @@ export default function OnlineGameScreen() {
   const [inactivityProgress, setInactivityProgress] = useState(1);
   const inactivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastActionTime = useRef(Date.now());
+
+  // ─── Online WebSocket setup ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!isOnline) return;
+
+    const s = getSocket();
+    socketRef.current = s;
+
+    s.off("game_state");
+    s.off("game_over");
+    s.off("player_left");
+
+    s.on("game_state", (srv: ServerGameState) => {
+      const local = buildLocalState(srv);
+      setGameState(local);
+      setLobbyPhase(prev => (prev === "dealing" || prev === "game") ? "game" : prev);
+      if (local.phase === "game_over") {
+        setLobbyPhase("result");
+        stopMusic().catch(() => {});
+        playWin().catch(() => {});
+      }
+    });
+
+    s.on("game_over", () => {
+      setLobbyPhase("result");
+    });
+
+    s.on("player_left", () => {
+      setRivalAbandoned(true);
+    });
+
+    return () => {
+      s.off("game_state");
+      s.off("game_over");
+      s.off("player_left");
+    };
+  }, [isOnline]);
 
   // ─── Lobby sequence ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -622,10 +730,19 @@ export default function OnlineGameScreen() {
     if (!gameState || !isPlaying) return;
     lastActionTime.current = Date.now();
     if (!multiCanPlay(card, gameState)) { playCardFlip().catch(() => {}); return; }
+    if (isOnline) {
+      if (selectedCard?.id === card.id) {
+        playCardFlip().catch(() => {});
+        socketRef.current?.emit("play_card", { card });
+        setSelectedCard(null);
+      } else {
+        setSelectedCard(card);
+      }
+      return;
+    }
     if (selectedCard?.id === card.id) {
       playCardFlip().catch(() => {});
       if (card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0)) {
-        // Play without suit to enter choosing_suit phase — SuitPicker will appear
         setGameState(multiPlayCard(gameState, card));
         return;
       }
@@ -634,26 +751,40 @@ export default function OnlineGameScreen() {
     } else {
       setSelectedCard(card);
     }
-  }, [gameState, isPlaying, selectedCard]);
+  }, [gameState, isPlaying, selectedCard, isOnline]);
 
   const handleChooseSuit = useCallback((suit: Suit) => {
     if (!gameState) return;
     playCardFlip().catch(() => {});
-    // Card already played — just set the chosen suit via multiChooseSuit
+    if (isOnline) {
+      socketRef.current?.emit("choose_suit", { suit });
+      setSelectedCard(null);
+      return;
+    }
     setGameState(multiChooseSuit(gameState, suit));
     setSelectedCard(null);
-  }, [gameState]);
+  }, [gameState, isOnline]);
 
   const handleDraw = useCallback(() => {
     if (!gameState || !isPlaying) return;
     lastActionTime.current = Date.now();
     playCardDraw().catch(() => {});
+    if (isOnline) {
+      socketRef.current?.emit("draw_card");
+      setSelectedCard(null);
+      return;
+    }
     setGameState(multiDraw(gameState));
     setSelectedCard(null);
-  }, [gameState, isPlaying]);
+  }, [gameState, isPlaying, isOnline]);
 
   // ─── Play again with fresh opponent ─────────────────────────────────────
   const handlePlayAgain = React.useCallback(() => {
+    if (isOnline) {
+      ensureDisconnected();
+      router.replace("/online-lobby");
+      return;
+    }
     const newProfiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
     setCurrentCpuProfiles(newProfiles);
     const newNames = [humanName, ...newProfiles.map(c => c.name)];
@@ -662,7 +793,7 @@ export default function OnlineGameScreen() {
     setGameState(gs);
     setSelectedCard(null);
     cpuThinking.current = false;
-  }, [playerCount, humanName]);
+  }, [playerCount, humanName, isOnline]);
 
   // ─── CPU zones (opponents around table) ──────────────────────────────────
   const cpuZonePositions = React.useMemo(() => {
@@ -692,32 +823,49 @@ export default function OnlineGameScreen() {
 
   // Show lobby
   if (lobbyPhase !== "game" && lobbyPhase !== "result") {
-    if (lobbyPhase === "dealing" && gameState) {
-      return (
-        <View style={{ flex: 1, backgroundColor: "#020810" }}>
-          <DealAnimation
-            cardsPerPlayer={7}
-            playerCards={gameState.hands[0]}
-            starterCard={multiGetTopCard(gameState)}
-            onComplete={handleDealingComplete}
-            backColors={backColors}
-            backAccent={backAccent}
-            numOpponents={playerCount - 1}
-          />
-        </View>
-      );
+    if (lobbyPhase === "dealing") {
+      if (isOnline && !gameState) {
+        return (
+          <View style={{ flex: 1, backgroundColor: "#020810", alignItems: "center", justifyContent: "center", gap: 16 }}>
+            <LinearGradient colors={["#020810", "#041530"]} style={StyleSheet.absoluteFill} />
+            <Animated.Text style={{ fontSize: 42, color: Colors.gold, fontFamily: "Nunito_800ExtraBold" }}>
+              ⟳
+            </Animated.Text>
+            <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.gold, letterSpacing: 3 }}>
+              CARGANDO PARTIDA
+            </Text>
+          </View>
+        );
+      }
+      if (gameState) {
+        return (
+          <View style={{ flex: 1, backgroundColor: "#020810" }}>
+            <DealAnimation
+              cardsPerPlayer={7}
+              playerCards={gameState.hands[0]}
+              starterCard={multiGetTopCard(gameState)}
+              onComplete={handleDealingComplete}
+              backColors={backColors}
+              backAccent={backAccent}
+              numOpponents={playerCount - 1}
+            />
+          </View>
+        );
+      }
     }
 
-    return (
-      <LobbyScreen
-        playerCount={playerCount}
-        humanName={humanName}
-        cpuProfiles={currentCpuProfiles}
-        joinedCount={joinedCount}
-        phase={lobbyPhase as "searching" | "found" | "countdown"}
-        countdown={countdown}
-      />
-    );
+    if (!isOnline) {
+      return (
+        <LobbyScreen
+          playerCount={playerCount}
+          humanName={humanName}
+          cpuProfiles={currentCpuProfiles}
+          joinedCount={joinedCount}
+          phase={lobbyPhase as "searching" | "found" | "countdown"}
+          countdown={countdown}
+        />
+      );
+    }
   }
 
   const gs = gameState!;

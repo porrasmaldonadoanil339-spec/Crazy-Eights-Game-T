@@ -126,9 +126,7 @@ export default function RankedLobbyScreen() {
 
   const handleStartMatch = useCallback(async () => {
     await playButton().catch(() => {});
-    stopMusic().catch(() => {});
-    startGameMusic().catch(() => {});
-    router.replace({ pathname: "/game-online", params: { count: String(Math.max(2, totalPlayers)), rivalName: "Rival" } });
+    router.replace({ pathname: "/online-lobby", params: { mode: "ranked", playerCount: String(Math.max(2, totalPlayers)) } });
   }, [totalPlayers]);
 
   const statusLabel = (s: FriendStatus) => s === "available" ? "Disponible" : s === "online" ? "En línea" : "En partida";

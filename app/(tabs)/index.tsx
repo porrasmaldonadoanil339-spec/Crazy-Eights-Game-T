@@ -478,7 +478,7 @@ export default function PlayScreen() {
   const handleStartOnline = async () => {
     await playButton().catch(() => {});
     setShowOnlineModal(false);
-    router.push({ pathname: "/game-online", params: { count: String(onlinePlayerCount) } });
+    router.push({ pathname: "/online-lobby", params: { mode: "classic", playerCount: String(onlinePlayerCount) } });
   };
 
   const handleOpenAd = () => {
@@ -958,7 +958,7 @@ export default function PlayScreen() {
                   />
                   <Pressable
                     disabled={joinCode.length < 6}
-                    onPress={() => { if (joinCode.length >= 6) { setShowOnlineModal(false); setJoinCode(""); router.push({ pathname: "/game-online", params: { count: "2" } }); } }}
+                    onPress={() => { if (joinCode.length >= 6) { setShowOnlineModal(false); setJoinCode(""); router.push({ pathname: "/online-lobby", params: { mode: "classic", playerCount: "2" } }); } }}
                     style={[styles.multiStartBtn, { opacity: joinCode.length < 6 ? 0.4 : 1 }]}
                   >
                     <LinearGradient colors={["#1a3a7a", "#4A90E2"]} style={styles.multiStartBtnGrad}>

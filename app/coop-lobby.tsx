@@ -135,13 +135,10 @@ export default function CoopLobbyScreen() {
       setCountdownVal(c);
       if (c <= 0) {
         clearInterval(iv);
-        stopMusic().catch(() => {});
-        startGameMusic().catch(() => {});
-        startGame("coop", "normal");
-        router.replace("/game");
+        router.replace({ pathname: "/online-lobby", params: { mode: "coop", playerCount: "4" } });
       }
     }, 1000);
-  }, [startGame]);
+  }, []);
 
   return (
     <View style={[styles.container, { paddingTop: topPad, paddingBottom: botPad }]}>

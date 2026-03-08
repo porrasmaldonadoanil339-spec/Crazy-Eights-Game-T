@@ -15,6 +15,7 @@ export interface RankedProfile {
   maxStars: number;
   totalWins: number;
   totalLosses: number;
+  rankedProfileVersion?: number;
 }
 
 export const RANK_COLORS: Record<number, string> = {

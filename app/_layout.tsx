@@ -392,6 +392,7 @@ function RootLayoutNav() {
         <Stack.Screen name="game" options={{ animation: "slide_from_bottom" }} />
         <Stack.Screen name="game-multi" options={{ animation: "slide_from_bottom" }} />
         <Stack.Screen name="game-online" options={{ animation: "slide_from_bottom" }} />
+        <Stack.Screen name="online-lobby" options={{ animation: "slide_from_bottom", headerShown: false }} />
         <Stack.Screen name="tutorial" options={{ animation: "slide_from_bottom" }} />
         <Stack.Screen name="rules" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="ranking" options={{ animation: "slide_from_right" }} />

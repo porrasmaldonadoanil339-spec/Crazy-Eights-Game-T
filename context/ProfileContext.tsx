@@ -274,9 +274,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             totalWins: savedRanked.totalWins ?? 0,
             totalLosses: savedRanked.totalLosses ?? 0,
           };
-          // Migration: fresh players (no wins/losses, no stars) always start at Hierro V (division 0)
-          if (mergedRanked.totalWins === 0 && mergedRanked.totalLosses === 0 && mergedRanked.stars === 0 && mergedRanked.rank === 0) {
-            mergedRanked.division = 0;
+          // Migration v2: recalculate division from totalWins for rank-0 players (fixes Hierro I/V mismatch)
+          if (!savedRanked.rankedProfileVersion && mergedRanked.rank === 0) {
+            const ms = mergedRanked.maxStars || 5;
+            mergedRanked.division = Math.min(4, Math.floor(mergedRanked.totalWins / ms));
+            mergedRanked.stars = mergedRanked.totalWins % ms;
+            mergedRanked.rankedProfileVersion = 2;
+          } else if (!savedRanked.rankedProfileVersion) {
+            mergedRanked.rankedProfileVersion = 2;
           }
 
           const merged: PlayerProfile = {
