@@ -218,14 +218,13 @@ export default function MultiGameScreen() {
 
   const [gameStarted, setGameStarted] = useState(false);
   const [playerCountSelect, setPlayerCountSelect] = useState(3);
+  const [gameState, setGameState] = useState<MultiGameState>(() => initMultiGame(playerNames.slice(0, playerCountSelect)));
 
   useEffect(() => {
     if (gameState.phase === "game_over") {
       stopMusic().catch(() => {});
     }
   }, [gameState.phase]);
-
-  const [gameState, setGameState] = useState<MultiGameState>(() => initMultiGame(playerNames.slice(0, playerCountSelect)));
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
 
   // Re-initialize when starting

@@ -1,0 +1,35 @@
+Necesito que corrijas y mejores el sistema de partidas online de mi juego.
+1.	Modo Cooperativo:
+El modo cooperativo actualmente no está creando la partida correctamente. Debe funcionar así:
+•	Cuando un jugador entra al modo cooperativo, el sistema debe crear automáticamente una sala.
+•	Los jugadores pueden invitar amigos o esperar que el matchmaking encuentre compañeros.
+•	La partida debe iniciar cuando haya el número necesario de jugadores.
+•	La jugabilidad debe funcionar correctamente durante toda la partida.
+2.	Modo Clasificatoria (Ranked):
+Quiero que el sistema sea más realista.
+•	Si agrego amigos a mi lista, ellos deben aparecer disponibles para invitarlos a la partida clasificatoria.
+•	Debe existir un sistema de invitación a amigos dentro del lobby.
+•	Cuando invite a un amigo, debe entrar a mi sala antes de iniciar la partida.
+•	El sistema también debe poder agregar otros jugadores online automáticamente si faltan jugadores para completar la partida.
+3.	Realismo del sistema online:
+•	El emparejamiento debe buscar jugadores reales conectados.
+•	Si no hay suficientes jugadores, el sistema puede completar con matchmaking automático.
+•	La experiencia debe verse lo más realista posible, como en juegos profesionales online.
+4.	Importante:
+Por favor corrige todos los errores actuales y mejora el sistema al 100%, asegurándote de que el modo cooperativo y clasificatoria funcionen correctamente sin fallos.
+ 
+Además, necesito que corrijas el sistema de ranking de mi juego.
+Actualmente mi perfil aparece en Hierro 1, pero el sistema de rangos de mi juego debe funcionar así:
+•	Cada rango tiene 5 divisiones: V, IV, III, II, I.
+•	El jugador debe comenzar desde Hierro V (Hierro 5).
+•	Luego debe subir progresivamente:
+Hierro V → Hierro IV → Hierro III → Hierro II → Hierro I.
+Después de Hierro I se pasa a:
+Bronce V → Bronce IV → Bronce III → Bronce II → Bronce I
+y así sucesivamente con todos los rangos.
+Por lo tanto, corrige el sistema para que mi perfil empiece correctamente en Hierro V (Hierro 5) y no en Hierro I.
+También asegúrate de que:
+•	El rango se actualice correctamente después de cada victoria o derrota.
+•	El rango se muestre correctamente en el perfil, en el modo clasificatoria y en el ranking global.
+Por favor revisa y corrige todo el sistema de ranking para que funcione correctamente en todo el juego.
+

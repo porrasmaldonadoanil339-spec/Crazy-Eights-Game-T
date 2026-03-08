@@ -21,6 +21,110 @@ const RARITY_COLORS_MAP: Record<string, string> = {
   legendary: "#D4AF37",
 };
 
+const RARITY_BORDER: Record<string, number> = { common: 1.5, rare: 2, epic: 2.5, legendary: 3 };
+const RARITY_BORDER_COLOR: Record<string, string> = {
+  common: "#95A5A655",
+  rare:   "#4AA8FF99",
+  epic:   "#C084FC99",
+  legendary: "#D4AF37",
+};
+const PATTERN_SYMBOL: Record<string, string> = {
+  diamonds: "◆", stars: "★", circles: "●", crosses: "✚", waves: "〜", hexagons: "⬡",
+};
+
+function CardDesignPreview({ item }: { item: StoreItem }) {
+  const bg = item.backColors?.[0] ?? "#FEFDF4";
+  const tc = item.backColors?.[1] ?? "#333333";
+  const ac = item.backColors?.[2] ?? Colors.gold;
+  const rarity = item.rarity;
+
+  const borderColor = RARITY_BORDER_COLOR[rarity] ?? "#D4AF3755";
+  const borderWidth = RARITY_BORDER[rarity] ?? 1.5;
+
+  return (
+    <View style={[styles.cardPreview, { borderWidth, borderColor, overflow: "hidden" }]}>
+      {rarity === "legendary" ? (
+        <LinearGradient
+          colors={[bg, tc + "33", ac + "22", bg]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : rarity === "epic" ? (
+        <LinearGradient
+          colors={[bg, ac + "44", bg]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : rarity === "rare" ? (
+        <LinearGradient
+          colors={[bg, ac + "18"]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: bg }]} />
+      )}
+
+      {rarity === "legendary" && (
+        <>
+          <View style={{ position: "absolute", top: 3, left: 3, width: 9, height: 9, borderTopWidth: 2, borderLeftWidth: 2, borderColor: ac }} />
+          <View style={{ position: "absolute", top: 3, right: 3, width: 9, height: 9, borderTopWidth: 2, borderRightWidth: 2, borderColor: ac }} />
+          <View style={{ position: "absolute", bottom: 3, left: 3, width: 9, height: 9, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: ac }} />
+          <View style={{ position: "absolute", bottom: 3, right: 3, width: 9, height: 9, borderBottomWidth: 2, borderRightWidth: 2, borderColor: ac }} />
+          <View style={{ position: "absolute", left: 5, top: 12, bottom: 12, width: 1, backgroundColor: ac + "44" }} />
+          <View style={{ position: "absolute", right: 5, top: 12, bottom: 12, width: 1, backgroundColor: ac + "44" }} />
+        </>
+      )}
+      {rarity === "epic" && (
+        <>
+          <View style={{ position: "absolute", left: 5, top: 8, bottom: 8, width: 1, backgroundColor: tc + "55" }} />
+          <View style={{ position: "absolute", right: 5, top: 8, bottom: 8, width: 1, backgroundColor: tc + "55" }} />
+          <View style={{ position: "absolute", top: 4, left: 8, right: 8, height: 1, backgroundColor: tc + "33" }} />
+        </>
+      )}
+      {rarity === "rare" && (
+        <View style={{ position: "absolute", top: 3, left: 3, right: 3, bottom: 3, borderWidth: 0.5, borderRadius: 5, borderColor: ac + "44" }} />
+      )}
+
+      <View style={styles.cardFaceCornerTL}>
+        <Text style={[styles.cardFaceRank, { color: tc }]}>8</Text>
+        <Text style={[styles.cardFaceSuit, { color: rarity === "legendary" ? ac : tc }]}>♥</Text>
+      </View>
+
+      <View style={styles.cardFaceCenter}>
+        {rarity === "legendary" ? (
+          <>
+            <Text style={{ fontSize: 13, color: ac, textShadowColor: ac, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 }}>★</Text>
+            <Text style={{ fontSize: 8, color: ac + "cc" }}>♦</Text>
+          </>
+        ) : rarity === "epic" ? (
+          <View style={[styles.cardFaceBadge, { backgroundColor: tc + "dd", shadowColor: tc, shadowRadius: 4, shadowOpacity: 0.5, elevation: 3 }]}>
+            <Text style={{ fontSize: 11, color: bg, fontWeight: "900" }}>♥</Text>
+          </View>
+        ) : (
+          <>
+            <View style={[styles.cardFaceBadge, { backgroundColor: tc + "cc" }]}>
+              <Text style={styles.cardFaceBadgeSuit}>♥</Text>
+            </View>
+            <Text style={[styles.cardFaceBadgeNum, { color: tc }]}>8</Text>
+          </>
+        )}
+      </View>
+
+      <View style={styles.cardFaceCornerBR}>
+        <Text style={[styles.cardFaceRank, { color: tc, transform: [{ rotate: "180deg" }] }]}>8</Text>
+        <Text style={[styles.cardFaceSuit, { color: rarity === "legendary" ? ac : tc, transform: [{ rotate: "180deg" }] }]}>♥</Text>
+      </View>
+
+      <View style={[styles.cardFaceInnerBorder, { borderColor: ac + "44" }]} />
+
+      {rarity === "legendary" && (
+        <View style={{ position: "absolute", top: 1, left: 1, right: 1, bottom: 1, borderWidth: 0.5, borderRadius: 6, borderColor: ac + "55" }} />
+      )}
+    </View>
+  );
+}
+
 function useRarityLabel() {
   const T = useT();
   return (rarity: string) => {
@@ -259,48 +363,44 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
         </View>
         {item.category === "card_back" ? (
           <LinearGradient
-            colors={(item.backColors ?? [item.previewColor, item.previewColor + "88"]) as [string, string]}
-            style={styles.cardPreview}
+            colors={(item.backColors?.slice(0,2) ?? [item.previewColor, item.previewColor + "88"]) as [string, string]}
+            style={[styles.cardPreview, {
+              borderWidth: RARITY_BORDER[item.rarity] ?? 1.5,
+              borderColor: RARITY_BORDER_COLOR[item.rarity] ?? "#D4AF3755",
+            }]}
           >
             <View style={styles.cardBackPatternWrap}>
               {[0,1,2].map(row => (
                 <View key={row} style={{ flexDirection: "row", gap: 3 }}>
                   {[0,1,2,3].map(col => (
-                    <Text key={col} style={{ fontSize: 7, color: item.backAccent ?? Colors.gold, opacity: 0.35 }}>◆</Text>
+                    <Text key={col} style={{ fontSize: 7, color: item.backAccent ?? Colors.gold, opacity: 0.4 }}>
+                      {PATTERN_SYMBOL[item.backPattern ?? "diamonds"] ?? "◆"}
+                    </Text>
                   ))}
                 </View>
               ))}
             </View>
             <View style={[styles.cardBackEmblem, {
-              backgroundColor: (item.backAccent ?? Colors.gold) + "22",
-              borderColor: (item.backAccent ?? Colors.gold) + "55",
+              backgroundColor: (item.backAccent ?? Colors.gold) + "28",
+              borderColor: (item.backAccent ?? Colors.gold) + "66",
+              width: item.rarity === "legendary" ? 26 : item.rarity === "epic" ? 24 : 22,
+              height: item.rarity === "legendary" ? 26 : item.rarity === "epic" ? 24 : 22,
+              borderRadius: 13,
             }]}>
-              <Text style={{ fontSize: 11, color: item.backAccent ?? Colors.gold }}>◆</Text>
+              <Text style={{ fontSize: item.rarity === "legendary" ? 13 : 11, color: item.backAccent ?? Colors.gold }}>
+                {item.rarity === "legendary" ? "★" : item.rarity === "epic" ? "⬡" : "◆"}
+              </Text>
             </View>
-            <View style={[styles.cardPreviewInnerBorder, { borderColor: (item.backAccent ?? Colors.gold) + "44" }]} />
+            <View style={[styles.cardPreviewInnerBorder, { borderColor: (item.backAccent ?? Colors.gold) + (item.rarity === "legendary" ? "77" : "44") }]} />
+            {item.rarity === "legendary" && (
+              <>
+                <View style={{ position: "absolute", top: 3, left: 3, width: 7, height: 7, borderTopWidth: 1.5, borderLeftWidth: 1.5, borderColor: item.backAccent ?? Colors.gold }} />
+                <View style={{ position: "absolute", bottom: 3, right: 3, width: 7, height: 7, borderBottomWidth: 1.5, borderRightWidth: 1.5, borderColor: item.backAccent ?? Colors.gold }} />
+              </>
+            )}
           </LinearGradient>
         ) : item.category === "card_design" ? (
-          <View style={[styles.cardPreview, {
-            backgroundColor: item.backColors?.[0] ?? "#FEFDF4",
-            borderRadius: 4,
-            overflow: "hidden",
-          }]}>
-            <View style={[styles.cardFaceCornerTL]}>
-              <Text style={[styles.cardFaceRank, { color: item.backColors?.[1] ?? item.previewColor }]}>8</Text>
-              <Text style={[styles.cardFaceSuit, { color: item.backColors?.[1] ?? item.previewColor }]}>♥</Text>
-            </View>
-            <View style={styles.cardFaceCenter}>
-              <View style={[styles.cardFaceBadge, { backgroundColor: (item.backColors?.[1] ?? item.previewColor) + "dd" }]}>
-                <Text style={styles.cardFaceBadgeSuit}>♥</Text>
-              </View>
-              <Text style={[styles.cardFaceBadgeNum, { color: item.backColors?.[1] ?? item.previewColor }]}>8</Text>
-            </View>
-            <View style={[styles.cardFaceCornerBR]}>
-              <Text style={[styles.cardFaceRank, { color: item.backColors?.[1] ?? item.previewColor, transform: [{ rotate: "180deg" }] }]}>8</Text>
-              <Text style={[styles.cardFaceSuit, { color: item.backColors?.[1] ?? item.previewColor, transform: [{ rotate: "180deg" }] }]}>♥</Text>
-            </View>
-            <View style={[styles.cardFaceInnerBorder, { borderColor: (item.backColors?.[2] ?? Colors.gold) + "66" }]} />
-          </View>
+          <CardDesignPreview item={item} />
         ) : item.category === "table_design" ? (
           <View style={[styles.cardPreview, { overflow: "hidden", borderRadius: 4 }]}>
             <LinearGradient

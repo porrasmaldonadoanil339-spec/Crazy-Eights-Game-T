@@ -1,0 +1,34 @@
+Necesito que realices varias mejoras y correcciones importantes en mi juego para que funcione de forma más profesional.
+1.	Logo de mi desarrolladora
+•	El logo de mi desarrolladora debe aparecer perfectamente centrado en la pantalla cuando se abre la app.
+•	Debe aparecer durante unos 3–4 segundos.
+•	Debe tener un sonido especial al aparecer, estilo el sonido corto que usan juegos como Clash Royale.
+•	Después de esos segundos, debe hacer una transición suave hacia la pantalla de carga.
+2.	Pantalla / fondo del menú de carga
+•	El fondo del menú de carga debe estar mejor centrado y ajustado para que se vea bien en la pantalla.
+•	No debe verse cortado ni mal posicionado.
+•	Ajusta el encuadre del fondo para que la imagen principal se aprecie correctamente.
+3.	Transición entre pantallas
+•	La transición entre logo de la desarrolladora → menú de carga → menú principal debe verse más suave, fluida y profesional.
+•	Evita cambios bruscos de pantalla.
+•	Usa una animación o desvanecido (fade) para que el cambio se vea natural.
+4.	Corrección del ranking
+•	Mi perfil actualmente aparece en Hierro I, pero debe comenzar en Hierro V (Hierro 5).
+•	Corrige el sistema para que el jugador empiece desde Hierro V y suba progresivamente por las divisiones.
+5.	Sistema online
+•	Corrige el modo cooperativo, ya que no está creando las partidas correctamente.
+•	En clasificatoria, cuando agrego amigos, deben aparecer en el lobby para poder invitarlos a jugar.
+•	El sistema debe completar la partida con otros jugadores online si faltan jugadores.
+Por favor revisa todo el sistema del juego y mejora cada uno de estos puntos al 100%, asegurándote de que todo funcione correctamente, sin errores y con una apariencia profesional.
+ Necesito que modifiques la apariencia de los perfiles dentro del Ranking Mundial del modo Clasificatoria.
+Actualmente los perfiles no se ven bien o no tienen imagen. Quiero que se modifique para que se vea más realista y profesional.
+Debe funcionar así:
+•	Cada jugador del ranking mundial debe tener una foto de perfil visible.
+•	Puede ser una cara de persona real o un avatar, similar a los avatares que ya existen en los modos de mi juego clásico.
+•	Las imágenes deben verse claras, bien centradas y dentro de un círculo o marco de perfil.
+•	El perfil debe mostrar también nombre del jugador, rango actual y posición en el ranking.
+Además:
+•	Cuando entre al ranking mundial, todos los jugadores deben verse con su foto o avatar, no solo texto.
+•	El diseño debe verse más realista y profesional, como en los juegos competitivos online.
+Por favor ajusta el diseño para que los perfiles del ranking mundial se vean completos, claros y bien organizados, utilizando avatares o imágenes de perfil como en otros modos del juego.
+

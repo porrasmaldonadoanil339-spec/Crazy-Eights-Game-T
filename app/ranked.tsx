@@ -165,8 +165,10 @@ export default function RankedScreen() {
           )}
         </View>
         
-        <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>
-          <Ionicons name={item.avatarIcon as any} size={16} color="#fff" />
+        <View style={[styles.avatarRing, { borderColor: RANK_COLORS[item.rank] }]}>
+          <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>
+            <Ionicons name={item.avatarIcon as any} size={16} color="#fff" />
+          </View>
         </View>
         
         <View style={styles.rankingInfo}>
@@ -311,7 +313,7 @@ export default function RankedScreen() {
         ListFooterComponent={
           visibleCount < totalPlayers ? (
             <View style={{ padding: 20, alignItems: "center" }}>
-              <ActivityIndicator color={themeColors.primary} />
+              <ActivityIndicator color={Colors.gold} />
             </View>
           ) : null
         }
@@ -330,7 +332,7 @@ export default function RankedScreen() {
                 return (
                   <View style={styles.rewardItem}>
                     <View style={[styles.rewardRankIcon, { backgroundColor: RANK_COLORS[idx] + "22" }]}>
-                      <Ionicons name="trophy" size={20} color={RANK_COLORS[idx]} />
+                      <Ionicons name={RANK_ICONS[idx] as any} size={20} color={RANK_COLORS[idx]} />
                     </View>
                     <View style={styles.rewardInfo}>
                       <Text style={[styles.rewardRankName, { color: themeColors.text }]}>{T(`rank${rank}` as any) || rank}</Text>
@@ -436,7 +438,8 @@ const styles = StyleSheet.create({
   },
   rankingPlace: { width: 36, alignItems: "center" },
   rankNumber: { fontFamily: "Nunito_900ExtraBold", fontSize: 16 },
-  avatarSmall: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
+  avatarRing: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: "center", justifyContent: "center" },
+  avatarSmall: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   rankingInfo: { flex: 1 },
   rankingName: { fontFamily: "Nunito_800ExtraBold", fontSize: 16 },
   rankingMetaRow: { flexDirection: "row", alignItems: "center", gap: 6 },
