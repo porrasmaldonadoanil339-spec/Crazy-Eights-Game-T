@@ -1,0 +1,71 @@
+Tiempo de búsqueda de jugadores
+La búsqueda no debe ser instantánea.
+Debe tardar aproximadamente:
+5 a 10 segundos
+Durante ese tiempo mostrar:
+"Buscando jugadores..."
+________________________________________
+Música durante la búsqueda
+Durante la pantalla de búsqueda:
+•	No debe sonar la música del menú.
+•	Debe sonar una música más épica o dinámica.
+Cuando la partida inicia, cambia a música de partida.
+________________________________________
+5. Modo Cooperativo
+Debe encontrar:
+•	1 compañero
+•	2 rivales
+Lobby:
+Yo + compañero VS 2 jugadores
+Importante:
+Los jugadores que aparecen en el lobby deben ser los mismos que juegan la partida.
+________________________________________
+Funcionalidad del cooperativo
+Debe funcionar exactamente como lo dice la descripción del modo.
+Reglas:
+•	Los compañeros comparten la misma baraja.
+•	Juegan por turnos.
+Orden:
+1 jugador
+2 compañero
+3 rival
+4 rival
+________________________________________
+6. Modo Clasificatoria
+Sistema de recompensas
+Debe mostrar los 12 rangos con sus logos:
+1 Hierro
+2 Bronce
+3 Plata
+4 Oro
+5 Platino
+6 Diamante
+7 Épico
+8 Mítico
+9 Maestro
+10 Gran Maestro
+11 Legendario
+12 Divino
+Los logos deben ser los mismos de la sección de progresión.
+________________________________________
+Corrección del rango en la interfaz
+En el menú principal, en el botón Clasificatoria, aparece el rango.
+Actualmente me muestra Hierro I pero mi rango es Hierro V.
+Debe corregirse para que:
+•	El rango mostrado sea el real del jugador.
+•	También se muestren las estrellas del progreso.
+Cuando se complete cierta cantidad de estrellas, debe subir automáticamente de división.
+________________________________________
+Sistema de invitación en Clasificatoria
+Las partidas clasificatorias son de 4 jugadores.
+Ejemplo:
+Si yo invito 1 amigo:
+•	Yo + amigo = 2 jugadores
+Pero faltan 2 jugadores más.
+Cuando presione Buscar partida, el sistema debe:
+•	Rellenar automáticamente con 2 jugadores adicionales.
+Estos jugadores pueden ser:
+•	Jugadores reales online
+•	Jugadores ficticios del sistema
+Cuando se complete la sala:
+Los 4 jugadores deben aparecer en la partida y jugar correctamente.

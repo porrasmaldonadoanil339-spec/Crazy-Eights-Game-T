@@ -129,7 +129,7 @@ export default function RankedLobbyScreen() {
     router.replace({ pathname: "/online-lobby", params: { mode: "ranked", playerCount: String(Math.max(2, totalPlayers)) } });
   }, [totalPlayers]);
 
-  const statusLabel = (s: FriendStatus) => s === "available" ? "Disponible" : s === "online" ? "En línea" : "En partida";
+  const statusLabel = (s: FriendStatus) => s === "available" ? T("statusAvailable" as any) : s === "online" ? T("statusOnline" as any) : T("statusPlaying" as any);
   const statusOrder = (s: FriendStatus) => s === "available" ? 0 : s === "online" ? 1 : 2;
   const sortedFriends = [...SIMULATED_FRIENDS].sort((a, b) => statusOrder(a.status) - statusOrder(b.status));
 

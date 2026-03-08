@@ -407,19 +407,19 @@ export default function SettingsScreen() {
           <SettingRow
             label={T("privacyPolicy")} sub={T("privacyPolicyDesc")}
             icon="document-text" iconColor="#27AE60" iconBg="#1a3a1a"
-            isDark={isDark} onPress={() => Alert.alert(T("privacyPolicy"), "Ocho Locos respeta tu privacidad. No compartimos tus datos personales con terceros sin tu consentimiento.")}
+            isDark={isDark} onPress={() => Alert.alert(T("privacyPolicy"), T("privacyPolicyText" as any))}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
             label={T("gamePermissions")} sub={T("permissionsDesc")}
             icon="lock-closed" iconColor="#F39C12" iconBg="#2a2a1a"
-            isDark={isDark} onPress={() => Alert.alert(T("gamePermissions"), "El juego solicita permisos para notificaciones, vibración y almacenamiento local.")}
+            isDark={isDark} onPress={() => Alert.alert(T("gamePermissions"), T("gamePermissionsText" as any))}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
             label={T("dataManagement")} sub={T("dataManagementDesc")}
             icon="trash" iconColor="#E74C3C" iconBg="#3a1a1a"
-            isDark={isDark} last onPress={() => Alert.alert(T("dataManagement"), "Para solicitar la eliminación de tus datos, contacta a support@biyisprime.com")}
+            isDark={isDark} last onPress={() => Alert.alert(T("dataManagement"), T("dataManagementText" as any))}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
         </View>
@@ -436,7 +436,7 @@ export default function SettingsScreen() {
           <SettingRow
             label={T("faq")} sub={T("faqDesc")}
             icon="help-circle" iconColor="#4FC3F7" iconBg="#1a2a3a"
-            isDark={isDark} onPress={() => Alert.alert(T("faq"), "Visita nuestra web para ver las preguntas frecuentes sobre Ocho Locos.")}
+            isDark={isDark} onPress={() => Alert.alert(T("faq"), T("faqText" as any))}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
@@ -448,7 +448,7 @@ export default function SettingsScreen() {
           <SettingRow
             label={T("reportPlayer")} sub={T("reportPlayerDesc")}
             icon="flag" iconColor="#E74C3C" iconBg="#3a1a1a"
-            isDark={isDark} last onPress={() => Alert.alert(T("reportPlayer"), "Usa el menú dentro de la partida para reportar a un jugador específico.")}
+            isDark={isDark} last onPress={() => Alert.alert(T("reportPlayer"), T("reportPlayerText" as any))}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
         </View>
@@ -465,13 +465,13 @@ export default function SettingsScreen() {
           <SettingRow
             label={T("credits")} sub={T("creditsDesc")}
             icon="people" iconColor="#D4AF37" iconBg="#2a2a1a"
-            isDark={isDark} onPress={() => Alert.alert(T("credits"), "Desarrollado por Biyis Prime Studios\n\nDirector: Biyis\nDiseño & Desarrollo: Equipo BP\n\n© 2025 Biyis Prime Studios")}
+            isDark={isDark} onPress={() => Alert.alert(T("credits"), T("creditsText" as any))}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
             label={T("termsOfService")} sub={T("termsDesc")}
             icon="document" iconColor="#9B59B6" iconBg="#2a1a3a"
-            isDark={isDark} last onPress={() => Alert.alert(T("termsOfService"), "Al usar Ocho Locos aceptas nuestros términos de servicio. El juego es gratuito y no requiere pagos para disfrutarlo.")}
+            isDark={isDark} last onPress={() => Alert.alert(T("termsOfService"), T("termsText" as any))}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
         </View>

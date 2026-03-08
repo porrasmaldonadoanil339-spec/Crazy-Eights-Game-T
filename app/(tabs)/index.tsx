@@ -21,6 +21,7 @@ import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameMode
 import { playButton, syncSettings } from "@/lib/audioManager";
 import { playSound } from "@/lib/sounds";
 import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName, diffDesc as getDiffDesc } from "@/lib/achTranslations";
+import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
 import { getRankInfo, RANKS } from "@/lib/ranked";
@@ -108,23 +109,19 @@ function AnimatedBackground({ isDark }: { isDark: boolean }) {
   );
 }
 
-function RankedPreviewCard({ isDark, lang }: { isDark: boolean; lang: "es" | "en" | "pt" }) {
-  const { profile, level } = useProfile();
-  const T = useT();
-  const rp = profile.rankedProfile;
-  const rankInfo = getRankInfo(rp);
-  
-  const isLocked = level < 5;
+function RankedPreviewCard({ isDark }: { isDark: boolean }) {
+    const { profile, level } = useProfile();
+    const T = useT();
+    const rp = profile.rankedProfile;
+    const rankInfo = getRankInfo(rp);
+    
+    const isLocked = level < 5;
 
-  const title = lang === "en" ? "RANKED" : lang === "pt" ? "CLASSIFICATÓRIA" : "CLASIFICATORIA";
-  const subtitle = isLocked 
-    ? (lang === "en" ? "Unlock at level 5" : lang === "pt" ? "Desbloqueie no nível 5" : "Desbloquea en nivel 5")
-    : (lang === "en" ? "Win games, earn stars, climb the ranks" : 
-       lang === "pt" ? "Ganhe partidas, suba estrelas, suba de nível" : 
-       "Gana partidas, suba estrellas, asciende de rango");
-  const playText = lang === "en" ? "PLAY RANKED" : lang === "pt" ? "JOGAR CLASSIFICATÓRIA" : "JUGAR CLASIFICATORIA";
+    const title = T("modeRanked" as any) || "CLASIFICATORIA";
+    const subtitle = isLocked ? T("rankedLockedDesc" as any) : T("rankedUnlockedDesc" as any);
+    const playText = T("playRanked");
 
-  return (
+      return (
     <Pressable 
       onPress={() => { 
         if (isLocked) return;
@@ -199,8 +196,8 @@ function StarRating({ stars, max = 5 }: { stars: number; max?: number }) {
   );
 }
 
-function DifficultyModal({ visible, onClose, onSelect, modeName, lang = "es" }: {
-  visible: boolean; onClose: () => void; onSelect: (d: Difficulty) => void; modeName: string; lang?: "es" | "en" | "pt";
+function DifficultyModal({ visible, onClose, onSelect, modeName }: {
+  visible: boolean; onClose: () => void; onSelect: (d: Difficulty) => void; modeName: string;
 }) {
   const RARITY_COLORS: Record<Difficulty, string> = {
     easy: "#95A5A6", normal: "#2196F3", intermediate: "#27AE60", hard: "#E74C3C", expert: "#A855F7",
@@ -209,16 +206,12 @@ function DifficultyModal({ visible, onClose, onSelect, modeName, lang = "es" }: 
     easy: "leaf-outline", normal: "shield-outline", intermediate: "flame-outline",
     hard: "skull-outline", expert: "nuclear-outline",
   };
-  const DIFF_DETAILS: Record<Difficulty, { es: string; en: string; pt: string }> = {
-    easy:         { es: "IA lenta y aleatoria. Sin presión. Ideal para aprender.", en: "Slow, random AI. No pressure. Perfect for learning.", pt: "IA lenta e aleatória. Sem pressão. Ideal para aprender." },
-    normal:       { es: "IA equilibrada. Juega de forma inteligente pero con errores.", en: "Balanced AI. Plays smart but makes mistakes.", pt: "IA equilibrada. Joga bem mas comete erros." },
-    intermediate: { es: "IA estratégica. Planifica jugadas y usa combos básicos.", en: "Strategic AI. Plans moves and uses basic combos.", pt: "IA estratégica. Planeja jogadas e usa combos básicos." },
-    hard:         { es: "IA experta. Juega de forma óptima, pocas concesiones.", en: "Expert AI. Near-optimal play, few concessions.", pt: "IA especialista. Jogo quase ótimo, poucas concessões." },
-    expert:       { es: "IA máxima + timer de 8 seg por turno. Solo para élites.", en: "Maximum AI + 8-second turn timer. Elite players only.", pt: "IA máxima + timer de 8 seg por turno. Só para élites." },
-  };
-  const subtitle = lang === "en" ? "Select difficulty" : lang === "pt" ? "Selecione a dificuldade" : "Selecciona la dificultad";
-  const rewardLabel = lang === "en" ? "Reward" : lang === "pt" ? "Recompensa" : "Recompensa";
-  const timerLabel = lang === "en" ? "8s timer" : lang === "pt" ? "Timer 8s" : "Timer 8s";
+  const T_diff = useT();
+  const { profile: diffProfile } = useProfile();
+  const diffLang = (diffProfile.language ?? "es") as Lang;
+  const subtitle = T_diff("selectDifficulty");
+  const rewardLabel = T_diff("rewardLabel" as any);
+  const timerLabel = T_diff("timer8s" as any);
 
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
@@ -231,7 +224,8 @@ function DifficultyModal({ visible, onClose, onSelect, modeName, lang = "es" }: 
             <View style={styles.diffList}>
               {DIFFICULTIES.map((d) => {
                 const color = RARITY_COLORS[d.id];
-                const detail = DIFF_DETAILS[d.id]?.[lang === "pt" ? "pt" : lang === "en" ? "en" : "es"] ?? "";
+                const diffDescKey = { easy: "diffEasyDesc", normal: "diffNormalDesc", intermediate: "diffInterDesc", hard: "diffHardDesc", expert: "diffExpertDesc" }[d.id];
+                  const detail = diffDescKey ? T_diff(diffDescKey as any) : "";
                 return (
                   <Pressable
                     key={d.id}
@@ -248,7 +242,7 @@ function DifficultyModal({ visible, onClose, onSelect, modeName, lang = "es" }: 
                     </View>
                     <View style={styles.diffRowContent}>
                       <View style={styles.diffRowTop}>
-                        <Text style={[styles.diffName, { color }]}>{getDiffName(d.id, lang) || d.name}</Text>
+                        <Text style={[styles.diffName, { color }]}>{getDiffName(d.id, diffLang) || d.name}</Text>
                         <StarRating stars={d.stars} />
                       </View>
                       <Text style={styles.diffRowDesc}>{detail}</Text>
@@ -575,7 +569,7 @@ export default function PlayScreen() {
 
         <PokerTitle />
 
-        <RankedPreviewCard isDark={isDark} lang={lang} />
+        <RankedPreviewCard isDark={isDark} />
 
         {/* Daily Challenges Section */}
         {challenges.length > 0 && (
@@ -583,7 +577,7 @@ export default function PlayScreen() {
             <View style={[styles.sectionHeader, { marginTop: 0 }]}>
               <Ionicons name="flash" size={14} color={theme.gold} />
               <Text style={[styles.sectionLabel, { color: theme.gold }]}>
-                {lang === "en" ? "DAILY CHALLENGES" : lang === "pt" ? "DESAFIOS DIÁRIOS" : "DESAFÍOS DIARIOS"}
+                {T("dailyChallenges" as any)}
               </Text>
             </View>
             <FlatList
@@ -842,7 +836,6 @@ export default function PlayScreen() {
         onClose={() => setShowDiffModal(false)}
         onSelect={handleDifficultySelect}
         modeName={selectedModeConfig ? (getModeName(selectedModeConfig.id, lang) || selectedModeConfig.name) : ""}
-        lang={lang}
       />
 
       <DailyRewardModal
@@ -869,7 +862,7 @@ export default function PlayScreen() {
             {/* Tab bar */}
             <View style={{ flexDirection: "row", gap: 6, marginBottom: 6 }}>
               {(["search", "create", "join"] as const).map((tab) => {
-                const labels = { search: lang === "en" ? "Search" : lang === "pt" ? "Buscar" : "Buscar", create: lang === "en" ? "Create Room" : lang === "pt" ? "Criar Sala" : "Crear Sala", join: lang === "en" ? "Join Room" : lang === "pt" ? "Entrar" : "Unirse" };
+                const labels: Record<string, string> = { search: T("searchTab" as any), create: T("createRoom" as any), join: T("joinRoom" as any) };
                 const icons: Record<string, any> = { search: "search", create: "add-circle-outline", join: "enter-outline" };
                 return (
                   <Pressable key={tab} onPress={() => setOnlineTab(tab)} style={[{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: onlineTab === tab ? "#4A90E266" : "rgba(255,255,255,0.08)", backgroundColor: onlineTab === tab ? "#4A90E222" : "rgba(255,255,255,0.03)" }]}>
@@ -903,18 +896,18 @@ export default function PlayScreen() {
 
             {onlineTab === "create" && (
               <>
-                <Text style={[styles.multiModalSectionLabel, { marginBottom: 4, color: theme.textDim }]}>{lang === "en" ? "YOUR ROOM CODE" : lang === "pt" ? "SEU CÓDIGO DE SALA" : "TU CÓDIGO DE SALA"}</Text>
+                <Text style={[styles.multiModalSectionLabel, { marginBottom: 4, color: theme.textDim }]}>{T("yourRoomCode" as any) || "TU CÓDIGO DE SALA"}</Text>
                 <View style={{ alignItems: "center", paddingVertical: 12, gap: 8 }}>
                   {generatedRoomCode ? (
                     <>
                       <Text style={{ fontFamily: "Nunito_900ExtraBold", fontSize: 44, color: "#4A90E2", letterSpacing: 8 }}>{generatedRoomCode}</Text>
                       <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: theme.textMuted, textAlign: "center" }}>
-                        {lang === "en" ? "Share this code with your friend" : lang === "pt" ? "Compartilhe este código com seu amigo" : "Comparte este código con tu amigo"}
+                        {T("shareCode" as any)}
                       </Text>
                     </>
                   ) : (
                     <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: theme.textMuted, textAlign: "center", paddingVertical: 20 }}>
-                      {lang === "en" ? "Press the button to generate a room code" : lang === "pt" ? "Pressione o botão para generar um código" : "Presiona el botón para generar un código"}
+                      {T("pressGenCode" as any)}
                     </Text>
                   )}
                 </View>
@@ -928,14 +921,14 @@ export default function PlayScreen() {
                   >
                     <View style={[styles.multiStartBtnGrad, { backgroundColor: "rgba(74,144,226,0.12)" }]}>
                       <Ionicons name="refresh" size={16} color="#4A90E2" />
-                      <Text style={[styles.multiStartBtnText, { color: "#4A90E2" }]}>{lang === "en" ? "New Code" : lang === "pt" ? "Novo Código" : "Nuevo Código"}</Text>
+                      <Text style={[styles.multiStartBtnText, { color: "#4A90E2" }]}>{T("newCode" as any)}</Text>
                     </View>
                   </Pressable>
                   {!!generatedRoomCode && (
                     <Pressable onPress={handleStartOnline} style={[styles.multiStartBtn, { flex: 2 }]}>
                       <LinearGradient colors={["#1a3a7a", "#4A90E2"]} style={styles.multiStartBtnGrad}>
                         <Ionicons name="play" size={18} color="#fff" />
-                        <Text style={styles.multiStartBtnText}>{lang === "en" ? "Start Room" : lang === "pt" ? "Iniciar Sala" : "Iniciar Sala"}</Text>
+                        <Text style={styles.multiStartBtnText}>{T("startRoom" as any)}</Text>
                       </LinearGradient>
                     </Pressable>
                   )}
@@ -945,7 +938,7 @@ export default function PlayScreen() {
 
             {onlineTab === "join" && (
               <>
-                <Text style={[styles.multiModalSectionLabel, { marginBottom: 4, color: theme.textDim }]}>{lang === "en" ? "ENTER ROOM CODE" : lang === "pt" ? "INSERIR CÓDIGO" : "INGRESA EL CÓDIGO"}</Text>
+                <Text style={[styles.multiModalSectionLabel, { marginBottom: 4, color: theme.textDim }]}>{T("enterRoomCode" as any)}</Text>
                 <View style={{ gap: 10 }}>
                   <TextInput
                     value={joinCode}
@@ -963,11 +956,11 @@ export default function PlayScreen() {
                   >
                     <LinearGradient colors={["#1a3a7a", "#4A90E2"]} style={styles.multiStartBtnGrad}>
                       <Ionicons name="enter" size={18} color="#fff" />
-                      <Text style={styles.multiStartBtnText}>{lang === "en" ? "Join Room" : lang === "pt" ? "Entrar na Sala" : "Unirse a la Sala"}</Text>
+                      <Text style={styles.multiStartBtnText}>{T("joinRoomBtn" as any)}</Text>
                     </LinearGradient>
                   </Pressable>
                 </View>
-                <Text style={[styles.multiModalHint, { color: theme.textDim }]}>{lang === "en" ? "Ask your friend for their 6-character code" : lang === "pt" ? "Peça o código de 6 caracteres ao seu amigo" : "Pídele el código de 6 caracteres a tu amigo"}</Text>
+                <Text style={[styles.multiModalHint, { color: theme.textDim }]}>{T("friendCode6" as any)}</Text>
               </>
             )}
           </LinearGradient>

@@ -66,13 +66,14 @@ function PulseDot({ color }: { color: string }) {
 }
 
 function PlayerSlot({ player, isSelf, delay = 0 }: { player: PlayerInfo | null; isSelf?: boolean; delay?: number }) {
+  const T = useT();
   if (!player) {
     return (
       <View style={[styles.playerSlot, styles.playerSlotEmpty]}>
         <View style={styles.slotAvatarWrap}>
           <SpinnerIcon />
         </View>
-        <Text style={styles.slotSearching}>Buscando...</Text>
+        <Text style={styles.slotSearching}>{T("searching")}</Text>
         <View style={[styles.onlineDot, { backgroundColor: "#555" }]} />
       </View>
     );
@@ -266,7 +267,7 @@ export default function OnlineLobbyScreen() {
 
   function handleJoinRoom() {
     if (joinCode.trim().length < 4) {
-      setJoinError("Ingresa un código válido");
+      setJoinError(T("enterValidCode" as any));
       return;
     }
     playButton().catch(() => {});
@@ -369,7 +370,7 @@ export default function OnlineLobbyScreen() {
         <View style={styles.teamsContainer}>
           <PreMatchTeamCard
             players={team1}
-            teamName={isCoopMode ? "EQUIPO 1" : "JUGADORES"}
+            teamName={isCoopMode ? T("teamOne") : T("playersCount" as any)}
             isMyTeam={myTeam === 1}
           />
           {isCoopMode && team2.length > 0 && (
@@ -391,7 +392,7 @@ export default function OnlineLobbyScreen() {
               </Animated.View>
               <PreMatchTeamCard
                 players={team2}
-                teamName="EQUIPO 2"
+                teamName={T("teamTwo" as any)}
                 isMyTeam={myTeam === 2}
               />
             </>
@@ -417,13 +418,13 @@ export default function OnlineLobbyScreen() {
           <Pressable onPress={handleBack} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={20} color={ACCENT} />
           </Pressable>
-          <Text style={styles.headerTitle}>BUSCANDO PARTIDA</Text>
+          <Text style={styles.headerTitle}>{T("searchingMatch" as any)}</Text>
         </View>
 
         <View style={styles.matchmakingContent}>
           <SpinnerIcon />
-          <Text style={styles.matchmakingLabel}>Buscando jugadores</Text>
-          <Text style={styles.matchmakingSub}>{foundPlayers.length}/{playerCount} encontrados</Text>
+          <Text style={styles.matchmakingLabel}>{T("waitingPlayers")}</Text>
+          <Text style={styles.matchmakingSub}>{foundPlayers.length}/{playerCount} {T("found" as any) || "encontrados"}</Text>
 
           <View style={styles.slotsList}>
             {Array.from({ length: playerCount }).map((_, i) => (
@@ -440,7 +441,7 @@ export default function OnlineLobbyScreen() {
             socketRef.current?.emit("cancel_matchmaking");
             setPhase("select");
           }} style={styles.cancelBtn}>
-            <Text style={styles.cancelTxt}>Cancelar búsqueda</Text>
+            <Text style={styles.cancelTxt}>{T("cancelSearch" as any)}</Text>
           </Pressable>
         </View>
       </View>
@@ -456,18 +457,18 @@ export default function OnlineLobbyScreen() {
           <Pressable onPress={handleBack} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={20} color={ACCENT} />
           </Pressable>
-          <Text style={styles.headerTitle}>SALA PRIVADA</Text>
+          <Text style={styles.headerTitle}>{T("privateRoom" as any)}</Text>
         </View>
 
         <ScrollView contentContainerStyle={styles.roomContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.codeLabel}>Código de sala</Text>
+          <Text style={styles.codeLabel}>{T("roomCode" as any)}</Text>
           <View style={styles.codeBox}>
             <Text style={styles.codeText}>{roomCode}</Text>
           </View>
-          <Text style={styles.codeSub}>Comparte este código con tus amigos</Text>
+          <Text style={styles.codeSub}>{T("shareCodeFriends" as any)}</Text>
 
           <View style={styles.slotsList}>
-            <Text style={styles.playersHeader}>Jugadores ({foundPlayers.length}/{playerCount})</Text>
+            <Text style={styles.playersHeader}>{T("playersCount" as any)} ({foundPlayers.length}/{playerCount})</Text>
             {Array.from({ length: playerCount }).map((_, i) => (
               <PlayerSlot
                 key={i}
@@ -481,7 +482,7 @@ export default function OnlineLobbyScreen() {
           {foundPlayers.length < playerCount && (
             <View style={styles.waitingRow}>
               <ActivityIndicator size="small" color={ACCENT} />
-              <Text style={styles.waitingTxt}>Esperando a que se unan más jugadores...</Text>
+              <Text style={styles.waitingTxt}>{T("waitingMorePlayers" as any)}</Text>
             </View>
           )}
         </ScrollView>
@@ -561,7 +562,7 @@ export default function OnlineLobbyScreen() {
               <Ionicons name={(profile.avatarId ?? "person") as any} size={28} color={rankInfo.color} />
             </View>
             <View>
-              <Text style={styles.myName}>{profile.name || "Jugador"}</Text>
+              <Text style={styles.myName}>{profile.name || T("player" as any)}</Text>
               <Text style={[styles.myRank, { color: rankInfo.color }]}>
                 <Ionicons name={rankInfo.icon as any} size={11} /> {rankInfo.displayName}
               </Text>

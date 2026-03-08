@@ -11,6 +11,7 @@ import { Colors } from "@/constants/colors";
 import { useAuth } from "@/context/AuthContext";
 import { useProfile } from "@/context/ProfileContext";
 import { playSound } from "@/lib/sounds";
+import { t as gT } from "@/lib/i18n";
 
 type Mode = "menu" | "login" | "register";
 
@@ -346,7 +347,7 @@ export default function LoginScreen() {
                 <View>
                   <Text style={oauthStyles.providerTitle}>Google</Text>
                   <Text style={oauthStyles.providerSub}>
-                    {lang === "en" ? "Secure sign-in" : lang === "pt" ? "Login seguro" : "Inicio seguro"}
+                    {gT("secureSignIn", lang as any)}
                   </Text>
                 </View>
                 <Pressable onPress={oauthClose} style={{ marginLeft: "auto" }}>
@@ -359,7 +360,7 @@ export default function LoginScreen() {
                 <View>
                   <Text style={oauthStyles.providerTitle}>Facebook</Text>
                   <Text style={oauthStyles.providerSub}>
-                    {lang === "en" ? "Secure sign-in" : lang === "pt" ? "Login seguro" : "Inicio seguro"}
+                    {gT("secureSignIn", lang as any)}
                   </Text>
                 </View>
                 <Pressable onPress={oauthClose} style={{ marginLeft: "auto" }}>

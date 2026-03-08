@@ -1,0 +1,64 @@
+Mejoras y correcciones completas para mi juego
+Quiero que implementes correctamente todas las siguientes mejoras para que mi juego se vea realista, profesional, funcional y moderno, como los juegos actuales.
+________________________________________
+1. Pantalla de la desarrolladora (BIYIS PRIME)
+Quiero que el logo de mi desarrolladora BIYIS PRIME aparezca mejor centrado en la pantalla.
+Actualmente está muy arriba, por lo que quiero que:
+•	El logo esté más centrado verticalmente.
+•	Se vea equilibrado en el centro de la pantalla.
+También quiero agregar detalles visuales para que se vea más profesional:
+•	Animación suave de aparición (fade-in).
+•	Pequeño efecto de brillo en el logo.
+•	Sonido corto y épico cuando aparece el logo.
+Duración recomendada:
+•	Pantalla del logo: 3 a 4 segundos.
+________________________________________
+2. Pantalla de carga del juego
+Después del logo debe aparecer la pantalla de carga.
+Cambios que quiero:
+•	El texto o menú de carga debe estar más centrado.
+•	El fondo debe apreciarse mejor.
+•	Debe verse claramente que el juego está cargando.
+Detalles recomendados:
+•	Barra de progreso de carga.
+•	Animación ligera en el fondo.
+•	Pequeños efectos visuales.
+Duración recomendada:
+•	4 a 6 segundos.
+________________________________________
+3. Modo Local
+Cuando se entre a una partida en modo local:
+•	No debe escucharse la música del menú.
+•	Debe sonar la música de partida.
+Antes de iniciar:
+1.	Animación de barajado de cartas
+2.	Animación repartiendo cartas
+________________________________________
+4. Modo Online
+Menú inicial del modo online
+Primero el jugador debe elegir:
+•	2 jugadores
+•	3 jugadores
+•	4 jugadores
+Después aparece el menú:
+•	Partida rápida
+•	Crear sala con código
+•	Unirse con código
+•	Unirse con QR
+________________________________________
+Sistema de salas con código o QR
+Los jugadores deben poder unirse de dos formas.
+Unirse con código
+Debe funcionar como en Kahoot!:
+•	Un jugador crea la sala.
+•	Se genera un código de sala.
+•	Otros ingresan el código.
+•	Todos entran al mismo lobby.
+•	Luego inicia la partida.
+Unirse con QR
+También debe existir:
+•	Escaneo de código QR
+•	Entrada automática a la sala.
+Disponible en:
+•	Modo Online
+•	Modo Cooperativo

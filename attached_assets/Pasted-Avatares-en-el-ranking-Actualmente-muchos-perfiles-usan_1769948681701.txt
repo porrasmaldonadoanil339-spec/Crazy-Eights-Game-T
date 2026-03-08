@@ -1,0 +1,46 @@
+Avatares en el ranking
+Actualmente muchos perfiles usan avatares estándar repetidos.
+Debe corregirse para que haya:
+•	Avatares más variados
+•	Caras diferentes
+•	Fotos más realistas
+Esto hará que el ranking parezca formado por jugadores reales.
+________________________________________
+Conclusión final
+Quiero que el juego tenga lógica y realismo, como los juegos actuales.
+Debes:
+•	Corregir errores existentes.
+•	Mejorar todos los sistemas.
+•	Hacer que todo funcione correctamente.
+Especialmente:
+•	Sistema de salas con código y QR
+•	Emparejamiento de jugadores
+•	Invitaciones a amigos
+•	Sistema cooperativo
+•	Clasificatoria funcional
+•	Avatares variados
+•	Rango actualizado correctamente
+La experiencia debe sentirse fluida y profesional, similar a juegos competitivos como Clash Royale o Garena Free Fire.
+Mejora de efectos visuales para cartas especiales
+Actualmente cuando se juega una carta especial solo aparece un texto simple, por ejemplo “+2”, lo cual se ve muy básico.
+Quiero que se mejoren los efectos visuales de todas las cartas especiales para que el juego se vea más dinámico, divertido y profesional.
+Cuando se juegue una carta especial deben agregarse animaciones más llamativas, por ejemplo:
+•	El efecto debe aparecer en el centro de la pantalla por un momento.
+•	El texto de la carta especial (como +2, Reversa, Salto, etc.) debe mostrarse grande y animado.
+•	Se pueden agregar efectos de partículas, brillo o energía alrededor de la carta.
+•	También sería bueno incluir un sonido especial diferente para cada carta especial.
+Por ejemplo:
+Carta +2
+•	El +2 aparece grande con animación.
+•	Pequeñas partículas o destellos alrededor.
+•	Un sonido especial que indique que el siguiente jugador roba cartas.
+La idea es que cuando se use una carta especial todos los jugadores noten inmediatamente el efecto.
+________________________________________
+Aplicación en todos los modos
+Estos efectos visuales deben funcionar en todos los modos del juego, para que la experiencia sea igual en todas las partidas:
+•	Modo Local
+•	Modo Online
+•	Modo Cooperativo
+•	Modo Clasificatoria
+Esto hará que el juego se vea más moderno, divertido y visualmente atractivo durante las partidas.
+

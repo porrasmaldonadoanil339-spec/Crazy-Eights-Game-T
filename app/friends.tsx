@@ -208,7 +208,7 @@ export default function FriendsScreen() {
           direction: "incoming",
         };
         setRequests(prev => [newReq, ...prev]);
-        showToast(`${p.name} te envió una solicitud`);
+        showToast(`${p.name} ${T("sentYouRequest" as any)}`);
       }
     }, 45000 + Math.random() * 75000); // 45s to 120s
     
@@ -258,11 +258,11 @@ export default function FriendsScreen() {
           await saveDirectly(currentFriends, currentRequests);
           setFriends(currentFriends);
           setRequests(currentRequests);
-          showToast(`¡${req.name} aceptó tu solicitud!`);
+          showToast(`¡${req.name} ${T("acceptedYourRequest" as any)}`);
         } else {
           await saveDirectly(friendsRef.current, currentRequests);
           setRequests(currentRequests);
-          showToast(`${req.name} rechazó tu solicitud`);
+          showToast(`${req.name} ${T("rejectedYourRequest" as any)}`);
         }
       }, delay);
     });
@@ -357,7 +357,7 @@ export default function FriendsScreen() {
       }
     }, delay);
 
-    showToast("Solicitud enviada");
+    showToast(T("requestSent" as any));
   };
 
   const handleAcceptRequest = (req: FriendRequest) => {
@@ -375,7 +375,7 @@ export default function FriendsScreen() {
     };
     setFriends(prev => [newFriend, ...prev]);
     setRequests(prev => prev.filter(r => r.id !== req.id));
-    showToast(`Ahora eres amigo de ${req.name}`);
+    showToast(`${T("nowFriendsWith" as any)} ${req.name}`);
   };
 
   const handleRejectRequest = (req: FriendRequest) => {
@@ -410,7 +410,7 @@ export default function FriendsScreen() {
   const borderColor = isDark ? Colors.border : "#aacfa0";
 
   const handleInvite = (friend: Friend) => {
-    showToast(`Invitación enviada a ${friend.name}`);
+    showToast(`${T("invitationSentTo" as any)} ${friend.name}`);
     
     // 75% for online, 20% for offline
     const acceptProb = friend.online ? 0.75 : 0.20;
@@ -419,12 +419,12 @@ export default function FriendsScreen() {
 
     setTimeout(() => {
       if (accepts) {
-        showToast(`¡${friend.name} aceptó! Iniciando partida...`);
+        showToast(`¡${friend.name} ${T("friendAcceptedMatch" as any)}`);
         setTimeout(() => {
           router.push(`/game-online?count=2&rivalName=${encodeURIComponent(friend.name)}`);
         }, 1000);
       } else {
-        showToast(`${friend.name} no está disponible ahora`);
+        showToast(`${friend.name} ${T("notAvailableNow" as any)}`);
       }
     }, delay);
   };
@@ -878,7 +878,7 @@ export default function FriendsScreen() {
           if (friend) {
             handleInvite(friend);
           } else {
-            showToast(`Invitación enviada a ${name}`);
+            showToast(`${T("invitationSentTo" as any)} ${name}`);
           }
         }}
       />

@@ -746,7 +746,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile 
                 color={accentColor}
               />
               <Text style={[styles.friendAddBtnText, { color: accentColor }]}>
-                {requestSent ? "Solicitud enviada" : `Agregar a ${cpuProfile.name}`}
+                {requestSent ? T("requestSent" as any) : `${T("addFriendTo" as any)} ${cpuProfile.name}`}
               </Text>
             </Pressable>
           )}
