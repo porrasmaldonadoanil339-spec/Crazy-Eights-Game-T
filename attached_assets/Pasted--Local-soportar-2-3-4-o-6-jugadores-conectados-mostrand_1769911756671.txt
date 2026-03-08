@@ -1,0 +1,71 @@
+•	Local: soportar 2, 3, 4 o 6 jugadores conectados, mostrando todos de frente en el menú.
+•	Todo debe sincronizarse en tiempo real: cartas, movimientos, mesas, objetos y chat.
+•	________________________________________
+•	2️⃣ Sala de espera y chat persistente
+•	Mostrar claramente los jugadores conectados y su estado (listo, esperando, en línea).
+•	Chat persistente: mensajes no se borran al salir de la partida o del juego.
+•	Opciones: borrar mensaje individual o conversación completa.
+•	Chat disponible en la sección de amigos y dentro de la partida.
+•	________________________________________
+•	3️⃣ Música
+•	Añadir canción de victoria y canción de derrota, reproducidas para todos los jugadores sincronizados.
+•	Suspender automáticamente la música de la partida al finalizar.
+•	________________________________________
+•	4️⃣ Ranking y perfiles
+•	Mostrar fotos reales de jugadores; si no tienen, usar avatars estándar.
+•	Reflejar correctamente rango y división, por ejemplo “Hierro V” en lugar de “Hierro I”.
+•	Cambiar correctamente según idioma.
+•	Mostrar estadísticas de partidas jugadas, victorias/derrotas y rango alcanzado por cada modo.
+•	________________________________________
+•	5️⃣ Objetos y mesas de la tienda
+•	Las cartas, mesas o items comprados o seleccionados en la tienda deben reflejarse exactamente igual en partidas online y locales.
+•	Diseño visual de cartas de la tienda:
+•	Cada carta debe ser única y fácilmente reconocible, con bordes, iconos, fondos o animaciones que indiquen rareza y función.
+•	Evitar que las cartas se vean iguales.
+•	________________________________________
+•	6️⃣ Idiomas y traducción
+•	Al cambiar idioma en ajustes, toda la interfaz del juego se traduce automáticamente, incluyendo:
+•	Menús
+•	Descripciones de modos
+•	Rangos y divisiones
+•	Botones, notificaciones y chat
+•	________________________________________
+•	7️⃣ Modo Local
+•	Mostrar claramente que se puede jugar con 2,3,4 o 6 jugadores, no solo en lista oculta.
+•	Cambiar la descripción del modo para reflejarlo:
+•	“Juega localmente con tus amigos. Elige entre 2, 3, 4 o 6 jugadores y disfruta partidas sin conexión.”
+•	________________________________________
+•	8️⃣ Descripciones de modos
+•	La descripción que aparece al abrir un modo debe reflejar exactamente los mismos puntos suspensivos o fragmentos en la sección de descripción del modo.
+•	Aplicar esto a todos los modos: Clasificatoria, Cooperativo, Local, etc.
+•	________________________________________
+•	9️⃣ Recompensas y rangos
+•	Mostrar recompensas para los 12 rangos completos: Hierro, Bronce, Plata, Oro, Platino, Diamante, Épico, Mítico, Maestro, Gran Maestro, Legendario y Divino.
+•	Cada rango debe tener su logo visible en la sección de recompensas.
+•	________________________________________
+•	🔟 Cuentas vinculadas
+•	En la opción de salir de la cuenta:
+•	Permitir cerrar sesión normalmente.
+•	Permitir vincular o iniciar sesión con Google y Facebook.
+•	________________________________________
+•	1️⃣1️⃣ Configuración
+•	Todas las opciones deben funcionar correctamente:
+•	Cambiar idioma
+•	Ajustes de audio y gráficos (baja, media, alta)
+•	Notificaciones
+•	Nada debe aparecer inactivo o sin efecto.
+•	________________________________________
+•	✅ Resumen final
+•	Todo esto debe implementarse exactamente como se describe, para que el juego se vea profesional, realista y listo para publicar. Esto incluye:
+•	Multijugador en tiempo real
+•	Sala de espera y chat persistente
+•	Música de victoria/derrota
+•	Ranking y perfiles correctos
+•	Objetos y mesas de la tienda reflejados
+•	Traducción completa de la interfaz
+•	Modo Local actualizado
+•	Descripciones de modos consistentes
+•	Diseño variado de cartas de la tienda
+•	Recompensas y logos de los 12 rangos
+•	Cuentas vinculadas (Google/Facebook)
+•	Configuración completamente funcional

@@ -222,7 +222,7 @@ export default function RankedLobbyScreen() {
         <View style={styles.searchingWrap}>
           <Animated.View entering={FadeIn.duration(400)}>
             <View style={styles.searchingIcon}>
-              <Ionicons name="trophy" size={40} color={RANK_GOLD} />
+              <Ionicons name={rankInfo.icon as any} size={40} color={rankInfo.color} />
             </View>
             <Text style={styles.searchingTitle}>Buscando partida</Text>
             <View style={styles.dotsRow}>
@@ -248,7 +248,7 @@ export default function RankedLobbyScreen() {
           <Text style={styles.foundTitle}>¡Partida encontrada!</Text>
           <Text style={styles.foundSub}>Rivales con rango similar han sido emparejados</Text>
           <View style={styles.foundRankRow}>
-            <Ionicons name="trophy" size={18} color={RANK_GOLD} />
+            <Ionicons name={rankInfo.icon as any} size={18} color={rankInfo.color} />
             <Text style={[styles.foundRankTxt, { color: ACCENT }]}>{rankInfo.displayName}</Text>
           </View>
           <Pressable onPress={handleStartMatch} style={styles.startBtn}>

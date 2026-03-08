@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
-import { getRankInfo, RANKS, RANK_COLORS, DIVISIONS } from "@/lib/ranked";
+import { getRankInfo, RANKS, RANK_COLORS, RANK_ICONS, DIVISIONS } from "@/lib/ranked";
 import { getCurrentSeason, getSeasonRewardsForRank } from "@/lib/seasons";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 
@@ -187,7 +187,7 @@ export default function RankedScreen() {
         </View>
         
         <View style={styles.rankBadgeSmall}>
-          <Ionicons name="trophy" size={14} color={RANK_COLORS[item.rank]} />
+          <Ionicons name={RANK_ICONS[item.rank] as any} size={14} color={RANK_COLORS[item.rank]} />
           <Text style={[styles.rankBadgeTextSmall, { color: RANK_COLORS[item.rank] }]}>Lv.{item.level}</Text>
         </View>
       </View>
@@ -249,7 +249,7 @@ export default function RankedScreen() {
           </View>
           <View style={styles.rankBadgeContainer}>
             <View style={[styles.rankIconCircle, { backgroundColor: rankInfo.color + "22", borderColor: rankInfo.color }]}>
-              <Ionicons name="trophy" size={50} color={rankInfo.color} />
+              <Ionicons name={RANK_ICONS[profile.rankedProfile.rank] as any} size={50} color={rankInfo.color} />
             </View>
           </View>
         </View>

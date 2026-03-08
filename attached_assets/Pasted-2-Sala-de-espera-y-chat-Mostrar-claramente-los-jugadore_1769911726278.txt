@@ -1,0 +1,48 @@
+2️⃣ Sala de espera y chat
+•	Mostrar claramente los jugadores conectados y su estado (listo, esperando, en línea).
+•	Chat persistente:
+o	Mensajes no se borran al salir del juego o de la partida.
+o	Opción de borrar mensaje individual o conversación completa.
+o	Chat disponible en la sección de amigos y dentro de la partida.
+________________________________________
+3️⃣ Música
+•	Nueva canción de victoria y derrota para todos los jugadores sincronizados.
+•	La música de la partida debe suspenderse automáticamente al finalizar el juego.
+________________________________________
+4️⃣ Ranking y perfiles
+•	Mostrar fotos reales de jugadores si están disponibles, y avatars estándar si no.
+•	Reflejar correctamente el rango y división (por ejemplo, Hierro V, no Hierro I).
+•	Que los rangos cambien y se muestren correctamente al cambiar idioma.
+________________________________________
+5️⃣ Objetos y mesas
+•	Lo que los jugadores compren o seleccionen en la tienda debe verse reflejado en las partidas online.
+•	Esto aplica a todos los modos donde haya interacción entre jugadores.
+________________________________________
+6️⃣ Idiomas y traducción
+•	Al cambiar idioma en ajustes, toda la interfaz del juego se debe traducir completamente, incluyendo:
+o	Menús
+o	Descripciones de modos
+o	Rangos y divisiones
+o	Botones, notificaciones y chat
+________________________________________
+7️⃣ Modo Local
+•	Mostrar claramente que se puede jugar con 2,3,4 o 6 jugadores.
+•	Cambiar la descripción del modo para reflejar esto:
+“Juega localmente con tus amigos. Elige entre 2, 3, 4 o 6 jugadores y disfruta partidas sin conexión.”
+________________________________________
+8️⃣ Opciones adicionales
+•	Si quiero concentrar jugadores en ciertos modos, se deben crear colas de juego separadas por modo y número de jugadores, con prioridad para amigos y reemplazo de IA si faltan jugadores.
+•	Todo esto debe integrarse con el multijugador en tiempo real.
+________________________________________
+💡 Resumen final:
+Quiero que todo esto funcione exactamente como lo describo, para que se vea profesional y listo para Play Store. Todo sincronizado en vivo, con chat persistente, música de victoria/derrota, objetos reflejados, ranking correcto y traducción completa de la interfaz.
+  
+
+•	ADEMAS Todas las DISEÑOS DE cartas que se vendan en la tienda deben tener diseños distintos y atractivos, con bordes, iconos, fondos o animaciones que indiquen su rareza y función. Cuando un jugador las compre o seleccione, estas cartas se reflejarán exactamente igual en la partida online y local, respetando colores, iconos y animaciones.”
+•	Hola, necesito que mi juego tenga todas estas funciones implementadas exactamente como se describe. Todo debe funcionar de manera profesional, realista y listo para Play Store.
+•	________________________________________
+•	📝 Funciones y mejoras a implementar
+•	1️⃣ Multijugador en tiempo real (Real-Time Multiplayer)
+•	Permitir que los amigos se conecten y jueguen en vivo, desde diferentes dispositivos.
+•	Cooperativo: amigos se unen directamente a la sala de espera y la partida inicia automáticamente, sin necesidad de buscar jugadores externos.
+•	Clasificatoria: amigos entran juntos en la misma sala; el sistema completa con rivales aleatorios o IA si faltan jugadores.

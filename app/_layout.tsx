@@ -96,7 +96,8 @@ function Particle({ delay }: { delay: number }) {
   );
 }
 
-const SPLASH_DURATION = 5000;
+const STUDIO_DURATION = 4000;
+const LOADING_DURATION = 4200;
 
 const LOADING_MESSAGES = [
   "Iniciando motor de juego…",
@@ -107,114 +108,196 @@ const LOADING_MESSAGES = [
   "¡Listo para jugar!",
 ];
 
+// Decorative card suits for the loading screen background
+const CARD_SUITS = ["♠", "♥", "♦", "♣", "8", "★", "♠", "♣"];
+const SUIT_POSITIONS = [
+  { top: "8%",  left: "5%",  size: 48, opacity: 0.07, color: "#D4AF37" },
+  { top: "12%", right: "8%", size: 36, opacity: 0.06, color: "#E53935" },
+  { top: "30%", left: "2%",  size: 26, opacity: 0.05, color: "#fff" },
+  { top: "38%", right: "4%", size: 32, opacity: 0.06, color: "#D4AF37" },
+  { top: "55%", left: "8%",  size: 22, opacity: 0.05, color: "#E53935" },
+  { top: "60%", right: "6%", size: 40, opacity: 0.06, color: "#fff" },
+  { top: "75%", left: "3%",  size: 30, opacity: 0.05, color: "#D4AF37" },
+  { top: "78%", right: "3%", size: 20, opacity: 0.04, color: "#E53935" },
+];
+
 function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const nativeDriver = Platform.OS !== "web";
+
+  // Phase 1 — Studio
+  const studioFade = useRef(new Animated.Value(0)).current;
+  const studioScale = useRef(new Animated.Value(0.82)).current;
   const glowAnim = useRef(new Animated.Value(1)).current;
+
+  // Phase 2 — Loading
+  const loadingFade = useRef(new Animated.Value(0)).current;
+  const titleScale = useRef(new Animated.Value(0.88)).current;
   const loadAnim = useRef(new Animated.Value(0)).current;
-  const [loadPct, setLoadPct] = useState(0);
+  const [loadPct, setLoadPct] = useState(1);
   const [loadMsg, setLoadMsg] = useState(LOADING_MESSAGES[0]);
+  const [phase, setPhase] = useState<"studio" | "loading">("studio");
 
   useEffect(() => {
-    const nativeDriver = Platform.OS !== "web";
+    // ── Phase 1: Studio logo ──────────────────────────────────────────────
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: nativeDriver }),
-      Animated.spring(scaleAnim, { toValue: 1, friction: 8, tension: 40, useNativeDriver: nativeDriver }),
+      Animated.timing(studioFade, { toValue: 1, duration: 700, useNativeDriver: nativeDriver }),
+      Animated.spring(studioScale, { toValue: 1, friction: 7, tension: 45, useNativeDriver: nativeDriver }),
     ]).start();
 
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1.4, duration: 1500, useNativeDriver: nativeDriver }),
-        Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: nativeDriver }),
-      ])
-    ).start();
+    Animated.loop(Animated.sequence([
+      Animated.timing(glowAnim, { toValue: 1.45, duration: 1200, useNativeDriver: nativeDriver }),
+      Animated.timing(glowAnim, { toValue: 1, duration: 1200, useNativeDriver: nativeDriver }),
+    ])).start();
 
-    playSound("win").catch(() => {});
+    // Startup fanfare
+    setTimeout(() => { playSound("win").catch(() => {}); }, 300);
 
-    // Loading bar — fill from 0→1 over SPLASH_DURATION - 1.2s (leave 1.2s for exit)
-    Animated.timing(loadAnim, {
-      toValue: 1,
-      duration: SPLASH_DURATION - 1200,
-      useNativeDriver: false,
-    }).start();
+    // ── Transition to Phase 2 ─────────────────────────────────────────────
+    const studioTimer = setTimeout(() => {
+      Animated.timing(studioFade, { toValue: 0, duration: 600, useNativeDriver: nativeDriver }).start(() => {
+        setPhase("loading");
 
-    // Progress text steps
-    const stepDuration = (SPLASH_DURATION - 1200) / LOADING_MESSAGES.length;
-    const steps = LOADING_MESSAGES.map((msg, i) =>
-      setTimeout(() => {
-        setLoadMsg(msg);
-        setLoadPct(Math.round(((i + 1) / LOADING_MESSAGES.length) * 100));
-      }, i * stepDuration)
-    );
+        // Fade in loading screen
+        Animated.parallel([
+          Animated.timing(loadingFade, { toValue: 1, duration: 600, useNativeDriver: nativeDriver }),
+          Animated.spring(titleScale, { toValue: 1, friction: 8, tension: 40, useNativeDriver: nativeDriver }),
+        ]).start();
 
-    const timer = setTimeout(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: nativeDriver,
-      }).start(() => { onComplete(); });
-    }, SPLASH_DURATION);
+        // Progress bar
+        Animated.timing(loadAnim, {
+          toValue: 1,
+          duration: LOADING_DURATION - 1000,
+          useNativeDriver: false,
+        }).start();
 
-    return () => {
-      clearTimeout(timer);
-      steps.forEach(clearTimeout);
-    };
+        // Progress text steps
+        const stepMs = (LOADING_DURATION - 1000) / LOADING_MESSAGES.length;
+        const steps = LOADING_MESSAGES.map((msg, i) =>
+          setTimeout(() => {
+            setLoadMsg(msg);
+            setLoadPct(Math.round(((i + 1) / LOADING_MESSAGES.length) * 100));
+          }, i * stepMs)
+        );
+
+        // Exit after loading completes
+        const exitTimer = setTimeout(() => {
+          Animated.timing(loadingFade, {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: nativeDriver,
+          }).start(() => onComplete());
+        }, LOADING_DURATION);
+
+        return () => { steps.forEach(clearTimeout); clearTimeout(exitTimer); };
+      });
+    }, STUDIO_DURATION);
+
+    return () => clearTimeout(studioTimer);
   }, []);
 
-  const loadBarWidth = loadAnim.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] });
+  const loadBarWidth = loadAnim.interpolate({ inputRange: [0, 1], outputRange: ["1%", "100%"] });
 
   return (
-    <Animated.View style={[styles.splashOverlay, { opacity: fadeAnim }]}>
-      <LinearGradient
-        colors={["#000000", "#0A0A14", "#000000"]}
-        style={StyleSheet.absoluteFill}
-      />
+    <View style={[styles.splashOverlay, StyleSheet.absoluteFillObject]}>
 
-      <View style={styles.particlesContainer}>
-        {[...Array(8)].map((_, i) => (
-          <Particle key={i} delay={i * 400} />
-        ))}
-      </View>
+      {/* ── PHASE 1: STUDIO LOGO ─────────────────────────────────────── */}
+      <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: studioFade, zIndex: 2 }]}>
+        <LinearGradient colors={["#000000", "#05050F", "#000000"]} style={StyleSheet.absoluteFill} />
 
-      <Animated.View style={{ transform: [{ scale: scaleAnim }], alignItems: "center", zIndex: 10, width: "100%" }}>
-        <View style={styles.logoContainer}>
-          <Animated.View
-            style={[styles.glow, { transform: [{ scale: glowAnim }], opacity: Animated.multiply(glowAnim, 0.3) }]}
-          />
-          <Image
-            source={require("@/assets/images/biyis-logo.png")}
-            resizeMode="contain"
-            style={{ width: 240, height: 240 }}
-          />
+        <View style={styles.particlesContainer}>
+          {[...Array(8)].map((_, i) => <Particle key={i} delay={i * 350} />)}
         </View>
 
-        <Text style={styles.splashBrand}>BIYIS PRIME STUDIOS</Text>
-        <Text style={styles.splashPresenta}>PRESENTA</Text>
-        <View style={styles.goldLine} />
-        <Text style={styles.splashTitle}>OCHO LOCOS</Text>
-
-        {/* Loading bar */}
-        <View style={styles.loadingBarContainer}>
-          <View style={styles.loadingBarTrack}>
-            <Animated.View style={[styles.loadingBarFill, { width: loadBarWidth }]}>
-              <LinearGradient
-                colors={["#A07800", "#D4AF37", "#F5D76E", "#D4AF37"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <View style={styles.loadingBarShine} />
-            </Animated.View>
+        <Animated.View style={[styles.studioCenterWrap, { transform: [{ scale: studioScale }] }]}>
+          <View style={styles.logoContainer}>
+            <Animated.View style={[styles.glow, { transform: [{ scale: glowAnim }], opacity: Animated.multiply(glowAnim, 0.28) }]} />
+            <Image
+              source={require("@/assets/images/biyis-logo.png")}
+              resizeMode="contain"
+              style={{ width: 200, height: 200 }}
+            />
           </View>
-          <View style={styles.loadingBarFooter}>
-            <Text style={styles.loadingMsg}>{loadMsg}</Text>
-            <Text style={styles.loadingPct}>{loadPct}%</Text>
-          </View>
-        </View>
+          <Text style={styles.splashBrand}>BIYIS PRIME STUDIOS</Text>
+          <Text style={styles.splashPresenta}>PRESENTA</Text>
+        </Animated.View>
       </Animated.View>
 
-      <Text style={styles.versionText}>Versión 3.0.0</Text>
-    </Animated.View>
+      {/* ── PHASE 2: GAME COVER LOADING ──────────────────────────────── */}
+      {phase === "loading" && (
+        <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: loadingFade, zIndex: 1 }]}>
+          <LinearGradient
+            colors={["#010D03", "#041008", "#000000"]}
+            style={StyleSheet.absoluteFill}
+          />
+
+          {/* Casino felt texture overlay */}
+          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(2, 25, 8, 0.6)" }]} />
+
+          {/* Decorative card suits background */}
+          {SUIT_POSITIONS.map((pos, i) => (
+            <Text
+              key={i}
+              style={{
+                position: "absolute",
+                top: pos.top as any,
+                left: (pos as any).left,
+                right: (pos as any).right,
+                fontSize: pos.size,
+                color: pos.color,
+                opacity: pos.opacity,
+                fontFamily: "Nunito_700Bold",
+              }}
+            >
+              {CARD_SUITS[i]}
+            </Text>
+          ))}
+
+          {/* Outer ring decoration */}
+          <View style={styles.coverRingOuter} />
+          <View style={styles.coverRingInner} />
+
+          {/* Center content */}
+          <Animated.View style={[styles.coverCenter, { transform: [{ scale: titleScale }] }]}>
+            {/* Mini card icons row */}
+            <View style={styles.coverCardsRow}>
+              {["♠", "♥", "♦", "♣"].map((suit, i) => (
+                <View key={i} style={[styles.coverCardMini, { borderColor: i % 2 === 1 ? "#E53935" : "#D4AF37" }]}>
+                  <Text style={[styles.coverCardSuit, { color: i % 2 === 1 ? "#E53935" : "#D4AF37" }]}>{suit}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.coverTitleWrap}>
+              <Text style={styles.coverTitleMain}>OCHO LOCOS</Text>
+              <Text style={styles.coverTitleSub}>EL JUEGO DE CARTAS MÁS LOCO</Text>
+            </View>
+
+            <View style={styles.coverDivider} />
+
+            {/* Loading bar */}
+            <View style={styles.loadingBarContainer}>
+              <View style={styles.loadingBarTrack}>
+                <Animated.View style={[styles.loadingBarFill, { width: loadBarWidth }]}>
+                  <LinearGradient
+                    colors={["#7B5800", "#D4AF37", "#F5D76E", "#D4AF37"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.loadingBarShine} />
+                </Animated.View>
+              </View>
+              <View style={styles.loadingBarFooter}>
+                <Text style={styles.loadingMsg}>{loadMsg}</Text>
+                <Text style={styles.loadingPct}>{loadPct}%</Text>
+              </View>
+            </View>
+          </Animated.View>
+
+          <Text style={styles.versionText}>Versión 3.0.0</Text>
+        </Animated.View>
+      )}
+    </View>
   );
 }
 
@@ -567,5 +650,89 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#D4AF37",
     marginLeft: 8,
+  },
+  studioCenterWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    zIndex: 10,
+  },
+  coverRingOuter: {
+    position: "absolute",
+    width: SCREEN_WIDTH * 1.1,
+    height: SCREEN_WIDTH * 1.1,
+    borderRadius: SCREEN_WIDTH * 0.55,
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.07)",
+    top: "50%",
+    left: "50%",
+    marginLeft: -(SCREEN_WIDTH * 0.55),
+    marginTop: -(SCREEN_WIDTH * 0.55),
+  },
+  coverRingInner: {
+    position: "absolute",
+    width: SCREEN_WIDTH * 0.78,
+    height: SCREEN_WIDTH * 0.78,
+    borderRadius: SCREEN_WIDTH * 0.39,
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.05)",
+    top: "50%",
+    left: "50%",
+    marginLeft: -(SCREEN_WIDTH * 0.39),
+    marginTop: -(SCREEN_WIDTH * 0.39),
+  },
+  coverCenter: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    zIndex: 10,
+    paddingHorizontal: 32,
+  },
+  coverCardsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 24,
+  },
+  coverCardMini: {
+    width: 36,
+    height: 50,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  coverCardSuit: {
+    fontSize: 18,
+    fontFamily: "Nunito_700Bold",
+  },
+  coverTitleWrap: {
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  coverTitleMain: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 46,
+    color: "#D4AF37",
+    letterSpacing: 5,
+    textAlign: "center",
+    textShadowColor: "rgba(212,175,55,0.5)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
+  },
+  coverTitleSub: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 11,
+    color: "rgba(255,255,255,0.45)",
+    letterSpacing: 4,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  coverDivider: {
+    width: 80,
+    height: 1.5,
+    backgroundColor: "rgba(212,175,55,0.4)",
+    marginBottom: 28,
+    borderRadius: 1,
   },
 });

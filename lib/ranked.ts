@@ -42,7 +42,8 @@ export function getRankInfo(rp: RankedProfile) {
     divisionName,
     displayName: `${rankName} ${divisionName}`,
     color,
-    icon: "trophy",
+    icon: RANK_ICONS[rp.rank] || "trophy",
+    rank: rp.rank,
   };
 }
 
@@ -90,6 +91,7 @@ export function getLocalizedRankInfo(rp: RankedProfile, lang: string) {
     displayName: `${rankName} ${divisionName}`,
     color,
     icon,
+    rank: rp.rank,
   };
 }
 

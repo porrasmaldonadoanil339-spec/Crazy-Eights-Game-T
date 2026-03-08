@@ -1,0 +1,82 @@
+1️⃣ Modo Cooperativo
+•	En Cooperativo, no hace falta buscar jugadores externos.
+•	Los jugadores que estén en tu sala de espera se llevan directamente a la partida.
+•	Esto significa que si tienes a tu amigo en la sala, la partida se inicia automáticamente con ustedes como equipo, sin matchmaking.
+•	La interfaz del menú debe mostrar “Cargar partida” con los jugadores de la sala listados, igual que en la sala de espera.
+________________________________________
+2️⃣ Modo Clasificatoria
+•	En Clasificatoria, si quieres jugar con un amigo:
+1.	Ambos se agregan a tu sala de espera.
+2.	El sistema debe buscar automáticamente los rivales (2 jugadores para un 2 vs 2).
+3.	Si el sistema no encuentra rivales en cierto tiempo, puede asignar un compañero IA o un jugador aleatorio para completar la partida 2 vs 2.
+•	Esto asegura que nunca falte ningún jugador y siempre se respete la proporción.
+•	En el menú de carga debe reflejar:
+o	Tus compañeros y rivales, tal como aparece en la sala de espera.
+o	Visualización clara: Tu equipo vs Equipo rival antes de empezar la partida.
+________________________________________
+3️⃣ Chat persistente
+•	El chat de amigos debe guardar los mensajes incluso al salir de la partida o del juego.
+•	Opciones necesarias en el chat:
+o	Borrar mensaje individual.
+o	Eliminar conversación completa.
+o	Mantener historial visible en la sección de amigos para que no se pierda nada.
+•	Esto aplica tanto en Cooperativo como en Clasificatoria, donde los jugadores pueden hablar antes de empezar o mientras esperan a rivales.
+________________________________________
+4️⃣ Interfaz y menú
+•	En el menú de Cargar partida / Sala de espera, debe mostrarse:
+o	Lista de compañeros y rivales.
+o	Estado de conexión (online, esperando, listo).
+o	Acceso rápido al chat, con las opciones mencionadas.
+•	Para Cooperativo: todos los de tu sala pasan directo a la partida.
+•	Para Clasificatoria: los rivales se asignan automáticamente si no aparecen jugadores.
+📌 Mejoras y ajustes a implementar
+1️⃣ Música y sonidos
+•	Nueva música de victoria: Cuando tu equipo gane una partida, se reproduce automáticamente una canción de victoria.
+•	Nueva música de derrota: Cuando pierdas, se reproduce una canción de derrota.
+•	Suspender música de partida: Cuando termina la partida, la canción de la partida ya no debe seguir sonando, igual que en los juegos profesionales.
+•	Esto aplica tanto para Cooperativo, Clasificatoria y Local.
+________________________________________
+2️⃣ Ranking y perfiles
+•	El ranking debe mostrar perfiles como en tu ranking mundial:
+o	Foto real de jugadores (avatar con cara de personas).
+o	Si no hay foto real, usar avatar estándar o predeterminado.
+•	Mostrar claramente rango actual y división, asegurando que:
+o	Si el jugador está en Hierro 5, el sistema refleje correctamente Hierro 5, no Hierro 1.
+•	Esto debe aplicarse tanto en Clasificatoria como en el perfil del jugador.
+________________________________________
+3️⃣ Modo Online / Multijugador
+•	Las mesas o items que el jugador haya comprado o seleccionado en la tienda deben reflejarse en el modo online multijugador.
+•	Los compañeros y rivales deben ver el mismo equipamiento/mesa que se haya comprado.
+•	En Clasificatoria y Cooperativo online, mantener todo sincronizado con la selección de objetos.
+________________________________________
+4️⃣ Modo Local
+•	En Modo Local, el sistema debe permitir claramente jugar con 2, 3, 4 o 6 jugadores.
+•	Mostrar esto de frente en el menú, no solo en lista oculta o descripción.
+•	Cambiar la descripción del modo local para reflejar esto:
+o	Ejemplo: “Juega localmente con tus amigos. Elige entre 2, 3, 4 o 6 jugadores y disfruta partidas sin conexión.”
+________________________________________
+5️⃣ Idiomas y traducciones
+•	Cuando se cambie el idioma en ajustes, toda la interfaz del juego debe traducirse completamente, incluyendo:
+o	Menús
+o	Descripciones de modos (Clasificatoria, Cooperativo, Local)
+o	Rango de jugadores y divisiones
+o	Botones, notificaciones y chat
+•	Asegurarse de que los rango y divisiones se muestren correctamente según idioma, por ejemplo “Hierro V” en español y “Iron V” en inglés.
+________________________________________
+6️⃣ Sala de espera y chat
+•	Cooperativo: los jugadores de tu sala pasan directo a la partida.
+•	Clasificatoria: permite jugar con amigos; si no hay suficientes rivales, busca compañeros aleatorios o IA.
+•	Chat persistente:
+o	Los mensajes no se borran al salir del juego o partida.
+o	Permite borrar mensaje individual o conversación completa.
+o	Chat disponible desde la sección de amigos.
+Hola, quiero implementar las siguientes funciones en mi juego y necesito que se cumpla todo exactamente como lo describo:
+________________________________________
+1️⃣ Multijugador en tiempo real (Real-Time Multiplayer)
+•	Los amigos deben poder conectarse y jugar juntos en vivo, aunque estén en dispositivos distintos.
+•	Esto aplica para:
+o	Cooperativo: los amigos se unen directamente a mi sala de espera, la partida inicia automáticamente, sin necesidad de buscar jugadores externos.
+o	Clasificatoria: los amigos entran a la misma sala; el sistema completa con rivales aleatorios o IA si es necesario.
+o	Local: permite 2, 3, 4 o 6 jugadores conectados, mostrando todos de frente en el menú.
+•	Todo debe sincronizarse en tiempo real: cartas, movimientos, mesas, objetos y chat.
+________________________________________
