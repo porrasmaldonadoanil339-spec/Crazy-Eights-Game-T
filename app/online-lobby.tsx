@@ -492,11 +492,118 @@ export default function OnlineLobbyScreen() {
   }
 
   if (phase === "direct_search" || phase === "direct_found") {
-    const allPlayers = [{ ...myProfile, playerIndex: 0 }, ...fakePlayers];
     const isFound = phase === "direct_found";
-    const isCoopDirect = isCoopMode;
+    const rival = fakePlayers[0] ?? null;
+    const isOneVsOne = playerCount === 2;
 
-    // For coop: show team split
+    if (isOneVsOne) {
+      // ── Second interface: two avatar circles (1v1 matchmaking) ──────────────
+      return (
+        <View style={[styles.fullBg, { paddingTop: topPad + 10, paddingBottom: botPad + 10 }]}>
+          <LinearGradient colors={["#020810", "#061020", "#08050a"]} style={StyleSheet.absoluteFill} />
+
+          <View style={styles.header}>
+            <Pressable onPress={() => { directSearchTimers.current.forEach(t => clearTimeout(t)); router.back(); }} style={styles.backBtn}>
+              <Ionicons name="arrow-back" size={20} color={ACCENT} />
+            </Pressable>
+            <Text style={styles.headerTitle}>
+              {isFound ? T("rivalFound" as any) : T("searchingMatch" as any)}
+            </Text>
+          </View>
+
+          <View style={styles.vsSearchCenter}>
+            {/* Mode label */}
+            <Text style={styles.vsSearchTitle}>
+              {isFound ? (T("rivalFound" as any) || "¡Rival encontrado!") : (T("searchingMatch" as any) || "Buscando rival...")}
+            </Text>
+
+            {/* Two circles row */}
+            <View style={styles.vsCirclesRow}>
+              {/* My profile */}
+              <View style={styles.vsPlayerCol}>
+                <View style={[styles.vsAvatarRing, { borderColor: isFound ? "#27AE60" : ACCENT }]}>
+                  {myProfile.photoUrl
+                    ? <Image source={{ uri: myProfile.photoUrl }} style={styles.vsAvatarPhoto} />
+                    : <View style={[styles.vsAvatarInner, { backgroundColor: myProfile.avatarColor + "33" }]}>
+                        <Ionicons name={myProfile.avatarIcon as any} size={44} color={myProfile.avatarColor} />
+                      </View>
+                  }
+                </View>
+                <Text style={styles.vsPlayerNameTxt} numberOfLines={1}>{myProfile.name}</Text>
+                <Text style={styles.vsPlayerRankTxt} numberOfLines={1}>{myProfile.rankName ?? ""}</Text>
+              </View>
+
+              {/* VS separator */}
+              <View style={styles.vsMiddleCol}>
+                <LinearGradient colors={["transparent", ACCENT + "66", "transparent"]} style={styles.vsVertLine} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} />
+                <View style={styles.vsMiddleCircle}>
+                  <Text style={styles.vsMiddleText}>VS</Text>
+                </View>
+                <LinearGradient colors={["transparent", ACCENT + "66", "transparent"]} style={styles.vsVertLine} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} />
+              </View>
+
+              {/* Rival profile */}
+              <View style={styles.vsPlayerCol}>
+                {rival ? (
+                  <Animated.View entering={FadeIn.duration(500)}>
+                    <View style={[styles.vsAvatarRing, { borderColor: "#E74C3C" }]}>
+                      {rival.photoUrl
+                        ? <Image source={{ uri: rival.photoUrl }} style={styles.vsAvatarPhoto} />
+                        : <View style={[styles.vsAvatarInner, { backgroundColor: rival.avatarColor + "33" }]}>
+                            <Ionicons name={rival.avatarIcon as any} size={44} color={rival.avatarColor} />
+                          </View>
+                      }
+                    </View>
+                  </Animated.View>
+                ) : (
+                  <View style={[styles.vsAvatarRing, { borderColor: "rgba(255,255,255,0.15)" }]}>
+                    <View style={[styles.vsAvatarInner, { backgroundColor: "rgba(255,255,255,0.05)" }]}>
+                      <ActivityIndicator size="large" color={ACCENT} />
+                    </View>
+                  </View>
+                )}
+                <Text style={[styles.vsPlayerNameTxt, !rival && { opacity: 0.3 }]} numberOfLines={1}>
+                  {rival?.name ?? "..."}
+                </Text>
+                <Text style={[styles.vsPlayerRankTxt, !rival && { opacity: 0 }]} numberOfLines={1}>
+                  {rival?.rankName ?? " "}
+                </Text>
+              </View>
+            </View>
+
+            {/* Found checkmark / searching dots */}
+            {isFound ? (
+              <Animated.View entering={FadeInUp.duration(400)} style={styles.vsFoundRow}>
+                <Ionicons name="checkmark-circle" size={22} color="#27AE60" />
+                <Text style={styles.vsFoundText}>{T("rivalFound" as any) || "¡Rival encontrado!"}</Text>
+              </Animated.View>
+            ) : (
+              <Text style={styles.vsSearchingDots}>
+                {T("waitingPlayers") || "Buscando..."}
+              </Text>
+            )}
+
+            {/* Progress bar when found */}
+            {isFound && (
+              <Animated.View entering={FadeInUp.delay(200).duration(400)} style={[styles.preMatchBar, { marginTop: 16 }]}>
+                <LinearGradient colors={[ACCENT, "#A07800"]} style={styles.preMatchBarFill} />
+              </Animated.View>
+            )}
+
+            {/* Cancel */}
+            {!isFound && (
+              <Pressable onPress={() => { directSearchTimers.current.forEach(t => clearTimeout(t)); router.back(); }} style={styles.cancelBtn}>
+                <Text style={styles.cancelTxt}>{T("cancelSearch" as any)}</Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      );
+    }
+
+    // ── First interface: player slot list (Ranked 4p, Coop 4p) ──────────────
+    const allPlayers = [{ ...myProfile, playerIndex: 0 }, ...fakePlayers];
+    const isCoopDirect = isCoopMode;
     const team1 = isCoopDirect ? allPlayers.slice(0, 2) : allPlayers;
     const team2 = isCoopDirect ? allPlayers.slice(2) : [];
 
@@ -963,5 +1070,43 @@ const styles = StyleSheet.create({
   countdownLabel: {
     fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "rgba(255,255,255,0.6)",
     letterSpacing: 4, textAlign: "center",
+  },
+  vsSearchCenter: {
+    flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 20, gap: 28,
+  },
+  vsSearchTitle: {
+    fontFamily: "Nunito_700Bold", fontSize: 16, color: "rgba(255,255,255,0.6)",
+    letterSpacing: 2, textAlign: "center",
+  },
+  vsCirclesRow: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 0, width: "100%",
+  },
+  vsPlayerCol: { flex: 1, alignItems: "center", gap: 10 },
+  vsAvatarRing: {
+    width: 100, height: 100, borderRadius: 50, borderWidth: 3,
+    overflow: "hidden", alignItems: "center", justifyContent: "center",
+  },
+  vsAvatarInner: {
+    width: 100, height: 100, borderRadius: 50, alignItems: "center", justifyContent: "center",
+  },
+  vsAvatarPhoto: { width: 100, height: 100 },
+  vsPlayerNameTxt: {
+    fontFamily: "Nunito_700Bold", fontSize: 14, color: "#FFFFFF", textAlign: "center", maxWidth: 120,
+  },
+  vsPlayerRankTxt: {
+    fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.4)", textAlign: "center",
+  },
+  vsMiddleCol: { width: 48, alignItems: "center", justifyContent: "center", gap: 0 },
+  vsVertLine: { width: 2, height: 36 },
+  vsMiddleCircle: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: "rgba(212,175,55,0.15)", borderWidth: 1, borderColor: ACCENT + "44",
+    alignItems: "center", justifyContent: "center",
+  },
+  vsMiddleText: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: ACCENT, letterSpacing: 1 },
+  vsFoundRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  vsFoundText: { fontFamily: "Nunito_700Bold", fontSize: 15, color: "#27AE60" },
+  vsSearchingDots: {
+    fontFamily: "Nunito_400Regular", fontSize: 13, color: "rgba(255,255,255,0.4)", textAlign: "center",
   },
 });

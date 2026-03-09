@@ -1,0 +1,107 @@
+Quiero que mi juego se vea realista, creativo y profesional, y que cada modo tenga su lógica y sus efectos. Por favor cumple exactamente lo siguiente:
+
+1️⃣ Interfaz y Matchmaking
+
+Modo 1 vs 1:
+
+Mostrar segunda interfaz de búsqueda con círculos de perfil (yo + rival).
+
+Buscar rival por unos segundos antes de entrar a la partida.
+
+Modo Clasificatoria (4 jugadores):
+
+Usar solo la primera interfaz.
+
+Cuando se encuentren los 4 jugadores: entrar directamente a la partida.
+
+Todos los jugadores compiten individualmente, nadie es compañero.
+
+Al presionar “Ranking Mundial”, los perfiles deben verse iguales a la primera interfaz: algunos con caras realistas, otros con avatares estándar, con bordes circulares y tamaño uniforme.
+
+Modo Cooperativo (2 vs 2):
+
+Usar solo la primera interfaz.
+
+Entrar directamente a la partida cuando se encuentren los jugadores.
+
+Equipo 1: yo + compañero; Equipo 2: rivales.
+
+Mostrar claramente los equipos en la partida.
+
+Modo Desafío:
+
+No mostrar el Desafío Diario dentro de la partida.
+
+Cada partida tiene su propio objetivo, si no se cumple → se pierde la partida.
+
+Modo Local:
+
+Al seleccionar la cantidad de jugadores, entrar directamente a la partida.
+
+Reproducir la canción de la partida automáticamente.
+
+Modo Online:
+
+Usar solo la primera interfaz.
+
+Los jugadores que aparecen allí deben jugar la partida.
+
+2️⃣ Jugabilidad y realismo
+
+La parte superior de la partida debe mostrar el modo exacto en que se juega (Online, Clasificatoria, Cooperativo, Desafío, Clásico).
+
+Debe haber un botón de menú dentro de la partida con estas opciones:
+
+Silenciar emotes del rival
+
+Activar / desactivar música y efectos de sonido
+
+Pausa temporal de la partida con temporizador de unos segundos antes de regresar automáticamente.
+
+Los emotes deben ser realistas y fluidos, como si los jugadores fueran reales.
+
+3️⃣ Sistema de inactividad
+
+Detectar inactividad solo después de un tiempo moderado, por ejemplo 15–20 segundos.
+
+Mostrar indicador de inactividad después de ese tiempo.
+
+Si el jugador realiza alguna acción antes del temporizador → no marcarlo como inactivo.
+
+4️⃣ Pantalla de victoria y derrota
+
+Clasificatoria:
+
+Cuando ganes, mostrar “¡Ganaste!”, tu logo o avatar en el centro, animación visual y +1 estrella al rango.
+
+Mostrar progreso de rango y animación de la estrella moviéndose hacia el contador.
+
+Derrota:
+
+Mostrar “Derrota” y animación simple, sonido más suave.
+
+Todos los modos deben mostrar ranking final de la partida al terminar.
+
+5️⃣ Efectos visuales y música
+
+Agregar más efectos visuales:
+
+Destellos al jugar cartas
+
+Brillo o onda al hacer jugadas importantes
+
+Animación al cambiar turno
+
+Confeti o celebración al ganar ronda
+
+Música de la partida debe comenzar al iniciar la partida, y poder desactivarse desde el menú.
+
+✅ En resumen:
+
+Que el juego sea realista, coherente y fluido.
+
+Que los jugadores se vean reales y las partidas tengan animaciones, música, emotes y efectos profesionales.
+
+Que cada modo tenga su lógica correcta, con interfaz, ranking y temporizadores adecuados.
+
+Que todo lo anterior se cumpla exactamente como está escrito, sin que se modifiquen las reglas ni interfaces.

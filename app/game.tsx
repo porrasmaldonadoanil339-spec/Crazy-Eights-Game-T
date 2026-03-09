@@ -29,7 +29,8 @@ import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge 
 import { generateChallengeRules, getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
-import { stopMusic } from "@/lib/audioManager";
+import { stopMusic, startGameMusic } from "@/lib/audioManager";
+import { getRankInfo, RANK_COLORS, DIVISIONS, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -521,7 +522,7 @@ function TournamentModal({ scores, round, onContinue, onQuit, lastRoundWon }: {
           <View style={[styles.endIconOuter, { borderColor: accentColor + "40", shadowColor: accentColor }]}>
             <View style={[styles.endIconInner, { borderColor: accentColor + "66", backgroundColor: accentColor + "18" }]}>
               {isOver
-                ? <Ionicons name={playerWon ? "trophy" : "skull"} size={46} color={accentColor} />
+                ? <Ionicons name={playerWon ? "trophy" : "trophy-outline"} size={46} color={accentColor} />
                 : isFinalRound
                 ? <Ionicons name="flash" size={46} color="#FFD700" />
                 : <Ionicons name={lastRoundWon ? "checkmark-circle" : "close-circle"} size={46} color={accentColor} />
@@ -599,10 +600,69 @@ const tStyles = StyleSheet.create({
   starVsText: { fontFamily: "Nunito_900ExtraBold", fontSize: 11, color: "rgba(255,255,255,0.3)" },
 });
 
+// ─── Ranked star section inside EndModal ────────────────────────────────────
+function RankedStarSection({ rankedProfile }: { rankedProfile: RankedProfile }) {
+  const T = useT();
+  const starScale = useSharedValue(0);
+  const starGlow = useSharedValue(0);
+  const rankInfo = getRankInfo(rankedProfile);
+  const rankColor = RANK_COLORS[rankedProfile.rank] || Colors.gold;
+
+  useEffect(() => {
+    starScale.value = withDelay(400, withSpring(1, { damping: 6, stiffness: 120 }));
+    starGlow.value = withDelay(600, withRepeat(withSequence(
+      withTiming(1, { duration: 500 }),
+      withTiming(0.4, { duration: 500 }),
+    ), -1, true));
+  }, []);
+
+  const starStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: starScale.value }],
+  }));
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: starGlow.value,
+  }));
+
+  return (
+    <View style={styles.rankedStarSection}>
+      <View style={styles.rankedStarRow}>
+        <Animated.View style={[styles.rankedStarBig, starStyle]}>
+          <Ionicons name="star" size={48} color={Colors.gold} />
+          <Animated.View style={[styles.rankedStarGlow, glowStyle]}>
+            <View style={[styles.rankedStarGlowCircle, { shadowColor: Colors.gold }]} />
+          </Animated.View>
+        </Animated.View>
+        <View style={styles.rankedStarInfo}>
+          <Text style={styles.rankedStarLabel}>
+            {T("starEarned" as any) || "+1 Estrella"}
+          </Text>
+          <Text style={[styles.rankedStarRankName, { color: rankColor }]}>
+            {rankInfo.rankName} {rankInfo.divisionName}
+          </Text>
+          <View style={styles.rankedStarPips}>
+            {Array.from({ length: rankedProfile.maxStars }).map((_, i) => (
+              <Ionicons
+                key={i}
+                name={i < rankedProfile.stars ? "star" : "star-outline"}
+                size={14}
+                color={i < rankedProfile.stars ? Colors.gold : "rgba(255,255,255,0.2)"}
+              />
+            ))}
+          </View>
+          <Text style={styles.rankedStarProgress}>
+            {rankedProfile.stars}/{rankedProfile.maxStars}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 // ─── End modal ────────────────────────────────────────────────────────────────
-function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile }: {
+function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
-  cpuProfile?: CpuProfile | null;
+  cpuProfile?: CpuProfile | null; mode?: string;
+  rankedProfile?: RankedProfile | null;
 }) {
   const T = useT();
   const isWin = phase === "player_wins";
@@ -711,7 +771,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile 
                 ? <Ionicons name="trophy" size={48} color={Colors.gold} />
                 : isDraw
                 ? <Ionicons name="hand-left" size={44} color={Colors.blue} />
-                : <Ionicons name="skull" size={44} color={Colors.red} />
+                : <Ionicons name="trophy-outline" size={44} color={Colors.red} />
               }
             </View>
           </View>
@@ -728,6 +788,11 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile 
               {isWin ? winMsg : isDraw ? T("drawMsg") : loseMsg}
             </Text>
           </Animated.View>
+
+          {/* Ranked star section */}
+          {mode === "ranked" && isWin && rankedProfile && (
+            <RankedStarSection rankedProfile={rankedProfile} />
+          )}
 
           {/* Friend Request Button */}
           {cpuProfile && !isFriend && (
@@ -979,6 +1044,49 @@ export default function GameScreen() {
     }
   }, [dealAnimationDone, session?.mode]);
 
+  // Ping simulation — changes every 5-8 seconds
+  useEffect(() => {
+    const schedule = () => {
+      const delay = 5000 + Math.floor(Math.random() * 3000);
+      return setTimeout(() => {
+        const r = Math.random();
+        const next = r < 0.7
+          ? Math.floor(Math.random() * 55 + 20)   // green 20-75
+          : r < 0.9
+          ? Math.floor(Math.random() * 70 + 80)   // yellow 80-150
+          : Math.floor(Math.random() * 100 + 150); // red 150-250
+        setPingMs(next);
+        timerRef.current = schedule();
+      }, delay);
+    };
+    const timerRef = { current: schedule() };
+    return () => clearTimeout(timerRef.current);
+  }, []);
+
+  // In-game menu countdown
+  function openGameMenu() {
+    setShowGameMenu(true);
+    setMenuCountdown(10);
+    if (menuCountdownRef.current) clearInterval(menuCountdownRef.current);
+    menuCountdownRef.current = setInterval(() => {
+      setMenuCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(menuCountdownRef.current!);
+          menuCountdownRef.current = null;
+          setShowGameMenu(false);
+          return 10;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+
+  function closeGameMenu() {
+    setShowGameMenu(false);
+    if (menuCountdownRef.current) { clearInterval(menuCountdownRef.current); menuCountdownRef.current = null; }
+    setMenuCountdown(10);
+  }
+
   // Challenge: win_fast — max turns enforcement
   useEffect(() => {
     if (session?.mode !== "challenge") return;
@@ -1025,6 +1133,11 @@ export default function GameScreen() {
     }
   }, [gameState?.lastPlayedCard]);
   const [muteCpuEmotes, setMuteCpuEmotes] = useState(false);
+  const [showGameMenu, setShowGameMenu] = useState(false);
+  const [menuCountdown, setMenuCountdown] = useState(10);
+  const menuCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [inGameMusicEnabled, setInGameMusicEnabled] = useState(true);
+  const [pingMs, setPingMs] = useState(Math.floor(Math.random() * 55 + 25));
   const [showMatchmaking, setShowMatchmaking] = useState(true);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpNum, setLevelUpNum] = useState(1);
@@ -1473,23 +1586,7 @@ export default function GameScreen() {
                 </Text>
               </View>
             )}
-            {/* Daily challenge progress */}
-            {activeChallenges.length > 0 && (
-              <>
-                <Ionicons name="ribbon" size={14} color={Colors.gold} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.challengeHudTitle} numberOfLines={1}>
-                    {(profile.language === "en" && activeChallenges[0].titleEn) ? activeChallenges[0].titleEn
-                      : (profile.language === "pt" && activeChallenges[0].titlePt) ? activeChallenges[0].titlePt
-                      : activeChallenges[0].title}
-                  </Text>
-                  <View style={styles.challengeHudProgress}>
-                    <View style={[styles.challengeHudBar, { width: `${Math.min(1, activeChallenges[0].progress / activeChallenges[0].target) * 100}%` }]} />
-                  </View>
-                </View>
-                <Text style={styles.challengeHudValue}>{activeChallenges[0].progress}/{activeChallenges[0].target}</Text>
-              </>
-            )}
+            {/* Daily challenge progress — hidden in challenge mode (it has its own rule system) */}
           </LinearGradient>
         </View>
       )}
@@ -1551,11 +1648,20 @@ export default function GameScreen() {
           )}
         </View>
         <View style={styles.headerRight}>
-          <Pressable
-            onPress={() => { setMuteCpuEmotes(m => !m); playSound("button_press").catch(() => {}); }}
-            style={[styles.muteBtn, muteCpuEmotes && styles.muteBtnActive]}
-          >
-            <Ionicons name={muteCpuEmotes ? "volume-mute" : "volume-medium"} size={15} color={muteCpuEmotes ? Colors.textDim : Colors.gold} />
+          {/* Ping indicator */}
+          <View style={styles.pingIndicator}>
+            <Ionicons
+              name={pingMs < 80 ? "wifi" : pingMs < 150 ? "wifi-outline" : "warning-outline"}
+              size={11}
+              color={pingMs < 80 ? "#27AE60" : pingMs < 150 ? "#F39C12" : "#E74C3C"}
+            />
+            <Text style={[styles.pingText, { color: pingMs < 80 ? "#27AE60" : pingMs < 150 ? "#F39C12" : "#E74C3C" }]}>
+              {pingMs}ms
+            </Text>
+          </View>
+          {/* Hamburger menu */}
+          <Pressable onPress={() => { playSound("button_press").catch(() => {}); openGameMenu(); }} style={styles.menuHamburger}>
+            <Ionicons name="menu" size={18} color={Colors.gold} />
           </Pressable>
           <View style={styles.deckInfo}>
             <Ionicons name="layers" size={13} color={Colors.textDim} />
@@ -1808,6 +1914,8 @@ export default function GameScreen() {
           }}
           onHome={() => router.back()}
           cpuProfile={activeCpu}
+          mode={session?.mode}
+          rankedProfile={session?.mode === "ranked" ? profile.rankedProfile : null}
         />
       )}
 
@@ -1822,6 +1930,74 @@ export default function GameScreen() {
       )}
 
       {showLightningBanner && <LightningBanner />}
+
+      {/* In-game menu modal */}
+      {showGameMenu && (
+        <Pressable style={[StyleSheet.absoluteFill, styles.gameMenuOverlay]} onPress={closeGameMenu}>
+          <Pressable style={styles.gameMenuCard} onPress={() => {}}>
+            <Text style={styles.gameMenuTitle}>
+              {profile.language === "en" ? "Menu" : "Menú"}
+            </Text>
+            <Text style={styles.gameMenuCountdownTxt}>
+              {profile.language === "en"
+                ? `Returning in ${menuCountdown}s...`
+                : `Regresando en ${menuCountdown}s...`}
+            </Text>
+
+            {/* Mute emotes */}
+            <Pressable
+              style={styles.gameMenuRow}
+              onPress={() => { setMuteCpuEmotes(m => !m); playSound("button_press").catch(() => {}); }}
+            >
+              <View style={styles.gameMenuRowLeft}>
+                <Ionicons name={muteCpuEmotes ? "chatbubble-ellipses-outline" : "chatbubble-ellipses"} size={20} color={muteCpuEmotes ? Colors.textDim : Colors.gold} />
+                <Text style={styles.gameMenuRowTxt}>
+                  {profile.language === "en" ? "Mute opponent emotes" : "Silenciar emotes del rival"}
+                </Text>
+              </View>
+              <View style={[styles.gameMenuToggle, { backgroundColor: muteCpuEmotes ? "#E74C3C" : "#27AE60" }]}>
+                <Text style={styles.gameMenuToggleTxt}>{muteCpuEmotes ? "OFF" : "ON"}</Text>
+              </View>
+            </Pressable>
+
+            {/* Music toggle */}
+            <Pressable
+              style={styles.gameMenuRow}
+              onPress={() => {
+                playSound("button_press").catch(() => {});
+                if (inGameMusicEnabled) {
+                  stopMusic().catch(() => {});
+                  setInGameMusicEnabled(false);
+                } else {
+                  startGameMusic().catch(() => {});
+                  setInGameMusicEnabled(true);
+                }
+              }}
+            >
+              <View style={styles.gameMenuRowLeft}>
+                <Ionicons name={inGameMusicEnabled ? "musical-notes" : "musical-notes-outline"} size={20} color={inGameMusicEnabled ? Colors.gold : Colors.textDim} />
+                <Text style={styles.gameMenuRowTxt}>
+                  {profile.language === "en" ? "Music" : "Música"}
+                </Text>
+              </View>
+              <View style={[styles.gameMenuToggle, { backgroundColor: inGameMusicEnabled ? "#27AE60" : "#E74C3C" }]}>
+                <Text style={styles.gameMenuToggleTxt}>{inGameMusicEnabled ? "ON" : "OFF"}</Text>
+              </View>
+            </Pressable>
+
+            {/* Divider */}
+            <View style={styles.gameMenuDivider} />
+
+            {/* Close */}
+            <Pressable style={styles.gameMenuCloseBtn} onPress={closeGameMenu}>
+              <Ionicons name="play" size={16} color={Colors.gold} />
+              <Text style={styles.gameMenuCloseTxt}>
+                {profile.language === "en" ? "Back to game" : "Volver a la partida"}
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      )}
 
       {showChallengeRulesModal && activeChallengeRules && (
         <ChallengeRulesModal
@@ -2264,5 +2440,62 @@ const styles = StyleSheet.create({
     color: "#1a0a00",
     fontFamily: "Nunito_800ExtraBold",
     fontSize: 12,
+  },
+  pingIndicator: { flexDirection: "row", alignItems: "center", gap: 2 },
+  pingText: { fontFamily: "Nunito_700Bold", fontSize: 9 },
+  menuHamburger: {
+    width: 28, height: 28, borderRadius: 8, alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(212,175,55,0.12)", borderWidth: 1, borderColor: "rgba(212,175,55,0.3)",
+  },
+  gameMenuOverlay: {
+    backgroundColor: "rgba(0,0,0,0.75)", alignItems: "center", justifyContent: "center", zIndex: 9000,
+  },
+  gameMenuCard: {
+    width: "84%", maxWidth: 340, backgroundColor: "#0E1A12",
+    borderRadius: 18, borderWidth: 1, borderColor: "rgba(212,175,55,0.3)",
+    paddingHorizontal: 20, paddingVertical: 22, gap: 12,
+  },
+  gameMenuTitle: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: Colors.gold, textAlign: "center", letterSpacing: 2,
+  },
+  gameMenuCountdownTxt: {
+    fontFamily: "Nunito_400Regular", fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center",
+  },
+  gameMenuRow: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingVertical: 10, paddingHorizontal: 4,
+  },
+  gameMenuRowLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
+  gameMenuRowTxt: { fontFamily: "Nunito_600SemiBold", fontSize: 14, color: "#FFFFFF", flex: 1 },
+  gameMenuToggle: {
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
+    minWidth: 44, alignItems: "center",
+  },
+  gameMenuToggleTxt: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#FFFFFF", letterSpacing: 1 },
+  gameMenuDivider: { height: 1, backgroundColor: "rgba(212,175,55,0.15)", marginVertical: 4 },
+  gameMenuCloseBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+    paddingVertical: 12, backgroundColor: "rgba(212,175,55,0.15)",
+    borderRadius: 12, borderWidth: 1, borderColor: "rgba(212,175,55,0.3)",
+  },
+  gameMenuCloseTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.gold },
+  rankedStarSection: {
+    backgroundColor: "rgba(212,175,55,0.08)", borderRadius: 12,
+    borderWidth: 1, borderColor: "rgba(212,175,55,0.25)",
+    paddingVertical: 14, paddingHorizontal: 16, width: "100%",
+  },
+  rankedStarRow: { flexDirection: "row", alignItems: "center", gap: 16 },
+  rankedStarBig: { alignItems: "center", justifyContent: "center", position: "relative" },
+  rankedStarGlow: { position: "absolute" },
+  rankedStarGlowCircle: {
+    width: 60, height: 60, borderRadius: 30,
+    backgroundColor: "rgba(212,175,55,0.25)", shadowOpacity: 0.9, shadowRadius: 20, shadowOffset: { width: 0, height: 0 },
+  },
+  rankedStarInfo: { flex: 1, gap: 4 },
+  rankedStarLabel: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: Colors.gold },
+  rankedStarRankName: { fontFamily: "Nunito_700Bold", fontSize: 13 },
+  rankedStarPips: { flexDirection: "row", gap: 3, marginTop: 2 },
+  rankedStarProgress: {
+    fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2,
   },
 });
