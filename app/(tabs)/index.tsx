@@ -441,7 +441,7 @@ export default function PlayScreen() {
     }
     await playSound("mode_select").catch(() => {});
     const playerCount = modeId === "coop" ? "4" : "2";
-    router.push({ pathname: "/online-lobby", params: { mode: modeId, playerCount } });
+    router.push({ pathname: "/online-lobby", params: { mode: modeId, playerCount, directSearch: "true" } });
   };
 
   const handleDifficultySelect = async (difficulty: Difficulty) => {
@@ -467,7 +467,7 @@ export default function PlayScreen() {
   const handleStartOnline = async () => {
     await playButton().catch(() => {});
     setShowOnlineModal(false);
-    router.push({ pathname: "/online-lobby", params: { mode: "classic", playerCount: String(onlinePlayerCount) } });
+    router.push({ pathname: "/online-lobby", params: { mode: "classic", playerCount: String(onlinePlayerCount), directSearch: "true" } });
   };
 
   const handleOpenAd = () => {

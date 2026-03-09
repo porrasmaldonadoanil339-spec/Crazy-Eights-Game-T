@@ -1,0 +1,135 @@
+Cambios importantes que necesito en el juego
+1. Búsqueda de partidas en los modos de juego
+En los modos Clásico, Relámpago, Torneo, Cooperativo y Desafíos, cuando el jugador presione “Buscar partida”, el juego debe:
+•	Iniciar automáticamente la búsqueda de partida.
+•	Mostrar una pantalla que diga “Buscando rival…”.
+•	Demorar unos segundos (3–6 segundos aproximadamente) para que se sienta realista.
+•	Después de ese tiempo entrar directamente a la partida.
+⚠️ Muy importante:
+En estos modos NO debe aparecer nunca lo siguiente:
+•	Partida rápida
+•	Crear sala
+•	Crear código
+•	Unirse
+Esas opciones deben eliminarse completamente de esos modos.
+________________________________________
+2. Funcionamiento del Modo Online
+En el Modo Online sí debe mantenerse lo siguiente:
+Cuando se abre el modo online deben aparecer:
+•	Elegir cantidad de jugadores: 2, 3 o 4
+•	Botón Jugar
+•	Botones azules:
+o	Crear sala
+o	Unirse
+Cuando el jugador seleccione 2, 3 o 4 jugadores, el juego debe:
+•	Mostrar “Buscando jugadores…”
+•	Buscar la cantidad exacta seleccionada
+•	Entrar automáticamente a la partida
+⚠️ No debe volver a aparecer “Partida rápida” ni “Crear código” al seleccionar jugadores.
+________________________________________
+3. Sistema de jugadores falsos (para dar realismo)
+Cuando el juego busque jugadores debe:
+•	Usar perfiles falsos con nombres y avatares.
+•	Hacer que parezca que el jugador está jugando contra personas reales online.
+•	Mantener los mismos estilos de perfiles que ya existen en el juego.
+Esto es importante para dar sensación de realismo.
+________________________________________
+4. Modo Cooperativo
+Cuando el jugador presione Buscar partida en cooperativo debe aparecer algo así:
+Equipo 1
+•	Yo
+•	Un compañero aleatorio
+VS
+Equipo rival
+•	Rival 1
+•	Rival 2
+Todos con perfiles y avatares como los demás modos.
+________________________________________
+5. Cambios en el modo Clasificatoria
+Cambios de texto:
+•	“Mode Ranked” → cambiar a “CLASIFICATORIA”
+•	“View Ranking” → cambiar a “RANKING GLOBAL”
+Corrección de rango:
+•	Actualmente aparece Hierro 1
+•	Debe aparecer Hierro 2, que es mi rango real.
+________________________________________
+6. Perfiles del ranking
+En Clasificatoria, los perfiles de los jugadores deben ser exactamente los mismos que aparecen en el Ranking Global.
+Es decir:
+•	mismos avatares
+•	mismos estilos de perfil
+•	mismo formato
+Para que el juego tenga coherencia y realismo.
+________________________________________
+7. Clasificatoria sin equipos
+En Clasificatoria:
+•	No deben existir equipos.
+•	Es todos contra todos.
+También debe existir la opción de:
+•	Añadir amigos a la partida
+•	Luego el sistema debe rellenar automáticamente hasta 4 jugadores.
+Si faltan jugadores, el juego debe:
+•	buscar jugadores
+•	o rellenar con perfiles falsos
+Cuando alguien gane:
+•	gana una estrella para subir su rango.
+________________________________________
+8. Pantalla inicial del juego
+El inicio del juego debe ser así:
+1.	Aparece el logo de BTYIS PRIME STUDIOS.
+2.	El logo debe estar perfectamente centrado (estilo Supercell en Clash Royale).
+3.	Debe durar aproximadamente 5 segundos.
+4.	Puede tener un sonido corto estilo Clash Royale.
+Luego:
+•	aparece la pantalla de carga del juego.
+•	agregar detalles visuales tipo juegos profesionales.
+•	que la carga dure unos segundos adicionales para que se sienta realista.
+•	después hacer una transición suave al menú principal.
+________________________________________
+9. Sistema de idioma
+Cuando el jugador cambie el idioma:
+•	TODA la aplicación debe cambiar de idioma.
+•	No debe quedar ningún texto en el idioma anterior.
+Esto incluye:
+•	botones
+•	menús
+•	descripciones
+•	textos de modos
+•	interfaz completa
+⚠️ Actualmente algunas cosas no cambian de idioma, eso debe corregirse.
+________________________________________
+Mensaje final para el desarrollador
+Puedes terminar con este mensaje:
+Por favor implementa todos estos cambios exactamente como los describí, manteniendo la lógica y el realismo del juego.
+No omitas ningún punto y asegúrate de que todo funcione correctamente dentro de la aplicación.
+________________________________________
+Mensaje correcto para que lo entienda
+El logo de BTYIS PRIME STUDIOS debe estar perfectamente centrado en el medio exacto de la pantalla, no arriba.
+Debe estar centrado horizontalmente y también verticalmente, es decir, exactamente en el centro de la pantalla, igual como aparece el logo de Supercell en el inicio de Clash Royale.
+Actualmente el logo aparece centrado pero demasiado arriba.
+Corrígelo para que el logo quede exactamente en el centro de la pantalla, con el mismo espacio arriba y abajo.
+________________________________________
+Si quieres decirlo todavía más claro
+Añade esto:
+El logo debe estar 50% de la altura de la pantalla (centro vertical) y 50% del ancho (centro horizontal).
+________________________________________
+✅ Eso normalmente ya no lo confunde.
+
+Correcciones necesarias en la interfaz y rangos
+Necesito que modifiques los siguientes textos y rangos dentro del juego para que todo tenga lógica y realismo:
+1. Cambio de nombre del modo
+•	Donde actualmente dice “ModeRanked”, debe cambiarse a “CLASIFICATORIA”.
+2. Corrección del rango actual
+•	El juego muestra actualmente “Hierro 1”, pero eso es incorrecto.
+•	Debe mostrar “Hierro 5”, que es mi rango actual real.
+•	El sistema debe guiarse por el rango actual del jugador y mostrarlo correctamente.
+3. Cambio de nombre del ranking
+•	Donde actualmente dice “ViewRanking”, debe cambiarse a “RANKING MUNDIAL”.
+4. Coherencia en la jugabilidad
+•	Todos los modos del juego deben tener lógica y coherencia con el sistema del juego.
+•	Los rangos, nombres de modos y perfiles deben mantenerse consistentes en todas las interfaces.
+________________________________________
+Mensaje final para asegurar que lo cumpla
+Puedes terminar con esto:
+Por favor aplica todos estos cambios exactamente como los indiqué, corrigiendo los textos y rangos para que el juego tenga coherencia, realismo y una interfaz profesional. No omitas ninguna modificación.
+ 

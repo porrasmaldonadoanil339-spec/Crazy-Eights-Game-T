@@ -6,7 +6,7 @@ export const RANK_I18N_KEYS = [
   "rankDiamante", "rankÉpico", "rankMítico", "rankMaestro",
   "rankGran Maestro", "rankLegendario", "rankDivino",
 ] as const;
-export const DIVISIONS = ["V", "IV", "III", "II", "I"];
+export const DIVISIONS = ["5", "4", "3", "2", "1"];
 
 export interface RankedProfile {
   rank: number; // 0 to 11

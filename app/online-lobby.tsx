@@ -38,7 +38,34 @@ type Phase =
   | "create_room"
   | "join_room"
   | "pre_match"
-  | "countdown";
+  | "countdown"
+  | "direct_search"
+  | "direct_found";
+
+const FAKE_NAMES = [
+  "CarlosRJ", "Isabella_V", "MiguelToro", "SofiaLuna", "PabloQuijada",
+  "ValentinaM", "AndrésCC", "CamilaFox", "DiegoStr", "MarianaBV",
+  "SebastianK", "LuisaOchoa", "JuanFelipe", "DanielaRP", "RicardoHM",
+  "PaulinaAB", "FernandoGZ", "VivianaOC", "AlejandroN", "NataliaSR",
+  "JorgeMaya", "AnaLuisa", "PedroVilla", "MonicaEsC", "RobertoAC",
+];
+const FAKE_ICONS = ["game-controller", "flash", "star", "trophy", "flame", "diamond", "shield", "rocket", "planet", "thunderstorm"];
+const FAKE_COLORS = ["#D4AF37", "#C0392B", "#2ECC71", "#3498DB", "#9B59B6", "#E67E22", "#1ABC9C", "#E74C3C", "#F39C12", "#16A085"];
+const FAKE_RANKS = ["Hierro 5", "Hierro 4", "Hierro 3", "Bronce 5", "Bronce 4", "Plata 5", "Hierro 2"];
+
+function makeFakePlayer(idx: number): PlayerInfo {
+  const seed = (idx * 7 + Date.now() % 100) % FAKE_NAMES.length;
+  return {
+    name: FAKE_NAMES[seed],
+    playerIndex: idx,
+    avatarColor: FAKE_COLORS[seed % FAKE_COLORS.length],
+    avatarIcon: FAKE_ICONS[seed % FAKE_ICONS.length],
+    level: 3 + (seed % 18),
+    rankColor: FAKE_COLORS[seed % FAKE_COLORS.length],
+    rankIcon: "shield",
+    rankName: FAKE_RANKS[seed % FAKE_RANKS.length],
+  };
+}
 
 function SpinnerIcon() {
   const rot = useSharedValue(0);
@@ -119,10 +146,11 @@ export default function OnlineLobbyScreen() {
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
   const { profile, level } = useProfile();
   const T = useT();
-  const params = useLocalSearchParams<{ mode?: string; playerCount?: string }>();
+  const params = useLocalSearchParams<{ mode?: string; playerCount?: string; directSearch?: string }>();
 
   const mode = params.mode ?? "classic";
   const playerCount = parseInt(params.playerCount ?? "2", 10);
+  const directSearch = params.directSearch === "true";
   const isCoopMode = mode === "coop";
 
   const lang = profile.language ?? "es";
@@ -139,7 +167,8 @@ export default function OnlineLobbyScreen() {
     rankName: rankInfo.displayName,
   };
 
-  const [phase, setPhase] = useState<Phase>("select");
+  const [phase, setPhase] = useState<Phase>(directSearch ? "direct_search" : "select");
+  const [fakePlayers, setFakePlayers] = useState<PlayerInfo[]>([]);
   const [foundPlayers, setFoundPlayers] = useState<PlayerInfo[]>([myProfile]);
   const [roomCode, setRoomCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -170,6 +199,54 @@ export default function OnlineLobbyScreen() {
       cleanup();
     };
   }, []);
+
+  // ── Direct fake matchmaking flow ─────────────────────────────────────────────
+  const directSearchTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  function startDirectGame() {
+    stopMusic().catch(() => {});
+    startGameMusic().catch(() => {});
+    if (isCoopMode) {
+      router.replace(`/game?mode=coop&difficulty=normal`);
+    } else {
+      router.replace(`/game?mode=${mode}&difficulty=normal`);
+    }
+  }
+
+  useEffect(() => {
+    if (!directSearch) return;
+    const needed = playerCount - 1; // fake players needed
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    playSound("searching").catch(() => {});
+
+    // Add fake players one by one with random delays
+    for (let i = 0; i < needed; i++) {
+      const delay = 1500 + i * 1200 + Math.floor(Math.random() * 1000);
+      const t = setTimeout(() => {
+        const fp = makeFakePlayer(i + 1);
+        setFakePlayers(prev => [...prev, fp]);
+      }, delay);
+      timers.push(t);
+    }
+
+    // After all fake players "joined", show found screen
+    const foundDelay = 1500 + needed * 1200 + Math.floor(Math.random() * 800) + 800;
+    const t2 = setTimeout(() => {
+      playSound("win").catch(() => {});
+      setPhase("direct_found");
+    }, foundDelay);
+    timers.push(t2);
+
+    // Start game after showing found screen
+    const gameDelay = foundDelay + 2200;
+    const t3 = setTimeout(() => {
+      startDirectGame();
+    }, gameDelay);
+    timers.push(t3);
+
+    directSearchTimers.current = timers;
+    return () => timers.forEach(t => clearTimeout(t));
+  }, [directSearch]);
 
   function buildProfilePayload() {
     return {
@@ -405,6 +482,86 @@ export default function OnlineLobbyScreen() {
             <LinearGradient colors={[ACCENT, "#A07800"]} style={styles.preMatchBarFill} />
           </View>
         </Animated.View>
+      </View>
+    );
+  }
+
+  if (phase === "direct_search" || phase === "direct_found") {
+    const allPlayers = [{ ...myProfile, playerIndex: 0 }, ...fakePlayers];
+    const isFound = phase === "direct_found";
+    const isCoopDirect = isCoopMode;
+
+    // For coop: show team split
+    const team1 = isCoopDirect ? allPlayers.slice(0, 2) : allPlayers;
+    const team2 = isCoopDirect ? allPlayers.slice(2) : [];
+
+    return (
+      <View style={[styles.fullBg, { paddingTop: topPad + 10, paddingBottom: botPad + 10 }]}>
+        <LinearGradient colors={["#020810", "#041530", "#08050a"]} style={StyleSheet.absoluteFill} />
+
+        <View style={styles.header}>
+          <Pressable onPress={() => { directSearchTimers.current.forEach(t => clearTimeout(t)); router.back(); }} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={20} color={ACCENT} />
+          </Pressable>
+          <Text style={styles.headerTitle}>
+            {isFound ? T("rivalFound" as any) : T("searchingMatch" as any)}
+          </Text>
+        </View>
+
+        <View style={styles.matchmakingContent}>
+          {!isFound && <SpinnerIcon />}
+          {isFound && (
+            <Animated.View entering={FadeIn.duration(400)}>
+              <Ionicons name="checkmark-circle" size={64} color="#27AE60" />
+            </Animated.View>
+          )}
+
+          <Text style={[styles.matchmakingLabel, isFound && { color: "#27AE60" }]}>
+            {isFound ? T("rivalFound" as any) : T("waitingPlayers")}
+          </Text>
+
+          {!isCoopDirect ? (
+            <View style={styles.slotsList}>
+              {Array.from({ length: playerCount }).map((_, i) => (
+                <PlayerSlot
+                  key={i}
+                  player={i === 0 ? myProfile : (fakePlayers[i - 1] ?? null)}
+                  isSelf={i === 0}
+                  delay={i * 200}
+                />
+              ))}
+            </View>
+          ) : (
+            <View style={styles.teamsContainer}>
+              <View style={styles.coopTeam}>
+                <Text style={[styles.teamLabel, { color: "#27AE60" }]}>EQUIPO 1</Text>
+                {team1.map((p, i) => (
+                  <PlayerSlot key={i} player={p} isSelf={i === 0} delay={i * 200} />
+                ))}
+              </View>
+              <View style={styles.vsContainer}>
+                <View style={styles.vsCircle}><Text style={styles.vsText}>VS</Text></View>
+              </View>
+              <View style={styles.coopTeam}>
+                <Text style={[styles.teamLabel, { color: "#E74C3C" }]}>EQUIPO RIVAL</Text>
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <PlayerSlot key={i} player={team2[i] ?? null} isSelf={false} delay={(team1.length + i) * 200} />
+                ))}
+              </View>
+            </View>
+          )}
+
+          {!isFound && (
+            <Pressable onPress={() => { directSearchTimers.current.forEach(t => clearTimeout(t)); router.back(); }} style={styles.cancelBtn}>
+              <Text style={styles.cancelTxt}>{T("cancelSearch" as any)}</Text>
+            </Pressable>
+          )}
+          {isFound && (
+            <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.preMatchBar}>
+              <LinearGradient colors={[ACCENT, "#A07800"]} style={styles.preMatchBarFill} />
+            </Animated.View>
+          )}
+        </View>
       </View>
     );
   }
@@ -753,6 +910,7 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#1a0a00", letterSpacing: 2,
   },
   teamsContainer: { flex: 1, paddingHorizontal: 20, justifyContent: "center", gap: 12 },
+  coopTeam: { gap: 6 },
   teamCard: {
     backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 16,
     borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", padding: 16, gap: 10,

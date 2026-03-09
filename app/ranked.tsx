@@ -231,6 +231,15 @@ export default function RankedScreen() {
         </View>
       </View>
 
+      {/* Section label: CLASIFICATORIA */}
+      <View style={styles.sectionModeBadge}>
+        <LinearGradient colors={["#D4AF37", "#A07800"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.modeBadgeGrad}>
+          <Ionicons name="trophy" size={14} color="#1a0a00" />
+          <Text style={styles.modeBadgeTxt}>{T("modeRanked" as any)}</Text>
+        </LinearGradient>
+        <Text style={[styles.modeBadgeSubTxt, { color: themeColors.textMuted }]}>{T("myRank" as any) || "Mi rango actual"}</Text>
+      </View>
+
       {/* Current Rank Card */}
       <View style={[styles.rankCard, { backgroundColor: themeColors.card, borderColor: "#D4AF37", borderWidth: 2 }]}>
         <LinearGradient
@@ -429,6 +438,10 @@ const styles = StyleSheet.create({
   
   section: { paddingHorizontal: 16, marginTop: 32 },
   sectionHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 },
+  sectionModeBadge: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, marginTop: 16, marginBottom: 8 },
+  modeBadgeGrad: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
+  modeBadgeTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: "#1a0a00", letterSpacing: 1.5 },
+  modeBadgeSubTxt: { fontFamily: "Nunito_700Bold", fontSize: 13 },
   sectionTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 20 },
   rankingItem: {
     flexDirection: "row", alignItems: "center", padding: 14,
