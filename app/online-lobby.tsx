@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View, Text, StyleSheet, Pressable, TextInput, Platform,
-  KeyboardAvoidingView, ScrollView, ActivityIndicator,
+  KeyboardAvoidingView, ScrollView, ActivityIndicator, Image,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,6 +17,9 @@ import { useProfile } from "@/context/ProfileContext";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
 import { getLocalizedRankInfo } from "@/lib/ranked";
 import { playButton, stopMusic, startGameMusic } from "@/lib/audioManager";
+import { CPU_PROFILES } from "@/lib/cpuProfiles";
+import { useGame } from "@/context/GameContext";
+import type { GameModeId } from "@/lib/gameModes";
 import { playSound } from "@/lib/sounds";
 
 const ACCENT = Colors.gold;
@@ -26,6 +29,7 @@ interface PlayerInfo {
   playerIndex: number;
   avatarColor: string;
   avatarIcon: string;
+  photoUrl?: string;
   level: number;
   rankColor: string;
   rankIcon: string;
@@ -42,28 +46,26 @@ type Phase =
   | "direct_search"
   | "direct_found";
 
-const FAKE_NAMES = [
-  "CarlosRJ", "Isabella_V", "MiguelToro", "SofiaLuna", "PabloQuijada",
-  "ValentinaM", "AndrésCC", "CamilaFox", "DiegoStr", "MarianaBV",
-  "SebastianK", "LuisaOchoa", "JuanFelipe", "DanielaRP", "RicardoHM",
-  "PaulinaAB", "FernandoGZ", "VivianaOC", "AlejandroN", "NataliaSR",
-  "JorgeMaya", "AnaLuisa", "PedroVilla", "MonicaEsC", "RobertoAC",
-];
-const FAKE_ICONS = ["game-controller", "flash", "star", "trophy", "flame", "diamond", "shield", "rocket", "planet", "thunderstorm"];
-const FAKE_COLORS = ["#D4AF37", "#C0392B", "#2ECC71", "#3498DB", "#9B59B6", "#E67E22", "#1ABC9C", "#E74C3C", "#F39C12", "#16A085"];
-const FAKE_RANKS = ["Hierro 5", "Hierro 4", "Hierro 3", "Bronce 5", "Bronce 4", "Plata 5", "Hierro 2"];
+const FAKE_RANK_NAMES = ["Hierro 5", "Hierro 4", "Hierro 3", "Bronce 5", "Bronce 4", "Plata 5", "Hierro 2", "Bronce 3", "Plata 4", "Oro 5"];
+const FAKE_RANK_COLORS = ["#8B7355", "#CD7F32", "#A8A8A8", "#D4AF37", "#4A90D9"];
+
+const CPU_PROFILES_WITH_PHOTO = CPU_PROFILES.filter(p => p.photoUrl);
 
 function makeFakePlayer(idx: number): PlayerInfo {
-  const seed = (idx * 7 + Date.now() % 100) % FAKE_NAMES.length;
+  const pool = CPU_PROFILES_WITH_PHOTO.length > 5 ? CPU_PROFILES_WITH_PHOTO : CPU_PROFILES;
+  const seed = ((idx + 1) * 13 + Date.now() % 71) % pool.length;
+  const cpu = pool[seed];
+  const rankSeed = seed % FAKE_RANK_NAMES.length;
   return {
-    name: FAKE_NAMES[seed],
+    name: cpu.name,
     playerIndex: idx,
-    avatarColor: FAKE_COLORS[seed % FAKE_COLORS.length],
-    avatarIcon: FAKE_ICONS[seed % FAKE_ICONS.length],
-    level: 3 + (seed % 18),
-    rankColor: FAKE_COLORS[seed % FAKE_COLORS.length],
+    avatarColor: cpu.avatarColor,
+    avatarIcon: cpu.avatarIcon,
+    photoUrl: cpu.photoUrl,
+    level: cpu.level,
+    rankColor: FAKE_RANK_COLORS[seed % FAKE_RANK_COLORS.length],
     rankIcon: "shield",
-    rankName: FAKE_RANKS[seed % FAKE_RANKS.length],
+    rankName: FAKE_RANK_NAMES[rankSeed],
   };
 }
 
@@ -108,7 +110,11 @@ function PlayerSlot({ player, isSelf, delay = 0 }: { player: PlayerInfo | null; 
   return (
     <Animated.View entering={FadeInDown.delay(delay).duration(400)} style={styles.playerSlot}>
       <View style={[styles.slotAvatarWrap, { borderColor: isSelf ? ACCENT : player.avatarColor }]}>
-        <Ionicons name={player.avatarIcon as any} size={22} color={isSelf ? ACCENT : player.avatarColor} />
+        {player.photoUrl ? (
+          <Image source={{ uri: player.photoUrl }} style={styles.slotAvatarPhoto} />
+        ) : (
+          <Ionicons name={player.avatarIcon as any} size={22} color={isSelf ? ACCENT : player.avatarColor} />
+        )}
       </View>
       <View style={styles.slotInfo}>
         <Text style={[styles.slotName, { color: isSelf ? ACCENT : "#fff" }]} numberOfLines={1}>
@@ -145,6 +151,7 @@ export default function OnlineLobbyScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
   const { profile, level } = useProfile();
+  const { startGame } = useGame();
   const T = useT();
   const params = useLocalSearchParams<{ mode?: string; playerCount?: string; directSearch?: string }>();
 
@@ -206,11 +213,9 @@ export default function OnlineLobbyScreen() {
   function startDirectGame() {
     stopMusic().catch(() => {});
     startGameMusic().catch(() => {});
-    if (isCoopMode) {
-      router.replace(`/game?mode=coop&difficulty=normal`);
-    } else {
-      router.replace(`/game?mode=${mode}&difficulty=normal`);
-    }
+    const gameMode = (isCoopMode ? "coop" : mode) as GameModeId;
+    startGame(gameMode, "normal");
+    router.replace("/game");
   }
 
   useEffect(() => {
@@ -852,7 +857,9 @@ const styles = StyleSheet.create({
   slotAvatarWrap: {
     width: 44, height: 44, borderRadius: 22, borderWidth: 2,
     alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.3)",
+    overflow: "hidden",
   },
+  slotAvatarPhoto: { width: 44, height: 44, borderRadius: 22 },
   slotInfo: { flex: 1, gap: 2 },
   slotName: { fontFamily: "Nunito_700Bold", fontSize: 14 },
   slotSub: { fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.4)" },

@@ -48,6 +48,8 @@ interface GameContextValue {
   setDealAnimationDone: (done: boolean) => void;
   startNextTournamentRound: () => void;
   getGameResult: () => "player_wins" | "ai_wins" | "draw" | null;
+  forceGameOver: () => void;
+  forceAiDraw: () => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -160,6 +162,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return null;
   }, [gameState]);
 
+  const forceGameOver = useCallback(() => {
+    setGameState(prev => prev ? { ...prev, phase: "ai_wins", message: "¡Regla violada! — Derrota" } : prev);
+  }, []);
+
+  const forceAiDraw = useCallback(() => {
+    setGameState(prev => {
+      if (!prev) return prev;
+      const newDrawPile = [...prev.drawPile];
+      const newAiHand = [...prev.aiHand];
+      if (newDrawPile.length > 0) newAiHand.push(newDrawPile.pop()!);
+      return { ...prev, drawPile: newDrawPile, aiHand: newAiHand };
+    });
+  }, []);
+
   return (
     <GameContext.Provider
       value={{
@@ -176,6 +192,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setDealAnimationDone,
         startNextTournamentRound,
         getGameResult,
+        forceGameOver,
+        forceAiDraw,
       }}
     >
       {children}

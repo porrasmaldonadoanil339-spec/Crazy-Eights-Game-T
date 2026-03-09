@@ -906,7 +906,7 @@ export default function GameScreen() {
   const {
     gameState, session, handlePlayCard, handleDraw, handleChooseSuit,
     runAiTurn, selectedCard, setSelectedCard, dealAnimationDone, setDealAnimationDone,
-    startNextTournamentRound, startGame, getGameResult,
+    startNextTournamentRound, startGame, getGameResult, forceGameOver, forceAiDraw,
   } = useGame();
   const { profile, level, recordGameResult, updateAchievementProgress, updateRanked } = useProfile();
   const T = useT();
@@ -947,6 +947,7 @@ export default function GameScreen() {
   const [showLightningBanner, setShowLightningBanner] = useState(false);
   const [activeChallengeRules, setActiveChallengeRules] = useState<ActiveChallengeRules | null>(null);
   const [showChallengeRulesModal, setShowChallengeRulesModal] = useState(false);
+  const [challengeRuleViolation, setChallengeRuleViolation] = useState<string | null>(null);
   const [showInactivityBar, setShowInactivityBar] = useState(false);
   const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -977,6 +978,22 @@ export default function GameScreen() {
       setShowChallengeRulesModal(true);
     }
   }, [dealAnimationDone, session?.mode]);
+
+  // Challenge: win_fast — max turns enforcement
+  useEffect(() => {
+    if (session?.mode !== "challenge") return;
+    if (!activeChallengeRules?.maxTurns) return;
+    if (!gameState || !dealAnimationDone) return;
+    if (["player_wins", "ai_wins", "draw"].includes(gameState.phase)) return;
+    if ((session.cardsPlayedThisGame ?? 0) >= activeChallengeRules.maxTurns) {
+      const lang = profile.language ?? "es";
+      const msg = lang === "en"
+        ? `Turn limit reached! (${activeChallengeRules.maxTurns} turns max)`
+        : `¡Límite de turnos! (máx ${activeChallengeRules.maxTurns})`;
+      setChallengeRuleViolation(msg);
+      forceGameOver();
+    }
+  }, [session?.cardsPlayedThisGame, activeChallengeRules, dealAnimationDone]);
 
   const lastCardBannerStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: withSpring(showLastCardBanner ? 0 : -100) }],
@@ -1333,6 +1350,30 @@ export default function GameScreen() {
       await playSound("error").catch(() => {});
       return;
     }
+
+    // ── Challenge rule enforcement ─────────────────────────────────────────
+    if (session?.mode === "challenge" && activeChallengeRules && selectedCard?.id === card.id) {
+      const lang = profile.language ?? "es";
+      const isWild = card.rank === "8" || card.rank === "Joker";
+      if (!isWild && activeChallengeRules.rules.some(r => r.id === "only_red")) {
+        if (card.suit !== "hearts" && card.suit !== "diamonds") {
+          await playSound("error").catch(() => {});
+          setChallengeRuleViolation(lang === "en" ? "Rule violated! Only red cards allowed" : "¡Regla violada! Solo cartas rojas");
+          forceGameOver();
+          return;
+        }
+      }
+      if (!isWild && activeChallengeRules.rules.some(r => r.id === "only_black")) {
+        if (card.suit !== "spades" && card.suit !== "clubs") {
+          await playSound("error").catch(() => {});
+          setChallengeRuleViolation(lang === "en" ? "Rule violated! Only black cards allowed" : "¡Regla violada! Solo cartas negras");
+          forceGameOver();
+          return;
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     if (selectedCard?.id === card.id) {
       const needsSuitPick = card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0);
       const willHaveLastCard = gameState.playerHand.length === 2;
@@ -1373,8 +1414,25 @@ export default function GameScreen() {
   const handleDrawPress = async () => {
     if (!isPlayerTurn) return;
     lastActionTime.current = Date.now();
+
+    // ── Challenge: no_draw enforcement ────────────────────────────────────
+    if (session?.mode === "challenge" && activeChallengeRules?.rules.some(r => r.id === "no_draw")) {
+      const lang = profile.language ?? "es";
+      await playSound("error").catch(() => {});
+      setChallengeRuleViolation(lang === "en" ? "Rule violated! Drawing cards is forbidden" : "¡Regla violada! No puedes robar cartas");
+      forceGameOver();
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     await playSound("card_draw").catch(() => {});
     handleDraw();
+
+    // ── Challenge: mirror — AI also draws ─────────────────────────────────
+    if (session?.mode === "challenge" && activeChallengeRules?.rules.some(r => r.id === "mirror")) {
+      setTimeout(() => forceAiDraw(), 400);
+    }
+    // ─────────────────────────────────────────────────────────────────────
   };
 
   const currentSuitColor = suitColor(gameState.currentSuit);
@@ -1444,6 +1502,14 @@ export default function GameScreen() {
             <Text style={styles.practiceHintText}>{T("practiceHintPlay")}</Text>
           </LinearGradient>
         </Animated.View>
+      )}
+
+      {/* Challenge Rule Violation Banner */}
+      {challengeRuleViolation && (
+        <View style={[styles.challengeViolationBanner, { pointerEvents: "none" }]}>
+          <Ionicons name="close-circle" size={22} color="#FF3B30" />
+          <Text style={styles.challengeViolationText}>{challengeRuleViolation}</Text>
+        </View>
       )}
 
       {/* Epic Result Overlay */}
@@ -2103,6 +2169,31 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 1000,
     gap: 6,
+  },
+  challengeViolationBanner: {
+    position: "absolute",
+    top: "40%",
+    left: 20,
+    right: 20,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: "#FF3B30",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    zIndex: 999,
+  },
+  challengeViolationText: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 15,
+    color: "#FF3B30",
+    textAlign: "center",
+    flex: 1,
+    flexWrap: "wrap",
   },
   challengeRuleBadge: {
     flexDirection: "row",

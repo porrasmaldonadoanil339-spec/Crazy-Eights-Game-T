@@ -334,7 +334,7 @@ export default function RankedScreen() {
           <View style={[styles.modalContent, { backgroundColor: themeColors.card }]}>
             <Text style={[styles.modalTitle, { color: themeColors.text }]}>{T("seasonRewards") || "Recompensas de Temporada"}</Text>
             <FlatList
-              data={RANKS.slice(0, 7)}
+              data={RANKS}
               keyExtractor={item => item}
               renderItem={({ item: rank, index: idx }) => {
                 const reward = getSeasonRewardsForRank(idx);
@@ -364,7 +364,7 @@ export default function RankedScreen() {
       {/* Play Button Fixed Bottom */}
       <View style={[styles.footer, { paddingBottom: botPad + 20, backgroundColor: themeColors.background + "ee" }]}>
         <Pressable
-          onPress={() => router.push("/ranked-lobby")}
+          onPress={() => router.push({ pathname: "/online-lobby", params: { mode: "ranked", playerCount: "4", directSearch: "true" } })}
           style={({ pressed }) => [
             styles.playBtn,
             { backgroundColor: rankInfo.color },

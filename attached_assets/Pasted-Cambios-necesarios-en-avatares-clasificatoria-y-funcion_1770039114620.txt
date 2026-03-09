@@ -1,0 +1,75 @@
+Cambios necesarios en avatares, clasificatoria y funcionamiento de partidas
+1. Avatares de los jugadores
+Todos los avatares del juego deben basarse en el mismo sistema que aparece en el Ranking Mundial.
+Esto significa:
+•	Usar perfiles con caras realistas.
+•	Usar también avatares estándar del juego.
+•	Mantener el mismo estilo de perfil en todos los modos.
+Esto debe aplicarse a:
+•	perfiles de jugadores en partidas
+•	perfiles del ranking
+•	perfiles en clasificatoria
+•	perfiles de jugadores falsos
+Es decir, toda la jugabilidad debe usar los mismos perfiles que aparecen en el Ranking Mundial para mantener coherencia visual.
+________________________________________
+2. Clasificatoria (muy importante)
+En el modo CLASIFICATORIA deben eliminarse completamente estas opciones:
+•	❌ Partida rápida
+•	❌ Crear sala
+•	❌ Unirse con código
+Estas opciones no deben aparecer en clasificatoria.
+Cuando el jugador entre a Clasificatoria, el sistema debe:
+1.	Buscar jugadores automáticamente.
+2.	Añadir 4 jugadores al azar.
+3.	Usar perfiles con avatares como los del ranking.
+4.	Simular que son jugadores reales (pero en realidad son perfiles del sistema).
+Esto se hace para dar sensación de realismo online.
+________________________________________
+3. Sistema de recompensas del Clasificatorio
+En la sección de recompensas del modo Clasificatoria deben aparecer los 12 rangos completos que ya fueron creados.
+Actualmente solo aparecen hasta Épico, lo cual es incorrecto.
+Deben aparecer todos los rangos del sistema.
+________________________________________
+4. Funcionamiento de las partidas
+La carga de búsqueda de jugadores está bien, pero falta algo importante:
+Después de buscar jugadores, el juego debe:
+•	ingresar automáticamente a la partida
+•	iniciar la jugabilidad normal
+Cada modo debe funcionar según su lógica original, respetando la programación anterior.
+Por ejemplo:
+•	Clásico → partida normal
+•	Relámpago → partida rápida
+•	Cooperativo → equipos
+•	Torneo → sistema de torneo
+•	Desafío → reglas especiales
+Es importante no romper la lógica de los modos que ya estaban programados.
+________________________________________
+5. Clasificatoria con jugadores aleatorios
+En Clasificatoria simplemente debe ocurrir lo siguiente:
+1.	El jugador entra al modo.
+2.	El sistema busca jugadores.
+3.	Se generan 4 jugadores aleatorios.
+4.	Todos con perfiles y avatares como los del ranking.
+5.	Se inicia la partida.
+Esto debe dar la sensación de que el jugador está jugando contra personas reales, aunque en realidad sean perfiles generados por el juego.
+________________________________________
+Mensaje final para que lo cumpla
+Puedes cerrar con esto:
+Por favor implementa todos estos cambios exactamente como los describí.
+El objetivo es que el juego tenga coherencia, realismo y que todos los modos funcionen correctamente respetando la lógica original de cada modo.
+
+Además, quiero que cada partida se base completamente en el modo de juego seleccionado. Las descripciones de cada modo no deben ser solo texto informativo: la jugabilidad de la partida debe seguir exactamente lo que dice la descripción del modo. Cada modo existe porque tiene mecánicas y dinámicas diferentes, por lo tanto las partidas no deben sentirse iguales entre sí. Cada modo debe tener su propia forma de jugar, reglas y ritmo, diferenciándose claramente de los demás modos.
+
+Además, en el Modo Desafío las reglas deben cumplirse obligatoriamente. Si el jugador no cumple alguna de las reglas o condiciones establecidas durante la partida, el juego debe finalizar automáticamente y el jugador pierde la partida de inmediato. Este modo debe ser estricto, ya que su objetivo es que el jugador supere el desafío exactamente bajo las reglas indicadas.
+Y si quieres que quede más completo, puedes decirlo así:
+En el Modo Desafío, todas las reglas del desafío deben cumplirse obligatoriamente. Si en cualquier momento de la partida el jugador incumple alguna de las reglas o condiciones del desafío, la partida debe terminar automáticamente y se debe registrar como derrota. Este modo debe ser más exigente que los demás, por lo que no se permiten errores ni incumplimientos de las reglas.
+Importante: He notado que en algunas modificaciones recientes se cambiaron o se perdieron partes de la funcionalidad de las partidas, especialmente en el modo Ocho Locos.
+Por favor, revisa las modificaciones anteriores y restaura la lógica original de la jugabilidad de cada modo, manteniendo las mecánicas que ya estaban funcionando antes.
+No cambies la forma en que se juega cada modo. Las nuevas mejoras deben respetar y mantener la funcionalidad original de las partidas, especialmente las reglas y dinámica del modo Ocho Locos.
+Si alguna modificación reciente alteró esa lógica, regrésala a como estaba antes y luego aplica las mejoras sin afectar la jugabilidad base.
+Y puedes cerrar con esto para que lo respete todo:
+Por favor, mantén todas las mecánicas originales de cada modo de juego y asegúrate de que las mejoras no cambien la lógica de las partidas.
+✅ Con eso le estás diciendo básicamente:
+•	No cambies la jugabilidad base
+•	Recuerda cómo funcionaba antes
+•	Solo mejora sin romper el sistema
