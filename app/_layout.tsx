@@ -104,7 +104,7 @@ const LOADING_MESSAGES = [
   "Cargando cartas…",
   "Preparando la mesa…",
   "Reuniendo jugadores…",
-  "Cargando perfiles de CPU…",
+  "Sincronizando progreso…",
   "¡Listo para jugar!",
 ];
 
@@ -294,6 +294,7 @@ function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
             </View>
           </Animated.View>
 
+          <Text style={styles.dataInfoText}>Sincronizando datos... (no consume datos móviles)</Text>
           <Text style={styles.versionText}>Versión 3.0.0</Text>
         </Animated.View>
       )}
@@ -606,6 +607,16 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_400Regular",
     fontSize: 12,
     color: "rgba(255,255,255,0.3)",
+  },
+  dataInfoText: {
+    position: "absolute",
+    bottom: 60,
+    alignSelf: "center",
+    fontFamily: "Nunito_400Regular",
+    fontSize: 11,
+    color: "rgba(255,255,255,0.35)",
+    textAlign: "center",
+    paddingHorizontal: 24,
   },
   loadingBarContainer: {
     width: "70%",

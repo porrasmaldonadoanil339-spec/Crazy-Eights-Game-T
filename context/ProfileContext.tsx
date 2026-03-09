@@ -310,13 +310,56 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           setProfile(merged);
         }
       } catch {}
+
+      // Cloud restore: if authenticated, fetch server profile and merge (server wins for progress)
+      try {
+        const authRaw = await AsyncStorage.getItem("ocho_auth_v1");
+        if (authRaw) {
+          const { token, user } = JSON.parse(authRaw) as { token?: string; user?: { isGuest?: boolean } };
+          if (token && !user?.isGuest) {
+            const { getApiUrl } = await import("@/lib/query-client");
+            const url = new URL("/api/auth/profile", getApiUrl()).toString();
+            const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+            if (resp.ok) {
+              const json = await resp.json() as { ok: boolean; data: PlayerProfile | null };
+              if (json.ok && json.data) {
+                const serverProfile = json.data as PlayerProfile;
+                setProfile((prev) => ({
+                  ...prev,
+                  ...serverProfile,
+                  stats: { ...prev.stats, ...(serverProfile.stats ?? {}) },
+                  rankedProfile: { ...prev.rankedProfile, ...(serverProfile.rankedProfile ?? {}) },
+                }));
+              }
+            }
+          }
+        }
+      } catch {}
+
       setIsLoaded(true);
     })();
   }, []);
 
+  const cloudSync = useCallback(async (p: PlayerProfile) => {
+    try {
+      const raw = await AsyncStorage.getItem("ocho_auth_v1");
+      if (!raw) return;
+      const { token, user } = JSON.parse(raw) as { token?: string; user?: { isGuest?: boolean } };
+      if (!token || user?.isGuest) return;
+      const { getApiUrl } = await import("@/lib/query-client");
+      const url = new URL("/api/auth/profile", getApiUrl()).toString();
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ data: p }),
+      }).catch(() => {});
+    } catch {}
+  }, []);
+
   const save = useCallback((p: PlayerProfile) => {
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(p)).catch(() => {});
-  }, []);
+    cloudSync(p);
+  }, [cloudSync]);
 
   const update = useCallback((updater: (prev: PlayerProfile) => PlayerProfile) => {
     setProfile((prev) => {

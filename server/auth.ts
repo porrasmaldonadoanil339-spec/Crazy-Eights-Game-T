@@ -401,4 +401,107 @@ function sendOAuthResult(res: import("express").Response, token: string | null, 
   return res.send(html);
 }
 
+// ─── Reset tokens storage ─────────────────────────────────────────────────────
+const RESET_TOKENS_FILE = path.join("/tmp", "ocho_reset_tokens.json");
+interface ResetToken { userId: string; token: string; expires: number; }
+
+function loadResetTokens(): ResetToken[] {
+  try {
+    if (fs.existsSync(RESET_TOKENS_FILE)) return JSON.parse(fs.readFileSync(RESET_TOKENS_FILE, "utf8"));
+  } catch {}
+  return [];
+}
+function saveResetTokens(tokens: ResetToken[]) {
+  fs.writeFileSync(RESET_TOKENS_FILE, JSON.stringify(tokens, null, 2));
+}
+
+// ─── POST /api/auth/forgot-password ──────────────────────────────────────────
+router.post("/forgot-password", (req, res) => {
+  const { username } = req.body as { username?: string };
+  if (!username) return res.status(400).json({ error: "username required" });
+
+  const users = loadUsers();
+  const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+
+  const tokens = loadResetTokens().filter(t => t.expires > Date.now());
+  if (user) {
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    tokens.push({ userId: user.id, token: resetToken, expires: Date.now() + 15 * 60 * 1000 });
+    saveResetTokens(tokens);
+  }
+
+  return res.json({ ok: true, message: "Si el usuario existe, recibirás instrucciones para restablecer tu contraseña." });
+});
+
+// ─── POST /api/auth/reset-password ───────────────────────────────────────────
+router.post("/reset-password", (req, res) => {
+  const { token, newPassword } = req.body as { token?: string; newPassword?: string };
+  if (!token || !newPassword) return res.status(400).json({ error: "token and newPassword required" });
+  if (newPassword.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters" });
+
+  const tokens = loadResetTokens().filter(t => t.expires > Date.now());
+  const resetEntry = tokens.find(t => t.token === token);
+  if (!resetEntry) return res.status(400).json({ error: "Invalid or expired token" });
+
+  const users = loadUsers();
+  const user = users.find(u => u.id === resetEntry.userId);
+  if (!user) return res.status(400).json({ error: "User not found" });
+
+  const salt = crypto.randomBytes(32).toString("hex");
+  user.passwordHash = hashPassword(newPassword, salt);
+  user.salt = salt;
+  saveUsers(users);
+  saveResetTokens(tokens.filter(t => t.token !== token));
+
+  return res.json({ ok: true, message: "Password reset successfully" });
+});
+
+// ─── Profile cloud save storage ───────────────────────────────────────────────
+const PROFILES_FILE = path.join("/tmp", "ocho_profiles.json");
+interface CloudProfile { userId: string; data: Record<string, unknown>; updatedAt: string; }
+
+function loadProfiles(): CloudProfile[] {
+  try {
+    if (fs.existsSync(PROFILES_FILE)) return JSON.parse(fs.readFileSync(PROFILES_FILE, "utf8"));
+  } catch {}
+  return [];
+}
+function saveProfiles(profiles: CloudProfile[]) {
+  fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
+}
+
+// ─── GET /api/profile ─────────────────────────────────────────────────────────
+router.get("/profile", (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: "Unauthorized" });
+  const token = auth.replace("Bearer ", "");
+  const payload = verifyToken(token);
+  if (!payload) return res.status(401).json({ error: "Invalid token" });
+
+  const profiles = loadProfiles();
+  const profile = profiles.find(p => p.userId === payload.userId);
+  if (!profile) return res.json({ ok: true, data: null });
+  return res.json({ ok: true, data: profile.data, updatedAt: profile.updatedAt });
+});
+
+// ─── POST /api/profile ────────────────────────────────────────────────────────
+router.post("/profile", (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: "Unauthorized" });
+  const token = auth.replace("Bearer ", "");
+  const payload = verifyToken(token);
+  if (!payload) return res.status(401).json({ error: "Invalid token" });
+
+  const { data } = req.body as { data?: Record<string, unknown> };
+  if (!data) return res.status(400).json({ error: "data required" });
+
+  const profiles = loadProfiles();
+  const idx = profiles.findIndex(p => p.userId === payload.userId);
+  const entry: CloudProfile = { userId: payload.userId, data, updatedAt: new Date().toISOString() };
+  if (idx >= 0) profiles[idx] = entry; else profiles.push(entry);
+  saveProfiles(profiles);
+
+  return res.json({ ok: true });
+});
+
 export default router;

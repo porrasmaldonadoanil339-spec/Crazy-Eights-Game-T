@@ -61,7 +61,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Enfrenta a un rival con 8 cartas cada uno. Usa las cartas especiales para dominar: el 2 hace robar, el 7 da cartas al rival, el 8 cambia el palo, el 10 invierte el turno, la J salta y el Comodín es salvaje. ¡El primero en vaciar su mano gana!",
         teams: [
           { label: "Tú", members: ["Tú"], color: "#D4AF37" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "card", color: "#D4AF37", text: "8 cartas por jugador" },
@@ -71,10 +71,10 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Tú", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Vaciar tu mano de cartas antes que el rival.",
-        rewardNote: "Recompensa extra por dificultad más alta.",
+        rewardNote: "Recompensa por ganar la partida.",
       },
       en: {
         subtitle: "The original Ocho Locos mode",
@@ -82,7 +82,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Face one opponent with 8 cards each. Use special cards to dominate: 2 makes them draw, 7 passes cards to the rival, 8 changes the suit, 10 reverses turn order, J skips, and the Joker is wild. First to empty their hand wins!",
         teams: [
           { label: "You", members: ["You"], color: "#D4AF37" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "card", color: "#D4AF37", text: "8 cards per player" },
@@ -92,10 +92,10 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "You", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Empty your hand of cards before the opponent.",
-        rewardNote: "Higher difficulty = higher reward multiplier.",
+        rewardNote: "Reward for winning the match.",
       },
       pt: {
         subtitle: "O modo original do Ocho Locos",
@@ -103,7 +103,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Enfrente um rival com 8 cartas cada. Use cartas especiais: 2 faz comprar, 7 passa cartas ao rival, 8 muda o naipe, 10 inverte a ordem, J pula e o Curinga é coringa. Quem esvaziar a mão primeiro vence!",
         teams: [
           { label: "Você", members: ["Você"], color: "#D4AF37" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "card", color: "#D4AF37", text: "8 cartas por jogador" },
@@ -113,10 +113,10 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Você", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Esvaziar sua mão antes do oponente.",
-        rewardNote: "Dificuldade maior = multiplicador de recompensa maior.",
+        rewardNote: "Recompensa por vencer a partida.",
       },
     },
     lightning: {
@@ -126,7 +126,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Partida exprés con solo 5 cartas. ¡Cada decisión cuenta! Si juegas en modo Experto tendrás solo 8 segundos por turno. El que vacíe la mano primero se lleva la victoria.",
         teams: [
           { label: "Tú", members: ["Tú"], color: "#FFD700" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "flash", color: "#FFD700", text: "Solo 5 cartas por jugador" },
@@ -136,7 +136,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Tú", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Vaciar 5 cartas antes que el rival en el menor tiempo posible.",
         rewardNote: "Partidas más cortas pero recompensa garantizada.",
@@ -147,7 +147,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Express match with only 5 cards. Every decision counts! In Expert mode you have just 8 seconds per turn. The one who empties their hand first takes the victory.",
         teams: [
           { label: "You", members: ["You"], color: "#FFD700" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "flash", color: "#FFD700", text: "Only 5 cards per player" },
@@ -157,7 +157,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "You", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Empty 5 cards before the rival as fast as possible.",
         rewardNote: "Shorter games, guaranteed reward.",
@@ -168,7 +168,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Partida expresso com apenas 5 cartas. Cada decisão conta! No modo Especialista você tem apenas 8 segundos por turno. Quem esvaziar a mão primeiro leva a vitória.",
         teams: [
           { label: "Você", members: ["Você"], color: "#FFD700" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "flash", color: "#FFD700", text: "Apenas 5 cartas por jogador" },
@@ -178,7 +178,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Você", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Esvaziar 5 cartas antes do rival o mais rápido possível.",
         rewardNote: "Partidas mais curtas, recompensa garantida.",
@@ -191,7 +191,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Compite en un torneo al mejor de 3 rondas. Gana la primera o segunda ronda para obtener ventaja; si quedas 1-1, una ronda final decide al ganador. ¡Solo el mejor avanza!",
         teams: [
           { label: "Tú", members: ["Tú"], color: "#E67E22" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "trophy", color: "#E67E22", text: "Formato: mejor de 3 rondas" },
@@ -201,7 +201,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Tú", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Ganar 2 de 3 rondas para llevarte el trofeo.",
         rewardNote: "Mayor recompensa que el modo Clásico por la intensidad.",
@@ -212,7 +212,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Compete in a best-of-3 tournament. Win the first or second round for an advantage; if it's 1-1, a final round decides the winner. Only the best advances!",
         teams: [
           { label: "You", members: ["You"], color: "#E67E22" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "trophy", color: "#E67E22", text: "Format: best of 3 rounds" },
@@ -222,7 +222,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "You", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Win 2 of 3 rounds to take the trophy.",
         rewardNote: "Higher reward than Classic due to intensity.",
@@ -233,7 +233,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Compita em um torneio no melhor de 3 rodadas. Vença a primeira ou segunda rodada para ter vantagem; se ficar 1-1, uma rodada final decide o vencedor. Apenas o melhor avança!",
         teams: [
           { label: "Você", members: ["Você"], color: "#E67E22" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "trophy", color: "#E67E22", text: "Formato: melhor de 3 rodadas" },
@@ -243,7 +243,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Você", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Vencer 2 de 3 rodadas para levar o troféu.",
         rewardNote: "Recompensa maior que o Clássico pela intensidade.",
@@ -255,7 +255,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         description:
           "Únete a un aliado y enfrenten juntos a dos rivales. El turno alterna: Tú → Aliado → Rival 1 → Rival 2. Cada equipo comparte un mazo de 8 cartas. ¡Coordínate con tu aliado para vaciar el mazo primero!",
         teams: [
-          { label: "Equipo 1", members: ["Tú", "Aliado CPU"], color: "#27AE60" },
+          { label: "Equipo 1", members: ["Tú", "Compañero"], color: "#27AE60" },
           { label: "Equipo 2", members: ["Rival 1", "Rival 2"], color: "#E74C3C" },
         ],
         rules: [
@@ -278,7 +278,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         description:
           "Join an ally and face two rivals together. Turns alternate: You → Ally → Rival 1 → Rival 2. Each team shares a deck of 8 cards. Coordinate with your ally to empty the deck first!",
         teams: [
-          { label: "Team 1", members: ["You", "CPU Ally"], color: "#27AE60" },
+          { label: "Team 1", members: ["You", "Ally"], color: "#27AE60" },
           { label: "Team 2", members: ["Rival 1", "Rival 2"], color: "#E74C3C" },
         ],
         rules: [
@@ -301,7 +301,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         description:
           "Una-se a um aliado e enfrente dois rivais juntos. Os turnos se alternam: Você → Aliado → Rival 1 → Rival 2. Cada equipe compartilha um baralho de 8 cartas. Coordene-se com seu aliado para esvaziar o baralho primeiro!",
         teams: [
-          { label: "Equipe 1", members: ["Você", "Aliado CPU"], color: "#27AE60" },
+          { label: "Equipe 1", members: ["Você", "Aliado"], color: "#27AE60" },
           { label: "Equipe 2", members: ["Rival 1", "Rival 2"], color: "#E74C3C" },
         ],
         rules: [
@@ -327,7 +327,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Cada partida trae una regla mutante que cambia las normas del juego: solo cartas rojas, victoria en 15 turnos, sin robar cartas, modo espejo y más. Completa los retos para ganar recompensas únicas y monedas extra.",
         teams: [
           { label: "Tú", members: ["Tú"], color: "#9B59B6" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "ribbon", color: "#9B59B6", text: "Regla aleatoria activa en cada partida" },
@@ -337,7 +337,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Tú", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Completar los desafíos diarios y ganar con las reglas especiales activas.",
         rewardNote: "Las recompensas de desafío son únicas y no se consiguen en otros modos.",
@@ -348,7 +348,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Each match brings a mutant rule that changes the game: red cards only, win in 15 turns, no drawing, mirror mode and more. Complete challenges to earn unique rewards and extra coins.",
         teams: [
           { label: "You", members: ["You"], color: "#9B59B6" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "ribbon", color: "#9B59B6", text: "Random rule active each match" },
@@ -358,7 +358,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "You", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Complete daily challenges and win with special rules active.",
         rewardNote: "Challenge rewards are unique — only available in this mode.",
@@ -369,7 +369,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Cada partida traz uma regra mutante que muda o jogo: apenas cartas vermelhas, vitória em 15 turnos, sem comprar cartas, modo espelho e mais. Complete desafios para ganhar recompensas únicas e moedas extras.",
         teams: [
           { label: "Você", members: ["Você"], color: "#9B59B6" },
-          { label: "Rival", members: ["CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "ribbon", color: "#9B59B6", text: "Regra aleatória ativa em cada partida" },
@@ -379,7 +379,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Você", isPlayer: true },
-          { label: "CPU" },
+          { label: "Rival" },
         ],
         objective: "Completar os desafios diários e vencer com as regras especiais ativas.",
         rewardNote: "Recompensas de desafio são únicas — só disponíveis neste modo.",
@@ -457,7 +457,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "El modo más competitivo. Sube estrellas ganando, pierde estrellas con las derrotas. Asciende de Bronce a Gran Maestro. Solo disponible desde el nivel 5. ¡Demuestra tu nivel!",
         teams: [
           { label: "Tú", members: ["Tú"], color: "#D4AF37" },
-          { label: "Rival", members: ["CPU Rankeado"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "trophy", color: "#D4AF37", text: "Sistema de estrellas por partida" },
@@ -467,7 +467,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Tú", isPlayer: true },
-          { label: "CPU Rival" },
+          { label: "Rival" },
         ],
         objective: "Ganar estrellas para ascender de rango y llegar al Gran Maestro.",
         rewardNote: "Recompensas especiales de temporada al final de cada season.",
@@ -478,7 +478,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "The most competitive mode. Gain stars by winning, lose stars with defeats. Climb from Bronze to Grand Master. Available from level 5 only. Show your true skill!",
         teams: [
           { label: "You", members: ["You"], color: "#D4AF37" },
-          { label: "Rival", members: ["Ranked CPU"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "trophy", color: "#D4AF37", text: "Star system per match" },
@@ -499,7 +499,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "O modo mais competitivo. Ganhe estrelas vencendo, perca estrelas com derrotas. Suba de Bronze a Gran Maestro. Disponível a partir do nível 5. Mostre seu verdadeiro nível!",
         teams: [
           { label: "Você", members: ["Você"], color: "#D4AF37" },
-          { label: "Rival", members: ["CPU Ranqueado"], color: "#E74C3C" },
+          { label: "Rival", members: ["Rival"], color: "#E74C3C" },
         ],
         rules: [
           { icon: "trophy", color: "#D4AF37", text: "Sistema de estrelas por partida" },
@@ -572,6 +572,7 @@ export function ModeInfoModal({
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
 
   const playLabel = lang === "pt" ? "JOGAR" : lang === "es" ? "JUGAR" : "PLAY";
+  const buscarLabel = lang === "pt" ? "BUSCAR PARTIDA" : lang === "es" ? "BUSCAR PARTIDA" : "FIND MATCH";
   const selectDiffLabel = lang === "pt" ? "SELECIONAR DIFICULDADE" : lang === "es" ? "SELECCIONAR DIFICULTAD" : "SELECT DIFFICULTY";
   const teamsLabel = lang === "pt" ? "EQUIPES" : lang === "es" ? "EQUIPOS" : "TEAMS";
   const rulesLabel = lang === "pt" ? "REGRAS" : lang === "es" ? "REGLAS" : "RULES";
@@ -730,9 +731,9 @@ export function ModeInfoModal({
                 style={({ pressed }) => [styles.playBtn, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
               >
                 <LinearGradient colors={[modeColor, modeColor + "cc"]} style={styles.playBtnGrad}>
-                  <Ionicons name="play" size={18} color="#000" />
+                  <Ionicons name={hasDifficulty ? "options" : (modeId !== "ranked" ? "search" : "play")} size={18} color="#000" />
                   <Text style={styles.playBtnText}>
-                    {hasDifficulty ? selectDiffLabel : playLabel}
+                    {hasDifficulty ? selectDiffLabel : (modeId !== "ranked" ? buscarLabel : playLabel)}
                   </Text>
                 </LinearGradient>
               </Pressable>

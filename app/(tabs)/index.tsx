@@ -433,20 +433,15 @@ export default function PlayScreen() {
     if (!modeId) return;
     const mode = GAME_MODES.find((m) => m.id === modeId);
     if (!mode) return;
-    if (modeId === "coop") {
-      await playSound("mode_select").catch(() => {});
-      router.push("/coop-lobby");
+    if (mode.hasDifficulty) {
+      await playSound("menu_open").catch(() => {});
+      setSelectedMode(modeId);
+      setShowDiffModal(true);
       return;
     }
-    if (!mode.hasDifficulty) {
-      await playSound("mode_select").catch(() => {});
-      startGame(modeId, "normal");
-      router.push("/game");
-      return;
-    }
-    await playSound("menu_open").catch(() => {});
-    setSelectedMode(modeId);
-    setShowDiffModal(true);
+    await playSound("mode_select").catch(() => {});
+    const playerCount = modeId === "coop" ? "4" : "2";
+    router.push({ pathname: "/online-lobby", params: { mode: modeId, playerCount } });
   };
 
   const handleDifficultySelect = async (difficulty: Difficulty) => {

@@ -31,6 +31,12 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const [showForgotPass, setShowForgotPass] = useState(false);
+  const [forgotUsername, setForgotUsername] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+
   const [oauthProvider, setOauthProvider] = useState<"google" | "facebook" | null>(null);
   const [oauthStep, setOauthStep] = useState<"email" | "password" | "success">("email");
   const [oauthEmail, setOauthEmail] = useState("");
@@ -72,6 +78,12 @@ export default function LoginScreen() {
       back: { es: "← Atrás", en: "← Back", pt: "← Voltar" },
       signInProvider: { es: "Iniciar sesión", en: "Sign in", pt: "Entrar" },
       saveProgress: { es: "Vincula tu cuenta con {p} para guardar tu progreso en la nube y jugar desde cualquier dispositivo.", en: "Link your account with {p} to save your progress to the cloud and play from any device.", pt: "Vincule sua conta com {p} para salvar seu progresso na nuvem e jogar de qualquer dispositivo." },
+      forgotPass: { es: "¿Olvidaste tu contraseña?", en: "Forgot your password?", pt: "Esqueceu sua senha?" },
+      forgotTitle: { es: "Recuperar contraseña", en: "Password Recovery", pt: "Recuperar senha" },
+      forgotSub: { es: "Ingresa tu nombre de usuario y te enviaremos instrucciones para restablecer tu contraseña.", en: "Enter your username and we'll send you instructions to reset your password.", pt: "Digite seu nome de usuário e enviaremos instruções para redefinir sua senha." },
+      forgotSent: { es: "¡Listo! Si el usuario existe, recibirás instrucciones de recuperación.", en: "Done! If the user exists, you'll receive recovery instructions.", pt: "Pronto! Se o usuário existir, você receberá instruções de recuperação." },
+      sendRecovery: { es: "Enviar instrucciones", en: "Send instructions", pt: "Enviar instruções" },
+      close: { es: "Cerrar", en: "Close", pt: "Fechar" },
     };
     return strings[key]?.[lang] ?? strings[key]?.["es"] ?? key;
   };
@@ -147,6 +159,21 @@ export default function LoginScreen() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!forgotUsername.trim()) return;
+    setForgotLoading(true);
+    setForgotError("");
+    try {
+      const { apiRequest } = await import("@/lib/query-client");
+      await apiRequest("POST", "/api/auth/forgot-password", { username: forgotUsername.trim() });
+      setForgotSent(true);
+    } catch {
+      setForgotError(t("networkError"));
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   const handleRegister = async () => {
     if (!username.trim() || !password || !confirmPassword) {
       setError(t("required"));
@@ -216,15 +243,23 @@ export default function LoginScreen() {
           {mode === "menu" && (
             <View style={styles.buttonsSection}>
               <Pressable onPress={() => handleOAuth("google")} style={({ pressed }) => [styles.authBtn, styles.authBtnGoogle, pressed && styles.pressed]}>
-                <View style={styles.authBtnIcon}><Ionicons name="logo-google" size={20} color="#EA4335" /></View>
+                <View style={styles.googleIconContainer}>
+                  <View style={[styles.googleDot, { backgroundColor: "#EA4335", top: 0, left: 0 }]} />
+                  <View style={[styles.googleDot, { backgroundColor: "#4285F4", top: 0, right: 0 }]} />
+                  <View style={[styles.googleDot, { backgroundColor: "#FBBC04", bottom: 0, left: 0 }]} />
+                  <View style={[styles.googleDot, { backgroundColor: "#34A853", bottom: 0, right: 0 }]} />
+                  <Text style={styles.googleGText}>G</Text>
+                </View>
                 <Text style={styles.authBtnText}>{t("continueGoogle")}</Text>
                 <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
               </Pressable>
 
               <Pressable onPress={() => handleOAuth("facebook")} style={({ pressed }) => [styles.authBtn, styles.authBtnFacebook, pressed && styles.pressed]}>
-                <View style={[styles.authBtnIcon, { backgroundColor: "#1877F2" }]}><Ionicons name="logo-facebook" size={20} color="#fff" /></View>
-                <Text style={styles.authBtnText}>{t("continueFacebook")}</Text>
-                <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+                <View style={styles.fbIconContainer}>
+                  <Ionicons name="logo-facebook" size={24} color="#fff" />
+                </View>
+                <Text style={[styles.authBtnText, { color: "#fff" }]}>{t("continueFacebook")}</Text>
+                <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.6)" />
               </Pressable>
 
               <View style={styles.orRow}>
@@ -324,6 +359,10 @@ export default function LoginScreen() {
                 {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.mainBtnText}>{t("loginBtn")}</Text>}
               </Pressable>
 
+              <Pressable onPress={() => { setShowForgotPass(true); setForgotSent(false); setForgotUsername(""); setForgotError(""); }} style={styles.forgotBtn}>
+                <Text style={styles.forgotBtnText}>{t("forgotPass")}</Text>
+              </Pressable>
+
               <Pressable onPress={() => { setMode("register"); setError(""); }} style={styles.switchModeBtn}>
                 <Text style={styles.switchModeText}>{t("noAccount")}</Text>
               </Pressable>
@@ -332,6 +371,66 @@ export default function LoginScreen() {
 
         </ScrollView>
       </LinearGradient>
+
+      {/* ─── Forgot Password Modal ─── */}
+      <Modal visible={showForgotPass} transparent animationType="slide" onRequestClose={() => setShowForgotPass(false)}>
+        <View style={oauthStyles.overlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowForgotPass(false)} />
+          <View style={oauthStyles.sheet}>
+            <View style={oauthStyles.providerHeader}>
+              <View style={[oauthStyles.googleIcon, { backgroundColor: "rgba(212,175,55,0.15)" }]}>
+                <Ionicons name="lock-open-outline" size={22} color={Colors.gold} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={oauthStyles.providerTitle}>{t("forgotTitle")}</Text>
+              </View>
+              <Pressable onPress={() => setShowForgotPass(false)}>
+                <Ionicons name="close" size={22} color={Colors.textMuted} />
+              </Pressable>
+            </View>
+
+            {forgotSent ? (
+              <View style={{ alignItems: "center", padding: 16, gap: 12 }}>
+                <Ionicons name="checkmark-circle" size={52} color="#27AE60" />
+                <Text style={[oauthStyles.infoText, { textAlign: "center" }]}>{t("forgotSent")}</Text>
+                <Pressable onPress={() => setShowForgotPass(false)} style={oauthStyles.btn}>
+                  <Text style={oauthStyles.btnText}>{t("close")}</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                <Text style={oauthStyles.infoText}>{t("forgotSub")}</Text>
+                <Text style={oauthStyles.heading}>{t("username")}</Text>
+                <View style={oauthStyles.inputWrap}>
+                  <Ionicons name="person-outline" size={18} color={Colors.textMuted} style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={oauthStyles.input}
+                    value={forgotUsername}
+                    onChangeText={setForgotUsername}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    placeholder="MiNombre"
+                    placeholderTextColor={Colors.textDim}
+                  />
+                </View>
+                {!!forgotError && (
+                  <View style={oauthStyles.errorRow}>
+                    <Ionicons name="alert-circle-outline" size={16} color="#E74C3C" />
+                    <Text style={oauthStyles.errorText}>{forgotError}</Text>
+                  </View>
+                )}
+                <Pressable
+                  onPress={handleForgotPassword}
+                  style={[oauthStyles.btn, forgotLoading && { opacity: 0.7 }]}
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? <ActivityIndicator color="#000" /> : <Text style={oauthStyles.btnText}>{t("sendRecovery")}</Text>}
+                </Pressable>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* ─── OAuth Modal ─── */}
       <Modal visible={!!oauthProvider} transparent animationType="slide" onRequestClose={oauthClose}>
@@ -507,10 +606,14 @@ const styles = StyleSheet.create({
   dividerDiamond: { fontSize: 12, color: Colors.gold + "80" },
   subtitle: { fontFamily: "Nunito_400Regular", fontSize: 14, color: Colors.textMuted, textAlign: "center", lineHeight: 20, paddingHorizontal: 8 },
   buttonsSection: { width: "100%", gap: 10 },
-  authBtn: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1 },
-  authBtnGoogle: { backgroundColor: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.14)" },
-  authBtnFacebook: { backgroundColor: "rgba(24,119,242,0.1)", borderColor: "rgba(24,119,242,0.3)" },
-  authBtnIcon: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.1)" },
+  authBtn: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 15, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1.5 },
+  authBtnGoogle: { backgroundColor: "rgba(255,255,255,0.07)", borderColor: "rgba(255,255,255,0.18)" },
+  authBtnFacebook: { backgroundColor: "#1877F2", borderColor: "#1877F2" },
+  authBtnIcon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.1)" },
+  googleIconContainer: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" },
+  googleDot: { position: "absolute", width: 16, height: 16 },
+  googleGText: { fontFamily: "Nunito_800ExtraBold", fontSize: 17, color: "#4285F4", zIndex: 1 },
+  fbIconContainer: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
   authBtnText: { fontFamily: "Nunito_700Bold", fontSize: 15, color: "#ffffff", flex: 1 },
   orRow: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 4 },
   orLine: { flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.08)" },
@@ -533,5 +636,7 @@ const styles = StyleSheet.create({
   errorText: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#FF6B6B", textAlign: "center" },
   switchModeBtn: { alignItems: "center", paddingVertical: 8 },
   switchModeText: { fontFamily: "Nunito_400Regular", fontSize: 14, color: Colors.textMuted, textDecorationLine: "underline" },
+  forgotBtn: { alignItems: "center", paddingVertical: 4 },
+  forgotBtnText: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.gold, textDecorationLine: "underline" },
   pressed: { opacity: 0.75 },
 });
