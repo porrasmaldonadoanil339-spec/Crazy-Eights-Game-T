@@ -224,7 +224,7 @@ function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
 
       {/* ── PHASE 2: GAME COVER LOADING ──────────────────────────────── */}
       {phase === "loading" && (
-        <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: loadingFade, zIndex: 1 }]}>
+        <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: loadingFade, zIndex: 1, justifyContent: "center", alignItems: "center" }]}>
           <LinearGradient
             colors={["#010D03", "#041008", "#000000"]}
             style={StyleSheet.absoluteFill}

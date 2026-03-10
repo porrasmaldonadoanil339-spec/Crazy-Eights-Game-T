@@ -51,8 +51,11 @@ interface ServerGameState {
 const DUMMY_CARD: Card = { id: "xx", rank: "2", suit: "hearts" };
 
 function buildLocalState(srv: ServerGameState): MultiGameState {
+  if (!srv.playerNames || !srv.handSizes) {
+    throw new Error("buildLocalState: missing playerNames or handSizes in server state");
+  }
   const n = srv.playerNames.length;
-  const myPidx = srv.myPlayerIndex;
+  const myPidx = srv.myPlayerIndex ?? 0;
   const hands: Card[][] = [];
   for (let i = 0; i < n; i++) {
     if (i === myPidx) {
@@ -542,13 +545,16 @@ export default function OnlineGameScreen() {
     s.off("player_left");
 
     s.on("game_state", (srv: ServerGameState) => {
-      const local = buildLocalState(srv);
-      setGameState(local);
-      setLobbyPhase(prev => (prev === "dealing" || prev === "game") ? "game" : prev);
-      if (local.phase === "game_over") {
-        setLobbyPhase("result");
-        stopMusic().catch(() => {});
-        playWin().catch(() => {});
+      try {
+        const local = buildLocalState(srv);
+        setGameState(local);
+        setLobbyPhase(prev => (prev === "dealing" || prev === "game") ? "game" : prev);
+        if (local.phase === "game_over") {
+          setLobbyPhase("result");
+          stopMusic().catch(() => {});
+          playWin().catch(() => {});
+        }
+      } catch {
       }
     });
 
@@ -567,8 +573,9 @@ export default function OnlineGameScreen() {
     };
   }, [isOnline]);
 
-  // ─── Lobby sequence ─────────────────────────────────────────────────────
+  // ─── Lobby sequence (local/simulated only — skip when real online socket) ──
   useEffect(() => {
+    if (isOnline) return;
     const timers: ReturnType<typeof setTimeout>[] = [];
     let delay = 1200;
 

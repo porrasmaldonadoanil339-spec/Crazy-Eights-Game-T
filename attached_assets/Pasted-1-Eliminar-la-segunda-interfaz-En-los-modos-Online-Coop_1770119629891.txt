@@ -1,0 +1,74 @@
+1. Eliminar la segunda interfaz
+•	En los modos Online, Cooperativo y Clasificatoria NO debe aparecer la segunda interfaz.
+•	Solo debe mostrarse la primera interfaz de búsqueda de jugadores.
+•	Después de encontrar los jugadores, el juego debe pasar directamente a la partida.
+________________________________________
+2. Jugadores de la partida
+•	Los mismos jugadores que aparecen en la primera interfaz de búsqueda deben ser los mismos que aparecen dentro de la partida.
+•	La jugabilidad debe realizarse exactamente con esos mismos jugadores encontrados, sin cambiar los perfiles ni generar otros jugadores diferentes.
+________________________________________
+3. Modo Cooperativo
+•	En el modo Cooperativo, los jugadores encontrados en la primera interfaz de búsqueda deben ser los mismos que juegan la partida 2 vs 2.
+•	No debe cambiar ni generar otros jugadores diferentes.
+Jugabilidad del cooperativo
+Cuando todos los jugadores se unan desde la primera interfaz, la partida debe funcionar así:
+Baraja compartida
+•	Cada equipo tiene una baraja de 8 cartas en común.
+•	Los dos jugadores del mismo equipo utilizan las mismas cartas durante la partida.
+Objetivo
+•	Derrotar al equipo rival utilizando la baraja compartida, aplicando estrategia, coordinación y buen timing entre compañeros.
+________________________________________
+4. Modo Online – Crear sala
+En el botón azul “Crear sala” quiero agregar:
+•	Generar un código de sala.
+•	Generar un código QR para compartir la sala con otros jugadores.
+________________________________________
+5. Modo Online – Unirse
+En la opción “Unirse” los jugadores deben poder entrar de dos formas:
+•	Escribiendo el código de sala.
+•	Escaneando el código QR.
+Esto debe funcionar correctamente y permitir jugar en tiempo real.
+________________________________________
+6. Error actual que debe corregirse
+•	Probé el modo Online con otro dispositivo usando Expo.
+•	El jugador puede unirse correctamente.
+•	Pero cuando comienza la partida el juego se crashea.
+Quiero que el modo Online funcione correctamente en tiempo real y que la partida no se cierre ni se crashee cuando comienza.
+________________________________________
+7. Efectos visuales para cartas con habilidades
+Quiero que cuando se coloquen cartas con habilidades importantes o cartas especiales, aparezcan efectos visuales dinámicos como:
+•	luces
+•	partículas
+•	destellos
+•	explosiones
+•	ondas de energía
+Estos efectos deben aparecer tanto cuando yo coloco la carta como cuando el rival la coloca, para que todos los jugadores vean la animación.
+________________________________________
+8. Ajuste de la pantalla de carga
+Por favor ajusta la pantalla de carga de mi juego.
+•	La portada o imagen principal está demasiado arriba.
+•	Quiero que la bajes un poco más hacia el centro de la pantalla.
+La portada debe quedar:
+•	ligeramente arriba del centro,
+•	no pegada a la parte superior.
+Debe verse equilibrada y profesional, como en juegos reales, y adaptarse bien a diferentes tamaños de pantalla.
+Realiza solo este ajuste visual sin modificar otras funciones del juego.
+________________________________________
+9. Perfiles del Ranking Mundial
+Quiero que los perfiles del Ranking Mundial en el modo Clasificatoria usen los mismos avatares que aparecen en los perfiles de los jugadores dentro de las partidas.
+Esto significa:
+•	Todos los jugadores del ranking deben tener su avatar visible.
+•	Deben verse igual que los perfiles que aparecen durante las partidas.
+Para que el ranking se vea más realista, quiero que haya variedad de avatares, por ejemplo:
+•	algunos perfiles con caras de personas reales
+•	otros perfiles con avatares estándar del juego
+El objetivo es que el Ranking Mundial se vea realista y profesional.
+Esto debe aplicarse a todos los perfiles del ranking, no solo a algunos.
+________________________________________
+10. Objetivo final
+Quiero que:
+•	Los modos Online, Cooperativo y Clasificatoria funcionen correctamente.
+•	La búsqueda de jugadores pase directamente a la partida.
+•	Se juegue con los mismos jugadores encontrados.
+•	El modo Online funcione en tiempo real sin errores ni crasheos.
+•	El juego tenga interfaz y efectos visuales más profesionales.

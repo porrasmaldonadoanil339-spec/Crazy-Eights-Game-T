@@ -1,4 +1,4 @@
-import { Lang } from "./i18n";
+import { Lang, t } from "./i18n";
 
 const ach: Record<string, { es: string; en: string; pt: string }> = {
   first_win_t:           { es: "Primera Victoria",           en: "First Victory",              pt: "Primeira Vitória" },
@@ -2007,7 +2007,16 @@ const modeDescs: Record<string, { es: string; en: string; pt: string }> = {
 };
 
 export function modeDesc(id: string, lang: Lang): string {
-  return modeDescs[id]?.[lang] ?? modeDescs[id]?.es ?? "";
+  const i18nKeyMap: Record<string, string> = {
+    classic: "modeClassicDesc", lightning: "modeLightningDesc", tournament: "modeTournamentDesc",
+    coop: "modeCoopDesc", challenge: "modeChallengeDesc", practice: "modePracticeDesc",
+  };
+  const i18nKey = i18nKeyMap[id];
+  if (i18nKey) {
+    const i18nVal = t(i18nKey as any, lang);
+    if (i18nVal && i18nVal !== i18nKey) return i18nVal;
+  }
+  return modeDescs[id]?.[lang as any] ?? modeDescs[id]?.es ?? "";
 }
 
 const diffDescs: Record<string, { es: string; en: string; pt: string }> = {
@@ -2044,5 +2053,14 @@ const modeNames: Record<string, { es: string; en: string; pt: string }> = {
 };
 
 export function modeName(id: string, lang: Lang): string {
-  return modeNames[id]?.[lang] ?? modeNames[id]?.es ?? id;
+  const i18nKeyMap: Record<string, string> = {
+    classic: "modeClassic", lightning: "modeLightning", tournament: "modeTournament",
+    coop: "modeCoop", challenge: "modeChallenge", practice: "modePractice", ranked: "rankedMode",
+  };
+  const i18nKey = i18nKeyMap[id];
+  if (i18nKey) {
+    const i18nVal = t(i18nKey as any, lang);
+    if (i18nVal && i18nVal !== i18nKey) return i18nVal;
+  }
+  return modeNames[id]?.[lang as any] ?? modeNames[id]?.es ?? id;
 }

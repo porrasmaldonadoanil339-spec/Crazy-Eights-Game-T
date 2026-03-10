@@ -440,7 +440,7 @@ function startPreMatch(room: Room, io: SocketServer) {
 function startGame(room: Room, io: SocketServer) {
   room.status = "playing";
   const names = room.players.map(p => p.name);
-  const gs = initMultiGame(names, 8);
+  const gs = initMultiGame(names, 8, room.mode === "coop");
   room.gameState = gs;
   room.hands = [...gs.hands];
 

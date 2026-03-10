@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
+import { t } from "@/lib/i18n";
 import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
 import { PlayingCard } from "@/components/PlayingCard";
@@ -327,9 +328,9 @@ function ChallengeRulesModal({ rules, lang, onClose }: {
   }, []);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
 
-  const title = lang === "en" ? "Special Rules" : lang === "pt" ? "Regras Especiais" : "Reglas Especiales";
-  const sub = lang === "en" ? "This challenge has unique rules:" : lang === "pt" ? "Este desafio tem regras únicas:" : "Este desafío tiene reglas únicas:";
-  const acceptLabel = lang === "en" ? "Accept Challenge!" : lang === "pt" ? "Aceito o Desafio!" : "¡Acepto el Desafío!";
+  const title = T("specialRules");
+  const sub = T("specialRulesSub");
+  const acceptLabel = T("acceptChallenge");
 
   return (
     <View style={crStyles.overlay}>
@@ -378,6 +379,7 @@ const crStyles = StyleSheet.create({
 
 // ─── Ranked promotion/demotion overlay ────────────────────────────────────────
 function RankedResultOverlay({ type, onDone }: { type: "promotion" | "demotion"; onDone: () => void }) {
+  const T = useT();
   const sc = useSharedValue(0.5);
   const op = useSharedValue(0);
   const isPromo = type === "promotion";
@@ -395,10 +397,10 @@ function RankedResultOverlay({ type, onDone }: { type: "promotion" | "demotion";
         <LinearGradient colors={isPromo ? ["#1A1200", "#221800", "#1A1200"] : ["#1A0000", "#220000", "#1A0000"]} style={rrStyles.grad}>
           <Ionicons name={isPromo ? "trending-up" : "trending-down"} size={52} color={accentColor} />
           <Text style={[rrStyles.title, { color: accentColor }]}>
-            {isPromo ? "¡Ascendido de Rango!" : "Bajaste de División"}
+            {isPromo ? T("rankPromoted") : T("rankDemoted")}
           </Text>
           <Text style={rrStyles.sub}>
-            {isPromo ? "Has demostrado tu habilidad. ¡Bienvenido a la élite!" : "Sigue practicando para recuperar tu posición."}
+            {isPromo ? T("rankPromotedSub") : T("rankDemotedSub")}
           </Text>
           <View style={rrStyles.starsRow}>
             {[0, 1, 2, 3, 4].map(i => (
@@ -1142,6 +1144,9 @@ export default function GameScreen() {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpNum, setLevelUpNum] = useState(1);
   const [showEffect, setShowEffect] = useState(false);
+  const [showSpecialBurst, setShowSpecialBurst] = useState(false);
+  const [specialBurstEffect, setSpecialBurstEffect] = useState("effect_lightning");
+  const prevTopCardIdRef = useRef<string | undefined>(undefined);
   const [showEpicResult, setShowEpicResult] = useState<"win" | "lose" | null>(null);
   const [inactivityProgress, setInactivityProgress] = useState(1);
   const inactivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1263,6 +1268,24 @@ export default function GameScreen() {
       prevAiHandCount.current = aiCount;
     }
   }, [gameState?.pendingDraw, gameState?.aiHand?.length, gameState?.currentPlayer, dealAnimationDone]);
+
+  // Special card burst effect — fires for any player (human or AI) playing a special card
+  useEffect(() => {
+    if (!gameState || !dealAnimationDone) return;
+    const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+    if (!topCard) return;
+    if (topCard.id === prevTopCardIdRef.current) return;
+    prevTopCardIdRef.current = topCard.id;
+    const isSpecial = topCard.rank === "8" || topCard.rank === "Joker" || topCard.rank === "2" || topCard.rank === "7";
+    if (!isSpecial) return;
+    let effectId = "effect_sparkle";
+    if (topCard.rank === "8") effectId = "effect_lightning";
+    else if (topCard.rank === "Joker") effectId = "effect_cosmic";
+    else if (topCard.rank === "2") effectId = "effect_fire";
+    else if (topCard.rank === "7") effectId = "effect_stars_c";
+    setSpecialBurstEffect(effectId);
+    setShowSpecialBurst(true);
+  }, [gameState?.discardPile?.length, gameState?.discardPile, dealAnimationDone]);
 
   const handleSendEmote = (emote: Emote) => {
     setPlayerEmote(emote);
@@ -1471,7 +1494,7 @@ export default function GameScreen() {
       if (!isWild && activeChallengeRules.rules.some(r => r.id === "only_red")) {
         if (card.suit !== "hearts" && card.suit !== "diamonds") {
           await playSound("error").catch(() => {});
-          setChallengeRuleViolation(lang === "en" ? "Rule violated! Only red cards allowed" : "¡Regla violada! Solo cartas rojas");
+          setChallengeRuleViolation(t("ruleViolatedRed", lang as any));
           forceGameOver();
           return;
         }
@@ -1479,7 +1502,7 @@ export default function GameScreen() {
       if (!isWild && activeChallengeRules.rules.some(r => r.id === "only_black")) {
         if (card.suit !== "spades" && card.suit !== "clubs") {
           await playSound("error").catch(() => {});
-          setChallengeRuleViolation(lang === "en" ? "Rule violated! Only black cards allowed" : "¡Regla violada! Solo cartas negras");
+          setChallengeRuleViolation(t("ruleViolatedBlack", lang as any));
           forceGameOver();
           return;
         }
@@ -1873,6 +1896,15 @@ export default function GameScreen() {
           originX={SW * 0.6}
           originY={SH * 0.42}
           onDone={() => setShowEffect(false)}
+        />
+      )}
+
+      {showSpecialBurst && (
+        <CardPlayEffect
+          effectId={specialBurstEffect}
+          originX={SW * 0.5}
+          originY={SH * 0.44}
+          onDone={() => setShowSpecialBurst(false)}
         />
       )}
 

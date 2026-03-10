@@ -52,6 +52,8 @@ function generateExtraPlayers(count: number, startSeed: number): RankEntry[] {
     const name = num > 800 ? `${prefix}${suffix}` : `${prefix}${suffix}${num > 0 ? num.toString().slice(0, 2) : ""}`;
     const level = Math.max(1, Math.floor(seededRand(s + 3) * 99));
     const wins = Math.max(1, Math.floor(level * 14 * (1 + seededRand(s + 4) * 1.5)));
+    const usePhoto = seededRand(s + 8) > 0.62;
+    const photoNum = Math.floor(seededRand(s + 9) * 70) + 1;
     players.push({
       rank: 0,
       name,
@@ -60,6 +62,7 @@ function generateExtraPlayers(count: number, startSeed: number): RankEntry[] {
       wins,
       avatarIcon: ICONS[Math.floor(seededRand(s + 6) * ICONS.length)],
       avatarColor: AVATAR_COLORS[Math.floor(seededRand(s + 7) * AVATAR_COLORS.length)],
+      photoUrl: usePhoto ? `https://i.pravatar.cc/150?img=${photoNum}` : undefined,
     });
   }
   return players;

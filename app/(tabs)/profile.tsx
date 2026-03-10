@@ -20,7 +20,7 @@ import { getLocalizedRankInfo, RANK_COLORS, RANK_ICONS, RANKS, DIVISIONS } from 
 import { playSound } from "@/lib/sounds";
 import { GAME_MODES } from "@/lib/gameModes";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
-import { Lang } from "@/lib/i18n";
+import { Lang, t } from "@/lib/i18n";
 
 const TITLE_ITEMS = STORE_ITEMS.filter((i) => i.category === "title");
 
@@ -605,7 +605,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Rank Progression */}
-        <Text style={[styles.sectionLabel, { color: themeGold }]}>{lang === "en" ? "RANK PROGRESSION" : lang === "pt" ? "PROGRESSÃO DE RANK" : "PROGRESIÓN DE RANGO"}</Text>
+        <Text style={[styles.sectionLabel, { color: themeGold }]}>{t("rankProgress", lang).toUpperCase()}</Text>
         <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0", paddingVertical: 12, paddingHorizontal: 12 }]}>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
             {RANKS.map((_, rankIdx) => {

@@ -11,6 +11,7 @@ import Animated, {
   withSpring, FadeIn, FadeInDown, FadeInUp, SlideInDown, Easing,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import QRCode from "react-native-qrcode-svg";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
@@ -118,9 +119,9 @@ function PlayerSlot({ player, isSelf, delay = 0 }: { player: PlayerInfo | null; 
       </View>
       <View style={styles.slotInfo}>
         <Text style={[styles.slotName, { color: isSelf ? ACCENT : "#fff" }]} numberOfLines={1}>
-          {player.name}{isSelf ? " (Tú)" : ""}
+          {player.name}{isSelf ? ` (${T("you")})` : ""}
         </Text>
-        <Text style={styles.slotSub}>Nv.{player.level} · {player.rankName}</Text>
+        <Text style={styles.slotSub}>{T("levelAbbr" as any)}{player.level} · {player.rankName}</Text>
       </View>
       <PulseDot color="#2ecc71" />
     </Animated.View>
@@ -128,6 +129,7 @@ function PlayerSlot({ player, isSelf, delay = 0 }: { player: PlayerInfo | null; 
 }
 
 function PreMatchTeamCard({ players, teamName, isMyTeam }: { players: PlayerInfo[]; teamName: string; isMyTeam: boolean }) {
+  const T = useT();
   return (
     <Animated.View entering={FadeInDown.duration(500)} style={[styles.teamCard, isMyTeam && styles.teamCardSelf]}>
       <Text style={[styles.teamLabel, { color: isMyTeam ? ACCENT : "#E74C3C" }]}>{teamName}</Text>
@@ -138,7 +140,7 @@ function PreMatchTeamCard({ players, teamName, isMyTeam }: { players: PlayerInfo
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.preMatchName} numberOfLines={1}>{p.name}</Text>
-            <Text style={styles.preMatchSub}>Nv.{p.level} · {p.rankName}</Text>
+            <Text style={styles.preMatchSub}>{T("levelAbbr" as any)}{p.level} · {p.rankName}</Text>
           </View>
         </View>
       ))}
@@ -426,7 +428,7 @@ export default function OnlineLobbyScreen() {
       <View style={styles.fullBg}>
         <LinearGradient colors={["#02060e", "#041020", "#02060e"]} style={StyleSheet.absoluteFill} />
         <Animated.Text style={[styles.countdownNumber, countStyle]}>{countdown}</Animated.Text>
-        <Text style={styles.countdownLabel}>COMIENZA YA</Text>
+        <Text style={styles.countdownLabel}>{T("startingNow" as any)}</Text>
       </View>
     );
   }
@@ -443,10 +445,10 @@ export default function OnlineLobbyScreen() {
         <LinearGradient colors={["#020810", "#041530", "#08050a"]} style={StyleSheet.absoluteFill} />
 
         <Animated.Text entering={FadeInDown.duration(500)} style={styles.preMatchTitle}>
-          PARTIDA ENCONTRADA
+          {T("matchFound")}
         </Animated.Text>
         <Animated.Text entering={FadeInDown.delay(100).duration(500)} style={styles.preMatchTitleSub}>
-          Prepárate para jugar
+          {T("getReady" as any)}
         </Animated.Text>
 
         <View style={styles.teamsContainer}>
@@ -482,7 +484,7 @@ export default function OnlineLobbyScreen() {
         </View>
 
         <Animated.View entering={FadeInUp.delay(500).duration(500)} style={styles.preMatchFooter}>
-          <Text style={styles.preMatchCountdown}>Comenzando pronto...</Text>
+          <Text style={styles.preMatchCountdown}>{T("startingSoon" as any)}</Text>
           <View style={styles.preMatchBar}>
             <LinearGradient colors={[ACCENT, "#A07800"]} style={styles.preMatchBarFill} />
           </View>
@@ -493,115 +495,8 @@ export default function OnlineLobbyScreen() {
 
   if (phase === "direct_search" || phase === "direct_found") {
     const isFound = phase === "direct_found";
-    const rival = fakePlayers[0] ?? null;
-    const isOneVsOne = playerCount === 2;
 
-    if (isOneVsOne) {
-      // ── Second interface: two avatar circles (1v1 matchmaking) ──────────────
-      return (
-        <View style={[styles.fullBg, { paddingTop: topPad + 10, paddingBottom: botPad + 10 }]}>
-          <LinearGradient colors={["#020810", "#061020", "#08050a"]} style={StyleSheet.absoluteFill} />
-
-          <View style={styles.header}>
-            <Pressable onPress={() => { directSearchTimers.current.forEach(t => clearTimeout(t)); router.back(); }} style={styles.backBtn}>
-              <Ionicons name="arrow-back" size={20} color={ACCENT} />
-            </Pressable>
-            <Text style={styles.headerTitle}>
-              {isFound ? T("rivalFound" as any) : T("searchingMatch" as any)}
-            </Text>
-          </View>
-
-          <View style={styles.vsSearchCenter}>
-            {/* Mode label */}
-            <Text style={styles.vsSearchTitle}>
-              {isFound ? (T("rivalFound" as any) || "¡Rival encontrado!") : (T("searchingMatch" as any) || "Buscando rival...")}
-            </Text>
-
-            {/* Two circles row */}
-            <View style={styles.vsCirclesRow}>
-              {/* My profile */}
-              <View style={styles.vsPlayerCol}>
-                <View style={[styles.vsAvatarRing, { borderColor: isFound ? "#27AE60" : ACCENT }]}>
-                  {myProfile.photoUrl
-                    ? <Image source={{ uri: myProfile.photoUrl }} style={styles.vsAvatarPhoto} />
-                    : <View style={[styles.vsAvatarInner, { backgroundColor: myProfile.avatarColor + "33" }]}>
-                        <Ionicons name={myProfile.avatarIcon as any} size={44} color={myProfile.avatarColor} />
-                      </View>
-                  }
-                </View>
-                <Text style={styles.vsPlayerNameTxt} numberOfLines={1}>{myProfile.name}</Text>
-                <Text style={styles.vsPlayerRankTxt} numberOfLines={1}>{myProfile.rankName ?? ""}</Text>
-              </View>
-
-              {/* VS separator */}
-              <View style={styles.vsMiddleCol}>
-                <LinearGradient colors={["transparent", ACCENT + "66", "transparent"]} style={styles.vsVertLine} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} />
-                <View style={styles.vsMiddleCircle}>
-                  <Text style={styles.vsMiddleText}>VS</Text>
-                </View>
-                <LinearGradient colors={["transparent", ACCENT + "66", "transparent"]} style={styles.vsVertLine} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} />
-              </View>
-
-              {/* Rival profile */}
-              <View style={styles.vsPlayerCol}>
-                {rival ? (
-                  <Animated.View entering={FadeIn.duration(500)}>
-                    <View style={[styles.vsAvatarRing, { borderColor: "#E74C3C" }]}>
-                      {rival.photoUrl
-                        ? <Image source={{ uri: rival.photoUrl }} style={styles.vsAvatarPhoto} />
-                        : <View style={[styles.vsAvatarInner, { backgroundColor: rival.avatarColor + "33" }]}>
-                            <Ionicons name={rival.avatarIcon as any} size={44} color={rival.avatarColor} />
-                          </View>
-                      }
-                    </View>
-                  </Animated.View>
-                ) : (
-                  <View style={[styles.vsAvatarRing, { borderColor: "rgba(255,255,255,0.15)" }]}>
-                    <View style={[styles.vsAvatarInner, { backgroundColor: "rgba(255,255,255,0.05)" }]}>
-                      <ActivityIndicator size="large" color={ACCENT} />
-                    </View>
-                  </View>
-                )}
-                <Text style={[styles.vsPlayerNameTxt, !rival && { opacity: 0.3 }]} numberOfLines={1}>
-                  {rival?.name ?? "..."}
-                </Text>
-                <Text style={[styles.vsPlayerRankTxt, !rival && { opacity: 0 }]} numberOfLines={1}>
-                  {rival?.rankName ?? " "}
-                </Text>
-              </View>
-            </View>
-
-            {/* Found checkmark / searching dots */}
-            {isFound ? (
-              <Animated.View entering={FadeInUp.duration(400)} style={styles.vsFoundRow}>
-                <Ionicons name="checkmark-circle" size={22} color="#27AE60" />
-                <Text style={styles.vsFoundText}>{T("rivalFound" as any) || "¡Rival encontrado!"}</Text>
-              </Animated.View>
-            ) : (
-              <Text style={styles.vsSearchingDots}>
-                {T("waitingPlayers") || "Buscando..."}
-              </Text>
-            )}
-
-            {/* Progress bar when found */}
-            {isFound && (
-              <Animated.View entering={FadeInUp.delay(200).duration(400)} style={[styles.preMatchBar, { marginTop: 16 }]}>
-                <LinearGradient colors={[ACCENT, "#A07800"]} style={styles.preMatchBarFill} />
-              </Animated.View>
-            )}
-
-            {/* Cancel */}
-            {!isFound && (
-              <Pressable onPress={() => { directSearchTimers.current.forEach(t => clearTimeout(t)); router.back(); }} style={styles.cancelBtn}>
-                <Text style={styles.cancelTxt}>{T("cancelSearch" as any)}</Text>
-              </Pressable>
-            )}
-          </View>
-        </View>
-      );
-    }
-
-    // ── First interface: player slot list (Ranked 4p, Coop 4p) ──────────────
+    // ── First interface: player slot list (all modes) ──────────────────────
     const allPlayers = [{ ...myProfile, playerIndex: 0 }, ...fakePlayers];
     const isCoopDirect = isCoopMode;
     const team1 = isCoopDirect ? allPlayers.slice(0, 2) : allPlayers;
@@ -646,7 +541,7 @@ export default function OnlineLobbyScreen() {
           ) : (
             <View style={styles.teamsContainer}>
               <View style={styles.coopTeam}>
-                <Text style={[styles.teamLabel, { color: "#27AE60" }]}>EQUIPO 1</Text>
+                <Text style={[styles.teamLabel, { color: "#27AE60" }]}>{T("teamOne")}</Text>
                 {team1.map((p, i) => (
                   <PlayerSlot key={i} player={p} isSelf={i === 0} delay={i * 200} />
                 ))}
@@ -655,7 +550,7 @@ export default function OnlineLobbyScreen() {
                 <View style={styles.vsCircle}><Text style={styles.vsText}>VS</Text></View>
               </View>
               <View style={styles.coopTeam}>
-                <Text style={[styles.teamLabel, { color: "#E74C3C" }]}>EQUIPO RIVAL</Text>
+                <Text style={[styles.teamLabel, { color: "#E74C3C" }]}>{T("teamRival" as any)}</Text>
                 {Array.from({ length: 2 }).map((_, i) => (
                   <PlayerSlot key={i} player={team2[i] ?? null} isSelf={false} delay={(team1.length + i) * 200} />
                 ))}
@@ -693,7 +588,7 @@ export default function OnlineLobbyScreen() {
         <View style={styles.matchmakingContent}>
           <SpinnerIcon />
           <Text style={styles.matchmakingLabel}>{T("waitingPlayers")}</Text>
-          <Text style={styles.matchmakingSub}>{foundPlayers.length}/{playerCount} {T("found" as any) || "encontrados"}</Text>
+          <Text style={styles.matchmakingSub}>{foundPlayers.length}/{playerCount} {T("foundCount" as any)}</Text>
 
           <View style={styles.slotsList}>
             {Array.from({ length: playerCount }).map((_, i) => (
@@ -734,6 +629,16 @@ export default function OnlineLobbyScreen() {
           <View style={styles.codeBox}>
             <Text style={styles.codeText}>{roomCode}</Text>
           </View>
+          {roomCode ? (
+            <Animated.View entering={FadeIn.delay(300).duration(500)} style={styles.qrBox}>
+              <QRCode
+                value={`ocholocos://join/${roomCode}`}
+                size={150}
+                color={ACCENT}
+                backgroundColor="transparent"
+              />
+            </Animated.View>
+          ) : null}
           <Text style={styles.codeSub}>{T("shareCodeFriends" as any)}</Text>
 
           <View style={styles.slotsList}>
@@ -772,19 +677,19 @@ export default function OnlineLobbyScreen() {
             <Pressable onPress={() => { playButton().catch(() => {}); setPhase("select"); }} style={styles.backBtn}>
               <Ionicons name="arrow-back" size={20} color={ACCENT} />
             </Pressable>
-            <Text style={styles.headerTitle}>UNIRSE A SALA</Text>
+            <Text style={styles.headerTitle}>{T("joinRoom").toUpperCase()}</Text>
           </View>
 
           <View style={styles.joinContent}>
             <Ionicons name="people" size={52} color={ACCENT} />
-            <Text style={styles.joinTitle}>Ingresa el código de sala</Text>
-            <Text style={styles.joinSub}>Tu amigo debe compartirte el código de 6 caracteres</Text>
+            <Text style={styles.joinTitle}>{T("enterRoomCode" as any)}</Text>
+            <Text style={styles.joinSub}>{T("askFriendCode" as any)}</Text>
 
             <TextInput
               style={styles.codeInput}
               value={joinCode}
               onChangeText={v => { setJoinCode(v.toUpperCase()); setJoinError(""); }}
-              placeholder="CÓDIGO"
+              placeholder={T("roomCode")}
               placeholderTextColor="#555"
               maxLength={8}
               autoCapitalize="characters"
@@ -795,13 +700,13 @@ export default function OnlineLobbyScreen() {
 
             <Pressable onPress={handleJoinRoom} style={styles.joinBtn}>
               <LinearGradient colors={[ACCENT, "#A07800"]} style={styles.joinBtnGrad}>
-                <Text style={styles.joinBtnTxt}>UNIRSE</Text>
+                <Text style={styles.joinBtnTxt}>{T("joinRoomBtn").toUpperCase()}</Text>
               </LinearGradient>
             </Pressable>
 
             {foundPlayers.length > 1 && (
               <View style={styles.slotsList}>
-                <Text style={styles.playersHeader}>En la sala ({foundPlayers.length}/{playerCount})</Text>
+                <Text style={styles.playersHeader}>{T("inRoom" as any)} ({foundPlayers.length}/{playerCount})</Text>
                 {foundPlayers.map((p, i) => (
                   <PlayerSlot key={i} player={p} isSelf={p.playerIndex === myPlayerIndex} delay={i * 80} />
                 ))}
@@ -821,7 +726,7 @@ export default function OnlineLobbyScreen() {
         <Pressable onPress={handleBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={ACCENT} />
         </Pressable>
-        <Text style={styles.headerTitle}>MULTIJUGADOR ONLINE</Text>
+        <Text style={styles.headerTitle}>{T("onlineMultiplayer" as any)}</Text>
       </View>
 
       <View style={styles.selectContent}>
@@ -849,8 +754,8 @@ export default function OnlineLobbyScreen() {
                 <Ionicons name="flash" size={28} color={ACCENT} />
               </View>
               <View style={styles.optionInfo}>
-                <Text style={styles.optionTitle}>PARTIDA RÁPIDA</Text>
-                <Text style={styles.optionSub}>Buscar jugadores automáticamente</Text>
+                <Text style={styles.optionTitle}>{T("quickMatch")}</Text>
+                <Text style={styles.optionSub}>{T("quickMatchSub" as any)}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={ACCENT + "88"} />
             </LinearGradient>
@@ -865,8 +770,8 @@ export default function OnlineLobbyScreen() {
                 <Ionicons name="add-circle" size={28} color="#9B59B6" />
               </View>
               <View style={styles.optionInfo}>
-                <Text style={[styles.optionTitle, { color: "#9B59B6" }]}>CREAR SALA</Text>
-                <Text style={styles.optionSub}>Generar código para invitar amigos</Text>
+                <Text style={[styles.optionTitle, { color: "#9B59B6" }]}>{T("createRoom").toUpperCase()}</Text>
+                <Text style={styles.optionSub}>{T("createRoomSub" as any)}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9B59B688" />
             </LinearGradient>
@@ -881,8 +786,8 @@ export default function OnlineLobbyScreen() {
                 <Ionicons name="enter" size={28} color="#27AE60" />
               </View>
               <View style={styles.optionInfo}>
-                <Text style={[styles.optionTitle, { color: "#27AE60" }]}>UNIRSE CON CÓDIGO</Text>
-                <Text style={styles.optionSub}>Ingresar código de sala de un amigo</Text>
+                <Text style={[styles.optionTitle, { color: "#27AE60" }]}>{T("joinWithCode" as any)}</Text>
+                <Text style={styles.optionSub}>{T("joinWithCodeSub" as any)}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#27AE6088" />
             </LinearGradient>
@@ -890,7 +795,7 @@ export default function OnlineLobbyScreen() {
         </Animated.View>
 
         <Animated.Text entering={FadeInDown.delay(200).duration(500)} style={styles.footerNote}>
-          Los movimientos se sincronizan en tiempo real entre todos los dispositivos
+          {T("syncNote" as any)}
         </Animated.Text>
       </View>
     </View>
@@ -974,6 +879,12 @@ const styles = StyleSheet.create({
   onlineDot: { width: 10, height: 10, borderRadius: 5 },
   cancelBtn: { marginTop: 12, paddingVertical: 10, paddingHorizontal: 24 },
   cancelTxt: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "rgba(255,255,255,0.35)" },
+  qrBox: {
+    alignItems: "center", justifyContent: "center",
+    padding: 16, backgroundColor: "rgba(212,175,55,0.06)",
+    borderRadius: 16, borderWidth: 1, borderColor: ACCENT + "33",
+    alignSelf: "center",
+  },
   codeLabel: {
     fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: ACCENT, letterSpacing: 3,
     textAlign: "center",
