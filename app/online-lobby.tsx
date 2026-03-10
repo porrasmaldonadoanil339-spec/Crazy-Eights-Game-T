@@ -212,12 +212,24 @@ export default function OnlineLobbyScreen() {
   // ── Direct fake matchmaking flow ─────────────────────────────────────────────
   const directSearchTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  const latestFakePlayers = useRef<PlayerInfo[]>([]);
+  useEffect(() => { latestFakePlayers.current = fakePlayers; }, [fakePlayers]);
+
   function startDirectGame() {
     stopMusic().catch(() => {});
     startGameMusic().catch(() => {});
     const gameMode = (isCoopMode ? "coop" : mode) as GameModeId;
-    startGame(gameMode, "normal");
-    router.replace("/game");
+    const firstFake = latestFakePlayers.current[0];
+    const cpuOverride = firstFake ? {
+      name: firstFake.name,
+      level: firstFake.level,
+      avatarIcon: firstFake.avatarIcon,
+      avatarColor: firstFake.avatarColor,
+      photoUrl: firstFake.photoUrl,
+      difficulty: "normal",
+    } : undefined;
+    startGame(gameMode, "normal", cpuOverride);
+    router.replace({ pathname: "/game", params: { skipMatchmaking: "true" } });
   }
 
   useEffect(() => {

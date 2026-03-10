@@ -440,8 +440,13 @@ export default function PlayScreen() {
       return;
     }
     await playSound("mode_select").catch(() => {});
-    const playerCount = modeId === "coop" ? "4" : "2";
-    router.push({ pathname: "/online-lobby", params: { mode: modeId, playerCount, directSearch: "true" } });
+    const useOnlineLobby = modeId === "coop";
+    if (useOnlineLobby) {
+      router.push({ pathname: "/online-lobby", params: { mode: modeId, playerCount: "4", directSearch: "true" } });
+    } else {
+      startGame(modeId as any, "normal");
+      router.push("/game");
+    }
   };
 
   const handleDifficultySelect = async (difficulty: Difficulty) => {

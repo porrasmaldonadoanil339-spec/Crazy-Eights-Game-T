@@ -1,0 +1,145 @@
+
+MENSAJE PARA REPLIT – CORRECCIONES COMPLETAS DEL JUEGO
+Por favor lee todo este mensaje completo y aplica cada punto exactamente como está explicado.
+________________________________________
+1. Uso correcto de las interfaces de búsqueda de jugadores
+En mi juego existen dos interfaces diferentes:
+•	PRIMERA Interfaz de búsqueda de jugadores
+•	SEGUNDA Interfaz de búsqueda de jugadores
+Cada modo del juego debe usar solo una de estas interfaces.
+La otra interfaz NO debe aparecer ni cargarse para evitar confusión.
+________________________________________
+2. Modos que usan SOLO la PRIMERA Interfaz de búsqueda de jugadores
+Los siguientes modos solo deben usar la PRIMERA Interfaz de búsqueda de jugadores:
+•	Modo Online
+•	Modo Cooperativo
+•	Modo Clasificatoria
+Funcionamiento correcto
+1.	Aparece la PRIMERA Interfaz de búsqueda de jugadores.
+2.	En esa interfaz el sistema busca y muestra los jugadores encontrados.
+3.	Después de unos segundos se entra directamente a la partida.
+❗ IMPORTANTE
+En estos modos NO debe aparecer la SEGUNDA Interfaz de búsqueda de jugadores en ningún momento.
+•	No debe cargarse
+•	No debe mostrarse
+•	No debe aparecer entre la búsqueda y la partida
+Después de la PRIMERA Interfaz de búsqueda de jugadores, el juego debe entrar directamente a la partida.
+________________________________________
+3. Jugadores dentro de la partida
+Los jugadores que aparecen en la PRIMERA Interfaz de búsqueda de jugadores deben ser exactamente los mismos jugadores que aparecen dentro de la partida.
+Esto significa:
+•	No deben cambiar
+•	No deben generarse otros jugadores
+•	La partida debe comenzar con los mismos jugadores encontrados en la PRIMERA Interfaz de búsqueda de jugadores
+________________________________________
+4. Modos restantes del juego
+En los demás modos del juego, el funcionamiento debe ser diferente.
+Funcionamiento correcto
+1.	Aparece la SEGUNDA Interfaz de búsqueda de jugadores.
+2.	En esa interfaz se muestran los jugadores que participarán en la partida.
+3.	Después se entra a la partida.
+❗ IMPORTANTE
+En estos modos NO debe aparecer la PRIMERA Interfaz de búsqueda de jugadores.
+Solo debe usarse la SEGUNDA Interfaz de búsqueda de jugadores.
+________________________________________
+5. Modo Cooperativo – Jugabilidad
+Cuando los jugadores se unan en el modo Cooperativo, la jugabilidad debe funcionar así:
+Baraja compartida
+•	Cada equipo tiene una baraja de 8 cartas en común.
+•	Los dos jugadores del mismo equipo usan las mismas cartas durante la partida.
+Objetivo
+El objetivo es derrotar al equipo rival utilizando la baraja compartida, aplicando:
+•	estrategia
+•	coordinación
+•	buen timing
+________________________________________
+6. Modo Online – Crear sala
+En el botón azul “Crear sala” quiero agregar:
+•	opción para generar un código de sala
+•	opción para generar un código QR para compartir la sala
+________________________________________
+7. Modo Online – Unirse
+Los jugadores deben poder unirse a la sala de dos formas:
+•	escribiendo el código de sala
+•	escaneando el código QR
+Esto debe funcionar correctamente en tiempo real.
+________________________________________
+8. Error actual del modo Online
+Probé el modo online con otro dispositivo usando Expo.
+El jugador puede unirse correctamente, pero cuando comienza la partida el juego se crashea.
+Por favor corrige esto para que:
+•	el juego no se crashee
+•	la partida funcione correctamente en tiempo real
+________________________________________
+9. Efectos visuales al colocar cartas
+Quiero mejorar los efectos visuales cuando se colocan cartas durante la partida.
+Cartas normales
+Cuando un jugador coloque cualquier carta, debe aparecer un pequeño efecto visual, por ejemplo:
+•	números flotantes como +1 o +2
+•	un pequeño destello
+•	una animación breve al colocar la carta
+Esto debe aparecer:
+•	cuando yo coloco una carta
+•	cuando el rival coloca una carta
+________________________________________
+Cartas especiales
+Cuando se coloque una carta especial o con habilidad, el efecto visual debe ser más notable, por ejemplo:
+•	destello más fuerte
+•	partículas
+•	animación especial
+El objetivo es que el jugador note inmediatamente que es una carta especial.
+________________________________________
+10. Pantalla de carga
+La portada de carga está demasiado arriba.
+Quiero que:
+•	la portada baje un poco hacia el centro
+•	quede ligeramente arriba del centro de la pantalla
+•	no esté pegada a la parte superior
+Debe verse equilibrada y profesional como en juegos móviles profesionales.
+________________________________________
+11. Sistema de idioma
+El cambio de idioma no está funcionando correctamente.
+Cuando el jugador cambie el idioma, toda la aplicación debe cambiar completamente de idioma, incluyendo:
+Menú Jugar
+•	botones
+•	descripciones
+Logros
+•	nombres
+•	descripciones
+Tienda
+•	nombres de cartas u objetos
+•	descripciones
+•	botones
+Perfil
+•	botones
+•	textos
+•	opciones
+No debe quedar ningún texto en el idioma anterior.
+________________________________________
+12. Ranking Mundial
+En el Ranking Mundial del modo Clasificatoria aparecen más de 10,000 jugadores.
+Quiero que todos los jugadores del ranking tengan un perfil visible con avatar, igual que los jugadores que aparecen en las partidas.
+Tipos de avatar
+Debe haber variedad:
+•	caras de personas reales
+•	avatares estándar del juego (como los de la tienda)
+Regla importante
+Esto debe aplicarse automáticamente a todos los jugadores del ranking, para que ningún jugador aparezca sin avatar.
+________________________________________
+13. Objetivo final
+Quiero que el juego tenga:
+•	uso correcto de la PRIMERA Interfaz de búsqueda de jugadores
+•	uso correcto de la SEGUNDA Interfaz de búsqueda de jugadores
+•	que no aparezca la interfaz incorrecta según el modo
+•	jugadores coherentes entre interfaz y partida
+•	modo online estable en tiempo real
+•	ranking con perfiles realistas
+•	sistema de idiomas funcionando al 100%
+•	mejores efectos visuales en las partidas
+Por favor aplica todos los cambios exactamente como están descritos en este mensaje.
+________________________________________
+✅ Así Replit entiende:
+•	qué interfaz usar
+•	qué interfaz NO debe aparecer
+•	cómo deben pasar los jugadores a la partida
+•	todas las mejoras que pediste

@@ -37,7 +37,7 @@ export interface GameSession {
 interface GameContextValue {
   gameState: GameState | null;
   session: GameSession | null;
-  startGame: (mode: GameModeId, difficulty: Difficulty) => void;
+  startGame: (mode: GameModeId, difficulty: Difficulty, overrideCpuProfile?: any) => void;
   handlePlayCard: (card: Card, chosenSuit?: Suit) => void;
   handleDraw: () => void;
   handleChooseSuit: (suit: Suit) => void;
@@ -63,11 +63,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [dealAnimationDone, setDealAnimationDone] = useState(false);
 
-  const startGame = useCallback((mode: GameModeId, difficulty: Difficulty) => {
+  const startGame = useCallback((mode: GameModeId, difficulty: Difficulty, overrideCpuProfile?: any) => {
     const modeConfig = getModeById(mode);
     const newState = initGame(modeConfig.cardsPerPlayer, difficulty);
     const isExpert = difficulty === "expert";
-    const cpuProfile = getRandomCpuProfile(undefined, playerLevel, isExpert);
+    const cpuProfile = overrideCpuProfile || getRandomCpuProfile(undefined, playerLevel, isExpert);
 
     setSelectedCard(null);
     setDealAnimationDone(false);

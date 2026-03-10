@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions, Image,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
@@ -970,6 +970,7 @@ function PlayerProfileBar({ name, avatarId, titleId, level, photoUri }: {
 // ─── Main game screen ─────────────────────────────────────────────────────────
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
+  const screenParams = useLocalSearchParams<{ skipMatchmaking?: string }>();
   const {
     gameState, session, handlePlayCard, handleDraw, handleChooseSuit,
     runAiTurn, selectedCard, setSelectedCard, dealAnimationDone, setDealAnimationDone,
@@ -1110,6 +1111,26 @@ export default function GameScreen() {
     opacity: withTiming(showLastCardBanner ? 1 : 0, { duration: 300 }),
   }));
 
+  const floatLabelY = useSharedValue(0);
+  const floatLabelOpacity = useSharedValue(0);
+  const floatLabelScale = useSharedValue(0.5);
+
+  const floatLabelStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatLabelY.value }, { scale: floatLabelScale.value }],
+    opacity: floatLabelOpacity.value,
+  }));
+
+  function triggerCardFloat(label: string, color: string = "#FFFFFF") {
+    setFloatingCardLabel(label);
+    setFloatingCardColor(color);
+    floatLabelY.value = 0;
+    floatLabelScale.value = 0.6;
+    floatLabelOpacity.value = 1;
+    floatLabelY.value = withTiming(-70, { duration: 1000 });
+    floatLabelScale.value = withSpring(1.1, { damping: 10 });
+    floatLabelOpacity.value = withDelay(600, withTiming(0, { duration: 500 }));
+  }
+
   useEffect(() => {
     if (gameState?.playerHand?.length === 1 && dealAnimationDone) {
       setShowLastCardBanner(true);
@@ -1140,10 +1161,12 @@ export default function GameScreen() {
   const menuCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [inGameMusicEnabled, setInGameMusicEnabled] = useState(true);
   const [pingMs, setPingMs] = useState(Math.floor(Math.random() * 55 + 25));
-  const [showMatchmaking, setShowMatchmaking] = useState(true);
+  const [showMatchmaking, setShowMatchmaking] = useState(screenParams.skipMatchmaking !== "true");
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpNum, setLevelUpNum] = useState(1);
   const [showEffect, setShowEffect] = useState(false);
+  const [floatingCardLabel, setFloatingCardLabel] = useState<string | null>(null);
+  const [floatingCardColor, setFloatingCardColor] = useState("#FFFFFF");
   const [showSpecialBurst, setShowSpecialBurst] = useState(false);
   const [specialBurstEffect, setSpecialBurstEffect] = useState("effect_lightning");
   const prevTopCardIdRef = useRef<string | undefined>(undefined);
@@ -1269,7 +1292,7 @@ export default function GameScreen() {
     }
   }, [gameState?.pendingDraw, gameState?.aiHand?.length, gameState?.currentPlayer, dealAnimationDone]);
 
-  // Special card burst effect — fires for any player (human or AI) playing a special card
+  // Card play effect — fires for any player (human or AI) playing any card
   useEffect(() => {
     if (!gameState || !dealAnimationDone) return;
     const topCard = gameState.discardPile[gameState.discardPile.length - 1];
@@ -1277,14 +1300,20 @@ export default function GameScreen() {
     if (topCard.id === prevTopCardIdRef.current) return;
     prevTopCardIdRef.current = topCard.id;
     const isSpecial = topCard.rank === "8" || topCard.rank === "Joker" || topCard.rank === "2" || topCard.rank === "7";
-    if (!isSpecial) return;
-    let effectId = "effect_sparkle";
-    if (topCard.rank === "8") effectId = "effect_lightning";
-    else if (topCard.rank === "Joker") effectId = "effect_cosmic";
-    else if (topCard.rank === "2") effectId = "effect_fire";
-    else if (topCard.rank === "7") effectId = "effect_stars_c";
-    setSpecialBurstEffect(effectId);
-    setShowSpecialBurst(true);
+    if (isSpecial) {
+      let effectId = "effect_sparkle";
+      if (topCard.rank === "8") effectId = "effect_lightning";
+      else if (topCard.rank === "Joker") effectId = "effect_cosmic";
+      else if (topCard.rank === "2") effectId = "effect_fire";
+      else if (topCard.rank === "7") effectId = "effect_stars_c";
+      setSpecialBurstEffect(effectId);
+      setShowSpecialBurst(true);
+      const label = topCard.rank === "2" ? "+2" : topCard.rank === "Joker" ? "+4" : topCard.rank === "7" ? "SKIP" : "WILD";
+      const color = topCard.rank === "2" ? "#FF4444" : topCard.rank === "Joker" ? "#CC44FF" : topCard.rank === "7" ? Colors.gold : Colors.gold;
+      triggerCardFloat(label, color);
+    } else {
+      triggerCardFloat("+1", "#FFFFFF");
+    }
   }, [gameState?.discardPile?.length, gameState?.discardPile, dealAnimationDone]);
 
   const handleSendEmote = (emote: Emote) => {
@@ -1908,6 +1937,13 @@ export default function GameScreen() {
         />
       )}
 
+      {/* Floating card play label */}
+      {floatingCardLabel && (
+        <Animated.View style={[styles.floatLabel, floatLabelStyle, { pointerEvents: "none" }]}>
+          <Text style={[styles.floatLabelText, { color: floatingCardColor }]}>{floatingCardLabel}</Text>
+        </Animated.View>
+      )}
+
       {/* Matchmaking screen */}
       {showMatchmaking && activeCpu && (
         <MatchmakingScreen
@@ -2369,6 +2405,22 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_900ExtraBold",
     fontSize: 24,
     color: "#1a0a00",
+  },
+  floatLabel: {
+    position: "absolute",
+    top: SH * 0.4,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 900,
+  },
+  floatLabelText: {
+    fontFamily: "Nunito_900ExtraBold",
+    fontSize: 32,
+    color: "#FFFFFF",
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   challengeHud: {
     position: "absolute",
