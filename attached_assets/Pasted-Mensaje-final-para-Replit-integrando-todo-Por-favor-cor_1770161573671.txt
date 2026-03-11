@@ -1,0 +1,123 @@
+Mensaje final para Replit (integrando todo)
+
+Por favor corrige y mejore todos los sistemas del juego usando lógica clara y profesional, siguiendo estas reglas:
+
+1. Conexión entre la interfaz de búsqueda de jugadores y la partida
+
+Los jugadores que aparecen en la Interfaz de Búsqueda de Jugadores deben ser exactamente los mismos que aparecen dentro de la partida.
+
+No deben generarse jugadores nuevos al iniciar la partida.
+
+Esto se aplica a: Modo Clasificatoria, Cooperativo y Online.
+
+Los jugadores encontrados deben poder jugar la partida normalmente.
+
+Flujo correcto:
+
+Entrar a la Interfaz de Búsqueda de Jugadores.
+
+Encontrar la cantidad específica de jugadores.
+
+Guardar esos jugadores temporalmente.
+
+Iniciar la partida con esos mismos jugadores.
+
+2. Lógica del modo Cooperativo
+
+Si la búsqueda encuentra 4 jugadores:
+
+Equipo de abajo (mi equipo)
+Jugador 1
+Jugador 2
+
+Equipo de arriba (equipo rival)
+Jugador 3
+Jugador 4
+
+Todos comparten la misma baraja.
+
+El turno debe ser: Jugador 1 → Jugador 3 → Jugador 2 → Jugador 4, y así sucesivamente.
+
+3. Corrección del modo Relámpago
+
+Temporizador de 5 segundos no debe reiniciarse al seleccionar otra carta.
+
+Solo reiniciarse cuando termina el turno y comienza el siguiente.
+
+Garantizar rapidez y presión de tiempo.
+
+4. Corrección de recompensas
+
+Ganar la partida: +10 monedas, +30 experiencia
+
+Perder la partida: no recibir monedas ni experiencia
+
+Esto asegura coherencia en el sistema de progresión.
+
+5. Corrección del sistema de idiomas
+
+El cambio de idioma debe ser total en toda la aplicación.
+
+Cuando se cambie de idioma, todas las interfaces, botones, menús y textos deben actualizarse completamente, sin dejar restos del idioma anterior.
+
+Debe funcionar como en juegos profesionales de Play Store (Clash Royale, Brawl Stars, etc.).
+
+6. Corrección del sistema de rangos en Clasificatoria
+
+La interfaz debe reflejar el rango real del jugador según el progreso.
+
+El jugador comienza en Hierro 5 y sube o baja siguiendo los 12 rangos del juego.
+
+Cada rango tiene estrellas que deben completarse antes de pasar al siguiente.
+
+No debe quedarse mostrando Hierro 1 ni ningún rango incorrecto.
+
+7. Efectos visuales de las cartas
+
+Cuando se coloque cualquier carta o carta especial, deben aparecer efectos visuales dinámicos como luces, destellos, partículas o explosiones.
+
+Estos efectos deben verse tanto cuando yo coloco la carta como cuando el rival la coloca.
+
+Los efectos que ya existen en la tienda deben aplicarse automáticamente al lanzar cartas en la partida.
+
+Los efectos de +1, +2 y frases de las cartas deben mantenerse.
+
+8. Portada y pantalla de carga
+
+El logo de la desarrolladora debe mostrarse con un tiempo moderado, estilo Clash Royale, sin salir demasiado rápido.
+
+Después del logo, mostrar la pantalla de carga del juego centrada visualmente.
+
+La primera vez que abra el juego, el jugador puede conectarse con Google, Facebook o como invitado.
+
+La vinculación de Google y Facebook debe funcionar como en Clash Royale, realista y confiable.
+
+Debe haber opción de cerrar sesión y volver a vincular en Configuración.
+
+9. Música de búsqueda de jugadores
+
+Durante la búsqueda de jugadores en todos los modos, debe sonar una música apropiada para mejorar la experiencia.
+
+Después de encontrar los jugadores, la música se detiene y se inicia la partida.
+
+10. Modo Desafíos
+
+Las reglas de los desafíos deben adaptarse a la partida.
+
+Por ejemplo, si un desafío indica que se empieza con 4 cartas, la partida debe aplicar exactamente esas 4 cartas, aunque el modo normal use 8.
+
+11. Mejoras opcionales
+
+Puedes agregar detalles visuales y mejoras de experiencia para que el juego se vea más profesional y atractivo, sin modificar la base o la lógica principal.
+
+Objetivo final
+
+Implementa todo siguiendo lógica de sistema, garantizando que:
+
+Las interfaces reflejen datos reales.
+
+Los rangos, recompensas, cartas y desafíos funcionen correctamente.
+
+El idioma se cambie completamente en toda la app.
+
+La experiencia del jugador sea coherente, fluida y profesional.

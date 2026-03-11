@@ -12,6 +12,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { getRankInfo, RANKS, RANK_COLORS, RANK_ICONS, DIVISIONS } from "@/lib/ranked";
 import { getCurrentSeason, getSeasonRewardsForRank } from "@/lib/seasons";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { PlayerProfileModal, type PlayerProfileData } from "@/components/PlayerProfileModal";
 
 const { width } = Dimensions.get("window");
 
@@ -92,7 +93,9 @@ function generatePlayer(index: number) {
 
 export default function RankedScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, level } = useProfile();
+  const { profile, level, addOutgoingFriendRequest } = useProfile();
+  const [profilePlayer, setProfilePlayer] = useState<PlayerProfileData | null>(null);
+  const [sentFriendIds, setSentFriendIds] = useState<Set<string>>(new Set());
   const T = useT();
   const isDark = profile.darkMode !== false;
   const themeColors = isDark ? Colors : LightColors;
@@ -151,14 +154,53 @@ export default function RankedScreen() {
 
   const nextRankProgress = (profile.rankedProfile.stars / profile.rankedProfile.maxStars) * 100;
 
+  const openPlayerProfile = useCallback((item: any) => {
+    if (item.isMe) return;
+    const rankLabel = `${T(`rank${RANKS[item.rank]}` as any)} ${DIVISIONS[item.division]}`;
+    const seed = item.position * 31337;
+    const wins = Math.floor(50 + seededRand(seed * 100) * 800);
+    const winRate = Math.round(40 + seededRand(seed * 200) * 45);
+    const alreadySent = sentFriendIds.has(item.id);
+    const data: PlayerProfileData = {
+      name: item.name,
+      level: item.level,
+      wins,
+      score: item.stars,
+      avatarIcon: item.avatarIcon,
+      avatarColor: item.avatarColor,
+      photoUrl: item.photoUrl,
+      titleName: rankLabel,
+      rank: item.position,
+      rankName: rankLabel,
+      country: item.country,
+      winRate,
+      isFriend: false,
+      requestSent: alreadySent,
+    };
+    setProfilePlayer(data);
+  }, [T, sentFriendIds]);
+
+  const handleAddFriend = useCallback((_name: string) => {
+    if (!profilePlayer) return;
+    const playerId = `ranked_${profilePlayer.name.replace(/\s/g, "_")}`;
+    setSentFriendIds(prev => new Set([...prev, playerId]));
+    addOutgoingFriendRequest({ id: playerId, name: profilePlayer.name, level: profilePlayer.level, avatarIcon: profilePlayer.avatarIcon, avatarColor: profilePlayer.avatarColor, photoUrl: profilePlayer.photoUrl });
+    setProfilePlayer(prev => prev ? { ...prev, requestSent: true } : prev);
+  }, [profilePlayer, addOutgoingFriendRequest]);
+
   const renderItem = ({ item, index }: { item: any; index: number }) => {
     const isMe = item.isMe === true;
     return (
-      <View key={item.id} style={[
-        styles.rankingItem,
-        { backgroundColor: isMe ? RANK_COLORS[item.rank] + "22" : themeColors.surface },
-        isMe && { borderWidth: 1.5, borderColor: RANK_COLORS[item.rank] + "88" },
-      ]}>
+      <Pressable
+        key={item.id}
+        onPress={() => openPlayerProfile(item)}
+        style={({ pressed }) => [
+          styles.rankingItem,
+          { backgroundColor: isMe ? RANK_COLORS[item.rank] + "22" : themeColors.surface },
+          isMe && { borderWidth: 1.5, borderColor: RANK_COLORS[item.rank] + "88" },
+          !isMe && pressed && { opacity: 0.75 },
+        ]}
+      >
         <View style={styles.rankingPlace}>
           {index < 3 && !isMe ? (
             <Ionicons name="medal" size={24} color={index === 0 ? "#D4AF37" : index === 1 ? "#C0C0C0" : "#CD7F32"} />
@@ -200,7 +242,7 @@ export default function RankedScreen() {
           <Ionicons name={RANK_ICONS[item.rank] as any} size={14} color={RANK_COLORS[item.rank]} />
           <Text style={[styles.rankBadgeTextSmall, { color: RANK_COLORS[item.rank] }]}>Lv.{item.level}</Text>
         </View>
-      </View>
+      </Pressable>
     );
   };
 
@@ -368,6 +410,14 @@ export default function RankedScreen() {
           </View>
         </Pressable>
       </Modal>
+
+      {/* Player Profile Modal */}
+      <PlayerProfileModal
+        visible={!!profilePlayer}
+        player={profilePlayer}
+        onClose={() => setProfilePlayer(null)}
+        onAddFriend={handleAddFriend}
+      />
 
       {/* Play Button Fixed Bottom */}
       <View style={[styles.footer, { paddingBottom: botPad + 20, backgroundColor: themeColors.background + "ee" }]}>

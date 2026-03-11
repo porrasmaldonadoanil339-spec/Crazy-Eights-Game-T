@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
+import { useT } from "@/hooks/useT";
 
 export interface PlayerProfileData {
   name: string;
@@ -17,6 +18,8 @@ export interface PlayerProfileData {
   photoUrl?: string;
   titleName?: string;
   rank?: number;
+  rankName?: string;
+  country?: { code: string; name: string };
   winRate?: number;
   isFriend?: boolean;
   requestSent?: boolean;
@@ -40,6 +43,7 @@ const RARITY_LEVEL_COLORS = (lvl: number) => {
 
 export function PlayerProfileModal({ visible, player, onClose, onAddFriend, onInvite }: PlayerProfileModalProps) {
   const insets = useSafeAreaInsets();
+  const T = useT();
   if (!player) return null;
 
   const levelColors = RARITY_LEVEL_COLORS(player.level);
@@ -90,8 +94,16 @@ export function PlayerProfileModal({ visible, player, onClose, onAddFriend, onIn
               <View style={[styles.rankBadge, { backgroundColor: player.rank <= 3 ? Colors.gold + "22" : Colors.surface }]}>
                 <Ionicons name="trophy" size={12} color={player.rank <= 3 ? Colors.gold : Colors.textMuted} />
                 <Text style={[styles.rankTxt, { color: player.rank <= 3 ? Colors.gold : Colors.textMuted }]}>
-                  #{player.rank} Ranking
+                  #{player.rank} {player.rankName || "Ranking"}
                 </Text>
+              </View>
+            )}
+
+            {/* Country */}
+            {player.country && (
+              <View style={styles.countryRow}>
+                <Ionicons name="location" size={12} color={Colors.textMuted} />
+                <Text style={styles.countryTxt}>{player.country.name}</Text>
               </View>
             )}
 
@@ -101,21 +113,21 @@ export function PlayerProfileModal({ visible, player, onClose, onAddFriend, onIn
                 <LinearGradient colors={["#1a2f1a", "#0d1f0f"]} style={styles.statGrad}>
                   <Ionicons name="trophy" size={18} color={Colors.gold} />
                   <Text style={styles.statValue}>{player.wins.toLocaleString()}</Text>
-                  <Text style={styles.statLabel}>Victorias</Text>
+                  <Text style={styles.statLabel}>{T("statsWins") || "Wins"}</Text>
                 </LinearGradient>
               </View>
               <View style={styles.statBox}>
                 <LinearGradient colors={["#1a2f1a", "#0d1f0f"]} style={styles.statGrad}>
                   <Ionicons name="trending-up" size={18} color="#27AE60" />
                   <Text style={styles.statValue}>{winRate}%</Text>
-                  <Text style={styles.statLabel}>Tasa Vic.</Text>
+                  <Text style={styles.statLabel}>{T("statsWinRate") || "Win Rate"}</Text>
                 </LinearGradient>
               </View>
               <View style={styles.statBox}>
                 <LinearGradient colors={["#1a2f1a", "#0d1f0f"]} style={styles.statGrad}>
                   <Ionicons name="game-controller" size={18} color="#4A90E2" />
                   <Text style={styles.statValue}>{gamesPlayed.toLocaleString()}</Text>
-                  <Text style={styles.statLabel}>Partidas</Text>
+                  <Text style={styles.statLabel}>{T("statsGames") || "Games"}</Text>
                 </LinearGradient>
               </View>
             </View>
@@ -123,8 +135,8 @@ export function PlayerProfileModal({ visible, player, onClose, onAddFriend, onIn
             {/* XP bar */}
             <View style={styles.xpSection}>
               <View style={styles.xpLabelRow}>
-                <Text style={styles.xpLabel}>Nivel {player.level}</Text>
-                <Text style={styles.xpLabel}>Nivel {player.level + 1}</Text>
+                <Text style={styles.xpLabel}>{T("statsLevel") || "Level"} {player.level}</Text>
+                <Text style={styles.xpLabel}>{T("statsLevel") || "Level"} {player.level + 1}</Text>
               </View>
               <View style={styles.xpTrack}>
                 <LinearGradient
@@ -147,14 +159,14 @@ export function PlayerProfileModal({ visible, player, onClose, onAddFriend, onIn
                 >
                   <LinearGradient colors={["#27AE60", "#1a7a43"]} style={styles.actionBtnGrad}>
                     <Ionicons name="person-add" size={16} color="#fff" />
-                    <Text style={styles.actionBtnTxt}>Agregar amigo</Text>
+                    <Text style={styles.actionBtnTxt}>{T("addFriend") || "Add Friend"}</Text>
                   </LinearGradient>
                 </Pressable>
               )}
               {player.requestSent && (
                 <View style={[styles.actionBtn, styles.sentBtn]}>
                   <Ionicons name="checkmark-circle" size={16} color={Colors.textMuted} />
-                  <Text style={styles.sentTxt}>Solicitud enviada</Text>
+                  <Text style={styles.sentTxt}>{T("requestSent") || "Request Sent"}</Text>
                 </View>
               )}
               {player.isFriend && onInvite && (
@@ -164,12 +176,12 @@ export function PlayerProfileModal({ visible, player, onClose, onAddFriend, onIn
                 >
                   <LinearGradient colors={[Colors.gold, "#A07800"]} style={styles.actionBtnGrad}>
                     <Ionicons name="game-controller" size={16} color="#1a0a00" />
-                    <Text style={[styles.actionBtnTxt, { color: "#1a0a00" }]}>Invitar a jugar</Text>
+                    <Text style={[styles.actionBtnTxt, { color: "#1a0a00" }]}>{T("invitePlay") || "Invite to Play"}</Text>
                   </LinearGradient>
                 </Pressable>
               )}
               <Pressable style={[styles.actionBtn, styles.closeAction]} onPress={onClose}>
-                <Text style={styles.closeActionTxt}>Cerrar</Text>
+                <Text style={styles.closeActionTxt}>{T("close") || "Close"}</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -273,6 +285,17 @@ const styles = StyleSheet.create({
   rankTxt: {
     fontFamily: "Nunito_700Bold",
     fontSize: 12,
+  },
+  countryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 6,
+  },
+  countryTxt: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 12,
+    color: Colors.textMuted,
   },
   statsGrid: {
     flexDirection: "row",

@@ -1,0 +1,121 @@
+Correcciones y reglas lógicas obligatorias del juego
+
+Por favor corrige estos sistemas del juego usando lógica clara para que la experiencia del jugador sea correcta y profesional.
+
+1. Conexión entre la interfaz de búsqueda de jugadores y la partida
+
+Debe existir una conexión directa entre la Interfaz de Búsqueda de Jugadores y la partida.
+
+Regla obligatoria:
+
+Los jugadores que aparecen en la interfaz de búsqueda deben ser exactamente los mismos jugadores que aparecen dentro de la partida.
+
+No deben generarse jugadores nuevos al iniciar la partida.
+
+Flujo correcto del sistema:
+
+El juego entra a la Interfaz de Búsqueda de Jugadores.
+
+El sistema encuentra una cantidad específica de jugadores.
+
+Esos jugadores se guardan temporalmente.
+
+Cuando inicia la partida, el juego debe usar exactamente esos mismos jugadores.
+
+Esto debe aplicarse en:
+
+Modo Clasificatoria
+
+Modo Cooperativo
+
+Modo Online
+
+Además, los jugadores encontrados deben poder jugar la partida normalmente.
+
+2. Lógica del modo Cooperativo
+
+Si la búsqueda encuentra 4 jugadores:
+
+Equipo de abajo (mi equipo)
+
+Jugador 1
+Jugador 2
+
+Equipo de arriba (equipo rival)
+
+Jugador 3
+Jugador 4
+
+Todos comparten la misma baraja y el turno debe ser:
+
+Jugador 1
+Jugador 3
+Jugador 2
+Jugador 4
+
+Y así sucesivamente.
+
+3. Corrección del modo Relámpago
+
+El modo Relámpago tiene un temporizador de 5 segundos.
+
+Problema actual:
+
+Cuando el jugador presiona otra carta, el temporizador se reinicia.
+
+Eso no debe ocurrir.
+
+Corrección:
+
+El temporizador debe seguir corriendo sin reiniciarse aunque el jugador seleccione otra carta.
+
+El contador solo debe reiniciarse cuando termina el turno y empieza el siguiente jugador.
+
+Esto es importante porque el modo Relámpago debe ser rápido y con presión de tiempo.
+
+4. Corrección de recompensas
+
+Actualmente el sistema da recompensas tanto al ganar como al perder.
+
+Eso no tiene sentido.
+
+Corrección lógica:
+
+Si el jugador gana la partida:
+
++10 monedas
++30 experiencia
+
+Si el jugador pierde la partida:
+
+No debe recibir monedas ni experiencia.
+
+Esto hace que el sistema de progreso tenga más sentido.
+
+5. Corrección del sistema de idiomas
+
+El cambio de idioma debe ser total en toda la aplicación.
+
+Problema actual:
+
+Cuando cambio el idioma (por ejemplo de Portugués a Español), algunas partes del juego se quedan en el idioma anterior.
+
+Corrección necesaria:
+
+Cuando el jugador cambie el idioma:
+
+Todo el juego debe actualizarse completamente.
+
+No debe quedar ningún texto en el idioma anterior.
+
+Todas las interfaces, botones, menús y textos deben cambiar al nuevo idioma.
+
+Debe funcionar como en juegos profesionales de Play Store, donde todo cambia completamente al nuevo idioma.
+
+Objetivo final
+
+Aplica estas correcciones usando lógica clara entre sistemas, para que el juego funcione correctamente y se sienta como un juego profesional.
+
+La experiencia del jugador debe ser coherente, fluida y realista.
+
+Por favor implementa todo esto tal cual está explicado.

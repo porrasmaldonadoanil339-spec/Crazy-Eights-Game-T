@@ -15,6 +15,7 @@ import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { PlayerProfileModal, type PlayerProfileData } from "@/components/PlayerProfileModal";
 
 const STORAGE_KEY = "ocho_friends_v1";
+const CHAT_STORAGE_KEY = "ocho_chats_v1";
 
 function seededRand(seed: number) {
   const x = Math.sin(seed + 91) * 10000;
@@ -144,6 +145,8 @@ export default function FriendsScreen() {
   const [showDeleteConvConfirm, setShowDeleteConvConfirm] = useState(false);
   const friendsRef = useRef<Friend[]>([]);
   const requestsRef = useRef<FriendRequest[]>([]);
+  const chatHistoryRef = useRef<Record<string, ChatMessage[]>>({});
+  const chatFriendRef = useRef<Friend | null>(null);
 
   // Persistence: Load from AsyncStorage
   useEffect(() => {
@@ -157,6 +160,10 @@ export default function FriendsScreen() {
         } else {
           setFriends(buildInitialFriends());
         }
+        const chatStored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
+        if (chatStored) {
+          chatHistoryRef.current = JSON.parse(chatStored);
+        }
       } catch (e) {
         setFriends(buildInitialFriends());
       } finally {
@@ -169,6 +176,14 @@ export default function FriendsScreen() {
   // Keep refs in sync with state (for setTimeout callbacks that may fire after unmount)
   useEffect(() => { friendsRef.current = friends; }, [friends]);
   useEffect(() => { requestsRef.current = requests; }, [requests]);
+  useEffect(() => { chatFriendRef.current = chatFriend; }, [chatFriend]);
+
+  // Persist chat messages when they change
+  useEffect(() => {
+    if (!chatFriend || chatMessages.length === 0) return;
+    chatHistoryRef.current[chatFriend.id] = chatMessages;
+    AsyncStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistoryRef.current)).catch(() => {});
+  }, [chatMessages, chatFriend]);
 
   // Persistence: Save to AsyncStorage
   useEffect(() => {
@@ -431,12 +446,17 @@ export default function FriendsScreen() {
 
   const openChat = (friend: Friend) => {
     setChatFriend(friend);
-    setChatMessages([{
-      id: "1",
-      text: friend.online ? "Hola! Estoy en línea, listo para jugar." : `Hola! Ahora no estoy disponible pero te responderé pronto.`,
-      fromMe: false,
-      ts: Date.now() - 60000,
-    }]);
+    const existing = chatHistoryRef.current[friend.id];
+    if (existing && existing.length > 0) {
+      setChatMessages(existing);
+    } else {
+      setChatMessages([{
+        id: "1",
+        text: friend.online ? "Hola! Estoy en línea, listo para jugar." : `Hola! Ahora no estoy disponible pero te responderé pronto.`,
+        fromMe: false,
+        ts: Date.now() - 60000,
+      }]);
+    }
     setChatInput("");
   };
 
@@ -776,7 +796,13 @@ export default function FriendsScreen() {
                     "¿Borrar todos los mensajes con este amigo?",
                     [
                       { text: "Cancelar", style: "cancel" },
-                      { text: "Eliminar", style: "destructive", onPress: () => { setChatMessages([]); } },
+                      { text: "Eliminar", style: "destructive", onPress: () => {
+                          setChatMessages([]);
+                          if (chatFriend) {
+                            delete chatHistoryRef.current[chatFriend.id];
+                            AsyncStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistoryRef.current)).catch(() => {});
+                          }
+                        } },
                     ]
                   );
                 }}
