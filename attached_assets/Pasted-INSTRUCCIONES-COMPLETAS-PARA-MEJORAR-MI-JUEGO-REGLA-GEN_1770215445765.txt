@@ -1,0 +1,336 @@
+INSTRUCCIONES COMPLETAS PARA MEJORAR MI JUEGO
+REGLA GENERAL (MUY IMPORTANTE)
+
+Antes de hacer cambios:
+
+No modificar la base del juego.
+
+No cambiar sistemas que ya funcionan.
+
+Solo corregir errores y agregar mejoras.
+
+Usar lógica para que el juego se sienta realista como si fuera online.
+
+1. MODO COOPERATIVO (EXPLICACIÓN CLARA)
+
+El modo cooperativo es 2 vs 2 con barajas compartidas.
+
+Equipos
+
+Equipo de abajo (mi equipo)
+
+Jugador 1 → Yo
+
+Jugador 2 → Mi compañero
+
+Equipo de arriba (equipo rival)
+
+Jugador 3 → Rival 1
+
+Jugador 4 → Rival 2
+
+Sistema de cartas (MUY IMPORTANTE)
+
+No deben existir 4 barajas individuales.
+
+Solo deben existir 2 barajas en toda la mesa.
+
+Baraja 1
+➡ Abajo (mi equipo)
+➡ 8 cartas compartidas entre yo y mi compañero
+
+Baraja 2
+➡ Arriba (equipo rival)
+➡ 8 cartas compartidas entre los dos rivales
+
+Esto significa:
+
+Yo puedo jugar cartas de la misma baraja que mi compañero
+
+Mi compañero también usa la misma baraja
+
+El equipo rival hace lo mismo con su baraja
+
+Esto hace que el cooperativo tenga lógica de equipo.
+
+Posición de avatares
+
+Debe verse así:
+
+Arriba izquierda → Rival 1
+Arriba derecha → Rival 2
+
+Abajo izquierda → Yo
+Abajo derecha → Mi compañero
+
+Debajo de cada baraja se ven los avatares del equipo que comparte esa baraja.
+
+Turnos
+
+Orden lógico:
+
+1️⃣ Yo
+2️⃣ Rival 1
+3️⃣ Mi compañero
+4️⃣ Rival 2
+
+Luego el turno vuelve a empezar.
+
+Efectos visuales
+
+El cooperativo debe tener los mismos efectos que otros modos:
+
+efecto +1
+
+efecto +2
+
+efecto Última carta
+
+animación al colocar carta
+
+Esto hace que el modo no se vea vacío.
+
+2. ABANDONO DE PARTIDAS (REALISMO)
+
+Para que el juego se vea realista:
+
+En todos los modos puede pasar que un jugador abandone la partida.
+
+Pero esto debe ser muy poco frecuente.
+
+Cuando ocurre:
+
+La partida termina automáticamente
+
+El jugador restante gana la partida
+
+Recompensas si ganas:
+
+monedas
+
+experiencia
+
+3. SISTEMA DE CLASIFICATORIA
+Si ganas
+
+ganas ⭐ 1 estrella
+
+aparece animación de estrella aumentando
+
+luego aparece la pantalla de victoria
+
+Si pierdes o abandonas
+
+pierdes ⭐ 1 estrella
+
+Animación de estrellas
+
+Antes de mostrar la victoria:
+
+Debe aparecer una animación donde:
+
+⭐ tu rango aparece
+⭐ la estrella aumenta
+
+Luego aparece la pantalla de victoria.
+
+4. SISTEMA DE RIVALES (REALISMO)
+
+Los rivales no deben repetirse mucho.
+
+El juego debe:
+
+usar perfiles variados
+
+cambiar nombres
+
+cambiar avatares
+
+Esto evita que el jugador note que no es online real.
+
+5. ELIMINAR TEXTO CPU
+
+En los modos:
+
+clasificatoria
+
+cooperativo
+
+online
+
+Nunca debe aparecer CPU.
+
+Debe aparecer:
+
+nombre del jugador
+
+o texto como “Rival jugó carta”
+
+El único modo que puede mostrar CPU es:
+
+Modo Práctica.
+
+6. TAMAÑO DE CARTAS
+
+Las cartas de los otros jugadores deben:
+
+ser un poco más grandes
+
+adaptarse mejor a la pantalla
+
+verse claras
+
+Pero sin exagerar el tamaño.
+
+7. EFECTOS VISUALES EN TODOS LOS MODOS
+
+Los efectos que ya existen en otros modos deben aparecer también en:
+
+cooperativo
+
+clasificatoria
+
+online
+
+Ejemplos:
+
++1
++2
+última carta
+animación de carta
+
+8. MENÚ DE PAUSA
+
+El menú de pausa debe tener:
+
+botón continuar
+
+botón salir
+
+contador automático
+
+Si el jugador no toca nada, el contador regresa automáticamente a la partida.
+
+9. MODO ONLINE (BOTONES AZULES)
+
+Cuando el jugador entra al modo online:
+
+Opciones:
+
+2 jugadores
+3 jugadores
+4 jugadores
+
+Cuando presione una opción:
+
+Debe ir directamente a buscar jugadores.
+
+No debe abrir otra pantalla preguntando nuevamente.
+
+10. SISTEMA DE MÚSICA (MUY IMPORTANTE)
+
+Actualmente la música está mal.
+
+Debe funcionar así:
+
+Logo desarrolladora
+
+Solo sonido del logo
+No música.
+
+Pantalla de carga
+
+Dura 30 segundos
+
+Aquí comienza la música del menú.
+
+Menú principal
+
+Sigue la música del menú.
+
+Búsqueda de jugadores
+
+La música del menú continúa.
+
+Inicio de partida
+
+La música del menú se detiene.
+
+Comienza la música de partida.
+
+Nunca deben sonar las dos músicas juntas.
+
+11. CÍRCULO AZUL EN LA MESA
+
+En los modos:
+
+cooperativo
+
+clasificatoria
+
+online
+
+Hay un círculo azul en el centro de la mesa.
+
+Ese círculo debe eliminarse porque quita realismo al juego.
+
+12. PERFIL DEL JUGADOR (ESTADÍSTICAS)
+
+Actualmente aparece algo así:
+
+Clásico
+22%
+2/9
+
+Relámpago
+50%
+2/4
+
+Esto debe mostrarse mejor:
+
+Ejemplo correcto:
+
+Clásico
+Victorias: 2
+Partidas: 9
+Win rate: 22%
+
+Esto se debe adaptar para todos los modos.
+
+13. MODO RELÁMPAGO
+
+Turno por jugador:
+
+⏱ 8 segundos
+
+Problema actual:
+
+Si el jugador toca otra carta, el temporizador se reinicia.
+
+Esto no debe pasar.
+
+El temporizador debe seguir hasta llegar a 0.
+
+14. MODO DESAFÍO
+
+Los desafíos deben ser variados y creativos, por ejemplo:
+
+gana 3 partidas seguidas
+
+juega 10 cartas especiales
+
+gana una partida con última carta
+
+15. OBJETIVO FINAL
+
+El juego debe sentirse:
+
+realista
+
+fluido
+
+variado
+
+profesional
+
+Sin romper la base actual del juego.

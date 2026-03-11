@@ -110,8 +110,25 @@ export default function RankedScreen() {
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
 
   const MY_POSITION = 9487;
+
+  // Score formula: rank×10000 + division×1000 + stars  (higher = better)
+  // division 4 = División 1 (best within rank), division 0 = División 5 (lowest)
+  const rankScore = (rank: number, division: number, stars: number) =>
+    rank * 10000 + division * 1000 + stars;
+
   const visiblePlayers = useMemo(() => {
     const players = Array.from({ length: Math.min(visibleCount, totalPlayers) }).map((_, i) => generatePlayer(i));
+
+    // Sort highest score first so División 1 appears above División 5,
+    // and within the same division more stars ranks higher.
+    players.sort((a, b) =>
+      rankScore(b.rank, b.division, b.stars) - rankScore(a.rank, a.division, a.stars)
+    );
+
+    // Re-assign sequential positions after sorting
+    players.forEach((p, i) => { p.position = i + 1; });
+
+    // Inject the current player at the fixed position (if loaded that far)
     if (visibleCount >= MY_POSITION + 1) {
       players[MY_POSITION] = {
         id: "player_me",
