@@ -95,8 +95,8 @@ export function MatchmakingScreen({
     };
     startRadar();
 
-    // Phase 2: rival found after 3-4 seconds
-    const delay = 3000 + Math.random() * 1000;
+    // Phase 2: rival found after 5-7 seconds (realistic matchmaking feel)
+    const delay = 5000 + Math.random() * 2000;
     const foundTimer = setTimeout(() => {
       if (spinLoop.current) spinLoop.current.stop();
       if (radarLoop.current) radarLoop.current.stop();

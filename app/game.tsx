@@ -27,7 +27,7 @@ import { getModeById, getDifficultyById } from "@/lib/gameModes";
 import { AVATARS, CARD_BACKS, getCardDesignById, getTableDesignById } from "@/lib/storeItems";
 import type { Card } from "@/lib/gameEngine";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
-import { generateChallengeRules, getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
+import { getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { stopMusic, startGameMusic } from "@/lib/audioManager";
@@ -1038,14 +1038,13 @@ export default function GameScreen() {
     }
   }, [dealAnimationDone, session?.mode]);
 
-  // Challenge mode random rules on start
+  // Challenge mode — read rules from session (set during startGame so startingCards applies)
   useEffect(() => {
-    if (session?.mode === "challenge" && dealAnimationDone && !activeChallengeRules) {
-      const rules = generateChallengeRules();
-      setActiveChallengeRules(rules);
+    if (session?.mode === "challenge" && dealAnimationDone && session.challengeRules && !activeChallengeRules) {
+      setActiveChallengeRules(session.challengeRules);
       setShowChallengeRulesModal(true);
     }
-  }, [dealAnimationDone, session?.mode]);
+  }, [dealAnimationDone, session?.mode, session?.challengeRules]);
 
   // Ping simulation — changes every 5-8 seconds
   useEffect(() => {
@@ -1167,8 +1166,6 @@ export default function GameScreen() {
   const [showEffect, setShowEffect] = useState(false);
   const [floatingCardLabel, setFloatingCardLabel] = useState<string | null>(null);
   const [floatingCardColor, setFloatingCardColor] = useState("#FFFFFF");
-  const [showSpecialBurst, setShowSpecialBurst] = useState(false);
-  const [specialBurstEffect, setSpecialBurstEffect] = useState("effect_lightning");
   const prevTopCardIdRef = useRef<string | undefined>(undefined);
   const [showEpicResult, setShowEpicResult] = useState<"win" | "lose" | null>(null);
   const [inactivityProgress, setInactivityProgress] = useState(1);
@@ -1292,7 +1289,7 @@ export default function GameScreen() {
     }
   }, [gameState?.pendingDraw, gameState?.aiHand?.length, gameState?.currentPlayer, dealAnimationDone]);
 
-  // Card play effect — fires for any player (human or AI) playing any card
+  // Card play floating label — fires for any player (human or AI) playing any card
   useEffect(() => {
     if (!gameState || !dealAnimationDone) return;
     const topCard = gameState.discardPile[gameState.discardPile.length - 1];
@@ -1301,15 +1298,8 @@ export default function GameScreen() {
     prevTopCardIdRef.current = topCard.id;
     const isSpecial = topCard.rank === "8" || topCard.rank === "Joker" || topCard.rank === "2" || topCard.rank === "7";
     if (isSpecial) {
-      let effectId = "effect_sparkle";
-      if (topCard.rank === "8") effectId = "effect_lightning";
-      else if (topCard.rank === "Joker") effectId = "effect_cosmic";
-      else if (topCard.rank === "2") effectId = "effect_fire";
-      else if (topCard.rank === "7") effectId = "effect_stars_c";
-      setSpecialBurstEffect(effectId);
-      setShowSpecialBurst(true);
       const label = topCard.rank === "2" ? "+2" : topCard.rank === "Joker" ? "+4" : topCard.rank === "7" ? "SKIP" : "WILD";
-      const color = topCard.rank === "2" ? "#FF4444" : topCard.rank === "Joker" ? "#CC44FF" : topCard.rank === "7" ? Colors.gold : Colors.gold;
+      const color = topCard.rank === "2" ? "#FF4444" : topCard.rank === "Joker" ? "#CC44FF" : Colors.gold;
       triggerCardFloat(label, color);
     } else {
       triggerCardFloat("+1", "#FFFFFF");
@@ -1925,15 +1915,6 @@ export default function GameScreen() {
           originX={SW * 0.6}
           originY={SH * 0.42}
           onDone={() => setShowEffect(false)}
-        />
-      )}
-
-      {showSpecialBurst && (
-        <CardPlayEffect
-          effectId={specialBurstEffect}
-          originX={SW * 0.5}
-          originY={SH * 0.44}
-          onDone={() => setShowSpecialBurst(false)}
         />
       )}
 

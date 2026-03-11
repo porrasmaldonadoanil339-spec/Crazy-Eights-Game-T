@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback } from "react";
 import {
-  View, Text, StyleSheet, Pressable, Platform, Dimensions, Modal, FlatList, ActivityIndicator,
+  View, Text, StyleSheet, Pressable, Platform, Dimensions, Modal, FlatList, ActivityIndicator, Image,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -51,6 +51,9 @@ function generatePlayer(index: number) {
   const avatarIcon = AVATAR_ICONS[Math.floor(seededRand(seed * 5) * AVATAR_ICONS.length)];
   const avatarColor = AVATAR_COLORS[Math.floor(seededRand(seed * 6) * AVATAR_COLORS.length)];
   const country = COUNTRIES[Math.floor(seededRand(seed * 11) * COUNTRIES.length)];
+  const usePhoto = seededRand(seed * 13) > 0.25;
+  const photoNum = Math.floor(seededRand(seed * 14) * 70) + 1;
+  const photoUrl = usePhoto ? `https://i.pravatar.cc/150?img=${photoNum}` : undefined;
   
   // Rank distribution
   let rankIdx = 0;
@@ -77,6 +80,7 @@ function generatePlayer(index: number) {
     name,
     avatarIcon,
     avatarColor,
+    photoUrl,
     country,
     rank: rankIdx,
     division: Math.floor(seededRand(seed * 9) * 5),
@@ -166,9 +170,13 @@ export default function RankedScreen() {
         </View>
         
         <View style={[styles.avatarRing, { borderColor: RANK_COLORS[item.rank] }]}>
-          <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>
-            <Ionicons name={item.avatarIcon as any} size={16} color="#fff" />
-          </View>
+          {item.photoUrl ? (
+            <Image source={{ uri: item.photoUrl }} style={styles.avatarSmallPhoto} />
+          ) : (
+            <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>
+              <Ionicons name={item.avatarIcon as any} size={16} color="#fff" />
+            </View>
+          )}
         </View>
         
         <View style={styles.rankingInfo}>
@@ -386,7 +394,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, marginBottom: 12,
   },
   backBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  headerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 24 },
+  headerTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 24 },
   
   seasonBanner: {
     marginHorizontal: 16, marginBottom: 20,
@@ -396,7 +404,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 6,
     borderRadius: 20, marginBottom: 8,
   },
-  seasonTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: "#000" },
+  seasonTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#000" },
   seasonMeta: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", paddingHorizontal: 4 },
   timerRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   timerText: { fontFamily: "Nunito_700Bold", fontSize: 13 },
@@ -421,7 +429,7 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     borderWidth: 2,
   },
-  rankName: { fontFamily: "Nunito_900ExtraBold", fontSize: 32, marginBottom: 8 },
+  rankName: { fontFamily: "Nunito_800ExtraBold", fontSize: 32, marginBottom: 8 },
   starsRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
   starIcon: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3 },
   
@@ -432,7 +440,7 @@ const styles = StyleSheet.create({
 
   statsRow: { flexDirection: "row", alignItems: "center", gap: 40 },
   statItem: { alignItems: "center" },
-  statValue: { fontFamily: "Nunito_900ExtraBold", fontSize: 24 },
+  statValue: { fontFamily: "Nunito_800ExtraBold", fontSize: 24 },
   statLabel: { fontFamily: "Nunito_700Bold", fontSize: 11, letterSpacing: 1 },
   statDivider: { width: 1, height: 36, backgroundColor: "rgba(255,255,255,0.15)" },
   
@@ -450,9 +458,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1, shadowRadius: 4,
   },
   rankingPlace: { width: 36, alignItems: "center" },
-  rankNumber: { fontFamily: "Nunito_900ExtraBold", fontSize: 16 },
+  rankNumber: { fontFamily: "Nunito_800ExtraBold", fontSize: 16 },
   avatarRing: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   avatarSmall: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
+  avatarSmallPhoto: { width: 36, height: 36, borderRadius: 18 },
   rankingInfo: { flex: 1 },
   rankingName: { fontFamily: "Nunito_800ExtraBold", fontSize: 16 },
   rankingMetaRow: { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -461,13 +470,13 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 4, 
     backgroundColor: "rgba(0,0,0,0.2)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10
   },
-  rankBadgeTextSmall: { fontFamily: "Nunito_900ExtraBold", fontSize: 12 },
+  rankBadgeTextSmall: { fontFamily: "Nunito_800ExtraBold", fontSize: 12 },
   countryBadge: { paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, alignItems: "center", justifyContent: "center" },
   countryCode: { fontFamily: "Nunito_700Bold", fontSize: 10, letterSpacing: 0.5 },
   
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center", alignItems: "center", padding: 20 },
   modalContent: { width: "100%", borderRadius: 24, padding: 24, maxHeight: "80%" },
-  modalTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, marginBottom: 20, textAlign: "center" },
+  modalTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 22, marginBottom: 20, textAlign: "center" },
   rewardsList: { marginBottom: 20 },
   rewardItem: { flexDirection: "row", alignItems: "center", gap: 16, marginBottom: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.05)" },
   rewardRankIcon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
@@ -475,7 +484,7 @@ const styles = StyleSheet.create({
   rewardRankName: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, marginBottom: 2 },
   rewardText: { fontFamily: "Nunito_600SemiBold", fontSize: 14 },
   closeModalBtn: { backgroundColor: "#D4AF37", paddingVertical: 14, borderRadius: 16, alignItems: "center" },
-  closeModalBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: "#000" },
+  closeModalBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#000" },
 
   footer: {
     position: "absolute", bottom: 0, left: 0, right: 0,
@@ -487,6 +496,6 @@ const styles = StyleSheet.create({
     elevation: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 10,
   },
-  playBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: "#000" },
+  playBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 20, color: "#000" },
 });
 

@@ -20,6 +20,7 @@ import {
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { getModeById, getDifficultyById } from "@/lib/gameModes";
 import { getRandomCpuProfile, CpuProfile } from "@/lib/cpuProfiles";
+import { generateChallengeRules, ActiveChallengeRules } from "@/lib/challengeRules";
 
 export interface GameSession {
   mode: GameModeId;
@@ -32,6 +33,7 @@ export interface GameSession {
   cardsPlayedThisGame: number;
   maxHandSizeReached: number;
   cpuProfile: CpuProfile | null;
+  challengeRules?: import("@/lib/challengeRules").ActiveChallengeRules;
 }
 
 interface GameContextValue {
@@ -65,10 +67,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const startGame = useCallback((mode: GameModeId, difficulty: Difficulty, overrideCpuProfile?: any) => {
     const modeConfig = getModeById(mode);
-    const newState = initGame(modeConfig.cardsPerPlayer, difficulty);
     const isExpert = difficulty === "expert";
     const cpuProfile = overrideCpuProfile || getRandomCpuProfile(undefined, playerLevel, isExpert);
 
+    let challengeRules: ActiveChallengeRules | undefined;
+    let cardsPerPlayer = modeConfig.cardsPerPlayer;
+    if (mode === "challenge") {
+      challengeRules = generateChallengeRules();
+      if (challengeRules.startingCards) {
+        cardsPerPlayer = challengeRules.startingCards;
+      }
+    }
+
+    const newState = initGame(cardsPerPlayer, difficulty);
     setSelectedCard(null);
     setDealAnimationDone(false);
     setGameState(newState);
@@ -81,8 +92,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       cardsDrawnThisGame: 0,
       eightsPlayedThisGame: 0,
       cardsPlayedThisGame: 0,
-      maxHandSizeReached: modeConfig.cardsPerPlayer,
+      maxHandSizeReached: cardsPerPlayer,
       cpuProfile,
+      challengeRules,
     });
   }, [playerLevel]);
 

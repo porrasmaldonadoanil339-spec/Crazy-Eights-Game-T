@@ -1,15 +1,15 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Stack, useSegments } from "expo-router";
+import { Stack, useSegments, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import { Animated, View, Text, Image, StyleSheet, Platform, Dimensions } from "react-native";
+import { Animated, View, Text, Image, StyleSheet, Platform, Dimensions, TextInput, Pressable } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { GameProvider } from "@/context/GameContext";
 import { ProfileProvider } from "@/context/ProfileContext";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { NetworkProvider, useNetwork } from "@/context/NetworkContext";
 import { OfflineScreen } from "@/components/OfflineScreen";
 import { LinearGradient } from "expo-linear-gradient";
@@ -22,6 +22,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, syncSettings } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
+import { useT } from "@/hooks/useT";
 import { playSound } from "@/lib/sounds";
 import { scheduleAllNotifications, requestNotificationPermissions } from "@/lib/notifications";
 
@@ -97,7 +98,7 @@ function Particle({ delay }: { delay: number }) {
 }
 
 const STUDIO_DURATION = 4000;
-const LOADING_DURATION = 4200;
+const LOADING_DURATION = 5500;
 
 const LOADING_MESSAGES = [
   "Iniciando motor de juego…",
@@ -121,7 +122,15 @@ const SUIT_POSITIONS = [
   { top: "78%", right: "3%", size: 20, opacity: 0.04, color: "#E53935" },
 ];
 
-function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
+interface SplashAuthProps {
+  isFirstLaunch: boolean;
+  onGuestLogin: () => void;
+  onGoogleLogin: () => void;
+  onFacebookLogin: () => void;
+}
+
+function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void; authProps?: SplashAuthProps }) {
+  const T = useT();
   const nativeDriver = Platform.OS !== "web";
 
   // Phase 1 — Studio
@@ -136,6 +145,10 @@ function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
   const [loadPct, setLoadPct] = useState(1);
   const [loadMsg, setLoadMsg] = useState(LOADING_MESSAGES[0]);
   const [phase, setPhase] = useState<"studio" | "loading">("studio");
+  const [loadingDone, setLoadingDone] = useState(false);
+  const loginButtonsOpacity = useRef(new Animated.Value(0)).current;
+  const authPropsRef = useRef(authProps);
+  useEffect(() => { authPropsRef.current = authProps; }, [authProps]);
 
   useEffect(() => {
     // ── Phase 1: Studio logo ──────────────────────────────────────────────
@@ -179,13 +192,18 @@ function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
           }, i * stepMs)
         );
 
-        // Exit after loading completes
+        // Exit after loading completes (or show login buttons for first launch)
         const exitTimer = setTimeout(() => {
-          Animated.timing(loadingFade, {
-            toValue: 0,
-            duration: 800,
-            useNativeDriver: nativeDriver,
-          }).start(() => onComplete());
+          if (authPropsRef.current?.isFirstLaunch) {
+            setLoadingDone(true);
+            Animated.timing(loginButtonsOpacity, { toValue: 1, duration: 500, useNativeDriver: nativeDriver }).start();
+          } else {
+            Animated.timing(loadingFade, {
+              toValue: 0,
+              duration: 800,
+              useNativeDriver: nativeDriver,
+            }).start(() => onComplete());
+          }
         }, LOADING_DURATION);
 
         return () => { steps.forEach(clearTimeout); clearTimeout(exitTimer); };
@@ -296,6 +314,39 @@ function CustomSplashScreen({ onComplete }: { onComplete: () => void }) {
 
           <Text style={styles.dataInfoText}>Sincronizando datos... (no consume datos móviles)</Text>
           <Text style={styles.versionText}>Versión 3.0.0</Text>
+
+          {/* Login buttons — only shown on first launch after loading */}
+          {authProps?.isFirstLaunch && (
+            <Animated.View style={[styles.splashLoginArea, { opacity: loginButtonsOpacity, pointerEvents: loadingDone ? "auto" : "none" }]}>
+              <Text style={styles.splashLoginTitle}>{T("splashConnectTitle")}</Text>
+              <Text style={styles.splashLoginSub}>{T("splashConnectSub")}</Text>
+
+              <Pressable style={styles.splashBtnGoogle} onPress={() => { authProps.onGoogleLogin(); }}>
+                <View style={styles.splashBtnGoogleIcon}>
+                  <Text style={{ fontSize: 14, fontFamily: "Nunito_700Bold" }}>
+                    <Text style={{ color: "#EA4335" }}>G</Text>
+                    <Text style={{ color: "#4285F4" }}>o</Text>
+                    <Text style={{ color: "#FBBC05" }}>o</Text>
+                    <Text style={{ color: "#34A853" }}>g</Text>
+                    <Text style={{ color: "#EA4335" }}>l</Text>
+                    <Text style={{ color: "#4285F4" }}>e</Text>
+                  </Text>
+                </View>
+                <Text style={styles.splashBtnText}>{T("splashContinueGoogle")}</Text>
+              </Pressable>
+
+              <Pressable style={styles.splashBtnFacebook} onPress={() => { authProps.onFacebookLogin(); }}>
+                <Ionicons name="logo-facebook" size={20} color="#fff" />
+                <Text style={[styles.splashBtnText, { color: "#fff" }]}>{T("splashContinueFacebook")}</Text>
+              </Pressable>
+
+              <Pressable style={styles.splashBtnGuest} onPress={() => { authProps.onGuestLogin(); }}>
+                <Ionicons name="person-outline" size={18} color="#95A5A6" />
+                <Text style={styles.splashBtnGuestText}>{T("splashPlayGuest")}</Text>
+              </Pressable>
+              <Text style={styles.splashGuestNote}>{T("splashGuestNoteText")}</Text>
+            </Animated.View>
+          )}
         </Animated.View>
       )}
     </View>
@@ -381,6 +432,173 @@ function NotificationManager() {
   ]);
 
   return null;
+}
+
+function SplashWithAuth({ onComplete }: { onComplete: () => void }) {
+  const { user, isLoading, loginAsGuest } = useAuth();
+  const [oauthModal, setOauthModal] = useState<"google" | "facebook" | null>(null);
+  const [authResolved, setAuthResolved] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) setAuthResolved(true);
+  }, [isLoading]);
+
+  const isFirstLaunch = authResolved && !user;
+
+  const handleGuestLogin = () => {
+    loginAsGuest();
+    onComplete();
+  };
+
+  const handleGoogleLogin = () => {
+    setOauthModal("google");
+  };
+
+  const handleFacebookLogin = () => {
+    setOauthModal("facebook");
+  };
+
+  const handleOAuthDone = () => {
+    setOauthModal(null);
+    onComplete();
+  };
+
+  const handleOAuthSkip = () => {
+    setOauthModal(null);
+  };
+
+  return (
+    <>
+      <CustomSplashScreen
+        onComplete={onComplete}
+        authProps={isFirstLaunch ? {
+          isFirstLaunch: true,
+          onGuestLogin: handleGuestLogin,
+          onGoogleLogin: handleGoogleLogin,
+          onFacebookLogin: handleFacebookLogin,
+        } : undefined}
+      />
+      {oauthModal && (
+        <SplashOAuthModal
+          provider={oauthModal}
+          onDone={handleOAuthDone}
+          onCancel={handleOAuthSkip}
+        />
+      )}
+    </>
+  );
+}
+
+function SplashOAuthModal({ provider, onDone, onCancel }: {
+  provider: "google" | "facebook";
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const T = useT();
+  const { loginWithGoogle, loginWithFacebook } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [step, setStep] = useState<"email" | "password" | "success">("email");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const isGoogle = provider === "google";
+  const providerColor = isGoogle ? "#EA4335" : "#1877F2";
+  const providerName = isGoogle ? "Google" : "Facebook";
+
+  const EMAIL_REGEX_LOCAL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  const handleNext = async () => {
+    if (step === "email") {
+      if (!EMAIL_REGEX_LOCAL.test(email)) { setError(T("splashEmailValid")); return; }
+      setError(""); setStep("password");
+    } else {
+      if (password.length < 6) { setError(T("splashPasswordLength")); return; }
+      setLoading(true);
+      const fn = isGoogle ? loginWithGoogle : loginWithFacebook;
+      const result = await fn(`${email}::${password}`);
+      setLoading(false);
+      if (result.ok) { setStep("success"); setTimeout(onDone, 1200); }
+      else { setError(T("splashLoginError")); }
+    }
+  };
+
+  return (
+    <View style={[StyleSheet.absoluteFillObject, { zIndex: 10000, backgroundColor: "rgba(0,0,0,0.88)", justifyContent: "center", alignItems: "center", padding: 24 }]}>
+      <View style={{ width: "100%", maxWidth: 360, backgroundColor: "#0a1a0c", borderRadius: 20, padding: 24, borderWidth: 1, borderColor: "#D4AF3744" }}>
+        {step === "success" ? (
+          <View style={{ alignItems: "center", gap: 12 }}>
+            <Ionicons name="checkmark-circle" size={56} color="#27AE60" />
+            <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 20, color: "#fff" }}>{T("splashWelcome")}</Text>
+            <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 14, color: "#aaa", textAlign: "center" }}>{T("splashLinked")}</Text>
+          </View>
+        ) : (
+          <>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16, gap: 8 }}>
+              <Ionicons name={isGoogle ? "logo-google" : "logo-facebook"} size={24} color={providerColor} />
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#fff" }}>{T("splashContinueWith")} {providerName}</Text>
+            </View>
+
+            {error ? <Text style={{ color: "#E74C3C", fontSize: 13, fontFamily: "Nunito_700Bold", marginBottom: 8 }}>{error}</Text> : null}
+
+            {step === "email" ? (
+              <View>
+                <Text style={{ color: "#aaa", fontSize: 13, fontFamily: "Nunito_700Bold", marginBottom: 6 }}>{T("splashEmailField")}</Text>
+                <View style={{ backgroundColor: "#0e2010", borderRadius: 10, borderWidth: 1, borderColor: "#1a3a1a", flexDirection: "row", alignItems: "center" }}>
+                  <TextInput
+                    style={{ flex: 1, color: "#fff", fontSize: 15, fontFamily: "Nunito_700Bold", padding: 12 }}
+                    placeholder="usuario@correo.com"
+                    placeholderTextColor="#555"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!loading}
+                  />
+                </View>
+              </View>
+            ) : (
+              <View>
+                <Text style={{ color: "#aaa", fontSize: 13, fontFamily: "Nunito_700Bold", marginBottom: 6 }}>{T("splashPasswordField")}</Text>
+                <View style={{ backgroundColor: "#0e2010", borderRadius: 10, borderWidth: 1, borderColor: "#1a3a1a", flexDirection: "row", alignItems: "center" }}>
+                  <TextInput
+                    style={{ flex: 1, color: "#fff", fontSize: 15, fontFamily: "Nunito_700Bold", padding: 12 }}
+                    placeholder="••••••"
+                    placeholderTextColor="#555"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    editable={!loading}
+                  />
+                </View>
+              </View>
+            )}
+
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
+              <Pressable
+                style={{ flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#333", alignItems: "center" }}
+                onPress={() => { if (step === "password") { setStep("email"); setError(""); } else { onCancel(); } }}
+              >
+                <Text style={{ color: "#aaa", fontFamily: "Nunito_700Bold" }}>{T("splashBack")}</Text>
+              </Pressable>
+              <Pressable
+                style={{ flex: 2, padding: 12, borderRadius: 10, backgroundColor: providerColor, alignItems: "center", justifyContent: "center" }}
+                onPress={handleNext}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Ionicons name="reload" size={18} color="#fff" />
+                ) : (
+                  <Text style={{ color: "#fff", fontFamily: "Nunito_700Bold", fontSize: 15 }}>
+                    {step === "email" ? T("splashNext") : T("splashSignIn")}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          </>
+        )}
+      </View>
+    </View>
+  );
 }
 
 function RootLayoutNav() {
@@ -490,7 +708,7 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_700Bold,
-    Nunito_900ExtraBold_Asset: Nunito_800ExtraBold_Asset,
+    Nunito_800ExtraBold_Asset: Nunito_800ExtraBold_Asset,
   });
 
   const [showSplash, setShowSplash] = useState(!splashShownThisSession);
@@ -520,7 +738,7 @@ export default function RootLayout() {
                     <StatusBar style="light" />
                     <RootLayoutNav />
                     {showSplash && (
-                      <CustomSplashScreen onComplete={handleSplashComplete} />
+                      <SplashWithAuth onComplete={handleSplashComplete} />
                     )}
                   </GameProvider>
                 </NetworkGuard>
@@ -617,6 +835,92 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.35)",
     textAlign: "center",
     paddingHorizontal: 24,
+  },
+  splashLoginArea: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 28,
+    paddingTop: 16,
+    paddingBottom: 40,
+    backgroundColor: "rgba(0,0,0,0.85)",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(212,175,55,0.2)",
+    alignItems: "center",
+    gap: 10,
+  },
+  splashLoginTitle: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 16,
+    color: "#D4AF37",
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  splashLoginSub: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 13,
+    color: "rgba(255,255,255,0.55)",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  splashBtnGoogle: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    width: "100%",
+    gap: 12,
+  },
+  splashBtnGoogleIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#f5f5f5",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  splashBtnFacebook: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1877F2",
+    borderRadius: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    width: "100%",
+    gap: 12,
+  },
+  splashBtnText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 15,
+    color: "#333",
+  },
+  splashBtnGuest: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    borderRadius: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 20,
+    width: "100%",
+    gap: 10,
+  },
+  splashBtnGuestText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 14,
+    color: "rgba(255,255,255,0.65)",
+  },
+  splashGuestNote: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 11,
+    color: "rgba(255,255,255,0.35)",
+    textAlign: "center",
+    marginTop: 2,
   },
   loadingBarContainer: {
     width: "70%",
