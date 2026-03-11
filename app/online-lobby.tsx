@@ -232,9 +232,9 @@ export default function OnlineLobbyScreen() {
     const timers: ReturnType<typeof setTimeout>[] = [];
     playSound("searching").catch(() => {});
 
-    // Add fake players one by one with random delays
+    // Add fake players one by one with staggered delays (~10s total search)
     for (let i = 0; i < needed; i++) {
-      const delay = 1500 + i * 1200 + Math.floor(Math.random() * 1000);
+      const delay = 2000 + i * 2500 + Math.floor(Math.random() * 600);
       const t = setTimeout(() => {
         const fp = makeFakePlayer(i + 1);
         setFakePlayers(prev => [...prev, fp]);
@@ -242,8 +242,8 @@ export default function OnlineLobbyScreen() {
       timers.push(t);
     }
 
-    // After all fake players "joined", show found screen
-    const foundDelay = 1500 + needed * 1200 + Math.floor(Math.random() * 800) + 800;
+    // After all fake players "joined", show found screen (~10s total)
+    const foundDelay = Math.max(8500, 2000 + needed * 2500 + 1000) + Math.floor(Math.random() * 1500);
     const t2 = setTimeout(() => {
       playSound("win").catch(() => {});
       setPhase("direct_found");

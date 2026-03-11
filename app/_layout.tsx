@@ -97,8 +97,8 @@ function Particle({ delay }: { delay: number }) {
   );
 }
 
-const STUDIO_DURATION = 4000;
-const LOADING_DURATION = 5500;
+const STUDIO_DURATION = 5000;
+const LOADING_DURATION = 20000;
 
 const LOADING_MESSAGES = [
   "Iniciando motor de juego…",

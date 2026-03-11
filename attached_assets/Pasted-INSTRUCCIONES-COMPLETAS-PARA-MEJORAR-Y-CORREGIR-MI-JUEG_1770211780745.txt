@@ -1,0 +1,348 @@
+INSTRUCCIONES COMPLETAS PARA MEJORAR Y CORREGIR MI JUEGO
+REGLA GENERAL (MUY IMPORTANTE)
+
+Antes de aplicar cualquier cambio:
+
+No modificar sistemas que ya funcionan correctamente.
+
+No reescribir la jugabilidad base del juego.
+
+Solo corregir errores y aplicar las mejoras mencionadas.
+
+Mantener intactos:
+
+sistema de cartas
+
+interfaz actual
+
+animaciones existentes
+
+lógica de partida
+
+El objetivo es mejorar el juego sin romper la base actual.
+
+1. Pantalla de inicio del juego
+
+El inicio del juego debe seguir este orden exacto:
+
+Paso 1
+
+Foto de la desarrolladora
+
+Debe aparecer muy rápido.
+
+Solo un instante.
+
+Paso 2
+
+Logo de la desarrolladora
+
+Después aparece el logo.
+
+Debe mostrarse 5 segundos para apreciarse bien.
+
+Paso 3
+
+Pantalla de carga del juego
+
+Aparece el fondo de carga del juego.
+
+Debe durar 20 segundos.
+
+Orden final:
+
+Foto desarrolladora
+➡ Logo desarrolladora (5s)
+➡ Pantalla de carga (20s)
+➡ Menú principal
+
+2. Error con recompensas
+
+Actualmente ocurre un error:
+
+Cuando el jugador recoge recompensas, vuelven a aparecer:
+
+pantalla desarrolladora
+
+pantalla de carga
+
+Esto no debe pasar.
+
+Estas pantallas solo deben mostrarse cuando el juego se abre por primera vez.
+
+3. Búsqueda de jugadores
+
+Cuando el jugador busca partida:
+
+La búsqueda debe durar aproximadamente 10 segundos.
+
+Esto hace que el matchmaking se vea más realista.
+
+Agregar animación como:
+
+“Buscando jugadores…”
+
+icono de carga
+
+4. Música del juego
+
+Actualmente la música está mal sincronizada.
+
+Problemas:
+
+la música se mezcla
+
+suena desordenada
+
+la experiencia es mala
+
+Solución:
+
+Revisar versiones anteriores del juego.
+
+Restaurar el sistema de música como estaba antes.
+
+La música del menú y de la partida no deben mezclarse.
+
+La música de partida debe sonar en:
+
+modo local
+
+modo online
+
+modo clasificatoria
+
+modo cooperativo
+
+5. Efectos visuales
+
+Los efectos visuales existentes deben agregarse también a:
+
+modo clasificatoria
+
+modo cooperativo
+
+modo online
+
+Ejemplos:
+
+efecto +1
+
+animaciones de puntos
+
+efectos de turno
+
+emojis que los jugadores pueden lanzar
+
+Esto hace que el juego no se vea apagado.
+
+6. Mesas del juego
+
+La mesa que el jugador compra en la tienda debe aplicarse automáticamente en:
+
+cooperativo
+
+clasificatoria
+
+online
+
+local
+
+Actualmente hay una mesa azul media que no aparece en las partidas.
+
+Esto debe corregirse.
+
+7. Salir de la partida
+
+Todos los modos deben tener el botón:
+
+Salir de la partida
+
+Al presionar debe aparecer:
+
+¿Desea salir de la partida?
+
+Modos:
+
+cooperativo
+
+clasificatoria
+
+online
+
+8. Advertencia en ranking
+
+Cuando un jugador intenta salir en modo clasificatoria debe aparecer:
+
+Advertencia:
+Si sales de la partida clasificatoria puedes perder puntos o bajar de rango.
+
+Este mensaje ya existía antes y funcionaba bien, debe volver.
+
+9. Sistema de ranking
+Orden correcto de rangos
+
+El ranking debe ordenarse así:
+
+Hierro 5
+Hierro 4
+Hierro 3
+Hierro 2
+Hierro 1
+
+Bronce 5
+Bronce 4
+Bronce 3
+Bronce 2
+Bronce 1
+
+Actualmente ocurre un error donde Hierro 5 aparece encima de Hierro 3, lo cual es incorrecto.
+
+Sistema de estrellas
+
+Ejemplo:
+
+Jugador en Hierro 5 con 0 estrellas
+
+Cada victoria da:
+
+⭐ 1 estrella
+
+Cuando llega a 5 estrellas:
+
+Hierro 5 → Hierro 4
+
+Luego:
+
+Hierro 4 → Hierro 3
+
+Y así sucesivamente.
+
+Cuando el jugador completa:
+
+Hierro 1 ⭐⭐⭐⭐⭐
+
+Sube a:
+
+➡ Bronce 5
+
+El juego tiene 12 rangos totales.
+
+10. Rango en el menú principal
+
+En el botón Clasificatoria del menú principal aparece el rango.
+
+Actualmente está desactualizado.
+
+Ejemplo:
+
+Muestra Hierro 1 cuando el jugador está en Hierro 5.
+
+Debe actualizarse automáticamente.
+
+11. Cambio de idioma
+
+El cambio de idioma debe funcionar al 100%.
+
+Cuando el jugador cambie idioma:
+
+Toda la interfaz debe cambiar automáticamente.
+
+No debe quedar texto sin traducir.
+
+Debe funcionar como en
+Clash Royale.
+
+12. Modo Cooperativo (2 vs 2)
+
+El modo cooperativo debe funcionar correctamente.
+
+Sistema de barajas
+
+Equipo abajo:
+
+Jugador 1 (yo)
+Jugador 2 (mi compañero)
+
+➡ compartimos 2 barajas de 8 cartas
+
+Equipo arriba:
+
+Jugador 3
+Jugador 4
+
+➡ comparten 2 barajas de 8 cartas
+
+Las cartas funcionan como barajas compartidas dentro del equipo.
+
+Orden de turnos
+
+Turnos automáticos:
+
+1️⃣ Yo
+2️⃣ Rival 1
+3️⃣ Mi compañero
+4️⃣ Rival 2
+
+Luego el turno se repite.
+
+Avatares
+
+Los avatares deben mostrarse como en partidas normales.
+
+Posiciones:
+
+Abajo izquierda → Yo
+Abajo derecha → Compañero
+
+Arriba izquierda → Rival 1
+Arriba derecha → Rival 2
+
+Cada avatar muestra:
+
+foto
+
+nombre
+
+cantidad de cartas
+
+13. Mejoras adicionales (sin romper el juego)
+
+Agregar pequeñas mejoras visuales:
+
+Animaciones de turno
+
+Resaltar al jugador que tiene el turno.
+
+Animación de carta jugada
+
+Cuando se juega una carta debe tener un pequeño movimiento.
+
+Sonido al robar carta
+Sonido al ganar partida
+
+Estas mejoras hacen que el juego se sienta más profesional.
+
+OBJETIVO FINAL
+
+El juego debe tener:
+
+cooperativo funcional
+
+ranking correcto
+
+sistema de estrellas claro
+
+música arreglada
+
+efectos visuales completos
+
+mesas funcionando
+
+idioma funcionando al 100%
+
+inicio del juego profesional
+
+matchmaking creíble
+
+Sin modificar la base actual del juego.

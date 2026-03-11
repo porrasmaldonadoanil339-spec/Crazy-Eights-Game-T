@@ -24,7 +24,7 @@ import {
   playCardFlip, playCardDraw, playButton, playWin,
   stopMusic
 } from "@/lib/audioManager";
-import { CARD_BACKS, AVATARS } from "@/lib/storeItems";
+import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
@@ -531,6 +531,10 @@ export default function OnlineGameScreen() {
   const backColors = (cardBack.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];
   const backAccent = cardBack.backAccent ?? "#D4AF37";
 
+  const tableDesign = getTableDesignById(profile.tableDesignId ?? "table_casino");
+  const tableBg = tableDesign.backColors?.[0] ?? "#041008";
+  const tableAccent = tableDesign.backColors?.[1] ?? "#061510";
+
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom + 4;
   const headerH = 50;
@@ -567,6 +571,7 @@ export default function OnlineGameScreen() {
   const [joinedCount, setJoinedCount] = useState(0);
   const [countdown, setCountdown] = useState(3);
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   // Game state
   const [gameState, setGameState] = useState<MultiGameState | null>(null);
@@ -949,9 +954,9 @@ export default function OnlineGameScreen() {
   const activeCpuProfile = activeCpuIdx !== null ? (currentCpuProfiles[activeCpuIdx] ?? null) : null;
 
   return (
-    <View style={[gameStyles.container, { paddingTop: topPad }]}>
+    <View style={[gameStyles.container, { paddingTop: topPad, backgroundColor: tableBg }]}>
       <LinearGradient
-        colors={["#04080e", "#060d18", "#080f1a", "#060d18", "#04080e"]}
+        colors={[tableBg, tableAccent, tableBg] as any}
         style={StyleSheet.absoluteFill}
       />
       {/* Subtle grid texture */}
@@ -959,7 +964,7 @@ export default function OnlineGameScreen() {
 
       {/* Header */}
       <View style={[gameStyles.header, { height: headerH }]}>
-        <Pressable onPress={() => { playButton().catch(() => {}); router.back(); }} style={gameStyles.backBtn}>
+        <Pressable onPress={() => { playButton().catch(() => {}); setShowExitModal(true); }} style={gameStyles.backBtn}>
           <Ionicons name="arrow-back" size={18} color={Colors.gold} />
         </Pressable>
         <View style={gameStyles.headerMid}>
@@ -1199,6 +1204,56 @@ export default function OnlineGameScreen() {
           onClaim={() => { playWin().catch(() => {}); router.back(); }}
           onPlayAgain={handlePlayAgain}
         />
+      )}
+
+      {/* ─── Exit Confirmation Modal ─── */}
+      {showExitModal && (
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.72)", justifyContent: "center", alignItems: "center", zIndex: 999 }]}>
+          <View style={{ backgroundColor: "#0d1a10", borderRadius: 18, padding: 24, margin: 24, width: "88%", maxWidth: 360, borderWidth: 1, borderColor: "#D4AF3744" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <Ionicons name="exit-outline" size={24} color="#E74C3C" />
+              <Text style={{ color: "#fff", fontFamily: "Nunito_800ExtraBold", fontSize: 18 }}>
+                {T("exitGame" as any) || "¿Salir de la partida?"}
+              </Text>
+            </View>
+            {modeParam === "ranked" && (
+              <View style={{ backgroundColor: "#E74C3C22", borderRadius: 10, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: "#E74C3C44" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <Ionicons name="warning-outline" size={18} color="#E74C3C" />
+                  <Text style={{ color: "#E74C3C", fontFamily: "Nunito_700Bold", fontSize: 13 }}>
+                    {T("rankedExitWarningTitle" as any) || "Advertencia"}
+                  </Text>
+                </View>
+                <Text style={{ color: "#FF9999", fontFamily: "Nunito_400Regular", fontSize: 12, lineHeight: 18 }}>
+                  {T("rankedExitWarning" as any) || "Si sales de la partida clasificatoria puedes perder puntos o bajar de rango."}
+                </Text>
+              </View>
+            )}
+            <Text style={{ color: "#BDC3C7", fontFamily: "Nunito_400Regular", fontSize: 13, marginBottom: 20, lineHeight: 20 }}>
+              {modeParam === "ranked"
+                ? (T("exitGameSubRanked" as any) || "Tu progreso en esta partida no se guardará.")
+                : (T("exitGameSub" as any) || "¿Estás seguro de que deseas salir? Tu progreso se perderá.")}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <Pressable
+                onPress={() => { playButton().catch(() => {}); setShowExitModal(false); }}
+                style={{ flex: 1, backgroundColor: "#1a2a1a", borderRadius: 12, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: "#D4AF3733" }}
+              >
+                <Text style={{ color: "#D4AF37", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
+                  {T("cancel") || "Cancelar"}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => { playButton().catch(() => {}); setShowExitModal(false); router.back(); }}
+                style={{ flex: 1, backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}
+              >
+                <Text style={{ color: "#fff", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
+                  {T("exitConfirm" as any) || "Salir"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
       )}
     </View>
   );

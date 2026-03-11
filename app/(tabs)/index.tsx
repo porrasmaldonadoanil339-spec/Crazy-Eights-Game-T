@@ -24,7 +24,7 @@ import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffNa
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
-import { getRankInfo, RANKS } from "@/lib/ranked";
+import { getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
 import { FlatList } from "react-native";
 import { ModeInfoModal } from "@/components/ModeInfoModal";
 
@@ -157,7 +157,7 @@ function RankedPreviewCard({ isDark }: { isDark: boolean }) {
           <View style={styles.rankedStatus}>
             <View style={[styles.rankBadge, { backgroundColor: rankInfo.color + "33" }]}>
               <Text style={[styles.rankBadgeText, { color: rankInfo.color }]}>
-                {T(`rank${RANKS[rp.rank]}` as any) || rankInfo.rankName} {rp.division + 1}
+                {T(`rank${RANKS[rp.rank]}` as any) || rankInfo.rankName} {DIVISIONS[rp.division]}
               </Text>
             </View>
             <View style={styles.starsMini}>
