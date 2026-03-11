@@ -21,8 +21,8 @@ import {
 } from "@/lib/multiplayerEngine";
 import { useProfile } from "@/context/ProfileContext";
 import {
-  playCardFlip, playCardDraw, playButton, playWin, playMenuOpen,
-  stopMusic, resumeMusic, startGameMusic
+  playCardFlip, playCardDraw, playButton, playWin,
+  stopMusic
 } from "@/lib/audioManager";
 import { CARD_BACKS, AVATARS } from "@/lib/storeItems";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
@@ -628,8 +628,6 @@ export default function OnlineGameScreen() {
 
     timers.push(setTimeout(() => {
       setLobbyPhase("found");
-      stopMusic().catch(() => {});
-      startGameMusic().catch(() => {});
     }, finalSearchDelay));
     
     let currentDelay = finalSearchDelay + 800;
@@ -651,7 +649,6 @@ export default function OnlineGameScreen() {
 
     return () => {
       timers.forEach(clearTimeout);
-      resumeMusic().catch(() => {});
     };
   }, []);
 

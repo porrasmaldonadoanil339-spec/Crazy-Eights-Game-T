@@ -25,6 +25,12 @@ let musicVolume = 0.35;
 let sfxVolume = 0.85;
 let isInitialized = false;
 
+// ─── Concurrency lock ─────────────────────────────────────────────────────────
+// Ensures only one music transition happens at a time.
+// If multiple requests come in during a transition, only the last one is applied.
+let transitionInProgress = false;
+let pendingTrack: "menu" | "game" | null = null;
+
 async function safe(fn: () => Promise<void>) {
   try { await fn(); } catch {}
 }
@@ -53,30 +59,47 @@ export async function preloadSounds() {
   }
 }
 
-export async function startMenuMusic() {
+// ─── Core: serialized music transition ───────────────────────────────────────
+async function applyMusicTransition(track: "menu" | "game") {
+  if (currentTrack === track && bgPlayer) return;
   if (!isMusicEnabled) return;
-  if (currentTrack === "menu" && bgPlayer) return;
+
   await _stopMusicInternal();
   await safe(async () => {
-    bgPlayer = createAudioPlayer(SOUNDS.menuMusic);
+    bgPlayer = createAudioPlayer(track === "menu" ? SOUNDS.menuMusic : SOUNDS.gameMusic);
     bgPlayer.volume = musicVolume;
     bgPlayer.loop = true;
     bgPlayer.play();
-    currentTrack = "menu";
+    currentTrack = track;
   });
 }
 
+async function requestMusicTrack(track: "menu" | "game") {
+  // Record the latest desired track
+  pendingTrack = track;
+
+  // If a transition is already in progress, let it pick up pendingTrack when done
+  if (transitionInProgress) return;
+
+  transitionInProgress = true;
+  try {
+    // Keep processing until there's no more pending request
+    while (pendingTrack !== null) {
+      const target = pendingTrack;
+      pendingTrack = null;
+      await applyMusicTransition(target);
+    }
+  } finally {
+    transitionInProgress = false;
+  }
+}
+
+export async function startMenuMusic() {
+  await requestMusicTrack("menu");
+}
+
 export async function startGameMusic() {
-  if (!isMusicEnabled) return;
-  if (currentTrack === "game" && bgPlayer) return;
-  await _stopMusicInternal();
-  await safe(async () => {
-    bgPlayer = createAudioPlayer(SOUNDS.gameMusic);
-    bgPlayer.volume = musicVolume;
-    bgPlayer.loop = true;
-    bgPlayer.play();
-    currentTrack = "game";
-  });
+  await requestMusicTrack("game");
 }
 
 async function _stopMusicInternal() {
@@ -90,6 +113,7 @@ async function _stopMusicInternal() {
 }
 
 export async function stopMusic() {
+  pendingTrack = null; // Cancel any pending transition
   await _stopMusicInternal();
 }
 
@@ -231,7 +255,6 @@ export async function playLevelUp() {
 // ─── Game event sounds ────────────────────────────────────────────────────────
 
 export async function playOcho() {
-  // Triple ascending beep — "Crazy Eight!" moment
   await playSfx("wild");
   setTimeout(() => playSfx("cardFlip", sfxVolume * 0.7).catch(() => {}), 120);
   setTimeout(() => playSfx("win", sfxVolume * 0.5).catch(() => {}), 250);
@@ -243,13 +266,11 @@ export async function playOcho() {
 }
 
 export async function playSpecialCard() {
-  // Quick swoosh for special cards (2, 3, 7, J, A, 10)
   await playSfx("cardDraw", sfxVolume * 0.9);
   haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
 }
 
 export async function playBlockCard() {
-  // Thud for block/skip
   await playSfx("button", sfxVolume * 0.8);
   setTimeout(() => playSfx("button", sfxVolume * 0.5).catch(() => {}), 100);
   haptic(async () => {
@@ -259,7 +280,6 @@ export async function playBlockCard() {
 }
 
 export async function playDrawPenalty() {
-  // Rapid card draw sound for penalty draws
   await playSfx("cardDraw");
   setTimeout(() => playSfx("cardDraw", sfxVolume * 0.8).catch(() => {}), 90);
   setTimeout(() => playSfx("cardDraw", sfxVolume * 0.6).catch(() => {}), 180);
@@ -270,19 +290,16 @@ export async function playDrawPenalty() {
 }
 
 export async function playReverseCard() {
-  // Reverse swoosh
   await playSfx("shuffle", sfxVolume * 0.6);
   haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
 }
 
 export async function playCountdownBeep() {
-  // Countdown tick
   await playSfx("button", sfxVolume * 0.6);
   haptic(() => Haptics.selectionAsync());
 }
 
 export async function playMatchStart() {
-  // Match starting fanfare
   await playSfx("win", sfxVolume * 0.8);
   setTimeout(() => playSfx("cardFlip", sfxVolume * 0.6).catch(() => {}), 200);
   setTimeout(() => playSfx("wild", sfxVolume * 0.5).catch(() => {}), 400);
@@ -293,19 +310,16 @@ export async function playMatchStart() {
 }
 
 export async function playEffectBurst() {
-  // Particle effect trigger
   await playSfx("wild", sfxVolume * 0.5);
   haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
 }
 
 export async function playTimerWarning() {
-  // Low-time warning tick
   await playSfx("button", sfxVolume * 0.4);
   haptic(() => Haptics.selectionAsync());
 }
 
 export async function playJokerPlay() {
-  // Joker card played
   await playSfx("wild");
   setTimeout(() => playSfx("wild", sfxVolume * 0.6).catch(() => {}), 150);
   haptic(async () => {
@@ -315,7 +329,6 @@ export async function playJokerPlay() {
 }
 
 export async function playInactivityWarning() {
-  // Warning beep before auto-draw
   await playSfx("button", sfxVolume * 0.5);
   setTimeout(() => playSfx("button", sfxVolume * 0.4).catch(() => {}), 150);
   haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning));

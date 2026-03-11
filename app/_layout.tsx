@@ -353,24 +353,30 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
   );
 }
 
+// Routes that should play game music (not menu music)
+const GAME_MUSIC_ROUTES = ["game", "game-online", "game-multi"];
+function isGameRoute(segments: string[]): boolean {
+  return segments.some(s => GAME_MUSIC_ROUTES.includes(s));
+}
+
 function AudioManager() {
   const segments = useSegments();
   const isFirstRun = useRef(true);
   const { profile, isLoaded } = useProfile();
 
+  // One-time init — no cleanup (music should outlive this effect)
   useEffect(() => {
     if (!isLoaded) return;
     initAudio().then(() => {
       syncSettings(profile.musicEnabled, profile.sfxEnabled);
       preloadSounds().catch(() => {});
-      const inGame = (segments as string[]).includes("game");
+      const inGame = isGameRoute(segments as string[]);
       if (inGame) {
         startGameMusic().catch(() => {});
       } else {
         startMenuMusic().catch(() => {});
       }
     });
-    return () => { stopMusic().catch(() => {}); };
   }, [isLoaded]);
 
   useEffect(() => {
@@ -378,10 +384,11 @@ function AudioManager() {
     syncSettings(profile.musicEnabled, profile.sfxEnabled);
   }, [profile.musicEnabled, profile.sfxEnabled, isLoaded]);
 
+  // React to route changes — skip the very first run (handled by init above)
   useEffect(() => {
     if (!isLoaded) return;
     if (isFirstRun.current) { isFirstRun.current = false; return; }
-    const inGame = (segments as string[]).includes("game");
+    const inGame = isGameRoute(segments as string[]);
     if (inGame) {
       startGameMusic().catch(() => {});
     } else {
