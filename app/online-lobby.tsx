@@ -17,7 +17,7 @@ import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
 import { getLocalizedRankInfo } from "@/lib/ranked";
-import { playButton, stopMusic, startGameMusic } from "@/lib/audioManager";
+import { playButton } from "@/lib/audioManager";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { useGame } from "@/context/GameContext";
 import type { GameModeId } from "@/lib/gameModes";
@@ -216,8 +216,6 @@ export default function OnlineLobbyScreen() {
   useEffect(() => { latestFakePlayers.current = fakePlayers; }, [fakePlayers]);
 
   function startDirectGame() {
-    stopMusic().catch(() => {});
-    startGameMusic().catch(() => {});
     const gameMode = (isCoopMode ? "coop" : mode) as GameModeId;
     const firstFake = latestFakePlayers.current[0];
     const cpuOverride = firstFake ? {
@@ -289,8 +287,6 @@ export default function OnlineLobbyScreen() {
         setPreMatchData(data);
         setMyPlayerIndex(data.myPlayerIndex);
         setFoundPlayers(data.players);
-        stopMusic().catch(() => {});
-        startGameMusic().catch(() => {}).catch(() => {});
         setPhase("pre_match");
       });
 

@@ -11,7 +11,7 @@ import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
 import { useGame } from "@/context/GameContext";
-import { playButton, stopMusic, startGameMusic } from "@/lib/audioManager";
+import { playButton } from "@/lib/audioManager";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 
 const AVATAR_COLORS = ["#E74C3C","#9B59B6","#E67E22","#2ECC71","#1A8FC1","#D4AF37","#C0392B","#27AE60","#8E44AD","#F39C12"];
@@ -130,15 +130,16 @@ export default function CoopLobbyScreen() {
     setPhase("countdown");
     let c = 3;
     setCountdownVal(c);
+    const cpuNames = cpus.map(cpu => cpu.name).join(",");
     const iv = setInterval(() => {
       c--;
       setCountdownVal(c);
       if (c <= 0) {
         clearInterval(iv);
-        router.replace({ pathname: "/online-lobby", params: { mode: "coop", playerCount: "4" } });
+        router.replace({ pathname: "/game-online", params: { count: "4", mode: "coop", skipLobby: "true", names: cpuNames } });
       }
     }, 1000);
-  }, []);
+  }, [cpus]);
 
   return (
     <View style={[styles.container, { paddingTop: topPad, paddingBottom: botPad }]}>

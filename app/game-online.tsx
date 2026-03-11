@@ -517,11 +517,12 @@ const raStyles = StyleSheet.create({
 export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
-  const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string }>();
+  const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string; skipLobby?: string; names?: string }>();
   const { profile, level: playerLevel } = useProfile();
   const T = useT();
 
   const isOnline = !!params.code;
+  const skipLobby = params.skipLobby === "true";
   const onlineCode = params.code ?? "";
   const serverPidx = parseInt(params.pidx ?? "0", 10);
   const socketRef = useRef<ReturnType<typeof getSocket> | null>(null);
@@ -543,7 +544,13 @@ export default function OnlineGameScreen() {
 
   const [currentCpuProfiles, setCurrentCpuProfiles] = useState<CpuProfile[]>(() => {
     const profiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
-    if (params.rivalName && profiles.length > 0) {
+    if (params.names) {
+      params.names.split(",").forEach((name, i) => {
+        if (name.trim() && profiles[i]) {
+          profiles[i] = { ...profiles[i], name: name.trim() };
+        }
+      });
+    } else if (params.rivalName && profiles.length > 0) {
       profiles[0] = { ...profiles[0], name: params.rivalName };
     }
     return profiles;
@@ -553,9 +560,9 @@ export default function OnlineGameScreen() {
   // All player names: human is index 0, CPUs are 1..n
   const allNames = [humanName, ...currentCpuProfiles.map(c => c.name)];
 
-  // Lobby state — online games start directly in "dealing" phase
+  // Lobby state — online/skipLobby games start directly in "dealing" phase
   const [lobbyPhase, setLobbyPhase] = useState<"searching" | "found" | "countdown" | "dealing" | "game" | "result">(
-    isOnline ? "dealing" : "searching"
+    (isOnline || skipLobby) ? "dealing" : "searching"
   );
   const [joinedCount, setJoinedCount] = useState(0);
   const [countdown, setCountdown] = useState(3);
@@ -609,9 +616,17 @@ export default function OnlineGameScreen() {
     };
   }, [isOnline]);
 
-  // ─── Lobby sequence (local/simulated only — skip when real online socket) ──
+  // ─── Skip-lobby: initialize game immediately for ranked/coop pre-lobbied games ──
   useEffect(() => {
-    if (isOnline) return;
+    if (!skipLobby) return;
+    const gs = initMultiGame(allNames);
+    gs.phase = "playing";
+    setGameState(gs);
+  }, [skipLobby]);
+
+  // ─── Lobby sequence (local/simulated only — skip when real online socket or pre-lobbied) ──
+  useEffect(() => {
+    if (isOnline || skipLobby) return;
     const timers: ReturnType<typeof setTimeout>[] = [];
     let delay = 1200;
 

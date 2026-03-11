@@ -555,7 +555,7 @@ export default function MultiGameScreen() {
         <WinOverlay
           winnerName={playerNames[gameState.winnerIndex]}
           winnerColor={PLAYER_COLORS[gameState.winnerIndex % PLAYER_COLORS.length]}
-          onClose={() => { stopMusic().catch(() => {}); playButton().catch(() => {}); router.back(); }}
+          onClose={() => { playButton().catch(() => {}); router.back(); }}
         />
       )}
     </View>

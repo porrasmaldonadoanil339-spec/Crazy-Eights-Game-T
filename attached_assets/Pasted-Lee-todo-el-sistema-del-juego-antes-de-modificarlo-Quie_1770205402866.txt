@@ -1,0 +1,55 @@
+Lee todo el sistema del juego antes de modificarlo.
+Quiero que la jugabilidad base del juego sea siempre la misma: la jugabilidad normal de Ocho Locos (turnos, reglas de cartas, funcionamiento de la partida).
+Los modos solo cambian la forma en que se organizan los jugadores.
+CLASIFICATORIA
+•	Es una partida normal de Ocho Locos.
+•	La jugabilidad es exactamente la misma que una partida normal.
+•	La única diferencia es que siempre debe haber 4 jugadores en total (incluyéndome).
+•	El sistema debe buscar hasta encontrar 4 jugadores y luego iniciar la partida.
+•	Dentro de la partida deben aparecer esos mismos 4 jugadores.
+COOPERATIVO
+•	Es una partida de Ocho Locos con equipos.
+•	Deben existir dos equipos: mi equipo y el equipo rival.
+•	Cada equipo comparte las cartas del mismo mazo.
+•	Los jugadores del equipo juegan por turnos usando las mismas cartas.
+•	Gana el equipo que logre quedarse sin cartas primero.
+ONLINE
+•	Cuando entro al modo Online puedo elegir la cantidad de jugadores: 2, 3 o 4.
+•	Cuando presiono el botón de 2, 3 o 4 jugadores, el sistema debe buscar esa cantidad de jugadores incluyendo mi jugador.
+•	Cuando se complete el número de jugadores, la partida debe iniciar automáticamente.
+JUGABILIDAD IMPORTANTE
+•	La jugabilidad dentro de la partida debe ser la misma que una partida normal de Ocho Locos.
+•	Las reglas del juego, los turnos y el sistema de cartas deben funcionar igual en todos los modos.
+•	Solo cambia la cantidad de jugadores o si existen equipos.
+IMPORTANTE
+•	Los jugadores encontrados en la búsqueda deben ser exactamente los mismos que aparecen dentro de la partida.
+•	No crear partidas incompletas.
+•	No cambiar la jugabilidad base del juego.
+
+Lee todo el sistema del juego antes de modificarlo.
+Quiero que la jugabilidad base del juego sea siempre la misma: la jugabilidad normal de Ocho Locos (turnos, reglas de cartas, funcionamiento de la partida).
+Los modos solo cambian la forma en que se organizan los jugadores.
+CLASIFICATORIA
+•	Es una partida normal de Ocho Locos.
+•	La jugabilidad es exactamente la misma que una partida normal.
+•	La única diferencia es que siempre debe haber 4 jugadores en total (incluyéndome).
+•	El sistema debe buscar hasta encontrar 4 jugadores y luego iniciar la partida.
+•	Dentro de la partida deben aparecer esos mismos 4 jugadores.
+COOPERATIVO
+•	Es una partida de Ocho Locos con equipos.
+•	Deben existir dos equipos: mi equipo y el equipo rival.
+•	Cada equipo comparte las cartas del mismo mazo.
+•	Los jugadores del equipo juegan por turnos usando las mismas cartas.
+•	Gana el equipo que logre quedarse sin cartas primero.
+ONLINE
+•	Cuando entro al modo Online puedo elegir la cantidad de jugadores: 2, 3 o 4.
+•	Cuando presiono el botón de 2, 3 o 4 jugadores, el sistema debe buscar esa cantidad de jugadores incluyendo mi jugador.
+•	Cuando se complete el número de jugadores, la partida debe iniciar automáticamente.
+JUGABILIDAD IMPORTANTE
+•	La jugabilidad dentro de la partida debe ser la misma que una partida normal de Ocho Locos.
+•	Las reglas del juego, los turnos y el sistema de cartas deben funcionar igual en todos los modos.
+•	Solo cambia la cantidad de jugadores o si existen equipos.
+IMPORTANTE
+•	Los jugadores encontrados en la búsqueda deben ser exactamente los mismos que aparecen dentro de la partida.
+•	No crear partidas incompletas.
+•	No cambiar la jugabilidad base del juego.

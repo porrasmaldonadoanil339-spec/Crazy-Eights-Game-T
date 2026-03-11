@@ -10,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
-import { playButton, stopMusic, startGameMusic } from "@/lib/audioManager";
+import { playButton } from "@/lib/audioManager";
 import { getLocalizedRankInfo } from "@/lib/ranked";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 
@@ -126,8 +126,8 @@ export default function RankedLobbyScreen() {
 
   const handleStartMatch = useCallback(async () => {
     await playButton().catch(() => {});
-    router.replace({ pathname: "/online-lobby", params: { mode: "ranked", playerCount: String(Math.max(2, totalPlayers)) } });
-  }, [totalPlayers]);
+    router.replace({ pathname: "/game-online", params: { count: "4", mode: "ranked", skipLobby: "true" } });
+  }, []);
 
   const statusLabel = (s: FriendStatus) => s === "available" ? T("statusAvailable" as any) : s === "online" ? T("statusOnline" as any) : T("statusPlaying" as any);
   const statusOrder = (s: FriendStatus) => s === "available" ? 0 : s === "online" ? 1 : 2;
