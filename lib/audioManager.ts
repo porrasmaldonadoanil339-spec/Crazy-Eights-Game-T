@@ -103,12 +103,13 @@ export async function startGameMusic() {
 }
 
 async function _stopMusicInternal() {
-  if (!bgPlayer) return;
+  const player = bgPlayer;
+  bgPlayer = null;
+  currentTrack = null;
+  if (!player) return;
   await safe(async () => {
-    bgPlayer!.pause();
-    bgPlayer!.remove();
-    bgPlayer = null;
-    currentTrack = null;
+    player.pause();
+    player.remove();
   });
 }
 

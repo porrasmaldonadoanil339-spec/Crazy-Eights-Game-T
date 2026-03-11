@@ -1,0 +1,228 @@
+MENSAJE PARA REPLIT
+
+Necesito que corrijas el sistema de partidas porque no está usando correctamente los jugadores que aparecen en la búsqueda.
+
+Jugadores de la búsqueda → deben ser los mismos en la partida
+
+En todos los modos (Clasificatoria, Cooperativo y Online) debe funcionar así:
+
+Los jugadores que aparecen en la pantalla de búsqueda de partida deben ser exactamente los mismos que aparecen dentro de la partida.
+
+No quiero que solo aparezca “yo vs 1 jugador”.
+
+Deben aparecer todos los jugadores que encontró el matchmaking.
+
+Ejemplo:
+
+Si la búsqueda encuentra 4 jugadores:
+
+Yo
+
+Jugador 2
+
+Jugador 3
+
+Jugador 4
+
+Entonces los 4 deben aparecer dentro de la misma partida jugando juntos en el tablero.
+
+No quiero que el sistema reduzca la partida a 1 vs 1.
+El juego es multijugador, así que todos los jugadores encontrados deben jugar la misma partida.
+
+Esto aplica para:
+
+Clasificatoria (4 jugadores en la misma partida)
+
+Cooperativo (los jugadores encontrados deben mantenerse en la partida)
+
+Online con botones de 2, 3 o 4 jugadores
+
+Si selecciono 4 jugadores, la partida debe tener los mismos 4 jugadores de la búsqueda.
+
+Música
+
+La música también está mal ahora.
+
+Quiero que la música se adapte exactamente como estaba antes, porque ahora se escucha mal:
+
+suena doble
+
+se mezcla entre pantallas
+
+se combina dentro de las partidas
+
+Antes funcionaba bien, así que solo restaura el comportamiento anterior de la música.
+
+Objetivo
+
+Quiero que el juego se sienta realista:
+
+Los jugadores encontrados en la búsqueda deben ser los mismos que juegan la partida.
+
+No debe convertirse en 1 vs 1 si el modo es de varios jugadores.
+
+💡 Tip importante:
+Si Replit sigue sin hacerlo bien, dile también esta frase al inicio:
+
+“Lee todo el documento del sistema de partidas antes de modificar el código y respeta la lógica multijugador del juego.”
+
+Si quieres, también puedo darte el truco que usan los devs para que Replit sí entienda estas cosas (una frase clave de programación), porque tu problema es típico cuando el matchmaking no pasa la lista de jugadores al game room.
+
+APARTE ESPEFICIFA DE CADA MODO COMO SE BASARIA LA PARTIDA Y LA CANTIDA PROFA YO YA TE DIJE PROFAVOR
+
+Te escribo un mensaje claro y ordenado para que Replit lo entienda, especificando cada modo y la cantidad de jugadores en la partida. Puedes copiarlo tal cual:
+
+MENSAJE PARA REPLIT
+
+Necesito que corrijas el sistema de partidas para que los jugadores que aparecen en la búsqueda de partida (matchmaking) sean exactamente los mismos que aparecen dentro de la partida. Actualmente solo aparece yo vs 1 jugador, y eso es incorrecto.
+
+El juego debe respetar la cantidad de jugadores según el modo.
+
+1. MODO CLASIFICATORIA
+
+La clasificatoria debe funcionar con 4 jugadores en total.
+
+Búsqueda
+
+En la búsqueda deben aparecer:
+
+Yo
+
+Jugador 2
+
+Jugador 3
+
+Jugador 4
+
+Partida
+
+Cuando inicia la partida:
+
+Deben aparecer los mismos 4 jugadores de la búsqueda
+
+Todos deben estar en la misma partida
+
+No debe convertirse en 1 vs 1
+
+Debe ser una partida de 4 jugadores jugando juntos (modo tipo Ocho Locos).
+
+Los nombres y avatares deben coincidir con los perfiles encontrados en la búsqueda.
+
+2. MODO COOPERATIVO
+
+El cooperativo es 2 vs 2 (4 jugadores).
+
+Búsqueda
+
+Debe encontrar:
+
+Yo
+
+Mi compañero
+
+Rival 1
+
+Rival 2
+
+Partida
+
+Dentro de la partida debe verse así:
+
+Parte inferior (mi equipo)
+
+Yo
+
+Mi compañero
+
+Parte superior (equipo rival)
+
+Rival 1
+
+Rival 2
+
+Importante:
+
+Los jugadores deben mantener sus nombres reales
+
+No usar etiquetas como "aliado" o "rival"
+
+Mi equipo comparte la misma baraja
+
+Orden de turnos
+
+El turno puede rotar entre los 4 jugadores, por ejemplo:
+
+Yo
+
+Rival
+
+Mi compañero
+
+Rival
+
+O
+
+Rival
+
+Yo
+
+Rival
+
+Mi compañero
+
+Pero siempre jugando los 4 jugadores de la búsqueda.
+
+3. MODO ONLINE
+
+En el modo online hay botones azules para elegir cantidad de jugadores:
+
+2 jugadores
+
+3 jugadores
+
+4 jugadores
+
+La partida debe respetar exactamente esa cantidad.
+
+Si selecciono 2 jugadores
+
+La búsqueda encuentra 2 jugadores
+La partida debe tener esos mismos 2 jugadores.
+
+Si selecciono 3 jugadores
+
+La búsqueda encuentra 3 jugadores
+La partida debe tener los mismos 3 jugadores.
+
+Si selecciono 4 jugadores
+
+La búsqueda encuentra 4 jugadores
+La partida debe tener los mismos 4 jugadores.
+
+No debe reducirse nunca a 1 vs 1 si se eligieron más jugadores.
+
+4. MÚSICA
+
+La música está mal ahora.
+
+Quiero que la música se adapte como estaba antes, porque ahora:
+
+suena doble
+
+se mezcla entre pantallas
+
+se combina dentro de las partidas
+
+Solo restaura el sistema de música anterior.
+
+5. OBJETIVO
+
+El objetivo es que el juego se sienta realista:
+
+Los jugadores de la búsqueda deben ser los mismos dentro de la partida
+
+La partida debe respetar la cantidad de jugadores del modo
+
+No convertir partidas multijugador en 1 vs 1
+
+✅ Esto hará que el sistema de partidas funcione correctamente.

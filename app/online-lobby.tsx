@@ -19,8 +19,6 @@ import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
 import { getLocalizedRankInfo } from "@/lib/ranked";
 import { playButton } from "@/lib/audioManager";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
-import { useGame } from "@/context/GameContext";
-import type { GameModeId } from "@/lib/gameModes";
 import { playSound } from "@/lib/sounds";
 
 const ACCENT = Colors.gold;
@@ -153,7 +151,6 @@ export default function OnlineLobbyScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
   const { profile, level } = useProfile();
-  const { startGame } = useGame();
   const T = useT();
   const params = useLocalSearchParams<{ mode?: string; playerCount?: string; directSearch?: string }>();
 
@@ -216,18 +213,17 @@ export default function OnlineLobbyScreen() {
   useEffect(() => { latestFakePlayers.current = fakePlayers; }, [fakePlayers]);
 
   function startDirectGame() {
-    const gameMode = (isCoopMode ? "coop" : mode) as GameModeId;
-    const firstFake = latestFakePlayers.current[0];
-    const cpuOverride = firstFake ? {
-      name: firstFake.name,
-      level: firstFake.level,
-      avatarIcon: firstFake.avatarIcon,
-      avatarColor: firstFake.avatarColor,
-      photoUrl: firstFake.photoUrl,
-      difficulty: "normal",
-    } : undefined;
-    startGame(gameMode, "normal", cpuOverride);
-    router.replace({ pathname: "/game", params: { skipMatchmaking: "true" } });
+    const allFakes = latestFakePlayers.current;
+    const names = allFakes.map(p => p.name).join(",");
+    router.replace({
+      pathname: "/game-online",
+      params: {
+        count: String(playerCount),
+        mode: mode,
+        skipLobby: "true",
+        names: names,
+      },
+    });
   }
 
   useEffect(() => {

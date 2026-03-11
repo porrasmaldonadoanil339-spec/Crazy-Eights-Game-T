@@ -624,6 +624,13 @@ export default function OnlineGameScreen() {
     setGameState(gs);
   }, [skipLobby]);
 
+  // ─── Stop music when local game ends (online socket path handles its own) ──
+  useEffect(() => {
+    if (isOnline) return;
+    if (!gameState || gameState.phase !== "game_over") return;
+    stopMusic().catch(() => {});
+  }, [gameState?.phase, isOnline]);
+
   // ─── Lobby sequence (local/simulated only — skip when real online socket or pre-lobbied) ──
   useEffect(() => {
     if (isOnline || skipLobby) return;
