@@ -192,33 +192,51 @@ function LobbyScreen({
               <Text style={[lobbyStyles.slotName, { color: Colors.gold }]}>{humanName}</Text>
               <Text style={lobbyStyles.slotSub}>{T("level")} {humanLevel} · {T("you")}</Text>
             </View>
-            <View style={lobbyStyles.onlineDot} />
+            {modeParam === "coop" ? (
+              <View style={[lobbyStyles.teamTag, { backgroundColor: "#4A90E222", borderColor: "#4A90E255" }]}>
+                <Text style={[lobbyStyles.teamTagText, { color: "#4A90E2" }]}>MI EQUIPO</Text>
+              </View>
+            ) : (
+              <View style={lobbyStyles.onlineDot} />
+            )}
           </Animated.View>
 
           {/* CPU slots */}
-          {cpuProfiles.slice(0, joinedCount).map((cpu, i) => (
-            <Animated.View
-              key={cpu.name}
-              entering={FadeInDown.delay(100 + i * 80).duration(500)}
-              style={lobbyStyles.slot}
-            >
-              <View style={[lobbyStyles.slotAvatar, { borderColor: cpu.avatarColor }]}>
-                {cpu.photoUrl ? (
-                  <Image
-                    source={{ uri: cpu.photoUrl }}
-                    style={{ width: 36, height: 36, borderRadius: 18 }}
-                  />
-                ) : (
-                  <Ionicons name={cpu.avatarIcon as any} size={20} color={cpu.avatarColor} />
+          {cpuProfiles.slice(0, joinedCount).map((cpu, i) => {
+            const isCoop = modeParam === "coop";
+            const isTeammate = isCoop && i === 0;
+            const slotColor = isCoop ? (isTeammate ? "#4A90E2" : "#E74C3C") : cpu.avatarColor;
+            return (
+              <Animated.View
+                key={cpu.name}
+                entering={FadeInDown.delay(100 + i * 80).duration(500)}
+                style={lobbyStyles.slot}
+              >
+                <View style={[lobbyStyles.slotAvatar, { borderColor: slotColor }]}>
+                  {cpu.photoUrl ? (
+                    <Image
+                      source={{ uri: cpu.photoUrl }}
+                      style={{ width: 36, height: 36, borderRadius: 18 }}
+                    />
+                  ) : (
+                    <Ionicons name={cpu.avatarIcon as any} size={20} color={slotColor} />
+                  )}
+                </View>
+                <View style={lobbyStyles.slotInfo}>
+                  <Text style={[lobbyStyles.slotName, { color: slotColor }]}>{cpu.name}</Text>
+                  <Text style={lobbyStyles.slotSub}>{T("level")} {cpu.level} · {wrFromLevel(cpu.level)}% WR</Text>
+                </View>
+                {isCoop && (
+                  <View style={[lobbyStyles.teamTag, { backgroundColor: slotColor + "22", borderColor: slotColor + "55" }]}>
+                    <Text style={[lobbyStyles.teamTagText, { color: slotColor }]}>
+                      {isTeammate ? "COMPAÑERO" : "RIVAL"}
+                    </Text>
+                  </View>
                 )}
-              </View>
-              <View style={lobbyStyles.slotInfo}>
-                <Text style={[lobbyStyles.slotName, { color: cpu.avatarColor }]}>{cpu.name}</Text>
-                <Text style={lobbyStyles.slotSub}>{T("level")} {cpu.level} · {wrFromLevel(cpu.level)}% WR</Text>
-              </View>
-              <View style={[lobbyStyles.onlineDot, { backgroundColor: "#2ecc71" }]} />
-            </Animated.View>
-          ))}
+                {!isCoop && <View style={[lobbyStyles.onlineDot, { backgroundColor: "#2ecc71" }]} />}
+              </Animated.View>
+            );
+          })}
 
           {/* Empty slots */}
           {Array.from({ length: Math.max(0, playerCount - 1 - joinedCount) }).map((_, i) => (
@@ -269,6 +287,10 @@ const lobbyStyles = StyleSheet.create({
   slotName: { fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.text },
   slotSub: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textDim },
   onlineDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#2ecc71" },
+  teamTag: {
+    paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1,
+  },
+  teamTagText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, letterSpacing: 1 },
 });
 
 // ─── Small face-down card ────────────────────────────────────────────────
@@ -827,12 +849,19 @@ export default function OnlineGameScreen() {
         { idx: 2, pos: "topRight" as const },
       ];
     }
+    if (modeParam === "coop") {
+      return [
+        { idx: 1, pos: "partnerRight" as const },
+        { idx: 2, pos: "topLeft" as const },
+        { idx: 3, pos: "topRight" as const },
+      ];
+    }
     return [
       { idx: 1, pos: "right" as const },
       { idx: 2, pos: "top" as const },
       { idx: 3, pos: "left" as const },
     ];
-  }, [playerCount]);
+  }, [playerCount, modeParam]);
 
   const posStyles: Record<string, object> = {
     top: { position: "absolute" as const, top: 4, left: 0, right: 0, alignItems: "center" as const },
@@ -840,6 +869,7 @@ export default function OnlineGameScreen() {
     topRight: { position: "absolute" as const, top: 4, right: 8 },
     left: { position: "absolute" as const, top: tableCenterY - 80, left: 4 },
     right: { position: "absolute" as const, top: tableCenterY - 80, right: 4 },
+    partnerRight: { position: "absolute" as const, bottom: 148, right: 8 },
   };
 
   // Show lobby
@@ -982,7 +1012,7 @@ export default function OnlineGameScreen() {
           const isSkipped = gs.lastSkipped === cp.idx;
           const side = cp.pos === "left" ? "left" : cp.pos === "right" ? "right" : undefined;
           const isCoop = modeParam === "coop";
-          const isTeammate = isCoop && cp.idx === 2;
+          const isTeammate = isCoop && cp.idx === 1;
           const coopColor = isCoop ? (isTeammate ? "#4A90E2" : "#E74C3C") : PLAYER_COLORS[cp.idx % PLAYER_COLORS.length];
           return (
             <View key={cp.idx} style={posStyles[cp.pos]}>

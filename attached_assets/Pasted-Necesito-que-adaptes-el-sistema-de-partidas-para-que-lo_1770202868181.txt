@@ -1,0 +1,138 @@
+Necesito que adaptes el sistema de partidas para que los jugadores que aparecen en la búsqueda sean exactamente los mismos que juegan dentro de la partida. Esto es muy importante para que el juego se sienta realista.
+
+1. MODO CLASIFICATORIA
+
+Cuando entro a Clasificatoria, el sistema busca 4 jugadores en total (incluyéndome a mí).
+
+Ejemplo en la pantalla de búsqueda:
+
+Jugador 1: Yo
+
+Jugador 2: Carlos
+
+Jugador 3: Alex
+
+Jugador 4: Mateo
+
+Cuando se encuentre la partida y se cargue el tablero, los mismos 4 jugadores deben aparecer dentro de la partida con sus nombres y avatares.
+
+No deben aparecer jugadores diferentes ni bots.
+Deben ser exactamente los mismos 4 que aparecieron en la búsqueda.
+
+Distribución dentro de la partida:
+
+Abajo: yo (jugador principal)
+
+Izquierda/derecha o posiciones del tablero: los otros jugadores
+
+Arriba: los rivales según el orden del juego
+
+Los nombres y avatares deben coincidir con los perfiles mostrados durante la búsqueda.
+
+Esto hará que el sistema se sienta más realista y coherente.
+
+2. MODO COOPERATIVO (2 vs 2)
+
+En cooperativo hay dos equipos de dos jugadores.
+
+Equipo 1 (mi equipo):
+
+Yo
+
+Mi compañero
+
+Equipo 2 (equipo rival):
+
+Rival 1
+
+Rival 2
+
+Dentro de la partida la distribución debe verse así:
+
+Parte inferior del tablero (mi equipo):
+
+Abajo izquierda: mi avatar
+
+Abajo derecha: mi compañero
+
+Parte superior del tablero (equipo rival):
+
+Arriba izquierda: rival 1
+
+Arriba derecha: rival 2
+
+Importante:
+
+Los jugadores deben aparecer con sus nombres reales de perfil, no como "aliado" o "rival".
+
+El equipo comparte la misma baraja.
+
+Orden de turnos posible
+
+El orden puede ser dinámico, por ejemplo:
+
+Ejemplo 1:
+
+Yo
+
+Rival 1
+
+Mi compañero
+
+Rival 2
+
+Ejemplo 2:
+
+Rival 1
+
+Yo
+
+Rival 2
+
+Mi compañero
+
+Pero siempre manteniendo los 4 jugadores reales que entraron a la partida.
+
+3. MODO ONLINE (botones de 2, 3 o 4 jugadores)
+
+En el modo online hay botones azules para elegir:
+
+2 jugadores
+
+3 jugadores
+
+4 jugadores
+
+El sistema debe funcionar así:
+
+Si elijo 4 jugadores:
+
+La búsqueda encuentra 4 jugadores
+
+Esos mismos 4 deben aparecer dentro de la partida
+
+Si elijo 3 jugadores:
+
+La búsqueda encuentra 3 jugadores
+
+Esos mismos 3 juegan dentro de la partida
+
+Si elijo 2 jugadores:
+
+La búsqueda encuentra 2 jugadores
+
+Esos mismos 2 juegan dentro de la partida
+
+Nunca deben cambiar los jugadores al entrar a la partida.
+
+4. OBJETIVO
+
+El objetivo es que el sistema sea coherente y realista:
+
+Los jugadores encontrados en matchmaking
+
+Deben ser exactamente los mismos dentro de la partida
+
+Con los mismos nombres, perfiles y avatares
+
+Esto hará que la experiencia del juego sea más realista y profesional.
