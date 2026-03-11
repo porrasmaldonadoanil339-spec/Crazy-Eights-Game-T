@@ -24,7 +24,7 @@ import {
   playCardFlip, playCardDraw, playButton, playWin, playMenuOpen,
   stopMusic, resumeMusic, startGameMusic
 } from "@/lib/audioManager";
-import { CARD_BACKS } from "@/lib/storeItems";
+import { CARD_BACKS, AVATARS } from "@/lib/storeItems";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
@@ -137,6 +137,7 @@ function LobbyScreen({
   countdown: number;
 }) {
   const T = useT();
+  const { profile, level: humanLevel } = useProfile();
   const pulse = useSharedValue(1);
   useEffect(() => {
     if (phase === "found" || phase === "countdown") {
@@ -181,11 +182,15 @@ function LobbyScreen({
           {/* Human player (always joined) */}
           <Animated.View entering={FadeInDown.duration(400)} style={lobbyStyles.slot}>
             <View style={[lobbyStyles.slotAvatar, { borderColor: Colors.gold }]}>
-              <Ionicons name="person" size={20} color={Colors.gold} />
+              {profile.photoUri ? (
+                <Image source={{ uri: profile.photoUri }} style={{ width: 40, height: 40, borderRadius: 20 }} />
+              ) : (
+                <Ionicons name={(AVATARS.find(a => a.id === profile.avatarId)?.preview ?? "person") as any} size={20} color={Colors.gold} />
+              )}
             </View>
             <View style={lobbyStyles.slotInfo}>
               <Text style={[lobbyStyles.slotName, { color: Colors.gold }]}>{humanName}</Text>
-              <Text style={lobbyStyles.slotSub}>{T("level")} 1 · {T("you")}</Text>
+              <Text style={lobbyStyles.slotSub}>{T("level")} {humanLevel} · {T("you")}</Text>
             </View>
             <View style={lobbyStyles.onlineDot} />
           </Animated.View>
@@ -239,14 +244,14 @@ const lobbyStyles = StyleSheet.create({
   bg: StyleSheet.absoluteFillObject,
   content: { flex: 1, alignItems: "center", justifyContent: "center", gap: 20, padding: 24 },
   header: { position: "absolute", top: 60, alignItems: "center" },
-  modeLabel: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: Colors.gold, letterSpacing: 4 },
-  spinner: { fontSize: 52, color: "#4A90E2", fontFamily: "Nunito_900ExtraBold" },
-  searchLabel: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: "#4A90E2", letterSpacing: 3 },
+  modeLabel: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: Colors.gold, letterSpacing: 4 },
+  spinner: { fontSize: 52, color: "#4A90E2", fontFamily: "Nunito_800ExtraBold" },
+  searchLabel: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#4A90E2", letterSpacing: 3 },
   searchSub: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textDim },
-  foundLabel: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: Colors.gold, letterSpacing: 2, textAlign: "center" },
+  foundLabel: { fontFamily: "Nunito_800ExtraBold", fontSize: 22, color: Colors.gold, letterSpacing: 2, textAlign: "center" },
   countdownWrap: { alignItems: "center", gap: 4 },
   countdownLabel: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textMuted, letterSpacing: 3 },
-  countdown: { fontFamily: "Nunito_900ExtraBold", fontSize: 72, color: Colors.gold },
+  countdown: { fontFamily: "Nunito_800ExtraBold", fontSize: 72, color: Colors.gold },
   slots: { width: "100%", gap: 10 },
   slot: {
     flexDirection: "row", alignItems: "center", gap: 12,
@@ -284,11 +289,12 @@ function FaceDownMini({ angle = 0, backColors, backAccent }: {
 }
 
 // ─── CPU opponent zone ────────────────────────────────────────────────────
-function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSkipped, backColors, backAccent }: {
+function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSkipped, backColors, backAccent, isTeammate, isCoop }: {
   handCount: number; profile: CpuProfile; color: string;
   isThinking: boolean; isCurrent: boolean; side?: "left" | "right";
   isSkipped?: boolean;
   backColors?: [string, string, string]; backAccent?: string;
+  isTeammate?: boolean; isCoop?: boolean;
 }) {
   const glow = useSharedValue(0);
   useEffect(() => {
@@ -339,6 +345,13 @@ function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSki
           </View>
         ))}
       </View>
+
+      {/* Coop team badge */}
+      {isCoop && (
+        <View style={[gameStyles.teamBadge, { backgroundColor: isTeammate ? "#4A90E222" : "#E74C3C22", borderColor: isTeammate ? "#4A90E244" : "#E74C3C44" }]}>
+          <Ionicons name={isTeammate ? "people" : "flame"} size={8} color={isTeammate ? "#4A90E2" : "#E74C3C"} />
+        </View>
+      )}
 
       {/* Thinking indicator */}
       {isThinking && <Text style={gameStyles.thinkingText}>...</Text>}
@@ -468,12 +481,12 @@ const raStyles = StyleSheet.create({
   iconWrap: { width: 72, height: 72, borderRadius: 36, backgroundColor: "#E74C3C22", borderWidth: 2, borderColor: "#E74C3C44", alignItems: "center", justifyContent: "center", marginBottom: 4 },
   rivalTxt: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1 },
   mainTitle: { fontFamily: "Nunito_700Bold", fontSize: 16, color: "rgba(255,255,255,0.8)", textAlign: "center" },
-  autoVic: { fontFamily: "Nunito_900ExtraBold", fontSize: 26, color: Colors.gold, textAlign: "center" },
+  autoVic: { fontFamily: "Nunito_800ExtraBold", fontSize: 26, color: Colors.gold, textAlign: "center" },
   sub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: "rgba(255,255,255,0.55)", textAlign: "center" },
   trophyRow: { flexDirection: "row", gap: 12, marginVertical: 4 },
   claimBtn: { width: "100%", borderRadius: 14, overflow: "hidden", marginTop: 4 },
   claimGrad: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14 },
-  claimTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: "#1a0a00" },
+  claimTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#1a0a00" },
   againBtn: { paddingVertical: 10 },
   againTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "rgba(255,255,255,0.45)" },
 });
@@ -504,6 +517,7 @@ export default function OnlineGameScreen() {
   const tableCenterY = zoneH * 0.44;
 
   const playerCount = Math.min(4, Math.max(2, parseInt(params.count ?? "3", 10)));
+  const modeParam = params.mode || "classic";
 
   const [currentCpuProfiles, setCurrentCpuProfiles] = useState<CpuProfile[]>(() => {
     const profiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
@@ -879,6 +893,12 @@ export default function OnlineGameScreen() {
   const topSuitColor = suitColor(gs.currentSuit);
   const playableCount = isPlaying ? currentHand.filter(c => multiCanPlay(c, gs)).length : 0;
 
+  const modePillColor = modeParam === "ranked" ? Colors.gold : modeParam === "coop" ? "#9B59B6" : "#2ecc71";
+  const modePillLabel = modeParam === "ranked" ? "RANKED" : modeParam === "coop" ? "COOP" : "ONLINE";
+
+  const activeCpuIdx = gs.currentPlayerIndex > 0 ? gs.currentPlayerIndex - 1 : null;
+  const activeCpuProfile = activeCpuIdx !== null ? (currentCpuProfiles[activeCpuIdx] ?? null) : null;
+
   return (
     <View style={[gameStyles.container, { paddingTop: topPad }]}>
       <LinearGradient
@@ -894,9 +914,9 @@ export default function OnlineGameScreen() {
           <Ionicons name="arrow-back" size={18} color={Colors.gold} />
         </Pressable>
         <View style={gameStyles.headerMid}>
-          <View style={gameStyles.onlinePill}>
-            <View style={gameStyles.onlinePillDot} />
-            <Text style={gameStyles.onlinePillText}>ONLINE</Text>
+          <View style={[gameStyles.onlinePill, { backgroundColor: modePillColor + "22", borderColor: modePillColor + "44" }]}>
+            <View style={[gameStyles.onlinePillDot, { backgroundColor: modePillColor }]} />
+            <Text style={[gameStyles.onlinePillText, { color: modePillColor }]}>{modePillLabel}</Text>
           </View>
           <Text style={gameStyles.headerTitle}>{playerCount} {T("players")}</Text>
         </View>
@@ -961,18 +981,23 @@ export default function OnlineGameScreen() {
           const isCurrent = gs.currentPlayerIndex === cp.idx;
           const isSkipped = gs.lastSkipped === cp.idx;
           const side = cp.pos === "left" ? "left" : cp.pos === "right" ? "right" : undefined;
+          const isCoop = modeParam === "coop";
+          const isTeammate = isCoop && cp.idx === 2;
+          const coopColor = isCoop ? (isTeammate ? "#4A90E2" : "#E74C3C") : PLAYER_COLORS[cp.idx % PLAYER_COLORS.length];
           return (
             <View key={cp.idx} style={posStyles[cp.pos]}>
               <CpuZone
                 handCount={handCount}
                 profile={cpu}
-                color={PLAYER_COLORS[cp.idx % PLAYER_COLORS.length]}
+                color={coopColor}
                 isThinking={isCurrent && gs.phase === "playing"}
                 isCurrent={isCurrent}
                 side={side as "left" | "right" | undefined}
                 isSkipped={isSkipped}
                 backColors={backColors}
                 backAccent={backAccent}
+                isTeammate={isTeammate}
+                isCoop={isCoop}
               />
             </View>
           );
@@ -999,7 +1024,18 @@ export default function OnlineGameScreen() {
             )}
             {!isPlaying && gs.currentPlayerIndex !== 0 && (
               <View style={gameStyles.waitingBadge}>
-                <Text style={gameStyles.waitingText}>{T("waiting")}</Text>
+                {activeCpuProfile && (
+                  <View style={gameStyles.waitingAvatar}>
+                    {activeCpuProfile.photoUrl ? (
+                      <Image source={{ uri: activeCpuProfile.photoUrl }} style={{ width: 16, height: 16, borderRadius: 8 }} />
+                    ) : (
+                      <Ionicons name={activeCpuProfile.avatarIcon as any} size={10} color={PLAYER_COLORS[gs.currentPlayerIndex % PLAYER_COLORS.length]} />
+                    )}
+                  </View>
+                )}
+                <Text style={gameStyles.waitingText}>
+                  {activeCpuProfile ? activeCpuProfile.name : T("waiting")}
+                </Text>
               </View>
             )}
           </View>
@@ -1143,7 +1179,7 @@ const gameStyles = StyleSheet.create({
     borderWidth: 1, borderColor: "#2ecc7144",
   },
   onlinePillDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#2ecc71" },
-  onlinePillText: { fontFamily: "Nunito_900ExtraBold", fontSize: 9, color: "#2ecc71", letterSpacing: 2 },
+  onlinePillText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: "#2ecc71", letterSpacing: 2 },
   headerTitle: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textMuted },
   deckBadge: {
     flexDirection: "row", alignItems: "center", gap: 4,
@@ -1178,10 +1214,10 @@ const gameStyles = StyleSheet.create({
     marginTop: 4, paddingHorizontal: 6, paddingVertical: 2,
     borderRadius: 6, alignSelf: "center",
   },
-  drawLabelText: { fontFamily: "Nunito_900ExtraBold", fontSize: 8, color: "#fff" },
+  drawLabelText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, color: "#fff" },
   dirArrowWrap: { alignItems: "center", gap: 2 },
   dirArrow: { fontSize: 18, color: "#4A90E2", opacity: 0.7 },
-  suitOnTable: { fontSize: 16, fontFamily: "Nunito_900ExtraBold" },
+  suitOnTable: { fontSize: 16, fontFamily: "Nunito_800ExtraBold" },
   discardPileWrap: { alignItems: "center", justifyContent: "center" },
 
   // CPU zones
@@ -1201,11 +1237,15 @@ const gameStyles = StyleSheet.create({
   topCardFan: { flexDirection: "row", alignItems: "flex-end" },
   sideCardFan: { alignItems: "center" },
   thinkingText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#4A90E2", marginTop: 2 },
-  skipText: { fontFamily: "Nunito_900ExtraBold", fontSize: 9, color: Colors.red, letterSpacing: 1 },
+  skipText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: Colors.red, letterSpacing: 1 },
+  teamBadge: {
+    flexDirection: "row" as const, alignItems: "center" as const, gap: 3,
+    borderWidth: 1, borderRadius: 6, paddingHorizontal: 5, paddingVertical: 2, marginTop: 2,
+  },
   cpuCountBadge: {
     paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, borderWidth: 1, marginTop: 2,
   },
-  cpuCountText: { fontFamily: "Nunito_900ExtraBold", fontSize: 9 },
+  cpuCountText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9 },
 
   faceDownMini: {
     width: 28, height: 40, borderRadius: 5,
@@ -1229,8 +1269,14 @@ const gameStyles = StyleSheet.create({
   },
   playableText: { fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.gold },
   waitingBadge: {
+    flexDirection: "row", alignItems: "center", gap: 5,
     backgroundColor: "#4A90E222", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2,
     borderWidth: 1, borderColor: "#4A90E244",
+  },
+  waitingAvatar: {
+    width: 18, height: 18, borderRadius: 9,
+    backgroundColor: "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
+    alignItems: "center", justifyContent: "center",
   },
   waitingText: { fontFamily: "Nunito_700Bold", fontSize: 10, color: "#4A90E2" },
   inactivityBar: {
@@ -1257,14 +1303,14 @@ const gameStyles = StyleSheet.create({
     flex: 1, backgroundColor: "rgba(0,0,0,0.9)",
     alignItems: "center", justifyContent: "center", gap: 20,
   },
-  suitTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: Colors.gold, letterSpacing: 2 },
+  suitTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: Colors.gold, letterSpacing: 2 },
   suitGrid: { flexDirection: "row", gap: 14, flexWrap: "wrap", justifyContent: "center" },
   suitBtn: {
     width: 80, height: 80, borderRadius: 16,
     backgroundColor: "rgba(255,255,255,0.07)", alignItems: "center", justifyContent: "center",
     gap: 4, borderWidth: 1, borderColor: Colors.border,
   },
-  suitSym: { fontSize: 28, fontFamily: "Nunito_900ExtraBold" },
+  suitSym: { fontSize: 28, fontFamily: "Nunito_800ExtraBold" },
   suitLbl: { fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.textMuted },
 
   // Result overlay
@@ -1272,9 +1318,9 @@ const gameStyles = StyleSheet.create({
     position: "absolute", inset: 0, zIndex: 300,
     alignItems: "center", justifyContent: "center", gap: 12,
   },
-  resultTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 40, letterSpacing: 2 },
+  resultTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 40, letterSpacing: 2 },
   resultSub: { fontFamily: "Nunito_700Bold", fontSize: 16 },
   resultBtn: { marginTop: 24, borderRadius: 16, overflow: "hidden", width: 250 },
   resultBtnGrad: { paddingVertical: 16, alignItems: "center" },
-  resultBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#fff" },
+  resultBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#fff" },
 });
