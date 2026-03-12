@@ -574,6 +574,12 @@ export default function OnlineGameScreen() {
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
 
+  // ─── In-game menu ────────────────────────────────────────────────────────
+  const [showGameMenu, setShowGameMenu] = useState(false);
+  const [menuCountdown, setMenuCountdown] = useState(10);
+  const menuCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [inGameMusicEnabled, setInGameMusicEnabled] = useState(true);
+
   // ─── Visual effects (card play, last card banner, floating label) ─────────
   const [showEffect, setShowEffect] = useState(false);
   const [showLastCardBanner, setShowLastCardBanner] = useState(false);
@@ -725,6 +731,30 @@ export default function OnlineGameScreen() {
     setLobbyPhase("game");
     startGameMusic().catch(() => {});
   }, []);
+
+  // ─── In-game menu handlers ────────────────────────────────────────────────
+  function openGameMenu() {
+    setShowGameMenu(true);
+    setMenuCountdown(10);
+    if (menuCountdownRef.current) clearInterval(menuCountdownRef.current);
+    menuCountdownRef.current = setInterval(() => {
+      setMenuCountdown(c => {
+        if (c <= 1) {
+          clearInterval(menuCountdownRef.current!);
+          menuCountdownRef.current = null;
+          setShowGameMenu(false);
+          return 10;
+        }
+        return c - 1;
+      });
+    }, 1000);
+  }
+
+  function closeGameMenu() {
+    setShowGameMenu(false);
+    if (menuCountdownRef.current) { clearInterval(menuCountdownRef.current); menuCountdownRef.current = null; }
+    setMenuCountdown(10);
+  }
 
   // ─── Rival abandoned: ~8% chance a CPU rival "disconnects" 10-25s into game ──
   useEffect(() => {
@@ -1027,9 +1057,20 @@ export default function OnlineGameScreen() {
           </View>
           <Text style={gameStyles.headerTitle}>{playerCount} {T("players")}</Text>
         </View>
-        <View style={gameStyles.deckBadge}>
-          <Ionicons name="layers-outline" size={12} color={Colors.textDim} />
-          <Text style={gameStyles.deckCount}>{gs.drawPile.length}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <View style={gameStyles.deckBadge}>
+            <Ionicons name="layers-outline" size={12} color={Colors.textDim} />
+            <Text style={gameStyles.deckCount}>{gs.drawPile.length}</Text>
+          </View>
+          <Pressable
+            onPress={() => { playButton().catch(() => {}); openGameMenu(); }}
+            style={gameStyles.menuHamburger}
+            hitSlop={8}
+          >
+            <View style={gameStyles.hamLine} />
+            <View style={[gameStyles.hamLine, { width: 14 }]} />
+            <View style={gameStyles.hamLine} />
+          </Pressable>
         </View>
       </View>
 
@@ -1111,6 +1152,47 @@ export default function OnlineGameScreen() {
             </View>
           );
         })}
+
+        {/* ─── Coop 2v2 team labels ─── */}
+        {modeParam === "coop" && playerCount === 4 && (
+          <>
+            {/* Rival team bar — top */}
+            <View style={{ position: "absolute", top: 2, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
+              <View style={{
+                flexDirection: "row", alignItems: "center", gap: 6,
+                backgroundColor: "#E74C3C18", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 3,
+                borderWidth: 1, borderColor: "#E74C3C33",
+              }}>
+                <Ionicons name="flame" size={9} color="#E74C3C" />
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: "#E74C3C", letterSpacing: 1 }}>
+                  {profile.language === "en" ? "RIVALS" : "EQUIPO RIVAL"}
+                </Text>
+                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: "#E74C3C88" }}>
+                  {(gs.hands[2]?.length ?? 0) + (gs.hands[3]?.length ?? 0)}
+                </Text>
+                <Ionicons name="flame" size={9} color="#E74C3C" />
+              </View>
+            </View>
+
+            {/* My team bar — above player hand */}
+            <View style={{ position: "absolute", bottom: 148, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
+              <View style={{
+                flexDirection: "row", alignItems: "center", gap: 6,
+                backgroundColor: "#4A90E218", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 3,
+                borderWidth: 1, borderColor: "#4A90E233",
+              }}>
+                <Ionicons name="people" size={9} color="#4A90E2" />
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: "#4A90E2", letterSpacing: 1 }}>
+                  {profile.language === "en" ? "MY TEAM" : "MI EQUIPO"}
+                </Text>
+                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: "#4A90E288" }}>
+                  {currentHand.length + (gs.hands[1]?.length ?? 0)}
+                </Text>
+                <Ionicons name="people" size={9} color="#4A90E2" />
+              </View>
+            </View>
+          </>
+        )}
 
         {/* ─── Human player hand (arc fan layout) ─── */}
         <View style={[gameStyles.playerZone, { bottom: 0 }]}>
@@ -1300,6 +1382,80 @@ export default function OnlineGameScreen() {
             </Text>
           </LinearGradient>
         </Animated.View>
+      )}
+
+      {/* ─── In-Game Menu Modal ─── */}
+      {showGameMenu && (
+        <Pressable style={[StyleSheet.absoluteFill, gameStyles.gameMenuOverlay]} onPress={closeGameMenu}>
+          <Pressable style={gameStyles.gameMenuCard} onPress={() => {}}>
+            <Text style={gameStyles.gameMenuTitle}>
+              {T("menu" as any) || "Menú"}
+            </Text>
+            <Text style={gameStyles.gameMenuCountdownTxt}>
+              {profile.language === "en"
+                ? `Returning in ${menuCountdown}s…`
+                : `Regresando en ${menuCountdown}s…`}
+            </Text>
+
+            {/* Music toggle */}
+            <Pressable
+              style={gameStyles.gameMenuRow}
+              onPress={() => {
+                playButton().catch(() => {});
+                if (inGameMusicEnabled) {
+                  stopMusic().catch(() => {});
+                  setInGameMusicEnabled(false);
+                } else {
+                  startGameMusic().catch(() => {});
+                  setInGameMusicEnabled(true);
+                }
+              }}
+            >
+              <View style={gameStyles.gameMenuRowLeft}>
+                <Ionicons
+                  name={inGameMusicEnabled ? "musical-notes" : "musical-notes-outline"}
+                  size={20}
+                  color={inGameMusicEnabled ? Colors.gold : Colors.textDim}
+                />
+                <Text style={gameStyles.gameMenuRowTxt}>
+                  {profile.language === "en" ? "Music" : "Música"}
+                </Text>
+              </View>
+              <View style={[gameStyles.gameMenuToggle, { backgroundColor: inGameMusicEnabled ? "#27AE60" : "#E74C3C" }]}>
+                <Text style={gameStyles.gameMenuToggleTxt}>{inGameMusicEnabled ? "ON" : "OFF"}</Text>
+              </View>
+            </Pressable>
+
+            <View style={gameStyles.gameMenuDivider} />
+
+            {/* Exit game */}
+            <Pressable
+              style={[gameStyles.gameMenuRow, { opacity: 0.85 }]}
+              onPress={() => {
+                closeGameMenu();
+                playButton().catch(() => {});
+                setShowExitModal(true);
+              }}
+            >
+              <View style={gameStyles.gameMenuRowLeft}>
+                <Ionicons name="exit-outline" size={20} color="#E74C3C" />
+                <Text style={[gameStyles.gameMenuRowTxt, { color: "#E74C3C" }]}>
+                  {profile.language === "en" ? "Quit match" : "Salir de la partida"}
+                </Text>
+              </View>
+            </Pressable>
+
+            <View style={gameStyles.gameMenuDivider} />
+
+            {/* Back to game */}
+            <Pressable style={gameStyles.gameMenuCloseBtn} onPress={closeGameMenu}>
+              <Ionicons name="play" size={16} color={Colors.gold} />
+              <Text style={gameStyles.gameMenuCloseTxt}>
+                {profile.language === "en" ? "Back to game" : "Volver a la partida"}
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
       )}
 
       {/* ─── Exit Confirmation Modal ─── */}
@@ -1523,4 +1679,69 @@ const gameStyles = StyleSheet.create({
   resultBtn: { marginTop: 24, borderRadius: 16, overflow: "hidden", width: 250 },
   resultBtnGrad: { paddingVertical: 16, alignItems: "center" },
   resultBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#fff" },
+
+  // Hamburger menu button
+  menuHamburger: {
+    width: 32, height: 32, alignItems: "center", justifyContent: "center", gap: 4,
+    backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 8,
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+  },
+  hamLine: {
+    width: 18, height: 2, borderRadius: 1,
+    backgroundColor: Colors.gold,
+  },
+
+  // In-game menu modal
+  gameMenuOverlay: {
+    backgroundColor: "rgba(0,0,0,0.75)", alignItems: "center", justifyContent: "center", zIndex: 900,
+  },
+  gameMenuCard: {
+    width: 300, backgroundColor: "#0d1f10", borderRadius: 20, padding: 24,
+    borderWidth: 1, borderColor: Colors.gold + "44", gap: 4,
+    shadowColor: "#000", shadowOpacity: 0.6, shadowRadius: 20, elevation: 20,
+  },
+  gameMenuTitle: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 20, color: Colors.gold,
+    textAlign: "center", letterSpacing: 1, marginBottom: 4,
+  },
+  gameMenuCountdownTxt: {
+    fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textDim,
+    textAlign: "center", marginBottom: 12,
+  },
+  gameMenuRow: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingVertical: 12, paddingHorizontal: 4,
+  },
+  gameMenuRowLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
+  gameMenuRowTxt: {
+    fontFamily: "Nunito_700Bold", fontSize: 14, color: "#D0D0D0",
+  },
+  gameMenuToggle: {
+    paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10, minWidth: 44, alignItems: "center",
+  },
+  gameMenuToggleTxt: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#fff",
+  },
+  gameMenuDivider: {
+    height: 1, backgroundColor: "rgba(255,255,255,0.08)", marginVertical: 6,
+  },
+  gameMenuCloseBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    paddingVertical: 12, gap: 8, marginTop: 2,
+  },
+  gameMenuCloseTxt: {
+    fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.gold,
+  },
+
+  // Coop team connector
+  coopTeamBar: {
+    position: "absolute", bottom: 0, left: 0, right: 0,
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    paddingHorizontal: 8, gap: 6, pointerEvents: "none",
+  } as any,
+  coopTeamLabel: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 1,
+    paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6,
+    overflow: "hidden",
+  },
 });

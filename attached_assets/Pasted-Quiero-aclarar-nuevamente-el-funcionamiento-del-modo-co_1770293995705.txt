@@ -1,0 +1,40 @@
+Quiero aclarar nuevamente el funcionamiento del modo cooperativo, porque es muy importante que lo entiendas exactamente.
+El modo cooperativo es 2 contra 2 y funciona con 2 barajas separadas:
+• Una baraja de 8 cartas para mi equipo
+• Una baraja de 8 cartas para el equipo rival
+Es decir:
+Mi equipo comparte una sola baraja de 8 cartas que aparece en la parte inferior de la mesa.
+El equipo rival comparte una sola baraja de 8 cartas que aparece en la parte superior de la mesa.
+Distribución visual:
+Parte inferior (mi equipo):
+•	Izquierda: mi avatar + mi nombre
+•	Derecha: avatar de mi compañero
+•	En el centro: la baraja de 8 cartas de nuestro equipo
+Parte superior (equipo rival):
+•	Izquierda: avatar del rival
+•	Derecha: avatar del otro rival
+•	En el centro: la baraja de 8 cartas del equipo rival
+En total hay solo 2 barajas visibles en la mesa:
+1.	Baraja de 8 cartas del equipo inferior (mi equipo)
+2.	Baraja de 8 cartas del equipo superior (equipo rival)
+Los turnos se juegan entre los 4 jugadores:
+Yo → Rival → Mi compañero → Rival
+Y así continúa la partida hasta que un equipo se quede sin cartas.
+Si mi equipo se queda sin cartas primero → Ganamos
+Si el equipo rival se queda sin cartas primero → Perdemos
+
+
+
+
+Agrega también los efectos visuales cuando se colocan cartas dentro de la partida en los modos Clasificatoria, Cooperativo y Online.
+Debe funcionar así:
+•	Cuando se coloca una carta +2, debe aparecer su efecto visual correspondiente.
+•	Cuando se coloca una carta +1 o cualquier carta normal, también debe aparecer un pequeño efecto visual al colocarla, igual que en el modo clásico.
+•	Cuando se colocan cartas especiales, deben verse los efectos visuales correspondientes.
+Estos efectos deben ser similares a los del modo clásico para que las partidas en esos tres modos se vean más vivas y dinámicas.
+También debes agregar el menú dentro de la partida en los modos:
+• Clasificatoria
+• Cooperativo
+• Online
+El menú debe permitir abrir las opciones del juego mientras se está jugando.
+
