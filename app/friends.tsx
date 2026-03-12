@@ -142,6 +142,8 @@ export default function FriendsScreen() {
   const [isTyping, setIsTyping] = useState(false);
   const chatListRef = useRef<FlatList<ChatMessage>>(null);
   const [deleteMsgId, setDeleteMsgId] = useState<string | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedMsgIds, setSelectedMsgIds] = useState<Set<string>>(new Set());
   const [showDeleteConvConfirm, setShowDeleteConvConfirm] = useState(false);
   const friendsRef = useRef<Friend[]>([]);
   const requestsRef = useRef<FriendRequest[]>([]);
@@ -445,6 +447,8 @@ export default function FriendsScreen() {
   };
 
   const openChat = (friend: Friend) => {
+    setSelectMode(false);
+    setSelectedMsgIds(new Set());
     setChatFriend(friend);
     const existing = chatHistoryRef.current[friend.id];
     if (existing && existing.length > 0) {
@@ -777,48 +781,80 @@ export default function FriendsScreen() {
       >
         {chatFriend && (
           <View style={[styles.chatModal, { backgroundColor: isDark ? "#010804" : "#eaf6e4", paddingTop: topPad }]}>
-            {/* Chat Header */}
-            <View style={[styles.chatHeader, { borderBottomColor: borderColor }]}>
-              <Pressable onPress={() => setChatFriend(null)} style={styles.backBtn}>
-                <Ionicons name="chevron-back" size={22} color={textColor} />
-              </Pressable>
-              <View style={[styles.avatarIcon, { backgroundColor: chatFriend.avatarColor + "33", width: 32, height: 32, borderRadius: 16 }]}>
-                <Ionicons name={chatFriend.avatarIcon as any} size={16} color={chatFriend.avatarColor} />
+            {/* Chat Header — normal mode */}
+            {!selectMode ? (
+              <View style={[styles.chatHeader, { borderBottomColor: borderColor }]}>
+                <Pressable onPress={() => setChatFriend(null)} style={styles.backBtn}>
+                  <Ionicons name="chevron-back" size={22} color={textColor} />
+                </Pressable>
+                <View style={[styles.avatarIcon, { backgroundColor: chatFriend.avatarColor + "33", width: 32, height: 32, borderRadius: 16 }]}>
+                  <Ionicons name={chatFriend.avatarIcon as any} size={16} color={chatFriend.avatarColor} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.friendName, { color: textColor }]}>{chatFriend.name}</Text>
+                  <Text style={[styles.friendSub, { color: textMuted }]}>{chatFriend.online ? "En línea" : chatFriend.lastSeen}</Text>
+                </View>
+                <Pressable
+                  onPress={() => {
+                    Alert.alert(
+                      "Eliminar conversación",
+                      "¿Borrar todos los mensajes con este amigo?",
+                      [
+                        { text: "Cancelar", style: "cancel" },
+                        { text: "Eliminar", style: "destructive", onPress: () => {
+                            setChatMessages([]);
+                            if (chatFriend) {
+                              delete chatHistoryRef.current[chatFriend.id];
+                              AsyncStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistoryRef.current)).catch(() => {});
+                            }
+                          } },
+                      ]
+                    );
+                  }}
+                  style={[styles.inviteBtn, { backgroundColor: "#E74C3C22", borderRadius: 18, width: 36, height: 36, alignItems: "center", justifyContent: "center", marginRight: 4 }]}
+                >
+                  <Ionicons name="trash-outline" size={15} color="#E74C3C" />
+                </Pressable>
+                <Pressable
+                  onPress={() => { setChatFriend(null); handleInvite(chatFriend); }}
+                  style={[styles.inviteBtn, { marginRight: 4 }]}
+                >
+                  <LinearGradient colors={[Colors.gold, "#A07800"]} style={styles.inviteBtnGrad}>
+                    <Ionicons name="game-controller" size={13} color="#1a0a00" />
+                  </LinearGradient>
+                </Pressable>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.friendName, { color: textColor }]}>{chatFriend.name}</Text>
-                <Text style={[styles.friendSub, { color: textMuted }]}>{chatFriend.online ? "En línea" : chatFriend.lastSeen}</Text>
+            ) : (
+              /* Chat Header — select mode */
+              <View style={[styles.chatHeader, { borderBottomColor: borderColor, backgroundColor: isDark ? "#1a0808" : "#fde8e8" }]}>
+                <Pressable onPress={() => { setSelectMode(false); setSelectedMsgIds(new Set()); }} style={styles.backBtn}>
+                  <Ionicons name="close" size={22} color={textColor} />
+                </Pressable>
+                <Text style={[styles.friendName, { flex: 1, color: textColor }]}>
+                  {selectedMsgIds.size} seleccionado{selectedMsgIds.size !== 1 ? "s" : ""}
+                </Text>
+                {selectedMsgIds.size > 0 && (
+                  <Pressable
+                    onPress={() => {
+                      setChatMessages(prev => {
+                        const next = prev.filter(m => !selectedMsgIds.has(m.id));
+                        if (chatFriend) {
+                          chatHistoryRef.current[chatFriend.id] = next;
+                          AsyncStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistoryRef.current)).catch(() => {});
+                        }
+                        return next;
+                      });
+                      setSelectMode(false);
+                      setSelectedMsgIds(new Set());
+                    }}
+                    style={{ backgroundColor: "#E74C3C", borderRadius: 18, paddingHorizontal: 14, paddingVertical: 7, flexDirection: "row", alignItems: "center", gap: 5, marginRight: 8 }}
+                  >
+                    <Ionicons name="trash" size={14} color="#fff" />
+                    <Text style={{ color: "#fff", fontFamily: "Nunito_700Bold", fontSize: 13 }}>Eliminar</Text>
+                  </Pressable>
+                )}
               </View>
-              <Pressable
-                onPress={() => {
-                  Alert.alert(
-                    "Eliminar conversación",
-                    "¿Borrar todos los mensajes con este amigo?",
-                    [
-                      { text: "Cancelar", style: "cancel" },
-                      { text: "Eliminar", style: "destructive", onPress: () => {
-                          setChatMessages([]);
-                          if (chatFriend) {
-                            delete chatHistoryRef.current[chatFriend.id];
-                            AsyncStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistoryRef.current)).catch(() => {});
-                          }
-                        } },
-                    ]
-                  );
-                }}
-                style={[styles.inviteBtn, { backgroundColor: "#E74C3C22", borderRadius: 18, width: 36, height: 36, alignItems: "center", justifyContent: "center", marginRight: 4 }]}
-              >
-                <Ionicons name="trash-outline" size={15} color="#E74C3C" />
-              </Pressable>
-              <Pressable
-                onPress={() => { setChatFriend(null); handleInvite(chatFriend); }}
-                style={[styles.inviteBtn, { marginRight: 4 }]}
-              >
-                <LinearGradient colors={[Colors.gold, "#A07800"]} style={styles.inviteBtnGrad}>
-                  <Ionicons name="game-controller" size={13} color="#1a0a00" />
-                </LinearGradient>
-              </Pressable>
-            </View>
+            )}
 
             {/* Messages */}
             <FlatList
@@ -826,34 +862,53 @@ export default function FriendsScreen() {
               data={chatMessages}
               keyExtractor={m => m.id}
               contentContainerStyle={{ padding: 14, gap: 10, paddingBottom: 8 }}
-              renderItem={({ item: msg }) => (
-                <Pressable
-                  onLongPress={() => {
-                    Alert.alert(
-                      "Eliminar mensaje",
-                      "¿Eliminar este mensaje?",
-                      [
-                        { text: "Cancelar", style: "cancel" },
-                        { text: "Eliminar", style: "destructive", onPress: () => setChatMessages(prev => prev.filter(m => m.id !== msg.id)) },
-                      ]
-                    );
-                  }}
-                  delayLongPress={400}
-                >
-                  <View style={[
-                    styles.chatBubble,
-                    msg.fromMe
-                      ? { alignSelf: "flex-end", backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "44" }
-                      : { alignSelf: "flex-start", backgroundColor: isDark ? "#1a3a1a" : "#c8e6c0", borderColor: borderColor },
-                    deleteMsgId === msg.id && { opacity: 0.5 },
-                  ]}>
-                    <Text style={[styles.chatBubbleTxt, { color: textColor }]}>{msg.text}</Text>
-                    <Text style={[styles.chatBubbleTime, { color: textMuted }]}>
-                      {new Date(msg.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </Text>
-                  </View>
-                </Pressable>
-              )}
+              renderItem={({ item: msg }) => {
+                const isSelected = selectedMsgIds.has(msg.id);
+                return (
+                  <Pressable
+                    onLongPress={() => {
+                      if (!selectMode) {
+                        setSelectMode(true);
+                        setSelectedMsgIds(new Set([msg.id]));
+                      } else {
+                        setSelectedMsgIds(prev => {
+                          const next = new Set(prev);
+                          next.has(msg.id) ? next.delete(msg.id) : next.add(msg.id);
+                          return next;
+                        });
+                      }
+                    }}
+                    onPress={() => {
+                      if (selectMode) {
+                        setSelectedMsgIds(prev => {
+                          const next = new Set(prev);
+                          next.has(msg.id) ? next.delete(msg.id) : next.add(msg.id);
+                          return next;
+                        });
+                      }
+                    }}
+                    delayLongPress={400}
+                  >
+                    <View style={[
+                      styles.chatBubble,
+                      msg.fromMe
+                        ? { alignSelf: "flex-end", backgroundColor: isSelected ? Colors.gold + "55" : Colors.gold + "22", borderColor: isSelected ? Colors.gold : Colors.gold + "44" }
+                        : { alignSelf: "flex-start", backgroundColor: isSelected ? (isDark ? "#2a5a2a" : "#aad6a0") : (isDark ? "#1a3a1a" : "#c8e6c0"), borderColor: isSelected ? Colors.gold : borderColor },
+                      deleteMsgId === msg.id && { opacity: 0.5 },
+                    ]}>
+                      {selectMode && (
+                        <View style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: 9, backgroundColor: isSelected ? Colors.gold : borderColor, alignItems: "center", justifyContent: "center", zIndex: 1, borderWidth: 2, borderColor: isDark ? "#010804" : "#fff" }}>
+                          {isSelected && <Ionicons name="checkmark" size={10} color="#1a0a00" />}
+                        </View>
+                      )}
+                      <Text style={[styles.chatBubbleTxt, { color: textColor }]}>{msg.text}</Text>
+                      <Text style={[styles.chatBubbleTime, { color: textMuted }]}>
+                        {new Date(msg.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              }}
               ListFooterComponent={isTyping ? (
                 <View style={[styles.chatBubble, { alignSelf: "flex-start", backgroundColor: isDark ? "#1a3a1a" : "#c8e6c0", borderColor, marginTop: 10 }]}>
                   <View style={{ flexDirection: "row", gap: 5, alignItems: "center", paddingHorizontal: 2, paddingVertical: 4 }}>

@@ -989,9 +989,11 @@ export default function OnlineGameScreen() {
           left: SW / 2 - tableW / 2,
           top: tableCenterY - tableH / 2,
           borderRadius: tableH / 2,
+          borderColor: tableAccent + "55",
+          shadowColor: tableAccent,
         }]}>
           <LinearGradient
-            colors={["#0d1f3e", "#0a1830", "#07101e"]}
+            colors={[tableAccent + "cc", tableBg + "ee", tableAccent + "88"] as any}
             style={[StyleSheet.absoluteFill, { borderRadius: tableH / 2 }]}
           />
           <View style={[gameStyles.tableInnerRing, { borderRadius: (tableH - 14) / 2 }]} />
@@ -1008,7 +1010,7 @@ export default function OnlineGameScreen() {
                 ))}
               </View>
               {isPlaying && (
-                <View style={[gameStyles.drawLabel, { backgroundColor: gs.pendingDraw > 0 ? Colors.red : "#4A90E2" }]}>
+                <View style={[gameStyles.drawLabel, { backgroundColor: gs.pendingDraw > 0 ? Colors.red : backAccent }]}>
                   <Text style={gameStyles.drawLabelText}>
                     {gs.pendingDraw > 0 ? `+${gs.pendingDraw}` : T("drawCard")}
                   </Text>
@@ -1293,12 +1295,12 @@ const gameStyles = StyleSheet.create({
   deckCount: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textDim },
   gameZone: { flex: 1, position: "relative" },
 
-  // Oval table (blue-themed for online)
+  // Oval table (colors driven by table design via inline styles)
   tableOval: {
     position: "absolute",
-    borderWidth: 2, borderColor: "#4A90E244",
+    borderWidth: 2, borderColor: "#D4AF3744",
     overflow: "hidden",
-    shadowColor: "#4A90E2", shadowOpacity: 0.2, shadowRadius: 20,
+    shadowColor: "#D4AF37", shadowOpacity: 0.2, shadowRadius: 20,
     elevation: 8,
   },
   tableInnerRing: {
@@ -1320,7 +1322,7 @@ const gameStyles = StyleSheet.create({
   },
   drawLabelText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, color: "#fff" },
   dirArrowWrap: { alignItems: "center", gap: 2 },
-  dirArrow: { fontSize: 18, color: "#4A90E2", opacity: 0.7 },
+  dirArrow: { fontSize: 18, color: "#D4AF37", opacity: 0.7 },
   suitOnTable: { fontSize: 16, fontFamily: "Nunito_800ExtraBold" },
   discardPileWrap: { alignItems: "center", justifyContent: "center" },
 
