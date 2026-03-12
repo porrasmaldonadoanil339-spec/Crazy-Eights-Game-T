@@ -22,8 +22,9 @@ import {
 import { useProfile } from "@/context/ProfileContext";
 import {
   playCardFlip, playCardDraw, playButton, playWin,
-  stopMusic
+  stopMusic, startGameMusic
 } from "@/lib/audioManager";
+import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
@@ -573,6 +574,26 @@ export default function OnlineGameScreen() {
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
 
+  // ─── Visual effects (card play, last card banner, floating label) ─────────
+  const [showEffect, setShowEffect] = useState(false);
+  const [showLastCardBanner, setShowLastCardBanner] = useState(false);
+  const [floatingLabel, setFloatingLabel] = useState<string | null>(null);
+  const [floatingLabelColor, setFloatingLabelColor] = useState("#FFFFFF");
+  const floatAnim = useSharedValue(0);
+  const floatLabelStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(floatAnim.value, { duration: 200 }),
+    transform: [{ translateY: withSpring(floatAnim.value === 1 ? -20 : 0) }],
+  }));
+
+  const showFloatLabel = (text: string, color: string) => {
+    setFloatingLabel(text);
+    setFloatingLabelColor(color);
+    floatAnim.value = 1;
+    setTimeout(() => { floatAnim.value = 0; setTimeout(() => setFloatingLabel(null), 300); }, 1200);
+  };
+  const prevHandCount = useRef<number>(7);
+  const prevPendingDraw = useRef(0);
+
   // Game state
   const [gameState, setGameState] = useState<MultiGameState | null>(null);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
@@ -580,6 +601,27 @@ export default function OnlineGameScreen() {
   const [inactivityProgress, setInactivityProgress] = useState(1);
   const inactivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastActionTime = useRef(Date.now());
+
+  // ─── Last card banner & floating pendingDraw label ───────────────────────
+  useEffect(() => {
+    if (!gameState) return;
+    const count = gameState.hands[0]?.length ?? 7;
+    if (count === 1 && prevHandCount.current > 1) {
+      setShowLastCardBanner(true);
+      playSound("last_card").catch(() => {});
+      setTimeout(() => setShowLastCardBanner(false), 2200);
+    }
+    prevHandCount.current = count;
+  }, [gameState?.hands]);
+
+  useEffect(() => {
+    if (!gameState) return;
+    const pd = gameState.pendingDraw ?? 0;
+    if (pd > prevPendingDraw.current && gameState.currentPlayerIndex === 0) {
+      showFloatLabel(`+${pd}`, "#E74C3C");
+    }
+    prevPendingDraw.current = pd;
+  }, [gameState?.pendingDraw]);
 
   // ─── Online WebSocket setup ──────────────────────────────────────────────
   useEffect(() => {
@@ -681,6 +723,7 @@ export default function OnlineGameScreen() {
 
   const handleDealingComplete = useCallback(() => {
     setLobbyPhase("game");
+    startGameMusic().catch(() => {});
   }, []);
 
   // ─── Rival abandoned: ~8% chance a CPU rival "disconnects" 10-25s into game ──
@@ -811,10 +854,20 @@ export default function OnlineGameScreen() {
       playCardFlip().catch(() => {});
       if (card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0)) {
         setGameState(multiPlayCard(gameState, card));
+        if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
+          setShowEffect(true);
+        }
         return;
       }
       setGameState(multiPlayCard(gameState, card));
       setSelectedCard(null);
+      if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
+        setShowEffect(true);
+      }
+      // Special card floating labels (Ocho Locos ranks)
+      if (card.rank === "2") showFloatLabel("+2", "#E74C3C");
+      else if (card.rank === "7") showFloatLabel("+7", "#E74C3C");
+      else if (card.rank === "A") showFloatLabel("⚡", "#9B59B6");
     } else {
       setSelectedCard(card);
     }
@@ -1206,6 +1259,47 @@ export default function OnlineGameScreen() {
           onClaim={() => { playWin().catch(() => {}); router.back(); }}
           onPlayAgain={handlePlayAgain}
         />
+      )}
+
+      {/* ─── Visual Effects ─── */}
+      {showEffect && (
+        <CardPlayEffect
+          effectId={profile.selectedEffect ?? "effect_none"}
+          originX={SW * 0.55}
+          originY={SH * 0.42}
+          onDone={() => setShowEffect(false)}
+        />
+      )}
+
+      {floatingLabel && (
+        <Animated.View
+          style={[{
+            position: "absolute", bottom: "35%", left: 0, right: 0,
+            alignItems: "center", zIndex: 500, pointerEvents: "none" as any,
+          }, floatLabelStyle]}
+        >
+          <View style={{ backgroundColor: floatingLabelColor + "EE", borderRadius: 14, paddingHorizontal: 18, paddingVertical: 8, shadowColor: floatingLabelColor, shadowOpacity: 0.8, shadowRadius: 12, elevation: 10 }}>
+            <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 28, color: "#fff", textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 4 }}>
+              {floatingLabel}
+            </Text>
+          </View>
+        </Animated.View>
+      )}
+
+      {showLastCardBanner && (
+        <Animated.View
+          entering={SlideInDown.duration(300)}
+          style={{
+            position: "absolute", top: topPad + 60, left: 20, right: 20,
+            alignItems: "center", zIndex: 500, pointerEvents: "none" as any,
+          }}
+        >
+          <LinearGradient colors={[Colors.gold, "#A07800"]} style={{ borderRadius: 14, paddingHorizontal: 28, paddingVertical: 10 }}>
+            <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: "#1a0a00", letterSpacing: 2 }}>
+              ¡ÚLTIMA CARTA!
+            </Text>
+          </LinearGradient>
+        </Animated.View>
       )}
 
       {/* ─── Exit Confirmation Modal ─── */}

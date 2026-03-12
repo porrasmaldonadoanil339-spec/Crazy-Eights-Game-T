@@ -1,0 +1,55 @@
+Quiero aclarar algo muy importante sobre el modo cooperativo para que no haya confusión.
+En la partida deben existir 2 barajas de 8 cartas:
+• 1 baraja de 8 cartas para mi equipo (equipo inferior)
+• 1 baraja de 8 cartas para el equipo rival (equipo superior)
+Es decir:
+•	Mi equipo comparte una baraja de 8 cartas que aparece en la parte inferior de la mesa.
+•	El equipo rival también comparte una baraja de 8 cartas que aparece en la parte superior de la mesa.
+Distribución visual:
+Parte inferior (mi equipo):
+•	A la izquierda aparece mi avatar y mi nombre.
+•	A la derecha aparece el avatar de mi compañero.
+•	En el centro aparece la baraja de 8 cartas de nuestro equipo.
+Parte superior (equipo rival):
+•	En el extremo izquierdo aparece un avatar del equipo rival.
+•	En el extremo derecho aparece el otro avatar del equipo rival.
+•	En el centro aparece la baraja de 8 cartas del equipo rival.
+En total hay 2 barajas visibles en la mesa:
+•	una para mi equipo
+•	una para el equipo rival
+Esto es muy importante para que el modo cooperativo se entienda bien y funcione correctamente.
+
+Quiero agregar unas instrucciones más muy importantes para que el juego funcione correctamente y se vea más profesional. Por favor, léelas bien y aplícalas tal cual.
+1.	Cuando el jugador entra a cualquier modo de juego (Clasificatoria, Cooperativo u Online) y presiona “Jugar”, mientras el juego está buscando jugadores, debe seguir escuchándose la música del menú.
+2.	Cuando finalmente se entra a la partida, en ese momento debe cambiar automáticamente a la música de la partida. La transición debe ser correcta y no debe romper la sincronización actual del juego.
+3.	Todo lo que el jugador compre o seleccione en la tienda debe funcionar dentro de los modos:
+•	Clasificatoria
+•	Cooperativo
+•	Online
+Esto incluye por ejemplo:
+•	diseños de cartas
+•	efectos de cartas
+•	mesas
+•	emotes
+•	personalizaciones
+4.	Cuando el jugador usa cartas dentro de la partida, también deben aparecer los efectos visuales que se compraron o seleccionaron en la tienda. Estos efectos deben verse en los tres modos mencionados.
+5.	Si el jugador cambia algún objeto o personalización en la tienda, ese cambio debe aplicarse automáticamente en las partidas de esos modos.
+6.	Los emotes, el menú de partida y las opciones interactivas también deben funcionar correctamente dentro de los modos Clasificatoria, Cooperativo y Online.
+El objetivo es que todos los modos del juego se vean igual de interactivos, completos y vivos, para que la experiencia sea más realista y profesional.
+
+Quiero agregar algunas instrucciones más muy importantes para mejorar el realismo del juego. Por favor, léelas bien y aplícalas tal cual.
+1.	En las partidas no deben repetirse los mismos avatares de perfil entre los jugadores. Cada jugador debe tener un avatar diferente para que el juego dé la sensación de que estás jugando contra personas distintas y reales.
+2.	En los textos dentro de las partidas no debe aparecer la palabra “CPU”. En su lugar debe decir “Rival”. Esto es importante porque quiero que el juego dé la sensación de que es un juego online real, aunque en realidad no lo sea.
+3.	En los modos Cooperativo, Clasificatoria y Online se deben agregar los mismos efectos visuales que tiene el modo Clásico, especialmente cuando se usan cartas especiales.
+Debe haber efectos visuales cuando:
+•	se usa +1
+•	se usa +2
+•	se colocan cartas especiales
+•	se activan acciones especiales de cartas
+Los efectos deben verse parecidos a los del modo clásico para que esos tres modos se vean más vivos y dinámicos.
+4.	Los perfiles de jugadores que aparecen en las partidas deben tener mucha variedad para que el juego se vea más realista. Necesito que el sistema genere muchos perfiles diferentes (por ejemplo miles de combinaciones) con:
+•	nombres distintos
+•	avatares distintos
+•	fotos de perfil variadas
+El objetivo es que en cada partida parezca que estás jugando contra personas diferentes, como en un juego online real.
+En resumen: quiero que todo esto se implemente correctamente para que el juego se vea más realista, más vivo y más profesional.
