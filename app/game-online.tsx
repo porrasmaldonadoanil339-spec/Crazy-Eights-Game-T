@@ -22,13 +22,14 @@ import {
 import { useProfile } from "@/context/ProfileContext";
 import {
   playCardFlip, playCardDraw, playButton, playWin,
-  stopMusic, startGameMusic
+  stopMusic, startGameMusic, syncSettings
 } from "@/lib/audioManager";
 import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
+import { addStars, getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
 
 interface ServerGameState {
   discardTop: Card;
@@ -607,12 +608,48 @@ const raStyles = StyleSheet.create({
   againTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "rgba(255,255,255,0.45)" },
 });
 
+// ─── Ranked promotion / demotion overlay ──────────────────────────────────
+function RankedResultOverlay({ type, onDone }: { type: "promotion" | "demotion"; onDone: () => void }) {
+  const T = useT();
+  const sc = useSharedValue(0.5);
+  const op = useSharedValue(0);
+  const isPromo = type === "promotion";
+  const accentColor = isPromo ? Colors.gold : "#E74C3C";
+  useEffect(() => {
+    sc.value = withSpring(1, { damping: 11 });
+    op.value = withTiming(1, { duration: 300 });
+    const t = setTimeout(onDone, 3200);
+    return () => clearTimeout(t);
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
+  return (
+    <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.8)", alignItems: "center", justifyContent: "center", zIndex: 250 } as any}>
+      <Animated.View style={[{ width: 300, borderRadius: 24, overflow: "hidden", borderWidth: 2, borderColor: accentColor + "55" }, animStyle]}>
+        <LinearGradient colors={isPromo ? ["#1A1200", "#221800", "#1A1200"] : ["#1A0000", "#220000", "#1A0000"]} style={{ padding: 28, alignItems: "center", gap: 12 } as any}>
+          <Ionicons name={isPromo ? "trending-up" : "trending-down"} size={52} color={accentColor} />
+          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 26, color: accentColor, textAlign: "center" }}>
+            {isPromo ? (T("rankPromoted" as any) || "¡Subiste de rango!") : (T("rankDemoted" as any) || "Bajaste de rango")}
+          </Text>
+          <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 13, color: "rgba(255,255,255,0.6)", textAlign: "center", lineHeight: 18 }}>
+            {isPromo ? (T("rankPromotedSub" as any) || "¡Sigue así!") : (T("rankDemotedSub" as any) || "Puedes recuperarte")}
+          </Text>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {[0, 1, 2, 3, 4].map(i => (
+              <Ionicons key={i} name={isPromo ? "star" : "star-outline"} size={22} color={isPromo ? Colors.gold : "#E74C3C66"} style={{ opacity: isPromo ? 1 : 0.5 }} />
+            ))}
+          </View>
+        </LinearGradient>
+      </Animated.View>
+    </View>
+  );
+}
+
 // ─── Main screen ──────────────────────────────────────────────────────────
 export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
   const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string; skipLobby?: string; names?: string }>();
-  const { profile, level: playerLevel } = useProfile();
+  const { profile, level: playerLevel, addXp, updateRanked } = useProfile();
   const T = useT();
 
   const isOnline = !!params.code;
@@ -672,6 +709,10 @@ export default function OnlineGameScreen() {
   const [menuCountdown, setMenuCountdown] = useState(10);
   const menuCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [inGameMusicEnabled, setInGameMusicEnabled] = useState(true);
+  const [inGameSfxEnabled, setInGameSfxEnabled] = useState(profile.sfxEnabled ?? true);
+  const [muteCpuEmotes, setMuteCpuEmotes] = useState(false);
+  const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
+  const rankedUpdatedRef = useRef(false);
 
   // ─── Visual effects (card play, last card banner, floating label) ─────────
   const [showEffect, setShowEffect] = useState(false);
@@ -776,6 +817,18 @@ export default function OnlineGameScreen() {
     if (!gameState || gameState.phase !== "game_over") return;
     stopMusic().catch(() => {});
   }, [gameState?.phase, isOnline]);
+
+  // ─── Ranked star update when game ends ───────────────────────────────────
+  useEffect(() => {
+    if (modeParam !== "ranked") return;
+    if (!gameState || gameState.phase !== "game_over") return;
+    if (gameState.winnerIndex === null) return;
+    if (rankedUpdatedRef.current) return;
+    rankedUpdatedRef.current = true;
+    const isWin = gameState.winnerIndex === 0;
+    updateRanked(isWin ? 2 : -1);
+    setRankedPromotion(isWin ? "promotion" : "demotion");
+  }, [gameState?.phase, gameState?.winnerIndex, modeParam]);
 
   // ─── Lobby sequence (local/simulated only — skip when real online socket or pre-lobbied) ──
   useEffect(() => {
@@ -1484,6 +1537,43 @@ export default function OnlineGameScreen() {
                 : `Regresando en ${menuCountdown}s…`}
             </Text>
 
+            {/* Emotes toggle */}
+            <Pressable
+              style={gameStyles.gameMenuRow}
+              onPress={() => { setMuteCpuEmotes(m => !m); playButton().catch(() => {}); }}
+            >
+              <View style={gameStyles.gameMenuRowLeft}>
+                <Ionicons name={muteCpuEmotes ? "chatbubble-ellipses-outline" : "chatbubble-ellipses"} size={20} color={muteCpuEmotes ? Colors.textDim : Colors.gold} />
+                <Text style={gameStyles.gameMenuRowTxt}>
+                  {profile.language === "en" ? "Emotes" : "Emotes"}
+                </Text>
+              </View>
+              <View style={[gameStyles.gameMenuToggle, { backgroundColor: muteCpuEmotes ? "#E74C3C" : "#27AE60" }]}>
+                <Text style={gameStyles.gameMenuToggleTxt}>{muteCpuEmotes ? "OFF" : "ON"}</Text>
+              </View>
+            </Pressable>
+
+            {/* SFX toggle */}
+            <Pressable
+              style={gameStyles.gameMenuRow}
+              onPress={() => {
+                const next = !inGameSfxEnabled;
+                setInGameSfxEnabled(next);
+                syncSettings(inGameMusicEnabled, next);
+                playButton().catch(() => {});
+              }}
+            >
+              <View style={gameStyles.gameMenuRowLeft}>
+                <Ionicons name={inGameSfxEnabled ? "volume-high" : "volume-mute"} size={20} color={inGameSfxEnabled ? Colors.gold : Colors.textDim} />
+                <Text style={gameStyles.gameMenuRowTxt}>
+                  {profile.language === "en" ? "Sound effects" : "Efectos de sonido"}
+                </Text>
+              </View>
+              <View style={[gameStyles.gameMenuToggle, { backgroundColor: inGameSfxEnabled ? "#27AE60" : "#E74C3C" }]}>
+                <Text style={gameStyles.gameMenuToggleTxt}>{inGameSfxEnabled ? "ON" : "OFF"}</Text>
+              </View>
+            </Pressable>
+
             {/* Music toggle */}
             <Pressable
               style={gameStyles.gameMenuRow}
@@ -1492,9 +1582,11 @@ export default function OnlineGameScreen() {
                 if (inGameMusicEnabled) {
                   stopMusic().catch(() => {});
                   setInGameMusicEnabled(false);
+                  syncSettings(false, inGameSfxEnabled);
                 } else {
                   startGameMusic().catch(() => {});
                   setInGameMusicEnabled(true);
+                  syncSettings(true, inGameSfxEnabled);
                 }
               }}
             >
@@ -1545,6 +1637,14 @@ export default function OnlineGameScreen() {
         </Pressable>
       )}
 
+      {/* ─── Ranked promotion/demotion overlay ─── */}
+      {!!rankedPromotion && (
+        <RankedResultOverlay
+          type={rankedPromotion}
+          onDone={() => setRankedPromotion(null)}
+        />
+      )}
+
       {/* ─── Exit Confirmation Modal ─── */}
       {showExitModal && (
         <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.72)", justifyContent: "center", alignItems: "center", zIndex: 999 }]}>
@@ -1583,7 +1683,12 @@ export default function OnlineGameScreen() {
                 </Text>
               </Pressable>
               <Pressable
-                onPress={() => { playButton().catch(() => {}); setShowExitModal(false); router.back(); }}
+                onPress={() => {
+                  playButton().catch(() => {});
+                  setShowExitModal(false);
+                  addXp(-50);
+                  router.back();
+                }}
                 style={{ flex: 1, backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}
               >
                 <Text style={{ color: "#fff", fontFamily: "Nunito_700Bold", fontSize: 14 }}>

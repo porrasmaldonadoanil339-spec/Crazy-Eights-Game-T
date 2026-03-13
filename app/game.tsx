@@ -30,7 +30,7 @@ import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge 
 import { getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
-import { stopMusic, startGameMusic } from "@/lib/audioManager";
+import { stopMusic, startGameMusic, syncSettings } from "@/lib/audioManager";
 import { getRankInfo, RANK_COLORS, DIVISIONS, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 
@@ -976,7 +976,7 @@ export default function GameScreen() {
     runAiTurn, selectedCard, setSelectedCard, dealAnimationDone, setDealAnimationDone,
     startNextTournamentRound, startGame, getGameResult, forceGameOver, forceAiDraw,
   } = useGame();
-  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked } = useProfile();
+  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp } = useProfile();
   const T = useT();
   useEffect(() => { setEngineLang(profile.language ?? "es"); }, [profile.language]);
 
@@ -1159,6 +1159,7 @@ export default function GameScreen() {
   const [menuCountdown, setMenuCountdown] = useState(10);
   const menuCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [inGameMusicEnabled, setInGameMusicEnabled] = useState(true);
+  const [inGameSfxEnabled, setInGameSfxEnabled] = useState(profile.sfxEnabled ?? true);
   const [pingMs, setPingMs] = useState(Math.floor(Math.random() * 55 + 25));
   const [showMatchmaking, setShowMatchmaking] = useState(screenParams.skipMatchmaking !== "true");
   const [showLevelUp, setShowLevelUp] = useState(false);
@@ -2009,6 +2010,27 @@ export default function GameScreen() {
               </View>
             </Pressable>
 
+            {/* SFX toggle */}
+            <Pressable
+              style={styles.gameMenuRow}
+              onPress={() => {
+                const next = !inGameSfxEnabled;
+                setInGameSfxEnabled(next);
+                syncSettings(inGameMusicEnabled, next);
+                playSound("button_press").catch(() => {});
+              }}
+            >
+              <View style={styles.gameMenuRowLeft}>
+                <Ionicons name={inGameSfxEnabled ? "volume-high" : "volume-mute"} size={20} color={inGameSfxEnabled ? Colors.gold : Colors.textDim} />
+                <Text style={styles.gameMenuRowTxt}>
+                  {profile.language === "en" ? "Sound effects" : "Efectos de sonido"}
+                </Text>
+              </View>
+              <View style={[styles.gameMenuToggle, { backgroundColor: inGameSfxEnabled ? "#27AE60" : "#E74C3C" }]}>
+                <Text style={styles.gameMenuToggleTxt}>{inGameSfxEnabled ? "ON" : "OFF"}</Text>
+              </View>
+            </Pressable>
+
             {/* Music toggle */}
             <Pressable
               style={styles.gameMenuRow}
@@ -2017,9 +2039,11 @@ export default function GameScreen() {
                 if (inGameMusicEnabled) {
                   stopMusic().catch(() => {});
                   setInGameMusicEnabled(false);
+                  syncSettings(false, inGameSfxEnabled);
                 } else {
                   startGameMusic().catch(() => {});
                   setInGameMusicEnabled(true);
+                  syncSettings(true, inGameSfxEnabled);
                 }
               }}
             >
@@ -2067,7 +2091,11 @@ export default function GameScreen() {
         visible={showExitConfirm}
         isRanked={session?.mode === "ranked"}
         onCancel={() => setShowExitConfirm(false)}
-        onConfirm={() => { setShowExitConfirm(false); router.back(); }}
+        onConfirm={() => {
+          setShowExitConfirm(false);
+          if (session?.mode === "ranked" || session?.mode === "challenge") addXp(-50);
+          router.back();
+        }}
       />
     </View>
   );

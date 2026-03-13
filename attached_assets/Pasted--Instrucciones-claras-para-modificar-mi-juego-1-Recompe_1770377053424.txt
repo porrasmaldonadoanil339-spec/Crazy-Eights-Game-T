@@ -1,0 +1,135 @@
+📄 Instrucciones claras para modificar mi juego
+1️⃣ Recompensas al entrar al juego
+•	Cuando abro la app, primero debe aparecer el logo de la desarrolladora.
+•	NO debe aparecer inmediatamente la ventana de reclamar recompensas.
+•	Las recompensas deben aparecer cuando el jugador entra al menú principal, no antes.
+Orden correcto:
+1.	Logo de desarrolladora
+2.	Pantalla de carga
+3.	Menú principal
+4.	Allí recién aparece “Reclamar recompensa”
+________________________________________
+🎮 Animaciones al ganar o perder
+En todos los modos
+Los modos:
+•	Cooperativo
+•	Clasificatoria
+•	Online
+•	Local
+•	Desafío
+Deben usar las mismas animaciones de victoria o derrota que ya existen en el juego.
+________________________________________
+🏆 Animación especial en Clasificatoria
+Cuando el jugador gana en clasificatoria:
+1.	Aparece una animación donde se gana una estrella ⭐ para el rango
+(estilo sistema de rango como en Garena Free Fire).
+2.	Luego aparece la animación “Ganaste”.
+3.	Finalmente el botón Continuar.
+Si pierde:
+•	Sale la animación “Perdiste”.
+•	Se quita una estrella del rango.
+________________________________________
+🃏 Animación de cartas en modo cooperativo
+En el modo cooperativo:
+•	La animación inicial de baraja debe mostrar:
+o	2 barajas de 8 cartas
+o	Una para el equipo de abajo
+o	Una para el equipo de arriba
+Además:
+•	Las cartas del equipo de arriba no deben verse todas juntas.
+•	Deben mostrarse separadas para que se vea claramente cada carta de la baraja.
+________________________________________
+✨ Efectos visuales de cartas
+Los efectos de cartas deben funcionar en los 3 modos principales:
+•	Clasificatoria
+•	Online
+•	Cooperativo
+Ejemplos:
+•	Carta +2 → aparece efecto visual +2
+•	Carta normal → aparece efecto +1
+•	Cartas especiales → efectos visuales propios
+Actualmente parece que faltan efectos visuales en algunas cartas, se deben agregar correctamente.
+________________________________________
+⏸️ Menú de pausa (muy importante)
+En todos los modos de juego el menú de pausa debe tener:
+Opciones:
+•	🔊 Activar / desactivar música
+•	🔉 Activar / desactivar efectos
+•	😀 Activar / desactivar emotes
+Esto debe funcionar en tiempo real durante la partida.
+________________________________________
+👤 Sistema de avatares en partida
+Actualmente aparece el avatar abajo cuando un jugador hace una acción.
+Eso debe modificarse.
+Cuando hay 3 o más jugadores:
+•	El avatar del jugador que está jugando debe verse normal o con brillo.
+•	Los otros avatares deben verse con menos brillo.
+Esto ayuda a identificar quién está jugando en ese momento.
+________________________________________
+🚪 Penalización por abandonar partida
+Si un jugador abandona una partida:
+•	Debe perder experiencia (XP).
+Esto se aplica en:
+•	Clasificatoria
+•	Online
+•	Cooperativo
+Porque si no hay penalización, los jugadores se saldrán de las partidas sin consecuencia.
+________________________________________
+⭐ Sistema de estrellas del ranking
+En el modo Clasificatoria:
+•	Ganar → +1 estrella
+•	Perder → −1 estrella
+Las estrellas deben aparecer en el perfil del jugador junto al rango.
+Cuando el jugador acumula suficientes estrellas → sube de rango.
+________________________________________
+🌍 Cambio de idioma (problema actual)
+El cambio de idioma no funciona correctamente.
+Debe funcionar como en Clash Royale:
+•	El jugador entra a Configuración.
+•	Selecciona idioma.
+•	El idioma cambia inmediatamente en toda la interfaz.
+Debe aplicarse a:
+•	Botones
+•	Menús
+•	Descripciones
+•	Interfaces de juego
+Todo debe cambiar en tiempo real.
+________________________________________
+🎯 Modo Desafío
+El modo desafío debe ser más creativo.
+Los desafíos deben:
+•	Ser variados
+•	Cambiar dependiendo de la partida
+•	Ser dinámicos
+Ejemplos de desafíos:
+•	Ganar usando máximo 10 cartas
+•	Ganar sin usar cartas especiales
+•	Hacer 3 +2 seguidos
+•	Terminar la partida con exactamente 1 carta especial
+Regla importante:
+❗ Si el jugador incumple el desafío, pierde automáticamente la partida.
+Esto hace el modo más divertido y desafiante.
+________________________________________
+⚠️ Mensaje de incumplimiento de regla
+Cuando el jugador rompe una regla del desafío:
+•	Aparece un mensaje.
+Problema actual:
+•	El botón cerrar no funciona correctamente.
+Debe funcionar bien para cerrar el mensaje.
+________________________________________
+🔑 Vinculación de cuenta
+(Esta parte la dejo solo como sugerencia porque dijiste que no estabas seguro)
+El sistema debería funcionar así:
+1.	Pantalla de carga → llega a 100%
+2.	Aparece pantalla de login:
+Opciones:
+•	Iniciar con Google
+•	Iniciar con Facebook
+•	Jugar como invitado
+Si el jugador entra como invitado:
+•	Puede jugar normalmente
+•	Pero podrá vincular su cuenta después en ajustes.
+Cuando ya está vinculada:
+•	Esas opciones ya no deben aparecer nuevamente.
+________________________________________
+✅ Con todas estas mejoras tu juego se verá mucho más profesional y pulido.
