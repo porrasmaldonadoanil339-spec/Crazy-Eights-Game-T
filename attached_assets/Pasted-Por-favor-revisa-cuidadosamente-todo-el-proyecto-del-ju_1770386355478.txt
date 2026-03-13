@@ -1,0 +1,15 @@
+Por favor revisa cuidadosamente todo el proyecto del juego y aplica correctamente todas las modificaciones que te indiqué anteriormente, siguiendo cada paso exactamente como fue explicado.
+También corrige correctamente el sistema de inactividad durante las partidas. Este sistema debe funcionar así:
+•	Si el jugador permanece 20 segundos sin realizar ninguna acción, entonces debe aparecer un contador visible de segundos que obligue al jugador a realizar su jugada.
+•	Es muy importante que tocar o seleccionar cartas NO regenere ni reinicie ese tiempo. El sistema debe seguir contando normalmente.
+•	Solo una jugada real válida debe detener ese proceso.
+•	Este sistema debe aplicarse en todos los modos del juego, excepto en el modo relámpago, ya que ese modo tiene su propio sistema de tiempo.
+En el modo relámpago, cada jugador debe tener 8 segundos obligatorios para realizar su jugada. Si el jugador no juega dentro de ese tiempo, el sistema debe ejecutar automáticamente una acción válida según las reglas.
+También corrige el funcionamiento del modo cooperativo. La animación inicial debe mostrar claramente el reparto de dos barajas de ocho cartas:
+•	Una baraja de ocho cartas para el equipo de la parte inferior.
+•	Otra baraja de ocho cartas para el equipo de la parte superior.
+Las cartas deben verse claramente separadas, igual que en los otros modos del juego, para que se pueda notar correctamente la cantidad de cartas.
+Además, cuando el jugador entre a cualquier modo y el sistema esté buscando rivales o preparando la partida, debe escucharse la música del menú. La música de partida solo debe comenzar cuando el jugador realmente ingrese a la partida.
+Por favor revisa nuevamente todo el proyecto completo y asegúrate de que todas las mejoras solicitadas anteriormente estén correctamente implementadas, optimizadas y funcionando sin errores.
+Cuando finalices, confirma que seguiste todos los pasos, aplicaste todas las modificaciones y que el juego quedó mejorado al 100%, con todas las funciones funcionando correctamente y bien integradas en la experiencia del jugador.
+También corrige el funcionamiento del modo local. Cuando el jugador entre al modo local y seleccione la cantidad de jugadores (por ejemplo 2, 3, 4 o 6 jugadores), al presionar esa opción el juego debe llevar directamente a la partida correspondiente con esa cantidad de jugadores. Es decir, al seleccionar el número de jugadores, el sistema debe iniciar inmediatamente la partida con esa configuración sin quedarse en la misma interfaz o generar errores.

@@ -983,7 +983,13 @@ export default function PlayScreen() {
               {[2, 3, 4, 6].map(n => (
                 <Pressable
                   key={n}
-                  onPress={() => setMultiPlayerCount(n)}
+                  onPress={async () => {
+                    await playButton().catch(() => {});
+                    setMultiPlayerCount(n);
+                    const names = multiPlayerNames.slice(0, n).map((nm, i) => nm.trim() || `Jugador ${i + 1}`);
+                    setShowMultiModal(false);
+                    router.push({ pathname: "/game-multi", params: { names: JSON.stringify(names), count: String(n) } });
+                  }}
                   style={[styles.multiCountBtn, multiPlayerCount === n && styles.multiCountBtnActive, { borderColor: theme.border }]}
                 >
                   <Text style={[styles.multiCountBtnText, multiPlayerCount === n ? styles.multiCountBtnTextActive : { color: theme.textMuted }]}>

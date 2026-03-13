@@ -754,6 +754,7 @@ export default function OnlineGameScreen() {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const cpuThinking = useRef(false);
   const [inactivityProgress, setInactivityProgress] = useState(1);
+  const [showInactivityBar, setShowInactivityBar] = useState(false);
   const inactivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastActionTime = useRef(Date.now());
 
@@ -984,8 +985,9 @@ export default function OnlineGameScreen() {
     }
   }, [gameState?.turnId, gameState?.phase, lobbyPhase]);
 
-  // ─── Inactivity timer (auto-draw after 20s idle on human turn) ───────────
-  const INACTIVITY_TIMEOUT = 20;
+  // ─── Inactivity timer (auto-draw after 30s idle; bar appears at 20s warning) ──
+  const INACTIVITY_TIMEOUT = 30;
+  const INACTIVITY_SHOW_DELAY = 20;
   useEffect(() => {
     const isActive =
       gameState?.phase === "playing" &&
@@ -994,14 +996,20 @@ export default function OnlineGameScreen() {
 
     if (isActive) {
       lastActionTime.current = Date.now();
+      setShowInactivityBar(false);
+      setInactivityProgress(1);
       if (inactivityRef.current) clearInterval(inactivityRef.current);
       inactivityRef.current = setInterval(() => {
         const elapsed = (Date.now() - lastActionTime.current) / 1000;
         const prog = Math.max(0, 1 - elapsed / INACTIVITY_TIMEOUT);
         setInactivityProgress(prog);
+        if (elapsed >= INACTIVITY_SHOW_DELAY) {
+          setShowInactivityBar(true);
+        }
         if (prog <= 0 && inactivityRef.current) {
           clearInterval(inactivityRef.current);
           inactivityRef.current = null;
+          setShowInactivityBar(false);
           setGameState(prev => {
             if (!prev || prev.phase !== "playing" || prev.currentPlayerIndex !== 0) return prev;
             return multiDraw(prev);
@@ -1015,6 +1023,7 @@ export default function OnlineGameScreen() {
         inactivityRef.current = null;
       }
       setInactivityProgress(1);
+      setShowInactivityBar(false);
     }
     return () => {
       if (inactivityRef.current) {
@@ -1413,8 +1422,8 @@ export default function OnlineGameScreen() {
             </Text>
           )}
 
-          {/* Inactivity progress bar — shown during human turn */}
-          {isPlaying && inactivityProgress < 1 && (
+          {/* Inactivity countdown bar — appears after 20s idle, shows remaining 10s */}
+          {isPlaying && showInactivityBar && (
             <View style={gameStyles.inactivityBar}>
               <View
                 style={[
@@ -1430,6 +1439,13 @@ export default function OnlineGameScreen() {
                   },
                 ]}
               />
+              <Text style={{
+                position: "absolute", right: 6, top: 2,
+                fontFamily: "Nunito_800ExtraBold", fontSize: 10,
+                color: inactivityProgress > 0.5 ? Colors.gold : inactivityProgress > 0.25 ? "#FF9500" : "#FF3B30",
+              }}>
+                {Math.ceil(inactivityProgress * INACTIVITY_TIMEOUT)}s
+              </Text>
             </View>
           )}
 

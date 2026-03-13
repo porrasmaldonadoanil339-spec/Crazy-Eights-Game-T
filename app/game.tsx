@@ -1420,8 +1420,8 @@ export default function GameScreen() {
   }, [gameState?.phase]);
 
   // ─── Inactivity auto-draw timer ──────────────────────────────────────────
-  const INACTIVITY_TIMEOUT = session?.mode === "lightning" ? 5 : session?.mode === "practice" ? 30 : 20;
-  const INACTIVITY_SHOW_DELAY = session?.mode === "lightning" ? 0 : 4;
+  const INACTIVITY_TIMEOUT = session?.mode === "lightning" ? 8 : session?.mode === "practice" ? 40 : 30;
+  const INACTIVITY_SHOW_DELAY = session?.mode === "lightning" ? 0 : 20;
   useEffect(() => {
     const isActive =
       gameState?.currentPlayer === "player" &&
