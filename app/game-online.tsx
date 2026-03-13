@@ -25,6 +25,7 @@ import {
   stopMusic, startGameMusic, syncSettings
 } from "@/lib/audioManager";
 import { CardPlayEffect } from "@/components/CardPlayEffect";
+import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
@@ -414,6 +415,7 @@ function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSki
   isTeammate?: boolean; isCoop?: boolean;
 }) {
   const glow = useSharedValue(0);
+  const zoneOpacity = useSharedValue(1);
   useEffect(() => {
     if (isCurrent) {
       glow.value = withRepeat(withSequence(
@@ -422,15 +424,17 @@ function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSki
     } else {
       glow.value = 0;
     }
+    zoneOpacity.value = withTiming(isCurrent ? 1 : 0.55, { duration: 300 });
   }, [isCurrent]);
   const glowStyle = useAnimatedStyle(() => ({
     opacity: 0.4 + glow.value * 0.5,
   }));
+  const zoneStyle = useAnimatedStyle(() => ({ opacity: zoneOpacity.value }));
 
   const maxCards = Math.min(handCount, side ? 5 : 7);
 
   return (
-    <View style={side ? [gameStyles.sideZone, side === "right" && gameStyles.sideZoneRight] : gameStyles.topZone}>
+    <Animated.View style={[side ? [gameStyles.sideZone, side === "right" && gameStyles.sideZoneRight] : gameStyles.topZone, zoneStyle]}>
       {/* Avatar */}
       <View style={gameStyles.cpuAvatarRow}>
         <Animated.View style={[gameStyles.cpuAvatarRing, { borderColor: color }, isCurrent && glowStyle]}>
@@ -478,7 +482,7 @@ function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSki
       <View style={[gameStyles.cpuCountBadge, { backgroundColor: color + "22", borderColor: color + "55" }]}>
         <Text style={[gameStyles.cpuCountText, { color }]}>{handCount}</Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -713,6 +717,12 @@ export default function OnlineGameScreen() {
   const [muteCpuEmotes, setMuteCpuEmotes] = useState(false);
   const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
   const rankedUpdatedRef = useRef(false);
+
+  // ─── Emote system ─────────────────────────────────────────────────────────
+  const [playerEmote, setPlayerEmote] = useState<Emote | null>(null);
+  const [cpuEmote, setCpuEmote] = useState<Emote | null>(null);
+  const [lastPlayerEmoteTime, setLastPlayerEmoteTime] = useState(0);
+  const cpuEmoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ─── Visual effects (card play, last card banner, floating label) ─────────
   const [showEffect, setShowEffect] = useState(false);
@@ -1008,6 +1018,34 @@ export default function OnlineGameScreen() {
       }
     };
   }, [gameState?.currentPlayerIndex, gameState?.phase, lobbyPhase]);
+
+  // ─── CPU emote timer (random emotes every 20-60s during gameplay) ─────────
+  useEffect(() => {
+    if (lobbyPhase !== "game" || gameState?.phase !== "playing") {
+      if (cpuEmoteTimerRef.current) { clearInterval(cpuEmoteTimerRef.current); cpuEmoteTimerRef.current = null; }
+      return;
+    }
+    const scheduleNext = () => {
+      const delay = 20000 + Math.random() * 40000;
+      cpuEmoteTimerRef.current = setTimeout(() => {
+        if (!muteCpuEmotes) {
+          const emote = EMOTES[Math.floor(Math.random() * EMOTES.length)];
+          setCpuEmote(emote);
+          setTimeout(() => setCpuEmote(null), 2800);
+        }
+        scheduleNext();
+      }, delay) as any;
+    };
+    scheduleNext();
+    return () => { if (cpuEmoteTimerRef.current) { clearTimeout(cpuEmoteTimerRef.current); cpuEmoteTimerRef.current = null; } };
+  }, [lobbyPhase, gameState?.phase, muteCpuEmotes]);
+
+  const handleSendEmote = useCallback((emote: Emote) => {
+    const now = Date.now();
+    setLastPlayerEmoteTime(now);
+    setPlayerEmote(emote);
+    setTimeout(() => setPlayerEmote(null), 2800);
+  }, []);
 
   // ─── Player card interactions ────────────────────────────────────────────
   const isPlaying = gameState?.phase === "playing" && gameState?.currentPlayerIndex === 0;
@@ -1355,18 +1393,7 @@ export default function OnlineGameScreen() {
             )}
             {!isPlaying && gs.currentPlayerIndex !== 0 && (
               <View style={gameStyles.waitingBadge}>
-                {activeCpuProfile && (
-                  <View style={gameStyles.waitingAvatar}>
-                    {activeCpuProfile.photoUrl ? (
-                      <Image source={{ uri: activeCpuProfile.photoUrl }} style={{ width: 16, height: 16, borderRadius: 8 }} />
-                    ) : (
-                      <Ionicons name={activeCpuProfile.avatarIcon as any} size={10} color={PLAYER_COLORS[gs.currentPlayerIndex % PLAYER_COLORS.length]} />
-                    )}
-                  </View>
-                )}
-                <Text style={gameStyles.waitingText}>
-                  {activeCpuProfile ? activeCpuProfile.name : T("waiting")}
-                </Text>
+                <Text style={gameStyles.waitingText}>{T("waiting")}</Text>
               </View>
             )}
           </View>
@@ -1453,6 +1480,23 @@ export default function OnlineGameScreen() {
         <View style={[gameStyles.messageBubble, { bottom: 168 }]}>
           <Text style={gameStyles.messageText} numberOfLines={1}>{gs.message}</Text>
         </View>
+
+        {/* CPU emote bubble — top center */}
+        <View style={{ position: "absolute", top: tableCenterY - 110, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
+          <EmoteBubble emote={cpuEmote} side="cpu" muted={muteCpuEmotes} lang={profile.language as any} />
+        </View>
+
+        {/* Player emote bubble — above hand */}
+        <View style={{ position: "absolute", bottom: 185, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
+          <EmoteBubble emote={playerEmote} side="player" lang={profile.language as any} />
+        </View>
+
+        {/* Emote panel button — bottom right */}
+        {lobbyPhase === "game" && gs.phase === "playing" && (
+          <View style={{ position: "absolute", bottom: 175, right: 12 }}>
+            <EmotePanel onSendEmote={handleSendEmote} lastEmoteTime={lastPlayerEmoteTime} />
+          </View>
+        )}
 
       </View>
 

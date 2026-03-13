@@ -903,9 +903,9 @@ function AiHand({ count, isThinking, cpuProfile, backColors, backAccent, cardCol
           </View>
         )}
         <View style={styles.cpuProfileInfo}>
-          <Text style={styles.cpuName} numberOfLines={1}>{cpuProfile?.name ?? "CPU"}</Text>
+          <Text style={styles.cpuName} numberOfLines={1}>{cpuProfile?.name ?? "Rival"}</Text>
           <Text style={styles.cpuMeta} numberOfLines={1}>
-            Nv.{cpuProfile?.level ?? "?"} · {cpuProfile?.titleId?.replace("title_", "").replace(/_/g, " ") ?? "CPU"}
+            Nv.{cpuProfile?.level ?? "?"} · {cpuProfile?.titleId?.replace("title_", "").replace(/_/g, " ") ?? "Rival"}
           </Text>
         </View>
         {isCoop && (
