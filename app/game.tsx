@@ -1501,11 +1501,11 @@ export default function GameScreen() {
 
   const handleCardPress = async (card: Card) => {
     if (!isPlayerTurn) return;
-    lastActionTime.current = Date.now();
     if (!canPlay(card, gameState)) {
       await playSound("error").catch(() => {});
       return;
     }
+    lastActionTime.current = Date.now();
 
     // ── Challenge rule enforcement ─────────────────────────────────────────
     if (session?.mode === "challenge" && activeChallengeRules && selectedCard?.id === card.id) {

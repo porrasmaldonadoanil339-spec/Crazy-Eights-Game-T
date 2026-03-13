@@ -327,14 +327,16 @@ function FaceDownMini({ angle = 0, backColors, backAccent }: {
 }
 
 // ─── Coop 2v2: rival team at top — two avatars + shared card back stack ───
-function CoopRivalTeam({ profiles, handCount, backColors, backAccent, isActive }: {
+function CoopRivalTeam({ profiles, handCount1, handCount2, backColors, backAccent, isActive }: {
   profiles: [CpuProfile, CpuProfile];
-  handCount: number;
+  handCount1: number;
+  handCount2: number;
   backColors?: [string, string, string];
   backAccent?: string;
   isActive: boolean;
 }) {
   const glow = useSharedValue(0);
+  const zoneOpacity = useSharedValue(1);
   useEffect(() => {
     if (isActive) {
       glow.value = withRepeat(withSequence(
@@ -343,66 +345,69 @@ function CoopRivalTeam({ profiles, handCount, backColors, backAccent, isActive }
     } else {
       glow.value = 0;
     }
+    zoneOpacity.value = withTiming(isActive ? 1 : 0.55, { duration: 300 });
   }, [isActive]);
   const glowStyle = useAnimatedStyle(() => ({ opacity: 0.35 + glow.value * 0.55 }));
+  const zoneStyle = useAnimatedStyle(() => ({ opacity: zoneOpacity.value }));
 
-  const stackCount = Math.min(handCount, 8);
   const colors = backColors ?? ["#1E4080", "#0e2248", "#0a1832"] as [string, string, string];
   const accent = backAccent ?? "#D4AF37";
+  const RIVAL_COLOR = "#E74C3C";
 
-  const AvatarBadge = ({ profile }: { profile: CpuProfile }) => (
-    <View style={{ alignItems: "center", gap: 2 }}>
-      <Animated.View style={[{
-        width: 34, height: 34, borderRadius: 17,
-        backgroundColor: "#E74C3C22", borderWidth: 2, borderColor: "#E74C3C",
-        alignItems: "center", justifyContent: "center",
-      }, isActive && glowStyle]}>
-        {profile.photoUrl ? (
-          <Image source={{ uri: profile.photoUrl }} style={{ width: 30, height: 30, borderRadius: 15 }} />
-        ) : (
-          <Ionicons name={profile.avatarIcon as any} size={14} color="#E74C3C" />
-        )}
-      </Animated.View>
-      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 8, color: "#E74C3Ccc" }} numberOfLines={1}>
-        {profile.name}
-      </Text>
+  const renderCardFan = (count: number) => {
+    const n = Math.min(count, 6);
+    return (
+      <View style={{ flexDirection: "row", height: 50, alignItems: "flex-end" }}>
+        {Array.from({ length: n }).map((_, i) => (
+          <View key={i} style={{
+            width: 30, height: 44,
+            marginLeft: i === 0 ? 0 : -14,
+            borderRadius: 4, overflow: "hidden",
+            borderWidth: 1, borderColor: accent + "55",
+            zIndex: i,
+            transform: [{ rotate: `${(i - (n - 1) / 2) * 4}deg` }],
+          }}>
+            <LinearGradient colors={colors} style={StyleSheet.absoluteFill}>
+              <Text style={{ fontSize: 8, color: accent, textAlign: "center", marginTop: 5 }}>◆</Text>
+            </LinearGradient>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  const renderRival = (profile: CpuProfile, count: number) => (
+    <View style={{ alignItems: "center", gap: 4 }}>
+      {renderCardFan(count)}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+        <Animated.View style={[{
+          width: 24, height: 24, borderRadius: 12,
+          backgroundColor: RIVAL_COLOR + "22", borderWidth: 2, borderColor: RIVAL_COLOR,
+          alignItems: "center", justifyContent: "center",
+        }, isActive && glowStyle]}>
+          {profile.photoUrl ? (
+            <Image source={{ uri: profile.photoUrl }} style={{ width: 20, height: 20, borderRadius: 10 }} />
+          ) : (
+            <Ionicons name={profile.avatarIcon as any} size={10} color={RIVAL_COLOR} />
+          )}
+        </Animated.View>
+        <View>
+          <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 8, color: RIVAL_COLOR + "cc" }} numberOfLines={1}>{profile.name}</Text>
+          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: RIVAL_COLOR }}>{count}</Text>
+        </View>
+      </View>
     </View>
   );
 
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12, gap: 8 }}>
-      <AvatarBadge profile={profiles[0]} />
-
-      {/* Shared card back stack */}
-      <View style={{ alignItems: "center", gap: 4 }}>
-        <View style={{ width: 48, height: 70, position: "relative" }}>
-          {Array.from({ length: stackCount }).map((_, i) => (
-            <View key={i} style={{
-              position: "absolute",
-              top: -(i * 1.5),
-              left: (i % 2 === 0 ? 0 : 1),
-              zIndex: i,
-              width: 44, height: 64,
-              borderRadius: 5, overflow: "hidden",
-              borderWidth: 1, borderColor: accent + "66",
-            }}>
-              <LinearGradient colors={colors} style={StyleSheet.absoluteFill}>
-                <Text style={{ fontSize: 14, color: accent, textAlign: "center", marginTop: 8 }}>◆</Text>
-              </LinearGradient>
-            </View>
-          ))}
-        </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4,
-          backgroundColor: "#E74C3C22", paddingHorizontal: 10, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: "#E74C3C33" }}>
-          <Ionicons name="flame" size={8} color="#E74C3C" />
-          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: "#E74C3C" }}>
-            {handCount}
-          </Text>
-        </View>
+    <Animated.View style={[{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-around", paddingHorizontal: 8, paddingVertical: 4 }, zoneStyle]}>
+      {renderRival(profiles[0], handCount1)}
+      <View style={{ alignItems: "center", paddingBottom: 8 }}>
+        <Ionicons name="flame" size={12} color={RIVAL_COLOR + "66"} />
+        <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: RIVAL_COLOR + "66", letterSpacing: 1 }}>VS</Text>
       </View>
-
-      <AvatarBadge profile={profiles[1]} />
-    </View>
+      {renderRival(profiles[1], handCount2)}
+    </Animated.View>
   );
 }
 
@@ -1054,8 +1059,8 @@ export default function OnlineGameScreen() {
 
   const handleCardPress = useCallback((card: Card) => {
     if (!gameState || !isPlaying) return;
-    lastActionTime.current = Date.now();
     if (!multiCanPlay(card, gameState)) { playCardFlip().catch(() => {}); return; }
+    lastActionTime.current = Date.now();
     if (isOnline) {
       if (selectedCard?.id === card.id) {
         playCardFlip().catch(() => {});
@@ -1345,7 +1350,8 @@ export default function OnlineGameScreen() {
           <View style={{ position: "absolute", top: 4, left: 0, right: 0, pointerEvents: "none" } as any}>
             <CoopRivalTeam
               profiles={[currentCpuProfiles[0], currentCpuProfiles[2]]}
-              handCount={gs.hands[1]?.length ?? 0}
+              handCount1={gs.hands[1]?.length ?? 0}
+              handCount2={gs.hands[3]?.length ?? 0}
               backColors={backColors}
               backAccent={backAccent}
               isActive={gs.currentPlayerIndex === 1 || gs.currentPlayerIndex === 3}
@@ -1507,8 +1513,8 @@ export default function OnlineGameScreen() {
         </View>
       )}
 
-      {/* Result overlay */}
-      {gs.phase === "game_over" && gs.winnerIndex !== null && !rivalAbandoned && (
+      {/* Result overlay — wait for ranked animation to complete first */}
+      {gs.phase === "game_over" && gs.winnerIndex !== null && !rivalAbandoned && !rankedPromotion && (
         <ResultOverlay
           isWin={gs.winnerIndex === 0}
           winnerName={allNames[gs.winnerIndex]}
