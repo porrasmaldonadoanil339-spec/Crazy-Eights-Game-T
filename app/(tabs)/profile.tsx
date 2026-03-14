@@ -587,18 +587,36 @@ export default function ProfileScreen() {
         </View>
 
         <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("byMode")}</Text>
-        <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}>
-          {GAME_MODES.map((mode) => {
+        <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0", paddingVertical: 4 }]}>
+          {GAME_MODES.map((mode, idx) => {
             const wins = profile.stats.winsByMode[mode.id] ?? 0;
             const games = profile.stats.gamesByMode[mode.id] ?? 0;
+            const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
+            const isLast = idx === GAME_MODES.length - 1;
             return (
-              <View key={mode.id} style={[styles.modeStatRow, { borderBottomColor: isDark ? Colors.border : "#aacfa0" }]}>
-                <View style={[styles.modeIconSm, { backgroundColor: mode.color + "33" }]}>
-                  <Ionicons name={mode.icon as any} size={14} color={mode.color} />
+              <View key={mode.id} style={{ paddingVertical: 10, paddingHorizontal: 4, borderBottomWidth: isLast ? 0 : 1, borderBottomColor: isDark ? Colors.border : "#aacfa0" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+                  <View style={[styles.modeIconSm, { backgroundColor: mode.color + "33" }]}>
+                    <Ionicons name={mode.icon as any} size={14} color={mode.color} />
+                  </View>
+                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: mode.color, marginLeft: 8 }}>
+                    {T(`mode${mode.id.charAt(0).toUpperCase() + mode.id.slice(1)}` as any) || mode.name}
+                  </Text>
                 </View>
-                <Text style={[styles.modeStatName, { color: textMuted }]}>{T(`mode${mode.id.charAt(0).toUpperCase() + mode.id.slice(1)}` as any) || mode.name}</Text>
-                <Text style={[styles.modeStatName, { color: textMuted, flex: 0, marginLeft: 8 }]}>{wins > 0 ? `${Math.round(wins / Math.max(games, 1) * 100)}%` : "—"}</Text>
-                <Text style={[styles.modeStatVal, { color: themeGold }]}>{wins}/{games}</Text>
+                <View style={{ flexDirection: "row", gap: 6 }}>
+                  <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: textColor }}>{games}</Text>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{lang === "es" ? "PARTIDAS" : "PLAYED"}</Text>
+                  </View>
+                  <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#27AE60" }}>{wins}</Text>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{lang === "es" ? "VICTORIAS" : "WINS"}</Text>
+                  </View>
+                  <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: winRate >= 50 ? "#D4AF37" : textMuted }}>{winRate}%</Text>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>WINRATE</Text>
+                  </View>
+                </View>
               </View>
             );
           })}

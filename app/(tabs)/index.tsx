@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView,
-  Modal, Platform, Dimensions, TextInput, BackHandler, Alert,
+  Modal, Platform, Dimensions, TextInput, BackHandler, Alert, Image,
 } from "react-native";
 import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { useT } from "@/hooks/useT";
@@ -900,14 +900,19 @@ export default function PlayScreen() {
                 <View style={{ alignItems: "center", paddingVertical: 12, gap: 8 }}>
                   {generatedRoomCode ? (
                     <>
-                      <Text style={{ fontFamily: "Nunito_900ExtraBold", fontSize: 44, color: "#4A90E2", letterSpacing: 8 }}>{generatedRoomCode}</Text>
-                      <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: theme.textMuted, textAlign: "center" }}>
-                        {T("shareCode" as any)}
+                      <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 42, color: "#4A90E2", letterSpacing: 8 }}>{generatedRoomCode}</Text>
+                      <Image
+                        source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(generatedRoomCode)}&size=150x150&bgcolor=ffffff&color=000000&margin=6` }}
+                        style={{ width: 130, height: 130, borderRadius: 12, borderWidth: 3, borderColor: "#4A90E266" }}
+                        resizeMode="contain"
+                      />
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: theme.textMuted, textAlign: "center" }}>
+                        {T("shareCode" as any) || "Comparte el código o QR con tus amigos"}
                       </Text>
                     </>
                   ) : (
-                    <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: theme.textMuted, textAlign: "center", paddingVertical: 20 }}>
-                      {T("pressGenCode" as any)}
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 12, color: theme.textMuted, textAlign: "center", paddingVertical: 20 }}>
+                      {T("pressGenCode" as any) || "Presiona para generar un código de sala"}
                     </Text>
                   )}
                 </View>

@@ -27,6 +27,7 @@ import {
 import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
+import { getModeById } from "@/lib/gameModes";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
@@ -658,7 +659,7 @@ export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
   const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string; skipLobby?: string; names?: string }>();
-  const { profile, level: playerLevel, addXp, updateRanked } = useProfile();
+  const { profile, level: playerLevel, addXp, updateRanked, recordGameResult } = useProfile();
   const T = useT();
 
   const isOnline = !!params.code;
@@ -722,6 +723,7 @@ export default function OnlineGameScreen() {
   const [muteCpuEmotes, setMuteCpuEmotes] = useState(false);
   const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
   const rankedUpdatedRef = useRef(false);
+  const resultRecordedRef = useRef(false);
 
   // ─── Emote system ─────────────────────────────────────────────────────────
   const [playerEmote, setPlayerEmote] = useState<Emote | null>(null);
@@ -842,9 +844,23 @@ export default function OnlineGameScreen() {
     if (rankedUpdatedRef.current) return;
     rankedUpdatedRef.current = true;
     const isWin = gameState.winnerIndex === 0;
-    updateRanked(isWin ? 2 : -1);
+    updateRanked(isWin ? 1 : -1);
     setRankedPromotion(isWin ? "promotion" : "demotion");
   }, [gameState?.phase, gameState?.winnerIndex, modeParam]);
+
+  // ─── Record game result (XP + coins) when game ends ───────────────────────
+  useEffect(() => {
+    if (!gameState || gameState.phase !== "game_over") return;
+    if (gameState.winnerIndex === null) return;
+    if (resultRecordedRef.current) return;
+    resultRecordedRef.current = true;
+    const isWin = gameState.winnerIndex === 0;
+    const mode = (modeParam || "classic") as any;
+    const mc = getModeById(mode);
+    const xp = isWin ? mc.xpReward : mc.xpLoss;
+    const coins = isWin ? mc.coinsReward : mc.coinsLoss;
+    recordGameResult({ won: isWin, mode, difficulty: "normal", coinsEarned: coins, xpEarned: xp, eightsPlayed: 0, cardsDrawn: 0, isPerfect: false, isComeback: false, gameDurationMs: 60000 });
+  }, [gameState?.phase, gameState?.winnerIndex]);
 
   // ─── Lobby sequence (local/simulated only — skip when real online socket or pre-lobbied) ──
   useEffect(() => {
@@ -1069,9 +1085,10 @@ export default function OnlineGameScreen() {
   const handleCardPress = useCallback((card: Card) => {
     if (!gameState || !isPlaying) return;
     if (!multiCanPlay(card, gameState)) { playCardFlip().catch(() => {}); return; }
-    lastActionTime.current = Date.now();
     if (isOnline) {
       if (selectedCard?.id === card.id) {
+        lastActionTime.current = Date.now();
+        setShowInactivityBar(false);
         playCardFlip().catch(() => {});
         socketRef.current?.emit("play_card", { card });
         setSelectedCard(null);
@@ -1081,6 +1098,8 @@ export default function OnlineGameScreen() {
       return;
     }
     if (selectedCard?.id === card.id) {
+      lastActionTime.current = Date.now();
+      setShowInactivityBar(false);
       playCardFlip().catch(() => {});
       const actedIdx = gameState.currentPlayerIndex;
       if (card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0)) {
@@ -1752,7 +1771,7 @@ export default function OnlineGameScreen() {
                 onPress={() => {
                   playButton().catch(() => {});
                   setShowExitModal(false);
-                  addXp(-50);
+                  addXp(-25);
                   router.back();
                 }}
                 style={{ flex: 1, backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}

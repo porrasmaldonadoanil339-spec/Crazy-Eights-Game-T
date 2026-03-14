@@ -1342,8 +1342,12 @@ export default function GameScreen() {
     const modeConfig = getModeById(session.mode);
     const diffConfig = getDifficultyById(session.difficulty);
     const duration = Date.now() - gameStartTimeRef.current;
-    const coins = Math.round(modeConfig.coinsReward * diffConfig.coinMultiplier * (won ? 1 : 0.1));
-    const xp = Math.round(modeConfig.xpReward * diffConfig.xpMultiplier * (won ? 1 : 0.3));
+    const coins = won
+      ? Math.round(modeConfig.coinsReward * diffConfig.coinMultiplier)
+      : modeConfig.coinsLoss;
+    const xp = won
+      ? Math.round(modeConfig.xpReward * (modeConfig.hasDifficulty ? diffConfig.xpMultiplier : 1))
+      : modeConfig.xpLoss;
     const isPerfect = session.cardsDrawnThisGame === 0 && won;
     const isComeback = (gameState?.playerHand?.length ?? 0) >= 10 && won;
 
@@ -1421,7 +1425,7 @@ export default function GameScreen() {
 
   // ─── Inactivity auto-draw timer ──────────────────────────────────────────
   const INACTIVITY_TIMEOUT = session?.mode === "lightning" ? 8 : session?.mode === "practice" ? 40 : 30;
-  const INACTIVITY_SHOW_DELAY = session?.mode === "lightning" ? 0 : 20;
+  const INACTIVITY_SHOW_DELAY = session?.mode === "lightning" ? 999 : 20;
   useEffect(() => {
     const isActive =
       gameState?.currentPlayer === "player" &&
@@ -1505,7 +1509,6 @@ export default function GameScreen() {
       await playSound("error").catch(() => {});
       return;
     }
-    lastActionTime.current = Date.now();
 
     // ── Challenge rule enforcement ─────────────────────────────────────────
     if (session?.mode === "challenge" && activeChallengeRules && selectedCard?.id === card.id) {
@@ -1531,6 +1534,8 @@ export default function GameScreen() {
     // ─────────────────────────────────────────────────────────────────────
 
     if (selectedCard?.id === card.id) {
+      lastActionTime.current = Date.now();
+      setShowInactivityBar(false);
       const needsSuitPick = card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0);
       const willHaveLastCard = gameState.playerHand.length === 2;
       
@@ -2093,7 +2098,7 @@ export default function GameScreen() {
         onCancel={() => setShowExitConfirm(false)}
         onConfirm={() => {
           setShowExitConfirm(false);
-          if (session?.mode === "ranked" || session?.mode === "challenge") addXp(-50);
+          if (session?.mode === "ranked" || session?.mode === "challenge") addXp(-25);
           router.back();
         }}
       />
