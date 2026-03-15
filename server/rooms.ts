@@ -19,6 +19,7 @@ interface RoomPlayerProfile {
 interface RoomPlayer extends RoomPlayerProfile {
   socketId: string;
   playerIndex: number;
+  isBot?: boolean;
 }
 
 interface Room {
@@ -49,6 +50,40 @@ const DEFAULT_PROFILE: Omit<RoomPlayerProfile, "name"> = {
   rankIcon: "shield",
   rankName: "Hierro V",
 };
+
+// Bot fill name pool
+const BOT_NAMES = [
+  "CarlosX99", "LunaMaster", "FireStrike", "ShadowKing", "CristinaPro",
+  "NightWolf", "TigerBeat", "JokerPro", "AceHunter", "BlackCard",
+  "DiamondX", "QueenBee", "KingSlayer", "WildCard88", "RoyalFlush",
+];
+const BOT_AVATAR_COLORS = [
+  "#E74C3C", "#9B59B6", "#E67E22", "#1A8FC1", "#2ECC71",
+  "#C0392B", "#27AE60", "#8E44AD", "#F39C12", "#D4AF37",
+];
+const BOT_RANK_NAMES = [
+  "Hierro 5", "Hierro 4", "Bronce 5", "Bronce 4", "Plata 5",
+  "Plata 4", "Oro 5", "Bronce 3", "Hierro 3", "Plata 3",
+];
+const BOT_RANK_COLORS = [
+  "#8B7355", "#CD7F32", "#C0C0C0", "#FFD700", "#8B7355",
+];
+
+function makeBotPlayer(playerIndex: number, seed: number): RoomPlayer {
+  const i = (seed + playerIndex) % BOT_NAMES.length;
+  return {
+    socketId: `bot_${playerIndex}_${Date.now()}`,
+    name: BOT_NAMES[i],
+    playerIndex,
+    avatarColor: BOT_AVATAR_COLORS[i % BOT_AVATAR_COLORS.length],
+    avatarIcon: "person",
+    level: 5 + (i % 25),
+    rankColor: BOT_RANK_COLORS[i % BOT_RANK_COLORS.length],
+    rankIcon: "shield",
+    rankName: BOT_RANK_NAMES[i % BOT_RANK_NAMES.length],
+    isBot: true,
+  };
+}
 
 function genCode(): string {
   return Math.random().toString(36).substr(2, 6).toUpperCase();
@@ -102,7 +137,13 @@ function buildPlayersInfo(room: Room) {
     rankColor: p.rankColor,
     rankIcon: p.rankIcon,
     rankName: p.rankName,
+    isBot: p.isBot ?? false,
   }));
+}
+
+// Only real (non-bot) players
+function realPlayers(room: Room): RoomPlayer[] {
+  return room.players.filter(p => !p.isBot);
 }
 
 export function setupRooms(httpServer: HttpServer) {
@@ -143,6 +184,7 @@ export function setupRooms(httpServer: HttpServer) {
         rankColor: rankColor ?? DEFAULT_PROFILE.rankColor,
         rankIcon: rankIcon ?? DEFAULT_PROFILE.rankIcon,
         rankName: rankName ?? DEFAULT_PROFILE.rankName,
+        isBot: false,
       };
       const room: Room = {
         code,
@@ -184,7 +226,9 @@ export function setupRooms(httpServer: HttpServer) {
         socket.emit("join_error", { error: "La partida ya comenzó" });
         return;
       }
-      if (room.players.length >= room.maxPlayers) {
+      // Count only real players for capacity check
+      const realCount = realPlayers(room).length;
+      if (realCount >= room.maxPlayers) {
         socket.emit("join_error", { error: "Sala llena" });
         return;
       }
@@ -200,6 +244,7 @@ export function setupRooms(httpServer: HttpServer) {
         rankColor: rankColor ?? DEFAULT_PROFILE.rankColor,
         rankIcon: rankIcon ?? DEFAULT_PROFILE.rankIcon,
         rankName: rankName ?? DEFAULT_PROFILE.rankName,
+        isBot: false,
       };
       room.players.push(player);
       currentRoom = code.toUpperCase();
@@ -210,7 +255,7 @@ export function setupRooms(httpServer: HttpServer) {
       socket.emit("room_joined", { code: room.code, playerIndex, players: playersInfo });
       socket.to(code.toUpperCase()).emit("player_joined", { name: playerName, players: playersInfo });
 
-      if (room.players.length === room.maxPlayers) {
+      if (realPlayers(room).length === room.maxPlayers) {
         startPreMatch(room, io);
       }
     });
@@ -263,6 +308,7 @@ export function setupRooms(httpServer: HttpServer) {
           players: matched.map((m, i) => ({
             ...m,
             playerIndex: i,
+            isBot: false,
           })),
           maxPlayers: playerCount,
           gameState: null,
@@ -294,15 +340,30 @@ export function setupRooms(httpServer: HttpServer) {
     });
 
     // ─── Start game (host only) ────────────────────────────────────────────
-    socket.on("start_game", () => {
+    // Accepts optional { botFill: true } to fill remaining slots with bots.
+    // This allows ranked rooms to start with 1+ real player.
+    socket.on("start_game", ({ botFill }: { botFill?: boolean } = {}) => {
       const roomCode = currentRoom ?? (socket as any)._currentRoom;
       if (!roomCode) return;
       const room = rooms.get(roomCode);
       if (!room || room.hostSocketId !== socket.id) return;
-      if (room.players.length < 2) {
-        socket.emit("error_msg", { error: "Necesitas al menos 2 jugadores" });
-        return;
+
+      const humanCount = realPlayers(room).length;
+
+      if (botFill) {
+        // Fill remaining player slots with bots
+        const seed = Math.floor(Math.random() * BOT_NAMES.length);
+        while (room.players.length < room.maxPlayers) {
+          const botIdx = room.players.length;
+          room.players.push(makeBotPlayer(botIdx, seed));
+        }
+      } else {
+        if (humanCount < 2) {
+          socket.emit("error_msg", { error: "Necesitas al menos 2 jugadores" });
+          return;
+        }
       }
+
       startPreMatch(room, io);
     });
 
@@ -390,16 +451,17 @@ export function setupRooms(httpServer: HttpServer) {
 
       const pidx = myPlayerIndex >= 0 ? myPlayerIndex : ((socket as any)._myPlayerIndex ?? -1);
 
+      // Remove only the real (non-bot) player who disconnected
       room.players = room.players.filter(p => p.socketId !== socket.id);
       socket.to(roomCode).emit("player_left", {
         playerIndex: pidx,
         players: buildPlayersInfo(room),
       });
 
-      if (room.players.length === 0) {
+      if (realPlayers(room).length === 0) {
         rooms.delete(roomCode);
-      } else if (room.hostSocketId === socket.id && room.players.length > 0) {
-        room.hostSocketId = room.players[0].socketId;
+      } else if (room.hostSocketId === socket.id && realPlayers(room).length > 0) {
+        room.hostSocketId = realPlayers(room)[0].socketId;
       }
 
       currentRoom = null;
@@ -412,18 +474,10 @@ export function setupRooms(httpServer: HttpServer) {
 
 function startPreMatch(room: Room, io: SocketServer) {
   room.status = "pre_match";
-  const playersInfo = room.players.map(p => ({
-    name: p.name,
-    playerIndex: p.playerIndex,
-    avatarColor: p.avatarColor,
-    avatarIcon: p.avatarIcon,
-    level: p.level,
-    rankColor: p.rankColor,
-    rankIcon: p.rankIcon,
-    rankName: p.rankName,
-  }));
+  const playersInfo = buildPlayersInfo(room);
 
-  for (const player of room.players) {
+  // Only emit pre_match to real (non-bot) players
+  for (const player of realPlayers(room)) {
     io.to(player.socketId).emit("pre_match", {
       code: room.code,
       myPlayerIndex: player.playerIndex,
@@ -439,8 +493,10 @@ function startPreMatch(room: Room, io: SocketServer) {
 
 function startGame(room: Room, io: SocketServer) {
   room.status = "playing";
-  const names = room.players.map(p => p.name);
-  const gs = initMultiGame(names, 8, room.mode === "coop");
+  // Sort players by playerIndex to ensure correct hand assignment
+  const sortedPlayers = [...room.players].sort((a, b) => a.playerIndex - b.playerIndex);
+  const names = sortedPlayers.map(p => p.name);
+  const gs = initMultiGame(names, 8, false);
   room.gameState = gs;
   room.hands = [...gs.hands];
 
@@ -459,7 +515,8 @@ function broadcastGameState(room: Room, io: SocketServer) {
   if (!room.gameState) return;
   const pub = publicState(room);
 
-  for (const player of room.players) {
+  // Only send game state to real (non-bot) players
+  for (const player of realPlayers(room)) {
     const hand = room.gameState.hands[player.playerIndex] ?? [];
     io.to(player.socketId).emit("game_state", {
       ...pub,
@@ -485,12 +542,14 @@ function scheduleAutoplay(room: Room, io: SocketServer) {
   if (room.gameState.phase === "choosing_suit") return;
 
   const curr = room.gameState.currentPlayerIndex;
-  const humanPlayer = room.players.find(p => p.playerIndex === curr);
+  // Check if current player is a real (non-bot) human player
+  const humanPlayer = room.players.find(p => p.playerIndex === curr && !p.isBot);
   if (humanPlayer) return;
 
   const prev = autoplayTimers.get(room.code);
   if (prev) clearTimeout(prev);
 
+  const delay = 900 + Math.random() * 800;
   const timer = setTimeout(() => {
     if (!room.gameState) return;
     if (room.gameState.currentPlayerIndex === curr) {
@@ -503,7 +562,7 @@ function scheduleAutoplay(room: Room, io: SocketServer) {
         }
       } catch {}
     }
-  }, 1200 + Math.random() * 600);
+  }, delay);
 
   autoplayTimers.set(room.code, timer);
 }

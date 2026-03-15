@@ -663,6 +663,35 @@ export default function OnlineLobbyScreen() {
               <Text style={styles.waitingTxt}>{T("waitingMorePlayers" as any)}</Text>
             </View>
           )}
+
+          {/* Ranked: start immediately with bots filling empty slots */}
+          {mode === "ranked" && myPlayerIndex === 0 && (
+            <Animated.View entering={FadeInDown.delay(400).duration(400)}>
+              <Pressable
+                onPress={() => {
+                  playButton().catch(() => {});
+                  socketRef.current?.emit("start_game", { botFill: true });
+                }}
+                style={({ pressed }) => [styles.startBotsBtn, pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] }]}
+              >
+                <LinearGradient
+                  colors={[Colors.gold, "#A07800"]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={styles.startBotsBtnGrad}
+                >
+                  <Ionicons name="flash" size={20} color="#000" />
+                  <Text style={styles.startBotsTxt}>
+                    {foundPlayers.length >= playerCount ? "INICIAR PARTIDA" : "INICIAR CON BOTS"}
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+              {foundPlayers.length < playerCount && (
+                <Text style={styles.startBotsHint}>
+                  Los espacios vacíos se llenarán con bots
+                </Text>
+              )}
+            </Animated.View>
+          )}
         </ScrollView>
       </View>
     );
@@ -911,6 +940,16 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 10, justifyContent: "center", marginTop: 12,
   },
   waitingTxt: { fontFamily: "Nunito_400Regular", fontSize: 12, color: "rgba(255,255,255,0.4)" },
+  startBotsBtn: { borderRadius: 16, overflow: "hidden", marginTop: 8 },
+  startBotsBtnGrad: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 10, paddingVertical: 16, paddingHorizontal: 24,
+  },
+  startBotsTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#000", letterSpacing: 1 },
+  startBotsHint: {
+    fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.35)",
+    textAlign: "center", marginTop: 6,
+  },
   roomContent: { paddingHorizontal: 20, paddingTop: 24, gap: 16 },
   joinContent: {
     flex: 1, alignItems: "center", paddingHorizontal: 24, paddingTop: 32, gap: 16,

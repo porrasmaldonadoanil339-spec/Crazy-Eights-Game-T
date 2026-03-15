@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   rankingInfo: { flex: 1 },
   rankingName: { fontFamily: "Nunito_800ExtraBold", fontSize: 16 },
   rankingMetaRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  rankingMeta: { fontFamily: "Nunito_600SemiBold", fontSize: 13 },
+  rankingMeta: { fontFamily: "Nunito_700Bold", fontSize: 13 },
   rankBadgeSmall: { 
     flexDirection: "row", alignItems: "center", gap: 4, 
     backgroundColor: "rgba(0,0,0,0.2)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   rewardRankIcon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   rewardInfo: { flex: 1 },
   rewardRankName: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, marginBottom: 2 },
-  rewardText: { fontFamily: "Nunito_600SemiBold", fontSize: 14 },
+  rewardText: { fontFamily: "Nunito_700Bold", fontSize: 14 },
   closeModalBtn: { backgroundColor: "#D4AF37", paddingVertical: 14, borderRadius: 16, alignItems: "center" },
   closeModalBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#000" },
 

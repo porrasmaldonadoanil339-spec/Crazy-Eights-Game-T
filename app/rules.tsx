@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerTitle: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 18,
     color: Colors.gold,
     letterSpacing: 3,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   introTitle: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 28,
     color: Colors.gold,
     letterSpacing: 2,

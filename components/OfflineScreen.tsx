@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   logoText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 20,
     color: "#D4AF37",
     letterSpacing: 3,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   title: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 22,
     color: "#EEE8D5",
     letterSpacing: 0.5,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   retryText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 15,
     color: "#010804",
     letterSpacing: 0.5,

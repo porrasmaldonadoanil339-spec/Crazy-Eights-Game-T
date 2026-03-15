@@ -190,7 +190,7 @@ const adviceStyles = StyleSheet.create({
     paddingVertical: 2, zIndex: 100,
     borderWidth: 1, borderColor: "#fff5",
   },
-  text: { fontFamily: "Nunito_900ExtraBold", fontSize: 10, color: "#1a0a00" },
+  text: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: "#1a0a00" },
 });
 
 // ─── Expert timer bar ──────────────────────────────────────────────────────────
@@ -213,7 +213,7 @@ const timerStyles = StyleSheet.create({
   wrap: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16 },
   track: { flex: 1, height: 6, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 3, overflow: "hidden" },
   fill: { height: "100%", borderRadius: 3 },
-  label: { fontFamily: "Nunito_900ExtraBold", fontSize: 13, color: "#D4AF37", minWidth: 26 },
+  label: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: "#D4AF37", minWidth: 26 },
   labelRed: { color: "#E74C3C" },
 });
 
@@ -244,7 +244,7 @@ const pendStyles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: "#E74C3C55",
   },
   text: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#E74C3C" },
-  num: { fontFamily: "Nunito_900ExtraBold" },
+  num: { fontFamily: "Nunito_800ExtraBold" },
 });
 
 // ─── Suit picker ─────────────────────────────────────────────────────────────
@@ -311,7 +311,7 @@ const lightStyles = StyleSheet.create({
   bannerGrad: { flexDirection: "row", alignItems: "center", paddingHorizontal: 24, paddingVertical: 20, gap: 12 },
   bolt: { fontSize: 36 },
   textWrap: { alignItems: "center", gap: 4 },
-  title: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: "#FFD700", letterSpacing: 3 },
+  title: { fontFamily: "Nunito_800ExtraBold", fontSize: 22, color: "#FFD700", letterSpacing: 3 },
   sub: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#C39BD3" },
 });
 
@@ -366,7 +366,7 @@ const crStyles = StyleSheet.create({
   modal: { width: 320, borderRadius: 24, overflow: "hidden", borderWidth: 1.5, borderColor: Colors.gold + "44" },
   grad: { padding: 24, gap: 14 },
   header: { flexDirection: "row", alignItems: "center", gap: 10 },
-  title: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: Colors.gold },
+  title: { fontFamily: "Nunito_800ExtraBold", fontSize: 22, color: Colors.gold },
   sub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted },
   ruleRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 14, padding: 12, borderWidth: 1 },
   ruleIcon: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
@@ -374,7 +374,7 @@ const crStyles = StyleSheet.create({
   ruleName: { fontFamily: "Nunito_700Bold", fontSize: 14 },
   ruleDesc: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textMuted, lineHeight: 17 },
   btn: { backgroundColor: Colors.gold, borderRadius: 14, paddingVertical: 15, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8, marginTop: 4 },
-  btnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#010804" },
+  btnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#010804" },
 });
 
 // ─── Ranked promotion/demotion overlay ────────────────────────────────────────
@@ -416,7 +416,7 @@ const rrStyles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.8)", alignItems: "center", justifyContent: "center", zIndex: 250 },
   card: { width: 300, borderRadius: 24, overflow: "hidden", borderWidth: 2 },
   grad: { padding: 28, alignItems: "center", gap: 12 },
-  title: { fontFamily: "Nunito_900ExtraBold", fontSize: 26, textAlign: "center" },
+  title: { fontFamily: "Nunito_800ExtraBold", fontSize: 26, textAlign: "center" },
   sub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: "rgba(255,255,255,0.6)", textAlign: "center", lineHeight: 18 },
   starsRow: { flexDirection: "row", gap: 8 },
 });
@@ -474,7 +474,7 @@ const ecStyles = StyleSheet.create({
   card: { width: 310, borderRadius: 20, overflow: "hidden", borderWidth: 1.5, borderColor: "#E74C3C55" },
   grad: { padding: 24, gap: 12 },
   iconRow: { alignItems: "center", marginBottom: 4 },
-  title: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: "#FFFFFF", textAlign: "center" },
+  title: { fontFamily: "Nunito_800ExtraBold", fontSize: 20, color: "#FFFFFF", textAlign: "center" },
   warning: { fontFamily: "Nunito_400Regular", fontSize: 14, color: "rgba(255,255,255,0.7)", textAlign: "center", lineHeight: 20 },
   rankedRow: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: Colors.gold + "18", borderRadius: 8, padding: 8, borderWidth: 1, borderColor: Colors.gold + "33" },
   rankedTxt: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.gold, flex: 1 },
@@ -599,7 +599,7 @@ const tStyles = StyleSheet.create({
   starTeamLabel: { fontFamily: "Nunito_700Bold", fontSize: 12, color: "rgba(255,255,255,0.6)" },
   starsRow: { flexDirection: "row", gap: 6 },
   starVsDivider: { alignItems: "center", gap: 4 },
-  starVsText: { fontFamily: "Nunito_900ExtraBold", fontSize: 11, color: "rgba(255,255,255,0.3)" },
+  starVsText: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "rgba(255,255,255,0.3)" },
 });
 
 // ─── Ranked star section inside EndModal ────────────────────────────────────
@@ -2119,7 +2119,7 @@ const styles = StyleSheet.create({
     borderRadius: 10, borderWidth: 1,
   },
   modeLabel: { fontFamily: "Nunito_700Bold", fontSize: 11 },
-  tournamentScore: { fontFamily: "Nunito_900ExtraBold", fontSize: 13, color: Colors.gold },
+  tournamentScore: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: Colors.gold },
   headerRight: {
     flexDirection: "row", alignItems: "center", gap: 6,
   },
@@ -2177,7 +2177,7 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     borderWidth: 2, borderColor: "#061510", zIndex: 20,
   },
-  aiCountText: { fontFamily: "Nunito_900ExtraBold", fontSize: 11, color: "#fff" },
+  aiCountText: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#fff" },
 
   // Table center
   tableCenter: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
@@ -2213,7 +2213,7 @@ const styles = StyleSheet.create({
     position: "absolute", bottom: -20, left: 0, right: 0,
     borderRadius: 6, paddingVertical: 3, alignItems: "center",
   },
-  drawLabelText: { fontFamily: "Nunito_900ExtraBold", fontSize: 9, color: "#1a0a00", letterSpacing: 1 },
+  drawLabelText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: "#1a0a00", letterSpacing: 1 },
   vsDivider: { alignItems: "center", gap: 5 },
   vsDividerLine: { width: 1, height: 30, backgroundColor: Colors.border },
   vsDividerText: { fontSize: 12, color: Colors.gold + "50" },
@@ -2252,7 +2252,7 @@ const styles = StyleSheet.create({
   },
   inactivityFill: { height: 4, borderRadius: 2 },
   inactivityCountdown: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 11, minWidth: 22, textAlign: "right",
+    fontFamily: "Nunito_800ExtraBold", fontSize: 11, minWidth: 22, textAlign: "right",
   },
 
   // Player hand
@@ -2270,7 +2270,7 @@ const styles = StyleSheet.create({
   suitOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", alignItems: "center", justifyContent: "center" },
   suitModal: { width: 320, borderRadius: 24, overflow: "hidden", borderWidth: 1.5, borderColor: Colors.gold + "55" },
   suitGrad: { padding: 24 },
-  suitTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: Colors.gold, textAlign: "center", marginBottom: 4, letterSpacing: 2 },
+  suitTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 20, color: Colors.gold, textAlign: "center", marginBottom: 4, letterSpacing: 2 },
   suitSub: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textMuted, textAlign: "center", marginBottom: 20 },
   suitGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   suitOption: {
@@ -2297,7 +2297,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, alignItems: "center", justifyContent: "center",
   },
   endLabel: { fontFamily: "Nunito_700Bold", fontSize: 10, letterSpacing: 3 },
-  endTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 32, letterSpacing: 3 },
+  endTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 32, letterSpacing: 3 },
   endSub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, textAlign: "center", lineHeight: 19 },
   endDivider: { width: "100%", height: 1 },
   rewardSection: { width: "100%", gap: 8 },
@@ -2313,19 +2313,19 @@ const styles = StyleSheet.create({
     borderRadius: 14, paddingHorizontal: 14, paddingVertical: 8,
     borderWidth: 1,
   },
-  rewardChipVal: { fontFamily: "Nunito_900ExtraBold", fontSize: 16 },
+  rewardChipVal: { fontFamily: "Nunito_800ExtraBold", fontSize: 16 },
   rewardChipSub: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim },
   tScoreRow: { flexDirection: "row", alignItems: "center", gap: 16, marginVertical: 6 },
   tScoreTeam: { alignItems: "center", gap: 4 },
   tScoreLbl: { fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textMuted },
-  tScoreNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 36, color: Colors.gold },
+  tScoreNum: { fontFamily: "Nunito_800ExtraBold", fontSize: 36, color: Colors.gold },
   tScoreSep: { fontFamily: "Nunito_700Bold", fontSize: 16, color: Colors.textDim },
   endBtns: { width: "100%", gap: 10, marginTop: 4 },
   btnPrimary: {
     borderRadius: 16, paddingVertical: 15, alignItems: "center",
     flexDirection: "row", justifyContent: "center", gap: 8,
   },
-  btnPrimaryTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#1a0a00" },
+  btnPrimaryTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#1a0a00" },
   btnSecondary: {
     borderRadius: 16, paddingVertical: 13, alignItems: "center",
     borderWidth: 1, borderColor: Colors.border, backgroundColor: "rgba(255,255,255,0.04)",
@@ -2344,7 +2344,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   epicTitle: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 72,
     textAlign: "center",
     textShadowColor: "rgba(0,0,0,0.75)",
@@ -2352,7 +2352,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
   epicCoins: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 28,
     color: "#4ade80",
     marginTop: 10,
@@ -2408,7 +2408,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   lastCardBannerText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 24,
     color: "#1a0a00",
   },
@@ -2421,7 +2421,7 @@ const styles = StyleSheet.create({
     zIndex: 900,
   },
   floatLabelText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 32,
     color: "#FFFFFF",
     textShadowColor: "rgba(0,0,0,0.9)",
@@ -2504,7 +2504,7 @@ const styles = StyleSheet.create({
   },
   challengeHudValue: {
     color: Colors.gold,
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 12,
   },
   practiceHintOverlay: {
@@ -2556,7 +2556,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10, paddingHorizontal: 4,
   },
   gameMenuRowLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
-  gameMenuRowTxt: { fontFamily: "Nunito_600SemiBold", fontSize: 14, color: "#FFFFFF", flex: 1 },
+  gameMenuRowTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "#FFFFFF", flex: 1 },
   gameMenuToggle: {
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
     minWidth: 44, alignItems: "center",

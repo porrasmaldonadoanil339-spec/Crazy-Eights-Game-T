@@ -1,0 +1,91 @@
+Por favor mejora el modo clasificatoria sin cambiar su base actual.
+Actualmente las partidas clasificatorias funcionan con jugadores simulados (bots).
+Quiero mantener ese sistema, pero permitir que amigos reales puedan unirse a esas mismas partidas.
+1.	SISTEMA DE JUGADOR
+2.	ES MIXTOS
+Las partidas clasificatorias deben permitir una mezcla de:
+•	jugadores reales
+•	jugadores simulados (bots)
+Ejemplo en una partida de 4 jugadores:
+•	1 jugador real + 3 bots
+•	2 jugadores reales + 2 bots
+•	3 jugadores reales + 1 bot
+•	4 jugadores reales
+Si no hay suficientes jugadores reales, el sistema completa la partida con bots.
+2.	INVITAR AMIGOS A CLASIFICATORIA
+Dentro del modo clasificatoria debe existir una opción para invitar amigos.
+Funcionamiento:
+•	el jugador crea una partida clasificatoria
+•	el sistema genera un código de sala
+•	el jugador comparte ese código con sus amigos
+•	los amigos ingresan ese código y se unen a la misma partida
+3.	INICIO DE PARTIDA
+Cuando la sala esté lista:
+•	si faltan jugadores, el sistema agrega bots automáticamente
+•	la partida comienza con la cantidad total de jugadores (ejemplo 4).
+4.	SINCRONIZACIÓN EN TIEMPO REAL
+Los jugadores reales deben ver en tiempo real:
+•	cartas jugadas
+•	turnos
+•	cartas robadas
+•	final de la partida.
+5.	SISTEMA DE ESTRELLAS
+Cuando el jugador gane una partida clasificatoria:
+•	recibe +1 estrella
+•	las estrellas cuentan para subir de subrango.
+Cada subrango necesita 5 estrellas para subir al siguiente.
+6.	IMPORTANTE
+No cambies la base actual del sistema clasificatoria.
+Solo agrega la posibilidad de que jugadores reales puedan unirse a las partidas junto con bots.
+Por favor revisa y mejora mi juego manteniendo siempre la base y la jugabilidad actual. No cambies el funcionamiento principal del juego, solo corrige errores y optimiza lo necesario.
+1.	FUNCIONALIDAD DE OCHO LOCOS
+Revisa que la lógica del juego funcione correctamente.
+Si alguna carta especial está fallando o algún efecto no se aplica bien, corrígelo.
+Si las funciones ya están bien implementadas, entonces mantenlas como están.
+También revisa:
+•	que los turnos funcionen correctamente
+•	que las cartas se repartan bien
+•	que el robo de cartas no genere errores
+•	que la partida no se buguee cuando el mazo se termina.
+2.	MODO CLASIFICATORIA
+Mantén el sistema actual de rangos y subrangos.
+Rangos:
+Hierro, Bronce, Plata, Oro, Platino, Diamante, Épico, Mítico, Maestro, Gran Maestro, Legendario y Divino.
+Cada rango tiene subrangos:
+5, 4, 3, 2 y 1.
+Cada subrango necesita 5 estrellas para subir al siguiente.
+Ejemplo:
+Hierro 5 → Hierro 4 → Hierro 3 → Hierro 2 → Hierro 1 → Bronce 5.
+Cada partida ganada en clasificatoria debe dar +1 estrella.
+Cuando se gane una partida:
+•	debe aparecer una animación de estrella
+•	debe reflejarse el progreso del rango.
+3.	CLASIFICATORIA CON AMIGOS REALES
+Dentro del mismo modo clasificatoria quiero que amigos reales puedan unirse a las partidas.
+Las partidas deben permitir mezcla de:
+•	jugadores reales
+•	jugadores simulados (bots).
+Ejemplo en una partida de 4 jugadores:
+•	2 jugadores reales + 2 bots
+•	3 jugadores reales + 1 bot
+•	4 jugadores reales
+•	o bots como funciona actualmente.
+4.	SISTEMA DE CÓDIGO PARA AMIGOS
+Permite que un jugador cree una sala clasificatoria y el sistema genere un código.
+Los amigos pueden ingresar ese código y unirse a la misma partida.
+Si faltan jugadores, el sistema debe completar con bots.
+5.	SINCRONIZACIÓN DE PARTIDA
+Cuando jugadores reales estén en la misma partida:
+•	los turnos deben sincronizarse correctamente
+•	las cartas jugadas deben verse en tiempo real
+•	el estado de la partida debe ser el mismo para todos.
+6.	MEJORAS GENERALES DEL JUEGO
+Agrega mejoras y detalles que consideres necesarios para que el juego se vea más profesional, pero sin cambiar la base del juego ni su jugabilidad.
+Puedes mejorar:
+•	estabilidad de las partidas
+•	animaciones más suaves
+•	transiciones entre pantallas
+•	interfaz más clara
+•	optimización del rendimiento
+•	pequeños detalles visuales que mejoren la experiencia del jugador.
+El objetivo es mejorar el juego al máximo posible antes de publicarlo.

@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
   },
   modeName: {
     fontSize: 22,
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     letterSpacing: 2,
     marginBottom: 4,
   },
@@ -891,7 +891,7 @@ const styles = StyleSheet.create({
   playBtnText: {
     fontSize: 16,
     color: "#000",
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     letterSpacing: 1.5,
   },
 });

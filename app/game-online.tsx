@@ -1389,7 +1389,7 @@ export default function OnlineGameScreen() {
       {gs.phase === "game_over" && gs.winnerIndex !== null && !rivalAbandoned && !rankedPromotion && (
         <ResultOverlay
           isWin={gs.winnerIndex === 0}
-          winnerName={allNames[gs.winnerIndex]}
+          winnerName={gs.playerNames?.[gs.winnerIndex] ?? allNames[gs.winnerIndex]}
           winnerColor={PLAYER_COLORS[gs.winnerIndex % PLAYER_COLORS.length]}
           onClose={() => { playButton().catch(() => {}); router.back(); }}
           onPlayAgain={handlePlayAgain}

@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingBottom: 8,
   },
   closeBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  headerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold, letterSpacing: 3 },
+  headerTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: Colors.gold, letterSpacing: 3 },
   dots: { flexDirection: "row", justifyContent: "center", gap: 5, marginBottom: 16 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.border },
   dotActive: { backgroundColor: Colors.gold, width: 18 },
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", marginBottom: 4,
   },
   stepSubtitle: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textMuted, letterSpacing: 1, textTransform: "uppercase" },
-  stepTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 24, color: Colors.gold, textAlign: "center" },
+  stepTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 24, color: Colors.gold, textAlign: "center" },
   divider: { width: 60, height: 1.5, backgroundColor: Colors.border },
   stepBody: {
     fontFamily: "Nunito_400Regular", fontSize: 14, color: Colors.text,
@@ -373,5 +373,5 @@ const styles = StyleSheet.create({
   navNext: { flex: 1, borderRadius: 14, overflow: "hidden" },
   navNextDisabled: { opacity: 0.5 },
   navNextGrad: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, padding: 14 },
-  navNextText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#1a0a00" },
+  navNextText: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#1a0a00" },
 });

@@ -986,7 +986,7 @@ const styles = StyleSheet.create({
   },
   backBtn: { padding: 4 },
   headerTitle: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 20,
     flex: 1,
   },

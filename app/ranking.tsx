@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.06)",
   },
   title: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 18, letterSpacing: 2,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 18, letterSpacing: 2,
   },
   myRankText: { fontFamily: "Nunito_700Bold", fontSize: 11, marginTop: 1 },
   trophyWrap: {
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   rankCol: { width: 30, alignItems: "center" },
-  rankNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 14 },
+  rankNum: { fontFamily: "Nunito_800ExtraBold", fontSize: 14 },
   avatarDot: {
     width: 32, height: 32, borderRadius: 16, borderWidth: 1,
     alignItems: "center", justifyContent: "center",
@@ -345,6 +345,6 @@ const styles = StyleSheet.create({
   entryName: { fontFamily: "Nunito_700Bold", fontSize: 13 },
   entryLevel: { fontFamily: "Nunito_400Regular", fontSize: 10, marginTop: 1 },
   scoreCol: { flexDirection: "row", alignItems: "baseline", gap: 2, minWidth: 44, justifyContent: "flex-end" },
-  entryWins: { fontFamily: "Nunito_900ExtraBold", fontSize: 15 },
+  entryWins: { fontFamily: "Nunito_800ExtraBold", fontSize: 15 },
   entryWinsLabel: { fontFamily: "Nunito_700Bold", fontSize: 10 },
 });

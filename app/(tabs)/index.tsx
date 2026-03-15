@@ -948,7 +948,7 @@ export default function PlayScreen() {
                     placeholderTextColor={theme.textDim}
                     maxLength={6}
                     autoCapitalize="characters"
-                    style={{ fontFamily: "Nunito_900ExtraBold", fontSize: 32, color: "#4A90E2", textAlign: "center", letterSpacing: 8, paddingVertical: 14, paddingHorizontal: 12, backgroundColor: "rgba(74,144,226,0.08)", borderRadius: 12, borderWidth: 1, borderColor: "#4A90E233" }}
+                    style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 32, color: "#4A90E2", textAlign: "center", letterSpacing: 8, paddingVertical: 14, paddingHorizontal: 12, backgroundColor: "rgba(74,144,226,0.08)", borderRadius: 12, borderWidth: 1, borderColor: "#4A90E233" }}
                   />
                   <Pressable
                     disabled={joinCode.length < 6}
@@ -1102,7 +1102,7 @@ const styles = StyleSheet.create({
   profileBarName: { fontFamily: "Nunito_700Bold", fontSize: 13, color: Colors.text },
   xpMini: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 },
   levelTag: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 9, color: Colors.gold,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: Colors.gold,
     backgroundColor: Colors.gold + "20", paddingHorizontal: 4, paddingVertical: 1, borderRadius: 3,
   },
   xpBarMini: { flex: 1, height: 3, backgroundColor: Colors.border, borderRadius: 2 },
@@ -1112,7 +1112,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gold + "18", borderRadius: 10,
     paddingHorizontal: 8, paddingVertical: 5, borderWidth: 1, borderColor: Colors.gold + "40",
   },
-  coinsNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: Colors.gold },
+  coinsNum: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: Colors.gold },
   settingsBtn: {
     width: 30, height: 30, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 15,
@@ -1139,7 +1139,7 @@ const styles = StyleSheet.create({
   suitRed: { fontSize: 22, color: "#C0392B", opacity: 0.8 },
   suitBlack: { fontSize: 22, color: Colors.textMuted, opacity: 0.8 },
   mainTitle: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 36, color: Colors.gold,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 36, color: Colors.gold,
     letterSpacing: 5,
     textShadowColor: "rgba(212,175,55,0.5)", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 20,
   },
@@ -1207,7 +1207,7 @@ const styles = StyleSheet.create({
     width: 38, height: 4, backgroundColor: Colors.border, borderRadius: 2,
     alignSelf: "center", marginBottom: 18,
   },
-  diffTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 20, color: Colors.gold, marginBottom: 4 },
+  diffTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 20, color: Colors.gold, marginBottom: 4 },
   diffSub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, marginBottom: 18 },
   diffGrid: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
   diffOption: {
@@ -1243,7 +1243,7 @@ const styles = StyleSheet.create({
   dailyModal: { width: 300, borderRadius: 24, overflow: "hidden", borderWidth: 1.5, borderColor: Colors.gold + "44" },
   dailyGrad: { padding: 28, alignItems: "center", gap: 12 },
   dailyTitle: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: Colors.gold,
     letterSpacing: 2, textAlign: "center",
   },
   dailyIconWrap: {
@@ -1263,10 +1263,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6,
     borderWidth: 1, borderColor: Colors.border,
   },
-  dailyChipText: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: Colors.gold },
+  dailyChipText: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: Colors.gold },
   dailyClaimBtn: { width: "100%", borderRadius: 14, overflow: "hidden" },
   dailyClaimGrad: { paddingVertical: 14, alignItems: "center" },
-  dailyClaimText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#1a0a00", letterSpacing: 1 },
+  dailyClaimText: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#1a0a00", letterSpacing: 1 },
 
   // Multiplayer cards
   multiRow: { flexDirection: "row", gap: 10, marginBottom: 10 },
@@ -1280,7 +1280,7 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.04)",
   },
-  multiCardTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 16 },
+  multiCardTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 16 },
   multiCardDesc: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim, flex: 1 },
   multiCardBadge: {
     flexDirection: "row", alignItems: "center", gap: 4,
@@ -1294,7 +1294,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6, paddingVertical: 2,
   },
   onlineDotSmall: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#2ecc71" },
-  onlineDotText: { fontFamily: "Nunito_900ExtraBold", fontSize: 8, color: "#2ecc71", letterSpacing: 1 },
+  onlineDotText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, color: "#2ecc71", letterSpacing: 1 },
 
   // Challenge Cards
   challengeCard: {
@@ -1338,7 +1338,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   challengeRewardText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 11,
   },
   challengeProgressBar: {
@@ -1359,7 +1359,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   challengeClaimText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 12,
     color: "#1a0a00",
   },
@@ -1371,7 +1371,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   challengeClaimedText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 12,
   },
 
@@ -1388,7 +1388,7 @@ const styles = StyleSheet.create({
   multiModalHeader: {
     flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4,
   },
-  multiModalTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 17, color: "#63B3ED", flex: 1 },
+  multiModalTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 17, color: "#63B3ED", flex: 1 },
   multiModalClose: {
     width: 30, height: 30, borderRadius: 15,
     backgroundColor: "rgba(255,255,255,0.07)", alignItems: "center", justifyContent: "center",
@@ -1405,7 +1405,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#63B3ED22", borderColor: "#63B3ED66",
   },
   multiCountBtnText: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 22,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 22,
   },
   multiCountBtnTextActive: { color: "#63B3ED" },
   multiCountBtnSub: { fontFamily: "Nunito_400Regular", fontSize: 10 },
@@ -1425,7 +1425,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 10, paddingVertical: 15,
   },
-  multiStartBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#fff", letterSpacing: 1 },
+  multiStartBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#fff", letterSpacing: 1 },
   multiModalHint: {
     fontFamily: "Nunito_400Regular", fontSize: 11, textAlign: "center", marginTop: 4,
   },
@@ -1436,7 +1436,7 @@ const styles = StyleSheet.create({
     marginBottom: 12, overflow: "hidden",
   },
   adIconWrap: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  adTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, letterSpacing: 0.5 },
+  adTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, letterSpacing: 0.5 },
   adDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, marginTop: 2 },
   adCounter: {
     borderRadius: 10,
@@ -1453,18 +1453,18 @@ const styles = StyleSheet.create({
     width: 80, height: 80, borderRadius: 40,
     alignItems: "center", justifyContent: "center", marginBottom: 4,
   },
-  adModalTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 32 },
+  adModalTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 32 },
   adModalSub: { fontFamily: "Nunito_400Regular", fontSize: 13, textAlign: "center" },
   adCountdownWrap: {
     width: 64, height: 64, borderRadius: 32,
     alignItems: "center", justifyContent: "center",
   },
-  adCountdownNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 28 },
+  adCountdownNum: { fontFamily: "Nunito_800ExtraBold", fontSize: 28 },
   adRewardRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  adRewardText: { fontFamily: "Nunito_900ExtraBold", fontSize: 20 },
+  adRewardText: { fontFamily: "Nunito_800ExtraBold", fontSize: 20 },
   adClaimBtn: { width: "100%", borderRadius: 12, overflow: "hidden", marginTop: 4 },
   adClaimGrad: { paddingVertical: 13, alignItems: "center" },
-  adClaimText: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, color: "#1a0a00", letterSpacing: 1 },
+  adClaimText: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#1a0a00", letterSpacing: 1 },
   adCancelBtn: { marginTop: 4 },
   adCancelText: { fontFamily: "Nunito_400Regular", fontSize: 13 },
 
@@ -1502,7 +1502,7 @@ const styles = StyleSheet.create({
     borderColor: "#D4AF3733",
   },
   rankedTitle: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 18,
     color: "#D4AF37",
     letterSpacing: 1,
@@ -1548,7 +1548,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rankedBtnText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 14,
     color: "#000",
     letterSpacing: 0.5,

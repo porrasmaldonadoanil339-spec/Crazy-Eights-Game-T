@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { paddingHorizontal: 16, paddingBottom: 24 },
   screenTitle: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: Colors.gold,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 22, color: Colors.gold,
     letterSpacing: 4, marginBottom: 16,
   },
   profileCard: {
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
   frameBadgeText: { fontFamily: "Nunito_700Bold", fontSize: 9 },
   profileDetails: { flex: 1, gap: 6 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  profileName: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: Colors.text },
+  profileName: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: Colors.text },
   titleBadge: {
     flexDirection: "row", alignItems: "center", gap: 4, alignSelf: "flex-start",
     backgroundColor: Colors.gold + "22", paddingHorizontal: 8, paddingVertical: 3,
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
     padding: 12, alignItems: "center", gap: 4,
     borderWidth: 1, borderColor: Colors.border,
   },
-  resourceVal: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold, textAlign: "center" },
+  resourceVal: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: Colors.gold, textAlign: "center" },
   resourceLbl: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textMuted },
   miniCard: {
     width: 24, height: 34, borderRadius: 4,
@@ -809,7 +809,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderRadius: 18, padding: 20,
     width: 300, borderWidth: 1, borderColor: Colors.border,
   },
-  editTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold, marginBottom: 12 },
+  editTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: Colors.gold, marginBottom: 12 },
   nameInput: {
     backgroundColor: Colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
     fontFamily: "Nunito_700Bold", fontSize: 16, color: Colors.text,
@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
     padding: 20, borderWidth: 1, borderColor: Colors.border, alignSelf: "stretch",
   },
   pickerHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
-  pickerTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: Colors.gold },
+  pickerTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: Colors.gold },
   photoRow: { flexDirection: "row", gap: 10, marginBottom: 14 },
   photoBtn: {
     flex: 1, backgroundColor: Colors.card, borderRadius: 12, padding: 12,
@@ -936,13 +936,13 @@ const styles = StyleSheet.create({
   },
   countryName: {
     flex: 1,
-    fontFamily: "Nunito_600SemiBold",
+    fontFamily: "Nunito_700Bold",
     fontSize: 16,
     color: Colors.text,
     marginLeft: 12,
   },
   sectionHeader: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 13,
     color: Colors.gold,
     backgroundColor: Colors.surface,

@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   },
   headerCenter: { alignItems: "center" },
   headerTitle: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 18,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 18,
     color: Colors.gold, letterSpacing: 2,
   },
   headerSub: {
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     borderRadius: 10, borderWidth: 1,
   },
   teamLabel: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 11, letterSpacing: 1,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 11, letterSpacing: 1,
   },
   slotCard: {
     width: "100%", borderRadius: 14, borderWidth: 1.5,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.02)",
   },
   slotEmptyLabel: {
-    fontFamily: "Nunito_600SemiBold", fontSize: 10, textAlign: "center",
+    fontFamily: "Nunito_700Bold", fontSize: 10, textAlign: "center",
   },
   slotAvatar: {
     width: 44, height: 44, borderRadius: 22,
@@ -316,13 +316,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gold, borderRadius: 4,
     paddingHorizontal: 3, paddingVertical: 1,
   },
-  meTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 7, color: "#000" },
+  meTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: "#000" },
   slotName: {
     fontFamily: "Nunito_700Bold", fontSize: 12,
     color: "#fff", textAlign: "center",
   },
   slotLevel: {
-    fontFamily: "Nunito_600SemiBold", fontSize: 10,
+    fontFamily: "Nunito_700Bold", fontSize: 10,
     color: "rgba(255,255,255,0.5)",
   },
   slotWr: {
@@ -333,12 +333,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 2,
   },
   joiningTxt: {
-    fontFamily: "Nunito_600SemiBold", fontSize: 9,
+    fontFamily: "Nunito_700Bold", fontSize: 9,
     color: "rgba(255,255,255,0.6)",
   },
   teamDesc: { marginTop: 4 },
   teamDescTxt: {
-    fontFamily: "Nunito_600SemiBold", fontSize: 10,
+    fontFamily: "Nunito_700Bold", fontSize: 10,
     color: "rgba(255,255,255,0.45)", textAlign: "center",
   },
   vsColumn: { width: 36, alignItems: "center", justifyContent: "center", paddingTop: 36 },
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.2)",
     alignItems: "center", justifyContent: "center",
   },
-  vsTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 11, color: "#fff" },
+  vsTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#fff" },
   vsSeparator: {
     width: 1, flex: 1, backgroundColor: "rgba(255,255,255,0.1)",
     marginTop: 8,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.08)",
   },
   turnStripTitle: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 10,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 10,
     color: "rgba(255,255,255,0.4)", letterSpacing: 2,
     textAlign: "center", marginBottom: 8,
   },
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     width: 26, height: 26, borderRadius: 13,
     alignItems: "center", justifyContent: "center", borderWidth: 1,
   },
-  turnNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 13 },
+  turnNum: { fontFamily: "Nunito_800ExtraBold", fontSize: 13 },
   turnName: { fontFamily: "Nunito_700Bold", fontSize: 9, maxWidth: 50, textAlign: "center" },
   infoStrip: {
     flexDirection: "row", alignItems: "center", gap: 8,
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.gold + "33",
   },
   infoTxt: {
-    fontFamily: "Nunito_600SemiBold", fontSize: 12,
+    fontFamily: "Nunito_700Bold", fontSize: 12,
     color: "rgba(255,255,255,0.7)", flex: 1,
   },
   startWrap: { padding: 16, paddingTop: 12 },
@@ -389,14 +389,14 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 10, paddingVertical: 16,
   },
-  startTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: "#fff", letterSpacing: 1 },
+  startTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: "#fff", letterSpacing: 1 },
   countdownWrap: { alignItems: "center", padding: 16, paddingTop: 12 },
   countdownNum: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 64,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 64,
     color: Colors.gold,
   },
   countdownLabel: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 14,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 14,
     color: "rgba(255,255,255,0.6)", letterSpacing: 3,
   },
 });

@@ -264,13 +264,13 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 16, marginBottom: 12,
   },
-  screenTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 22, letterSpacing: 4 },
+  screenTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 22, letterSpacing: 4 },
   counterBadge: {
     flexDirection: "row", alignItems: "center", gap: 5,
     paddingHorizontal: 10, paddingVertical: 5,
     borderRadius: 10, borderWidth: 1,
   },
-  counterText: { fontFamily: "Nunito_900ExtraBold", fontSize: 13 },
+  counterText: { fontFamily: "Nunito_800ExtraBold", fontSize: 13 },
   tabRow: { flexDirection: "row", paddingHorizontal: 16, gap: 8, marginBottom: 14 },
   tabBtn: {
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   tabLabel: { fontFamily: "Nunito_700Bold", fontSize: 12 },
   scroll: { paddingHorizontal: 16 },
   rarityHeader: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 11, letterSpacing: 2,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 11, letterSpacing: 2,
     textTransform: "uppercase", marginTop: 16, marginBottom: 8,
   },
   achCard: {
@@ -305,10 +305,10 @@ const styles = StyleSheet.create({
   claimBtn: {
     borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
   },
-  claimText: { fontFamily: "Nunito_900ExtraBold", fontSize: 11, color: "#1a0a00" },
+  claimText: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#1a0a00" },
   bpHeader: { marginBottom: 16 },
   bpLevelBig: { borderRadius: 14, padding: 14, gap: 6, borderWidth: 1 },
-  bpLevelNum: { fontFamily: "Nunito_900ExtraBold", fontSize: 16 },
+  bpLevelNum: { fontFamily: "Nunito_800ExtraBold", fontSize: 16 },
   bpXpBar: { height: 8, borderRadius: 4 },
   bpXpFill: { height: "100%", borderRadius: 4 },
   bpXpText: { fontFamily: "Nunito_400Regular", fontSize: 11 },
@@ -322,13 +322,13 @@ const styles = StyleSheet.create({
     width: 32, height: 32, borderRadius: 16,
     alignItems: "center", justifyContent: "center",
   },
-  bpTierNumText: { fontFamily: "Nunito_900ExtraBold", fontSize: 13 },
+  bpTierNumText: { fontFamily: "Nunito_800ExtraBold", fontSize: 13 },
   bpIconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   bpTierContent: { flex: 1 },
   bpTierLabel: { fontFamily: "Nunito_700Bold", fontSize: 13 },
   bpTierXp: { fontFamily: "Nunito_400Regular", fontSize: 11 },
   bpClaimBtn: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
-  bpClaimText: { fontFamily: "Nunito_900ExtraBold", fontSize: 11, color: "#1a0a00" },
+  bpClaimText: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#1a0a00" },
   toast: {
     position: "absolute", bottom: 90, alignSelf: "center",
     borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,
@@ -347,11 +347,11 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
   },
   rankMiniLabel: { fontFamily: "Nunito_400Regular", fontSize: 11 },
-  rankMiniName: { fontFamily: "Nunito_900ExtraBold", fontSize: 18 },
+  rankMiniName: { fontFamily: "Nunito_800ExtraBold", fontSize: 18 },
   viewRankBtn: {
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
   },
-  viewRankText: { fontFamily: "Nunito_900ExtraBold", fontSize: 12, color: "#1a0a00" },
+  viewRankText: { fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#1a0a00" },
   rankRow: {
     flexDirection: "row", alignItems: "center", gap: 12,
     padding: 12, borderRadius: 14, marginBottom: 8,
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   playerRankName: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 16,
   },
   worldRankBadge: {
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     color: "#D4AF37",
   },
   worldRankValue: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 14,
     color: "#D4AF37",
   },

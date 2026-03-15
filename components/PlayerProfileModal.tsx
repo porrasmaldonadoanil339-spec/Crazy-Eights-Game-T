@@ -249,12 +249,12 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   levelBadgeTxt: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 11,
     color: "#fff",
   },
   playerName: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 20,
     color: Colors.text,
     letterSpacing: 0.5,
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   statValue: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 15,
     color: Colors.text,
   },

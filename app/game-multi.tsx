@@ -608,10 +608,10 @@ const styles = StyleSheet.create({
     marginTop: 4, paddingHorizontal: 6, paddingVertical: 2,
     borderRadius: 6, alignSelf: "center",
   },
-  drawLabelText: { fontFamily: "Nunito_900ExtraBold", fontSize: 8, color: "#fff" },
+  drawLabelText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, color: "#fff" },
   dirArrowWrap: { alignItems: "center", gap: 2 },
   dirArrow: { fontSize: 18, color: Colors.gold, opacity: 0.6 },
-  suitOnTable: { fontSize: 16, fontFamily: "Nunito_900ExtraBold" },
+  suitOnTable: { fontSize: 16, fontFamily: "Nunito_800ExtraBold" },
   discardPileWrap: { alignItems: "center", justifyContent: "center" },
 
   // Opponents
@@ -624,9 +624,9 @@ const styles = StyleSheet.create({
   opponentCountBadge: {
     paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, borderWidth: 1,
   },
-  opponentCountText: { fontFamily: "Nunito_900ExtraBold", fontSize: 9 },
+  opponentCountText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9 },
   skipLabel: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 9, color: Colors.red,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: Colors.red,
     marginTop: 2, letterSpacing: 1,
   },
 
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
   pendingBadge: {
     paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, borderWidth: 1,
   },
-  pendingText: { fontFamily: "Nunito_900ExtraBold", fontSize: 11 },
+  pendingText: { fontFamily: "Nunito_800ExtraBold", fontSize: 11 },
   handContainer: { paddingHorizontal: 12, paddingVertical: 4 },
   selectedHint: {
     fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.gold,
@@ -677,14 +677,14 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: "rgba(0,0,0,0.88)",
     alignItems: "center", justifyContent: "center", gap: 20,
   },
-  suitTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: Colors.gold, letterSpacing: 2 },
+  suitTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: Colors.gold, letterSpacing: 2 },
   suitGrid: { flexDirection: "row", gap: 14, flexWrap: "wrap", justifyContent: "center" },
   suitBtn: {
     width: 80, height: 80, borderRadius: 16,
     backgroundColor: "rgba(255,255,255,0.07)", alignItems: "center", justifyContent: "center",
     gap: 4, borderWidth: 1, borderColor: Colors.border,
   },
-  suitSym: { fontSize: 28, fontFamily: "Nunito_900ExtraBold" },
+  suitSym: { fontSize: 28, fontFamily: "Nunito_800ExtraBold" },
   suitLbl: { fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.textMuted },
 
   // Pass device overlay
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   passTurnLabel: {
     fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.textDim, letterSpacing: 4, marginTop: 4,
   },
-  passPlayerName: { fontFamily: "Nunito_900ExtraBold", fontSize: 34, textAlign: "center" },
+  passPlayerName: { fontFamily: "Nunito_800ExtraBold", fontSize: 34, textAlign: "center" },
   passMessage: {
     fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textMuted, textAlign: "center",
     backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 16, paddingVertical: 6,
@@ -710,16 +710,16 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 10, paddingVertical: 17, paddingHorizontal: 24,
   },
-  passBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, letterSpacing: 1 },
+  passBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, letterSpacing: 1 },
 
   // Win overlay
   winOverlay: { position: "absolute", inset: 0, zIndex: 300, alignItems: "center", justifyContent: "center" },
   winContent: { alignItems: "center", gap: 10 },
   winSubtitle: { fontFamily: "Nunito_700Bold", fontSize: 12, letterSpacing: 5 },
-  winName: { fontFamily: "Nunito_900ExtraBold", fontSize: 42, textAlign: "center", paddingHorizontal: 20 },
+  winName: { fontFamily: "Nunito_800ExtraBold", fontSize: 42, textAlign: "center", paddingHorizontal: 20 },
   winBtn: { marginTop: 24, borderRadius: 16, overflow: "hidden", width: 250 },
   winBtnGrad: { paddingVertical: 16, alignItems: "center" },
-  winBtnText: { fontFamily: "Nunito_900ExtraBold", fontSize: 15, color: "#1a0a00" },
+  winBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#1a0a00" },
 
   // Config Screen
   configTitle: { fontFamily: "Nunito_700Bold", fontSize: 18, color: Colors.gold },
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.gold,
   },
   chipText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 16,
     color: Colors.textDim,
   },
@@ -793,7 +793,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   startBtnText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 16,
     color: "#1a0a00",
   },

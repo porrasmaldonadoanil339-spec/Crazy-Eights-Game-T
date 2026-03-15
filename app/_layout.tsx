@@ -715,7 +715,7 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_700Bold,
-    Nunito_800ExtraBold_Asset: Nunito_800ExtraBold_Asset,
+    Nunito_800ExtraBold: Nunito_800ExtraBold_Asset,
   });
 
   const [showSplash, setShowSplash] = useState(!splashShownThisSession);

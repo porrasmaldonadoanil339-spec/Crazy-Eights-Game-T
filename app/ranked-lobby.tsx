@@ -327,12 +327,12 @@ const styles = StyleSheet.create({
   },
   headerCenter: { alignItems: "center" },
   headerTitle: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 17,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 17,
     color: Colors.gold, letterSpacing: 2,
   },
   headerRank: { fontFamily: "Nunito_700Bold", fontSize: 12, letterSpacing: 1 },
   sectionTitle: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 11,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 11,
     color: "rgba(255,255,255,0.4)", letterSpacing: 2,
     marginHorizontal: 16, marginTop: 8, marginBottom: 10,
   },
@@ -351,9 +351,9 @@ const styles = StyleSheet.create({
     position: "absolute", bottom: -2, right: -4,
     backgroundColor: Colors.gold, borderRadius: 4, paddingHorizontal: 3, paddingVertical: 1,
   },
-  meTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 7, color: "#000" },
+  meTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: "#000" },
   playerName: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "#fff", flex: 1 },
-  playerLevel: { fontFamily: "Nunito_600SemiBold", fontSize: 11, color: "rgba(255,255,255,0.5)" },
+  playerLevel: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "rgba(255,255,255,0.5)" },
   removeBtn: {
     width: 22, height: 22, borderRadius: 11,
     backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center",
@@ -369,23 +369,23 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1.5,
     borderColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center",
   },
-  addLabel: { fontFamily: "Nunito_600SemiBold", fontSize: 13 },
+  addLabel: { fontFamily: "Nunito_700Bold", fontSize: 13 },
   countInfo: {
     flexDirection: "row", alignItems: "center", gap: 6,
     marginHorizontal: 16, marginTop: 12, marginBottom: 4,
   },
-  countTxt: { fontFamily: "Nunito_600SemiBold", fontSize: 11, color: "rgba(255,255,255,0.4)" },
+  countTxt: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "rgba(255,255,255,0.4)" },
   searchBtn: { marginHorizontal: 16, marginTop: 16, borderRadius: 16, overflow: "hidden" },
   searchGrad: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 10, paddingVertical: 16,
   },
-  searchTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 17, color: "#fff", letterSpacing: 1 },
+  searchTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 17, color: "#fff", letterSpacing: 1 },
   infoRow: {
     flexDirection: "row", alignItems: "center", gap: 6,
     marginHorizontal: 16, marginTop: 12,
   },
-  infoTxt: { fontFamily: "Nunito_600SemiBold", fontSize: 11, color: "rgba(255,255,255,0.35)" },
+  infoTxt: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "rgba(255,255,255,0.35)" },
   searchingWrap: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 },
   searchingIcon: {
     width: 80, height: 80, borderRadius: 40,
@@ -393,11 +393,11 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", alignSelf: "center", marginBottom: 20,
   },
   searchingTitle: {
-    fontFamily: "Nunito_900ExtraBold", fontSize: 22, color: "#fff", textAlign: "center",
+    fontFamily: "Nunito_800ExtraBold", fontSize: 22, color: "#fff", textAlign: "center",
   },
   dotsRow: { flexDirection: "row", justifyContent: "center", marginTop: 4, marginBottom: 12 },
   searchingRank: {
-    fontFamily: "Nunito_600SemiBold", fontSize: 14, color: "rgba(255,255,255,0.6)", textAlign: "center", marginBottom: 20,
+    fontFamily: "Nunito_700Bold", fontSize: 14, color: "rgba(255,255,255,0.6)", textAlign: "center", marginBottom: 20,
   },
   progressBarWrap: {
     height: 6, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 3,
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   },
   progressBar: { height: 6, borderRadius: 3 },
   progressTxt: {
-    fontFamily: "Nunito_600SemiBold", fontSize: 12, color: "rgba(255,255,255,0.45)", textAlign: "center", marginBottom: 24,
+    fontFamily: "Nunito_700Bold", fontSize: 12, color: "rgba(255,255,255,0.45)", textAlign: "center", marginBottom: 24,
   },
   cancelBtn: { alignSelf: "center", paddingVertical: 10, paddingHorizontal: 20 },
   cancelTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "rgba(255,255,255,0.4)" },
@@ -415,18 +415,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#2ECC7122", borderWidth: 2, borderColor: "#2ECC7166",
     alignItems: "center", justifyContent: "center", marginBottom: 20,
   },
-  foundTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 24, color: "#fff", textAlign: "center", marginBottom: 8 },
+  foundTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 24, color: "#fff", textAlign: "center", marginBottom: 8 },
   foundSub: {
-    fontFamily: "Nunito_600SemiBold", fontSize: 13, color: "rgba(255,255,255,0.55)", textAlign: "center", marginBottom: 16,
+    fontFamily: "Nunito_700Bold", fontSize: 13, color: "rgba(255,255,255,0.55)", textAlign: "center", marginBottom: 16,
   },
   foundRankRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 24 },
-  foundRankTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 18 },
+  foundRankTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 18 },
   startBtn: { width: "100%", borderRadius: 16, overflow: "hidden" },
   startGrad: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 10, paddingVertical: 16,
   },
-  startTxt: { fontFamily: "Nunito_900ExtraBold", fontSize: 18, color: "#fff", letterSpacing: 1 },
+  startTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: "#fff", letterSpacing: 1 },
   modalOverlay: {
     flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end",
   },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 16,
     borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.08)",
   },
-  friendModalTitle: { fontFamily: "Nunito_900ExtraBold", fontSize: 16, color: "#fff", letterSpacing: 2 },
+  friendModalTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#fff", letterSpacing: 2 },
   friendList: { flex: 1 },
   friendRow: {
     flexDirection: "row", alignItems: "center", gap: 12,
@@ -452,11 +452,11 @@ const styles = StyleSheet.create({
   },
   friendNameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   friendName: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "#fff" },
-  friendMeta: { fontFamily: "Nunito_600SemiBold", fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 },
+  friendMeta: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 },
   inviteBtn: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1,
   },
   inviteBtnTxt: { fontFamily: "Nunito_700Bold", fontSize: 12 },
   noFriends: { alignItems: "center", padding: 40, gap: 12 },
-  noFriendsTxt: { fontFamily: "Nunito_600SemiBold", fontSize: 14, color: "rgba(255,255,255,0.35)" },
+  noFriendsTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: "rgba(255,255,255,0.35)" },
 });

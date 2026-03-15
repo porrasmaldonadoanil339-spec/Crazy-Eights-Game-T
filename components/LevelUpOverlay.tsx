@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   levelNumber: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 42,
     color: Colors.gold,
     lineHeight: 46,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
   },
   levelUpTitle: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 28,
     color: Colors.gold,
     letterSpacing: 1,

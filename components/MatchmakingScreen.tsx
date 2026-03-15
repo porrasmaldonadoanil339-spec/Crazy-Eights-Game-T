@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   foundText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 18,
     color: "#27AE60",
     letterSpacing: 0.5,
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   questionMark: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 34,
     color: Colors.gold,
     lineHeight: 40,
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   youBadgeText: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 10,
     color: Colors.gold,
     letterSpacing: 1,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gold + "33",
   },
   vsTxt: {
-    fontFamily: "Nunito_900ExtraBold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 18,
     color: "#1a0e00",
     letterSpacing: 1,
