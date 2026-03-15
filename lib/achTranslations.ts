@@ -1966,14 +1966,18 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
   secret_ext_70_d: { es: "Desbloquea el secreto número 3500.", en: "Unlock secret number 3500.", pt: "Desbloqueie o segredo número 3500." },
 };
 
+function get3(obj: { es: string; en: string; pt: string } | undefined, lang: Lang): string {
+  return (obj as any)?.[lang] ?? obj?.es ?? "";
+}
+
 export function achTitle(id: string, lang: Lang): string {
   const key = id + "_t";
-  return ach[key]?.[lang] ?? ach[key]?.es ?? id;
+  return get3(ach[key], lang) || id;
 }
 
 export function achDesc(id: string, lang: Lang): string {
   const key = id + "_d";
-  return ach[key]?.[lang] ?? ach[key]?.es ?? id;
+  return get3(ach[key], lang) || id;
 }
 
 const emotes: Record<string, { es: string; en: string; pt: string }> = {
@@ -1988,7 +1992,7 @@ const emotes: Record<string, { es: string; en: string; pt: string }> = {
 };
 
 export function emoteLabel(id: string, lang: Lang): string {
-  return emotes[id]?.[lang] ?? emotes[id]?.es ?? id;
+  return get3(emotes[id], lang) || id;
 }
 
 const modeDescs: Record<string, { es: string; en: string; pt: string }> = {
@@ -2014,7 +2018,7 @@ export function modeDesc(id: string, lang: Lang): string {
     const i18nVal = t(i18nKey as any, lang);
     if (i18nVal && i18nVal !== i18nKey) return i18nVal;
   }
-  return modeDescs[id]?.[lang as any] ?? modeDescs[id]?.es ?? "";
+  return get3(modeDescs[id], lang) || "";
 }
 
 const diffDescs: Record<string, { es: string; en: string; pt: string }> = {
@@ -2026,7 +2030,7 @@ const diffDescs: Record<string, { es: string; en: string; pt: string }> = {
 };
 
 export function diffDesc(id: string, lang: Lang): string {
-  return diffDescs[id]?.[lang] ?? diffDescs[id]?.es ?? "";
+  return get3(diffDescs[id], lang);
 }
 
 const diffNames: Record<string, { es: string; en: string; pt: string }> = {
@@ -2038,7 +2042,7 @@ const diffNames: Record<string, { es: string; en: string; pt: string }> = {
 };
 
 export function diffName(id: string, lang: Lang): string {
-  return diffNames[id]?.[lang] ?? diffNames[id]?.es ?? id;
+  return get3(diffNames[id], lang) || id;
 }
 
 const modeNames: Record<string, { es: string; en: string; pt: string }> = {
@@ -2059,5 +2063,5 @@ export function modeName(id: string, lang: Lang): string {
     const i18nVal = t(i18nKey as any, lang);
     if (i18nVal && i18nVal !== i18nKey) return i18nVal;
   }
-  return modeNames[id]?.[lang as any] ?? modeNames[id]?.es ?? id;
+  return get3(modeNames[id], lang) || id;
 }

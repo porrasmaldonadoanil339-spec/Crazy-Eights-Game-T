@@ -88,6 +88,7 @@ function generatePlayer(index: number) {
     stars: Math.floor(seededRand(seed * 10) * 5) + 1,
     level,
     position: index + 1,
+    isMe: false,
   };
 }
 
@@ -135,6 +136,7 @@ export default function RankedScreen() {
         name: profile.name || "Tú",
         avatarIcon: "person",
         avatarColor: AVATAR_COLORS[2],
+        photoUrl: profile.photoUri ?? undefined,
         country: { code: "MX", name: "México" },
         rank: profile.rankedProfile.rank,
         division: profile.rankedProfile.division,

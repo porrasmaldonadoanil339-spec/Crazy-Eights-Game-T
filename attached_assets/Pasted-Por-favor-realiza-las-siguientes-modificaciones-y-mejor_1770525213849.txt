@@ -1,0 +1,32 @@
+Por favor realiza las siguientes modificaciones y mejoras en mi juego:
+1.	Eliminar completamente el modo cooperativo y todo lo relacionado con él.
+Ya decidí quitar el modo cooperativo del juego, por lo tanto debes eliminar absolutamente todo lo relacionado con ese modo, por ejemplo:
+o	Misiones diarias del modo cooperativo
+o	Logros del modo cooperativo
+o	Eventos o recompensas relacionadas con cooperativo
+o	Cualquier referencia al cooperativo en menús o sistemas del juego
+No tiene sentido que aparezca una misión, logro o contenido relacionado con cooperativo si ese modo ya no existe en el juego.
+2.	Efectos de cartas en partidas online.
+En los modos online, cuando un jugador selecciona o lanza una carta, debe aparecer correctamente el efecto visual de la carta, tal como ocurre normalmente en las partidas.
+3.	Modo Clasificatoria (Ranked).
+Las partidas clasificatorias siempre deben tener 4 jugadores en total.
+Dentro de esas partidas pueden participar:
+o	Jugadores reales (amigos o personas que tengan el juego instalado)
+o	Jugadores falsos o bots que rellenen la partida
+Ejemplos de funcionamiento:
+o	Si estoy solo → el sistema agrega 3 bots.
+o	Si estoy con 1 amigo real → el sistema agrega 2 bots.
+o	Si estoy con 2 amigos reales → el sistema agrega 1 bot.
+o	Si hay 4 jugadores reales → se juega sin bots.
+Es decir, en una misma partida pueden mezclarse jugadores reales y bots, pero siempre deben ser 4 jugadores en total.
+4.	Música del menú durante la búsqueda de jugadores.
+Cuando entro a cualquier modo de juego y aparece la pantalla de “buscando jugadores” o “cargando partida”, la música del menú debe seguir escuchándose y no detenerse ni cambiar hasta que la partida empiece.
+5.	Mejoras generales del juego.
+Además de lo anterior, analiza el juego y agrega mejoras o detalles que consideres necesarios para optimizarlo, como:
+o	Mejor estabilidad en partidas online
+o	Mejor organización de los menús
+o	Animaciones más fluidas
+o	Mejores efectos visuales de cartas
+o	Corrección de errores
+Estas mejoras deben mejorar el juego al máximo, pero sin cambiar la base ni la jugabilidad principal.
+Por favor aplica todas estas modificaciones correctamente para que el juego quede más optimizado, ordenado y funcionando al 100%.

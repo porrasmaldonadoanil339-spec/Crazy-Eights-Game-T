@@ -354,7 +354,10 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
 }
 
 // Routes that should play game music (not menu music)
-const GAME_MUSIC_ROUTES = ["game", "game-online", "game-multi"];
+// NOTE: "game-online" is intentionally excluded — it manages its own music
+// (menu music plays during the lobby/searching/dealing phase, then game-online
+// itself calls startGameMusic() only when the actual match begins).
+const GAME_MUSIC_ROUTES = ["game", "game-multi"];
 function isGameRoute(segments: string[]): boolean {
   return segments.some(s => GAME_MUSIC_ROUTES.includes(s));
 }

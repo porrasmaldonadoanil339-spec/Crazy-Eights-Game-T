@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image,
+  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image, ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -595,6 +595,7 @@ export default function OnlineGameScreen() {
   const [countdown, setCountdown] = useState(3);
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [disconnectedPlayerMsg, setDisconnectedPlayerMsg] = useState<string | null>(null);
 
   // ─── In-game menu ────────────────────────────────────────────────────────
   const [showGameMenu, setShowGameMenu] = useState(false);
@@ -637,6 +638,8 @@ export default function OnlineGameScreen() {
   const [gameState, setGameState] = useState<MultiGameState | null>(null);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const cpuThinking = useRef(false);
+  const [showYourTurnFlash, setShowYourTurnFlash] = useState(false);
+  const prevPlayerIdxRef = useRef(-1);
   const [inactivityProgress, setInactivityProgress] = useState(1);
   const [showInactivityBar, setShowInactivityBar] = useState(false);
   const inactivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -663,6 +666,19 @@ export default function OnlineGameScreen() {
     prevPendingDraw.current = pd;
   }, [gameState?.pendingDraw]);
 
+  // ─── "YOUR TURN" flash — triggers when turn rotates to the local player ──
+  useEffect(() => {
+    if (!gameState || lobbyPhase !== "game") return;
+    const curr = gameState.currentPlayerIndex;
+    if (curr === 0 && prevPlayerIdxRef.current !== 0 && prevPlayerIdxRef.current !== -1) {
+      setShowYourTurnFlash(true);
+      const t = setTimeout(() => setShowYourTurnFlash(false), 1200);
+      prevPlayerIdxRef.current = 0;
+      return () => clearTimeout(t);
+    }
+    prevPlayerIdxRef.current = curr;
+  }, [gameState?.currentPlayerIndex, lobbyPhase]);
+
   // ─── Online WebSocket setup ──────────────────────────────────────────────
   useEffect(() => {
     if (!isOnline) return;
@@ -673,6 +689,7 @@ export default function OnlineGameScreen() {
     s.off("game_state");
     s.off("game_over");
     s.off("player_left");
+    s.off("player_disconnected");
 
     s.on("game_state", (srv: ServerGameState) => {
       try {
@@ -696,10 +713,19 @@ export default function OnlineGameScreen() {
       setRivalAbandoned(true);
     });
 
+    // Player left during an active game — converted to bot on server side,
+    // game continues. Show a brief notification to remaining players.
+    s.on("player_disconnected", ({ playerName }: { playerName: string; playerIndex: number }) => {
+      const msg = `${playerName} salió → BOT`;
+      setDisconnectedPlayerMsg(msg);
+      setTimeout(() => setDisconnectedPlayerMsg(null), 3500);
+    });
+
     return () => {
       s.off("game_state");
       s.off("game_over");
       s.off("player_left");
+      s.off("player_disconnected");
     };
   }, [isOnline]);
 
@@ -817,15 +843,18 @@ export default function OnlineGameScreen() {
   }
 
   // ─── Rival abandoned: ~8% chance a CPU rival "disconnects" 10-25s into game ──
+  // Only applies to simulated (non-socket) games — real online games handle
+  // disconnections via the server's player_disconnected / player_left events.
   useEffect(() => {
+    if (isOnline) return;
     if (lobbyPhase !== "game" || rivalAbandoned) return;
-    if (Math.random() > 0.08) return; // 8% chance per game
+    if (Math.random() > 0.08) return; // 8% chance per simulated game
     const delay = 10000 + Math.random() * 15000; // 10-25 seconds in
     const t = setTimeout(() => {
       if (lobbyPhase === "game") setRivalAbandoned(true);
     }, delay);
     return () => clearTimeout(t);
-  }, [lobbyPhase]);
+  }, [lobbyPhase, isOnline]);
 
   // ─── CPU auto-play ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -1086,12 +1115,12 @@ export default function OnlineGameScreen() {
     if (lobbyPhase === "dealing") {
       if (isOnline && !gameState) {
         return (
-          <View style={{ flex: 1, backgroundColor: "#020810", alignItems: "center", justifyContent: "center", gap: 16 }}>
+          <View style={{ flex: 1, backgroundColor: "#020810", alignItems: "center", justifyContent: "center", gap: 20 }}>
             <LinearGradient colors={["#020810", "#041530"]} style={StyleSheet.absoluteFill} />
-            <Animated.Text style={{ fontSize: 42, color: Colors.gold, fontFamily: "Nunito_800ExtraBold" }}>
-              ⟳
-            </Animated.Text>
-            <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.gold, letterSpacing: 3 }}>
+            <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: "rgba(212,175,55,0.1)", borderWidth: 1, borderColor: Colors.gold + "44", alignItems: "center", justifyContent: "center" }}>
+              <ActivityIndicator size="large" color={Colors.gold} />
+            </View>
+            <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: Colors.gold, letterSpacing: 4 }}>
               CARGANDO PARTIDA
             </Text>
           </View>
@@ -1455,6 +1484,49 @@ export default function OnlineGameScreen() {
         </Animated.View>
       )}
 
+      {/* ─── "YOUR TURN" flash banner ─── */}
+      {showYourTurnFlash && (
+        <Animated.View
+          entering={FadeIn.duration(100)}
+          style={{
+            position: "absolute", bottom: "40%", left: 0, right: 0,
+            alignItems: "center", zIndex: 520, pointerEvents: "none" as any,
+          }}
+        >
+          <View style={{
+            backgroundColor: Colors.gold + "EE", borderRadius: 12,
+            paddingHorizontal: 24, paddingVertical: 7,
+          }}>
+            <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#1a0a00", letterSpacing: 3 }}>
+              ¡TU TURNO!
+            </Text>
+          </View>
+        </Animated.View>
+      )}
+
+      {/* ─── Player disconnected toast (game continues with bot) ─── */}
+      {disconnectedPlayerMsg && (
+        <Animated.View
+          entering={SlideInDown.duration(250)}
+          style={{
+            position: "absolute", top: topPad + 10, left: 20, right: 20,
+            alignItems: "center", zIndex: 600, pointerEvents: "none" as any,
+          }}
+        >
+          <View style={{
+            backgroundColor: "rgba(15,15,25,0.92)", borderRadius: 10,
+            paddingHorizontal: 16, paddingVertical: 8,
+            borderWidth: 1, borderColor: "rgba(255,140,0,0.35)",
+            flexDirection: "row", alignItems: "center", gap: 8,
+          }}>
+            <Ionicons name="warning-outline" size={14} color="#FF8C00" />
+            <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 12, color: "#FF8C00" }}>
+              {disconnectedPlayerMsg}
+            </Text>
+          </View>
+        </Animated.View>
+      )}
+
       {/* ─── In-Game Menu Modal ─── */}
       {showGameMenu && (
         <Pressable style={[StyleSheet.absoluteFill, gameStyles.gameMenuOverlay]} onPress={closeGameMenu}>
@@ -1759,10 +1831,10 @@ const gameStyles = StyleSheet.create({
   },
   waitingText: { fontFamily: "Nunito_700Bold", fontSize: 10, color: "#4A90E2" },
   inactivityBar: {
-    width: "100%", height: 3, backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 2, marginBottom: 4, overflow: "hidden",
+    width: "100%", height: 5, backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 3, marginBottom: 6, overflow: "hidden",
   },
-  inactivityFill: { height: 3, borderRadius: 2 },
+  inactivityFill: { height: 5, borderRadius: 3 },
   handContainer: { paddingHorizontal: 12, paddingVertical: 4 },
   selectedHint: {
     fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.gold, textAlign: "center", marginTop: 2,

@@ -451,17 +451,47 @@ export function setupRooms(httpServer: HttpServer) {
 
       const pidx = myPlayerIndex >= 0 ? myPlayerIndex : ((socket as any)._myPlayerIndex ?? -1);
 
-      // Remove only the real (non-bot) player who disconnected
-      room.players = room.players.filter(p => p.socketId !== socket.id);
-      socket.to(roomCode).emit("player_left", {
-        playerIndex: pidx,
-        players: buildPlayersInfo(room),
-      });
+      // If an active game is running and other real players remain, convert the
+      // disconnected slot to a bot so the match continues uninterrupted.
+      const activeGame = room.status === "playing" || room.status === "pre_match";
+      const otherRealPlayers = room.players.filter(
+        p => p.socketId !== socket.id && !p.isBot
+      );
 
-      if (realPlayers(room).length === 0) {
-        rooms.delete(roomCode);
-      } else if (room.hostSocketId === socket.id && realPlayers(room).length > 0) {
-        room.hostSocketId = realPlayers(room)[0].socketId;
+      if (activeGame && otherRealPlayers.length > 0) {
+        const leaver = room.players.find(p => p.socketId === socket.id);
+        if (leaver) {
+          // Promote slot to bot — keeps playerIndex intact for gameState
+          leaver.isBot = true;
+          leaver.socketId = `bot_${leaver.playerIndex}_${Date.now()}`;
+          // Inform remaining players that someone left (but game continues)
+          socket.to(roomCode).emit("player_disconnected", {
+            playerIndex: pidx,
+            playerName: leaver.name,
+            players: buildPlayersInfo(room),
+          });
+          // Transfer host if needed
+          if (room.hostSocketId === socket.id && otherRealPlayers.length > 0) {
+            room.hostSocketId = otherRealPlayers[0].socketId;
+          }
+          // If the bot's turn is up immediately, trigger autoplay
+          if (room.gameState && room.gameState.currentPlayerIndex === pidx) {
+            scheduleAutoplay(room, io);
+          }
+        }
+      } else {
+        // Lobby stage or no other real players — remove normally
+        room.players = room.players.filter(p => p.socketId !== socket.id);
+        socket.to(roomCode).emit("player_left", {
+          playerIndex: pidx,
+          players: buildPlayersInfo(room),
+        });
+
+        if (realPlayers(room).length === 0) {
+          rooms.delete(roomCode);
+        } else if (room.hostSocketId === socket.id && realPlayers(room).length > 0) {
+          room.hostSocketId = realPlayers(room)[0].socketId;
+        }
       }
 
       currentRoom = null;
