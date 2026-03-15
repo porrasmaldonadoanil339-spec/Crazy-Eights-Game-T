@@ -542,7 +542,7 @@ export default function StoreScreen() {
   const swipeHandlers = useSwipeTabs(2);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
-  const lang = profile.language ?? "es";
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
   const items = STORE_ITEMS.filter((i) => i.category === category).map((i) => localizeItem(i, lang));
   const isEffects = category === "effect";
   const isEmotes = category === "emote";

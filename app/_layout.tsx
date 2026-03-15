@@ -2,7 +2,13 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import { Animated, View, Text, Image, StyleSheet, Platform, Dimensions, TextInput, Pressable } from "react-native";
+import { Animated, View, Text, Image, StyleSheet, Platform, Dimensions, TextInput, Pressable, LogBox } from "react-native";
+
+LogBox.ignoreLogs([
+  '"shadow*" style props are deprecated',
+  '"textShadow*" style props are deprecated',
+  'props.pointerEvents is deprecated',
+]);
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { ErrorBoundary } from "@/components/ErrorBoundary";

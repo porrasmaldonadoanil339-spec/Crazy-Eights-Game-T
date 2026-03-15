@@ -29,7 +29,6 @@ export interface PlayerStats {
   lastPlayedDate: string;
   challengesCompleted: number;
   tournamentsWon: number;
-  coopWins: number;
   fastestLightningWin: number;
   localMultiWins: number;
   localMultiGames: number;
@@ -142,7 +141,6 @@ const DEFAULT_STATS: PlayerStats = {
   lastPlayedDate: "",
   challengesCompleted: 0,
   tournamentsWon: 0,
-  coopWins: 0,
   fastestLightningWin: 999999,
   localMultiWins: 0,
   localMultiGames: 0,
@@ -617,7 +615,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           ? p.stats.challengesCompleted + 1 : p.stats.challengesCompleted,
         tournamentsWon: params.mode === "tournament" && params.won
           ? p.stats.tournamentsWon + 1 : p.stats.tournamentsWon,
-        coopWins: p.stats.coopWins,
         fastestLightningWin: (params.mode === "lightning" && params.won && params.gameDurationMs)
           ? Math.min(p.stats.fastestLightningWin, params.gameDurationMs)
           : p.stats.fastestLightningWin,

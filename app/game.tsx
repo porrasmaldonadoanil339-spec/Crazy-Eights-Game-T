@@ -31,7 +31,7 @@ import { getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/chal
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { stopMusic, startGameMusic, syncSettings } from "@/lib/audioManager";
-import { getRankInfo, RANK_COLORS, DIVISIONS, type RankedProfile } from "@/lib/ranked";
+import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -1365,13 +1365,11 @@ export default function GameScreen() {
     } else {
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
       if (session.mode === "ranked") {
-        const beforeRanked = profile.rankedStars ?? 0;
-        const beforeRank = Math.floor(beforeRanked / 20);
+        const beforeRank = profile.rankedProfile?.rank ?? 0;
+        const nextRanked = addStars(profile.rankedProfile, won ? 2 : -1);
         updateRanked(won ? 2 : -1);
-        const afterRanked = beforeRanked + (won ? 2 : -1);
-        const afterRank = Math.floor(Math.max(0, afterRanked) / 20);
-        if (afterRank > beforeRank) setRankedPromotion("promotion");
-        else if (afterRank < beforeRank) setRankedPromotion("demotion");
+        if (nextRanked.rank > beforeRank) setRankedPromotion("promotion");
+        else if (nextRanked.rank < beforeRank) setRankedPromotion("demotion");
       }
       setTimeout(() => {
         setShowEpicResult(null);

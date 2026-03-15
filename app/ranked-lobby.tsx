@@ -213,6 +213,10 @@ export default function RankedLobbyScreen() {
             <Ionicons name="information-circle-outline" size={14} color="rgba(255,255,255,0.35)" />
             <Text style={styles.infoTxt}>El sistema buscará rivales con rango similar al tuyo</Text>
           </View>
+          <View style={[styles.infoRow, { marginTop: 6 }]}>
+            <Ionicons name="hardware-chip-outline" size={14} color={ACCENT + "88"} />
+            <Text style={[styles.infoTxt, { color: ACCENT + "99" }]}>Los slots vacíos se rellenarán con bots si no hay suficientes jugadores</Text>
+          </View>
         </ScrollView>
       )}
 

@@ -729,7 +729,7 @@ export default function OnlineGameScreen() {
     };
   }, [isOnline]);
 
-  // ─── Skip-lobby: initialize game immediately for ranked/coop pre-lobbied games ──
+  // ─── Skip-lobby: initialize game immediately for ranked (pre-lobbied) games ──
   useEffect(() => {
     if (!skipLobby) return;
     const gs = initMultiGame(allNames, 8);

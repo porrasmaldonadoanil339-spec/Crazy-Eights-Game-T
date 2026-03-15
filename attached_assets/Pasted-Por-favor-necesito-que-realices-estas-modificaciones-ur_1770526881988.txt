@@ -1,0 +1,39 @@
+Por favor necesito que realices estas modificaciones **urgentemente** en mi juego y que todo funcione correctamente:
+
+1. **Eliminar completamente todo lo relacionado con el modo cooperativo.**
+   El modo cooperativo ya no existe dentro del juego, por lo tanto debes eliminar absolutamente todo lo relacionado con él, por ejemplo:
+
+   * Misiones diarias del modo cooperativo
+   * Logros del modo cooperativo
+   * Eventos o recompensas del cooperativo
+   * Cualquier texto, sistema o referencia a ese modo dentro del juego
+
+   Actualmente siguen apareciendo **misiones que hablan sobre cooperativo**, pero ese modo ya no está en el juego, así que **no tiene sentido que aparezcan**. Por favor revisa todo el sistema del juego y elimina cualquier cosa relacionada con cooperativo.
+
+2. **Cumplir exactamente todos los detalles que te mencioné anteriormente.**
+   Por favor aplica cada modificación **tal cual te lo expliqué**, sin cambiar la base ni la jugabilidad principal del juego.
+
+3. **Sistema de idioma perfecto.**
+   Cuando un jugador cambie el idioma dentro del juego, el cambio debe ser **excelente y completo**.
+   Todo el contenido del juego debe cambiar correctamente al idioma seleccionado, incluyendo:
+
+   * Menús
+   * Textos
+   * Botones
+   * Misiones
+   * Configuraciones
+   * Notificaciones
+   * Cualquier parte de la aplicación
+
+   Es decir, el idioma debe **cambiar completamente en toda la app del juego**, sin errores ni textos mezclados entre idiomas.
+
+4. **Mejorar el juego al 100%.**
+   También te pido que analices todo el juego y agregues mejoras necesarias para que quede **lo más pulido, estable y profesional posible**, por ejemplo:
+
+   * Corregir errores o fallos
+   * Mejorar estabilidad en partidas online
+   * Mejorar animaciones y efectos visuales
+   * Mejorar organización de menús
+   * Optimizar el rendimiento del juego
+
+El objetivo es que el juego quede **muy bien hecho, optimizado y funcionando sin errores**, para que tenga **mucho éxito cuando se publique**.

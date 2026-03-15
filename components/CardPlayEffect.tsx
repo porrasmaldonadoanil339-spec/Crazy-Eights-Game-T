@@ -29,7 +29,7 @@ const EFFECT_CONFIGS: Record<string, EffectConfig> = {
     count: 22, dir: "up", minSize: 16, maxSize: 34, speed: 0.8,
   },
   effect_leaves: {
-    symbols: ["❧","♣","✿","❀","♧","☘","🍃","❁"],
+    symbols: ["❧","♣","✿","❀","♧","☘","✾","❁"],
     colors: ["#228B22","#32CD32","#7CFC00","#90EE90","#3CB371","#00A86B"],
     count: 20, dir: "diagonal", minSize: 16, maxSize: 28, speed: 0.9,
   },

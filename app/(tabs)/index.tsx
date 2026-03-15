@@ -582,8 +582,8 @@ export default function PlayScreen() {
               keyExtractor={(item) => item.id}
               contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingBottom: 8 }}
               renderItem={({ item }) => {
-                const title = lang === "en" ? item.titleEn : lang === "pt" ? item.titlePt : item.title;
-                const desc = lang === "en" ? item.descriptionEn : lang === "pt" ? item.descriptionPt : item.description;
+                const title = lang === "es" ? item.title : lang === "pt" ? item.titlePt : item.titleEn;
+                const desc = lang === "es" ? item.description : lang === "pt" ? item.descriptionPt : item.descriptionEn;
                 const progressPct = Math.min(1, item.progress / item.target);
                 
                 return (
