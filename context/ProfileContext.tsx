@@ -617,8 +617,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           ? p.stats.challengesCompleted + 1 : p.stats.challengesCompleted,
         tournamentsWon: params.mode === "tournament" && params.won
           ? p.stats.tournamentsWon + 1 : p.stats.tournamentsWon,
-        coopWins: params.mode === "coop" && params.won
-          ? p.stats.coopWins + 1 : p.stats.coopWins,
+        coopWins: p.stats.coopWins,
         fastestLightningWin: (params.mode === "lightning" && params.won && params.gameDurationMs)
           ? Math.min(p.stats.fastestLightningWin, params.gameDurationMs)
           : p.stats.fastestLightningWin,

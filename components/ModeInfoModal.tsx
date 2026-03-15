@@ -45,8 +45,8 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
   const isPt = lang === "pt";
   const isOther = lang !== "es" && lang !== "pt" && lang !== "en";
 
-  const descKey: Partial<Record<GameModeId, "modeClassicDesc"|"modeRankedDesc"|"modeCoopDesc"|"modeLightningDesc"|"modeTournamentDesc"|"modeChallengeDesc"|"modePracticeDesc">> = {
-    classic: "modeClassicDesc", ranked: "modeRankedDesc", coop: "modeCoopDesc",
+  const descKey: Partial<Record<GameModeId, "modeClassicDesc"|"modeRankedDesc"|"modeLightningDesc"|"modeTournamentDesc"|"modeChallengeDesc"|"modePracticeDesc">> = {
+    classic: "modeClassicDesc", ranked: "modeRankedDesc",
     lightning: "modeLightningDesc", tournament: "modeTournamentDesc",
     challenge: "modeChallengeDesc", practice: "modePracticeDesc",
   };
@@ -247,77 +247,6 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         objective: "Vencer 2 de 3 rodadas para levar o troféu.",
         rewardNote: "Recompensa maior que o Clássico pela intensidade.",
-      },
-    },
-    coop: {
-      es: {
-        subtitle: "2 vs 2 — Trabajo en equipo",
-        description:
-          "Únete a un aliado y enfrenten juntos a dos rivales. El turno alterna: Tú → Aliado → Rival 1 → Rival 2. Cada equipo comparte un mazo de 8 cartas. ¡Coordínate con tu aliado para vaciar el mazo primero!",
-        teams: [
-          { label: "Equipo 1", members: ["Tú", "Compañero"], color: "#27AE60" },
-          { label: "Equipo 2", members: ["Rival 1", "Rival 2"], color: "#E74C3C" },
-        ],
-        rules: [
-          { icon: "people", color: "#27AE60", text: "2 vs 2: Tú + Aliado vs 2 Rivales" },
-          { icon: "card", color: "#D4AF37", text: "Cada equipo comparte un mazo de 8 cartas" },
-          { icon: "swap-horizontal", color: "#27AE60", text: "Turnos: Tú → Aliado → Rival 1 → Rival 2" },
-          { icon: "trophy", color: "#FFD700", text: "Gana el equipo que vacíe el mazo primero" },
-        ],
-        turns: [
-          { label: "Tú", isPlayer: true },
-          { label: "Aliado" },
-          { label: "Rival 1" },
-          { label: "Rival 2" },
-        ],
-        objective: "Coordínate con tu aliado para vaciar el mazo antes que los rivales.",
-        rewardNote: "Bonificación de equipo por victoria cooperativa.",
-      },
-      en: {
-        subtitle: "2 vs 2 — Teamwork",
-        description:
-          "Join an ally and face two rivals together. Turns alternate: You → Ally → Rival 1 → Rival 2. Each team shares a deck of 8 cards. Coordinate with your ally to empty the deck first!",
-        teams: [
-          { label: "Team 1", members: ["You", "Ally"], color: "#27AE60" },
-          { label: "Team 2", members: ["Rival 1", "Rival 2"], color: "#E74C3C" },
-        ],
-        rules: [
-          { icon: "people", color: "#27AE60", text: "2 vs 2: You + Ally vs 2 Rivals" },
-          { icon: "card", color: "#D4AF37", text: "Each team shares one deck of 8 cards" },
-          { icon: "swap-horizontal", color: "#27AE60", text: "Turns: You → Ally → Rival 1 → Rival 2" },
-          { icon: "trophy", color: "#FFD700", text: "Team that empties their deck first wins" },
-        ],
-        turns: [
-          { label: "You", isPlayer: true },
-          { label: "Ally" },
-          { label: "Rival 1" },
-          { label: "Rival 2" },
-        ],
-        objective: "Coordinate with your ally to empty the deck before the rivals.",
-        rewardNote: "Team bonus for cooperative victory.",
-      },
-      pt: {
-        subtitle: "2 vs 2 — Trabalho em equipe",
-        description:
-          "Una-se a um aliado e enfrente dois rivais juntos. Os turnos se alternam: Você → Aliado → Rival 1 → Rival 2. Cada equipe compartilha um baralho de 8 cartas. Coordene-se com seu aliado para esvaziar o baralho primeiro!",
-        teams: [
-          { label: "Equipe 1", members: ["Você", "Aliado"], color: "#27AE60" },
-          { label: "Equipe 2", members: ["Rival 1", "Rival 2"], color: "#E74C3C" },
-        ],
-        rules: [
-          { icon: "people", color: "#27AE60", text: "2 vs 2: Você + Aliado vs 2 Rivais" },
-          { icon: "card", color: "#D4AF37", text: "Cada equipe compartilha um baralho de 8 cartas" },
-          { icon: "swap-horizontal", color: "#27AE60", text: "Turnos: Você → Aliado → Rival 1 → Rival 2" },
-          { icon: "trophy", color: "#FFD700", text: "A equipe que esvaziar o baralho primeiro vence" },
-        ],
-        turns: [
-          { label: "Você", isPlayer: true },
-          { label: "Aliado" },
-          { label: "Rival 1" },
-          { label: "Rival 2" },
-        ],
-        objective: "Coordene-se com seu aliado para esvaziar o baralho antes dos rivais.",
-        rewardNote: "Bônus de equipe pela vitória cooperativa.",
       },
     },
     challenge: {

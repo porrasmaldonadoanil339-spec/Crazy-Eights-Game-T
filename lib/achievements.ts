@@ -2,7 +2,7 @@ export type AchievementId =
   // Win milestones
   | "first_win" | "win_5" | "win_25" | "win_100" | "win_250" | "win_500"
   // Mode wins
-  | "lightning_king" | "tournament_champ" | "coop_hero" | "challenge_master" | "expert_survivor"
+  | "lightning_king" | "tournament_champ" | "challenge_master" | "expert_survivor"
   | "all_modes" | "practice_grad"
   // Special cards
   | "eight_wizard" | "eight_10" | "eight_50" | "joker_hero" | "joker_final"
@@ -56,7 +56,6 @@ export type AchievementId =
   // Mode-specific expansion
   | "lightning_3" | "lightning_10" | "lightning_25"
   | "tournament_3" | "tournament_10" | "tournament_25"
-  | "coop_3" | "coop_15" | "coop_30"
   | "challenge_1" | "challenge_5" | "challenge_25" | "challenge_100"
   | "practice_25" | "practice_50" | "practice_100"
   // Special cards expansion
@@ -100,7 +99,7 @@ export type AchievementId =
   // Audio / Settings
   | "mute_toggle" | "sound_all_on" | "audio_lover"
   // Special wins
-  | "tournament_perfect" | "coop_undefeated" | "domination_5" | "perfect_streak" | "clutch_king"
+  | "tournament_perfect" | "domination_5" | "perfect_streak" | "clutch_king"
   // Gameplay specific expansion
   | "wild_frenzy_3" | "j_spam_5" | "seven_trap_3" | "two_chain_3"
   | "joker_comeback" | "perfect_eight" | "defensive_master" | "offensive_master"
@@ -865,10 +864,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   // ─── Mode wins ───────────────────────────────────────────────────
   { id: "lightning_king",   title: "Rey Relámpago",             description: "Gana 10 partidas en modo Relámpago.",            icon: "flash",            iconColor: "#FFD700", target: 10,   coinsReward: 50,   xpReward: 120,  rarity: "rare" },
   { id: "tournament_champ", title: "Campeón de Torneo",         description: "Gana 3 torneos.",                                icon: "medal",            iconColor: "#E67E22", target: 3,    coinsReward: 100,  xpReward: 300,  rarity: "epic" },
-  { id: "coop_hero",        title: "Héroe Cooperativo",         description: "Gana 5 partidas en modo Cooperativo.",           icon: "people",           iconColor: "#27AE60", target: 5,    coinsReward: 60,   xpReward: 150,  rarity: "rare" },
   { id: "challenge_master", title: "Maestro de Desafíos",       description: "Completa 10 desafíos.",                          icon: "checkbox",         iconColor: "#9B59B6", target: 10,   coinsReward: 80,   xpReward: 200,  rarity: "epic" },
   { id: "expert_survivor",  title: "Superviviente Experto",     description: "Gana 5 partidas en modo Experto.",               icon: "timer",            iconColor: "#E74C3C", target: 5,    coinsReward: 150,  xpReward: 400,  rarity: "legendary" },
-  { id: "all_modes",        title: "Todoterreno",               description: "Gana en todos los modos de juego.",              icon: "grid",             iconColor: "#9B59B6", target: 6,    coinsReward: 150,  xpReward: 400,  rarity: "legendary" },
+  { id: "all_modes",        title: "Todoterreno",               description: "Gana en todos los modos de juego.",              icon: "grid",             iconColor: "#9B59B6", target: 5,    coinsReward: 150,  xpReward: 400,  rarity: "legendary" },
   { id: "practice_grad",    title: "Graduado",                  description: "Completa 10 partidas de Práctica.",              icon: "school",           iconColor: "#1A8FC1", target: 10,   coinsReward: 25,   xpReward: 60,   rarity: "common" },
   // ─── Special cards ───────────────────────────────────────────────
   { id: "eight_wizard",     title: "Mago del 8",                description: "Gana una partida con un 8 Loco.",                icon: "diamond",          iconColor: "#1A8FC1", target: 1,    coinsReward: 25,   xpReward: 60,   rarity: "rare" },
@@ -1011,9 +1009,6 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: "tournament_3",     title: "Tres Torneos",               description: "Gana 3 torneos.",                                icon: "medal",            iconColor: "#D4AF37", target: 3,     coinsReward: 80,   xpReward: 200,   rarity: "rare" },
   { id: "tournament_10",    title: "Campeón Consistente",        description: "Gana 10 torneos.",                               icon: "medal",            iconColor: "#E67E22", target: 10,    coinsReward: 200,  xpReward: 600,   rarity: "epic" },
   { id: "tournament_25",    title: "Leyenda del Torneo",         description: "Gana 25 torneos.",                               icon: "trophy",           iconColor: "#A855F7", target: 25,    coinsReward: 600,  xpReward: 1500,  rarity: "legendary" },
-  { id: "coop_3",           title: "Equipo Unido",               description: "Gana 3 partidas en modo Cooperativo.",           icon: "people",           iconColor: "#27AE60", target: 3,     coinsReward: 30,   xpReward: 75,    rarity: "common" },
-  { id: "coop_15",          title: "Cooperador Veterano",        description: "Gana 15 partidas en modo Cooperativo.",          icon: "people",           iconColor: "#1A8FC1", target: 15,    coinsReward: 100,  xpReward: 250,   rarity: "rare" },
-  { id: "coop_30",          title: "Maestro del Equipo",         description: "Gana 30 partidas en modo Cooperativo.",          icon: "people",           iconColor: "#D4AF37", target: 30,    coinsReward: 300,  xpReward: 800,   rarity: "epic" },
   { id: "challenge_1",      title: "El Primer Desafío",          description: "Completa 1 desafío.",                            icon: "checkbox",         iconColor: "#27AE60", target: 1,     coinsReward: 15,   xpReward: 40,    rarity: "common" },
   { id: "challenge_5",      title: "Desafiante en Serio",        description: "Completa 5 desafíos.",                           icon: "checkbox",         iconColor: "#E67E22", target: 5,     coinsReward: 50,   xpReward: 130,   rarity: "rare" },
   { id: "challenge_25",     title: "Cazador de Desafíos",        description: "Completa 25 desafíos.",                          icon: "checkbox",         iconColor: "#9B59B6", target: 25,    coinsReward: 200,  xpReward: 500,   rarity: "epic" },
@@ -1113,7 +1108,6 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: "audio_lover",      title: "Amante del Audio",           description: "Juega 50 partidas con todos los sonidos activos.", icon: "musical-notes",  iconColor: "#E67E22", target: 50,    coinsReward: 60,   xpReward: 150,   rarity: "rare" },
   // Special wins
   { id: "tournament_perfect",title:"Torneo Sin Derrota",         description: "Gana un torneo sin perder ninguna ronda.",        icon: "trophy",           iconColor: "#FFD700", target: 1,     coinsReward: 200,  xpReward: 500,   rarity: "epic", hidden: true },
-  { id: "coop_undefeated",  title: "Cooperativo Invicto",        description: "Gana 10 partidas coop sin perder.",              icon: "people",           iconColor: "#D4AF37", target: 10,    coinsReward: 400,  xpReward: 1000,  rarity: "legendary" },
   { id: "domination_5",     title: "Dominación Cinco",           description: "Gana 5 partidas en Difícil sin robar.",          icon: "flash",            iconColor: "#A855F7", target: 5,     coinsReward: 600,  xpReward: 1500,  rarity: "legendary", hidden: true },
   { id: "perfect_streak",   title: "Perfectas Seguidas",         description: "Gana 3 partidas perfectas consecutivas.",        icon: "sparkles",         iconColor: "#FFD700", target: 3,     coinsReward: 300,  xpReward: 800,   rarity: "legendary", hidden: true },
   { id: "clutch_king",      title: "Rey del Clutch",             description: "Gana 10 partidas cuando estabas perdiendo.",     icon: "arrow-up-circle",  iconColor: "#E74C3C", target: 10,    coinsReward: 500,  xpReward: 1200,  rarity: "legendary" },
@@ -1170,7 +1164,6 @@ export const ACHIEVEMENTS: Achievement[] = [
   // Social
   { id: "emote_master_full",title: "Maestro de Emotes",          description: "Usa todos los tipos de emote disponibles.",       icon: "happy",            iconColor: "#9B59B6", target: 1,     coinsReward: 100,  xpReward: 250,   rarity: "epic" },
   { id: "silent_champion",  title: "Campeón Silencioso",         description: "Gana 20 partidas sin usar ningún emote.",        icon: "volume-mute",      iconColor: "#95A5A6", target: 20,    coinsReward: 100,  xpReward: 250,   rarity: "rare" },
-  { id: "team_player",      title: "Jugador de Equipo",          description: "Gana 20 partidas cooperativas.",                  icon: "people",           iconColor: "#27AE60", target: 20,    coinsReward: 200,  xpReward: 500,   rarity: "epic" },
   // Battle pass collection
   { id: "bp_collector_10",  title: "10 Premios del Pase",        description: "Reclama 10 recompensas del Pase de Batalla.",    icon: "gift",             iconColor: "#1A8FC1", target: 10,    coinsReward: 50,   xpReward: 120,   rarity: "common" },
   { id: "bp_collector_50",  title: "50 Premios del Pase",        description: "Reclama 50 recompensas del Pase de Batalla.",    icon: "gift",             iconColor: "#D4AF37", target: 50,    coinsReward: 200,  xpReward: 500,   rarity: "rare" },

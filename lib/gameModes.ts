@@ -2,7 +2,6 @@ export type GameModeId =
   | "classic"
   | "lightning"
   | "tournament"
-  | "coop"
   | "challenge"
   | "practice"
   | "ranked";
@@ -26,7 +25,6 @@ export interface GameModeConfig {
   hasDifficulty: boolean;
   timerSeconds?: number;
   hasHints?: boolean;
-  teamMode?: boolean;
   isOnline?: boolean;
 }
 
@@ -41,12 +39,13 @@ export interface DifficultyConfig {
   timerSeconds?: number;
 }
 
+// Modes shown in the main grid (ranked lives in its own top-section card)
 export const GAME_MODES: GameModeConfig[] = [
   {
     id: "classic",
     name: "Clásico",
     nameShort: "Clásico",
-    description: "Reglas completas: 2, 3, 7, 8, 10, J y Comodín activos. Enfrenta rivales reales.",
+    description: "Reglas completas: 2, 3, 7, 8, 10, J y Comodín activos.",
     cardsPerPlayer: 8,
     icon: "card-outline",
     iconLib: "Ionicons",
@@ -79,7 +78,7 @@ export const GAME_MODES: GameModeConfig[] = [
     id: "tournament",
     name: "Torneo",
     nameShort: "Torneo",
-    description: "Gana 2 de 3 rondas frente a oponentes reales para llevarte el trofeo.",
+    description: "Gana 2 de 3 rondas frente a oponentes para llevarte el trofeo.",
     cardsPerPlayer: 8,
     icon: "trophy",
     iconLib: "Ionicons",
@@ -89,23 +88,6 @@ export const GAME_MODES: GameModeConfig[] = [
     xpLoss: 20,
     coinsLoss: 0,
     hasDifficulty: false,
-    isOnline: true,
-  },
-  {
-    id: "coop",
-    name: "Cooperativo",
-    nameShort: "2v2",
-    description: "2 vs 2: Tú + Compañero vs 2 rivales reales. ¡Coordínate para ganar juntos!",
-    cardsPerPlayer: 8,
-    icon: "people",
-    iconLib: "Ionicons",
-    color: "#27AE60",
-    coinsReward: 15,
-    xpReward: 25,
-    xpLoss: 10,
-    coinsLoss: 0,
-    hasDifficulty: false,
-    teamMode: true,
     isOnline: true,
   },
   {
@@ -125,26 +107,10 @@ export const GAME_MODES: GameModeConfig[] = [
     isOnline: true,
   },
   {
-    id: "ranked",
-    name: "Clasificatoria",
-    nameShort: "Ranked",
-    description: "Sube de rango compitiendo en partidas clasificatorias.",
-    cardsPerPlayer: 8,
-    icon: "trophy",
-    iconLib: "Ionicons",
-    color: "#D4AF37",
-    coinsReward: 20,
-    xpReward: 30,
-    xpLoss: 10,
-    coinsLoss: 0,
-    hasDifficulty: false,
-    isOnline: true,
-  },
-  {
     id: "practice",
     name: "Práctica",
     nameShort: "Práctica",
-    description: "Entrena sin presión. Pistas visuales, sin penalización. Solo tú vs la IA.",
+    description: "Entrena sin presión. Pistas visuales, sin penalización.",
     cardsPerPlayer: 7,
     icon: "school",
     iconLib: "Ionicons",
@@ -158,6 +124,24 @@ export const GAME_MODES: GameModeConfig[] = [
     timerSeconds: 30,
   },
 ];
+
+// Full config for ranked (used in reward calculations; not shown in GAME_MODES grid)
+export const RANKED_MODE_CONFIG: GameModeConfig = {
+  id: "ranked",
+  name: "Clasificatoria",
+  nameShort: "Ranked",
+  description: "Sube de rango compitiendo en partidas clasificatorias.",
+  cardsPerPlayer: 8,
+  icon: "trophy",
+  iconLib: "Ionicons",
+  color: "#D4AF37",
+  coinsReward: 20,
+  xpReward: 30,
+  xpLoss: 10,
+  coinsLoss: 0,
+  hasDifficulty: false,
+  isOnline: true,
+};
 
 export const DIFFICULTIES: DifficultyConfig[] = [
   {
@@ -204,7 +188,8 @@ export const DIFFICULTIES: DifficultyConfig[] = [
   },
 ];
 
-export function getModeById(id: GameModeId): GameModeConfig {
+export function getModeById(id: string): GameModeConfig {
+  if (id === "ranked") return RANKED_MODE_CONFIG;
   return GAME_MODES.find((m) => m.id === id) ?? GAME_MODES[0];
 }
 

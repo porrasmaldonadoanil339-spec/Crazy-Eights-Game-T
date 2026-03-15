@@ -120,17 +120,6 @@ function wrFromLevel(level: number) {
 
 const PLAYER_COLORS = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
 
-// Keeps team hands in sync after any play/draw in coop mode.
-// prevPlayer = the player index that just acted.
-function syncCoopHands(gs: MultiGameState, prevPlayer: number): MultiGameState {
-  if (!gs.coopMode) return gs;
-  const h = gs.hands.map(arr => [...arr]); // shallow-copy each hand
-  if (prevPlayer === 0) h[2] = [...h[0]];
-  else if (prevPlayer === 2) h[0] = [...h[2]];
-  else if (prevPlayer === 1) h[3] = [...h[1]];
-  else if (prevPlayer === 3) h[1] = [...h[3]];
-  return { ...gs, hands: h };
-}
 
 // ─── Lobby screen ─────────────────────────────────────────────────────────
 function LobbySpinner() {
@@ -208,21 +197,12 @@ function LobbyScreen({
               <Text style={[lobbyStyles.slotName, { color: Colors.gold }]}>{humanName}</Text>
               <Text style={lobbyStyles.slotSub}>{T("level")} {humanLevel} · {T("you")}</Text>
             </View>
-            {modeParam === "coop" ? (
-              <View style={[lobbyStyles.teamTag, { backgroundColor: "#4A90E222", borderColor: "#4A90E255" }]}>
-                <Text style={[lobbyStyles.teamTagText, { color: "#4A90E2" }]}>MI EQUIPO</Text>
-              </View>
-            ) : (
-              <View style={lobbyStyles.onlineDot} />
-            )}
+            <View style={lobbyStyles.onlineDot} />
           </Animated.View>
 
           {/* CPU slots */}
           {cpuProfiles.slice(0, joinedCount).map((cpu, i) => {
-            const isCoop = modeParam === "coop";
-            // cpuProfiles[0]=Rival1, cpuProfiles[1]=Partner, cpuProfiles[2]=Rival2
-            const isTeammate = isCoop && i === 1;
-            const slotColor = isCoop ? (isTeammate ? "#4A90E2" : "#E74C3C") : cpu.avatarColor;
+            const slotColor = cpu.avatarColor;
             return (
               <Animated.View
                 key={cpu.name}
@@ -243,14 +223,7 @@ function LobbyScreen({
                   <Text style={[lobbyStyles.slotName, { color: slotColor }]}>{cpu.name}</Text>
                   <Text style={lobbyStyles.slotSub}>{T("level")} {cpu.level} · {wrFromLevel(cpu.level)}% WR</Text>
                 </View>
-                {isCoop && (
-                  <View style={[lobbyStyles.teamTag, { backgroundColor: slotColor + "22", borderColor: slotColor + "55" }]}>
-                    <Text style={[lobbyStyles.teamTagText, { color: slotColor }]}>
-                      {isTeammate ? "COMPAÑERO" : "RIVAL"}
-                    </Text>
-                  </View>
-                )}
-                {!isCoop && <View style={[lobbyStyles.onlineDot, { backgroundColor: "#2ecc71" }]} />}
+                <View style={[lobbyStyles.onlineDot, { backgroundColor: "#2ecc71" }]} />
               </Animated.View>
             );
           })}
@@ -327,98 +300,13 @@ function FaceDownMini({ angle = 0, backColors, backAccent }: {
   );
 }
 
-// ─── Coop 2v2: rival team at top — two avatars + shared card back stack ───
-function CoopRivalTeam({ profiles, handCount1, handCount2, backColors, backAccent, isActive }: {
-  profiles: [CpuProfile, CpuProfile];
-  handCount1: number;
-  handCount2: number;
-  backColors?: [string, string, string];
-  backAccent?: string;
-  isActive: boolean;
-}) {
-  const glow = useSharedValue(0);
-  const zoneOpacity = useSharedValue(1);
-  useEffect(() => {
-    if (isActive) {
-      glow.value = withRepeat(withSequence(
-        withTiming(1, { duration: 600 }), withTiming(0, { duration: 600 })
-      ), -1);
-    } else {
-      glow.value = 0;
-    }
-    zoneOpacity.value = withTiming(isActive ? 1 : 0.55, { duration: 300 });
-  }, [isActive]);
-  const glowStyle = useAnimatedStyle(() => ({ opacity: 0.35 + glow.value * 0.55 }));
-  const zoneStyle = useAnimatedStyle(() => ({ opacity: zoneOpacity.value }));
-
-  const colors = backColors ?? ["#1E4080", "#0e2248", "#0a1832"] as [string, string, string];
-  const accent = backAccent ?? "#D4AF37";
-  const RIVAL_COLOR = "#E74C3C";
-
-  const renderCardFan = (count: number) => {
-    const n = Math.min(count, 6);
-    return (
-      <View style={{ flexDirection: "row", height: 50, alignItems: "flex-end" }}>
-        {Array.from({ length: n }).map((_, i) => (
-          <View key={i} style={{
-            width: 30, height: 44,
-            marginLeft: i === 0 ? 0 : -14,
-            borderRadius: 4, overflow: "hidden",
-            borderWidth: 1, borderColor: accent + "55",
-            zIndex: i,
-            transform: [{ rotate: `${(i - (n - 1) / 2) * 4}deg` }],
-          }}>
-            <LinearGradient colors={colors} style={StyleSheet.absoluteFill}>
-              <Text style={{ fontSize: 8, color: accent, textAlign: "center", marginTop: 5 }}>◆</Text>
-            </LinearGradient>
-          </View>
-        ))}
-      </View>
-    );
-  };
-
-  const renderRival = (profile: CpuProfile, count: number) => (
-    <View style={{ alignItems: "center", gap: 4 }}>
-      {renderCardFan(count)}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-        <Animated.View style={[{
-          width: 24, height: 24, borderRadius: 12,
-          backgroundColor: RIVAL_COLOR + "22", borderWidth: 2, borderColor: RIVAL_COLOR,
-          alignItems: "center", justifyContent: "center",
-        }, isActive && glowStyle]}>
-          {profile.photoUrl ? (
-            <Image source={{ uri: profile.photoUrl }} style={{ width: 20, height: 20, borderRadius: 10 }} />
-          ) : (
-            <Ionicons name={profile.avatarIcon as any} size={10} color={RIVAL_COLOR} />
-          )}
-        </Animated.View>
-        <View>
-          <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 8, color: RIVAL_COLOR + "cc" }} numberOfLines={1}>{profile.name}</Text>
-          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: RIVAL_COLOR }}>{count}</Text>
-        </View>
-      </View>
-    </View>
-  );
-
-  return (
-    <Animated.View style={[{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-around", paddingHorizontal: 8, paddingVertical: 4 }, zoneStyle]}>
-      {renderRival(profiles[0], handCount1)}
-      <View style={{ alignItems: "center", paddingBottom: 8 }}>
-        <Ionicons name="flame" size={12} color={RIVAL_COLOR + "66"} />
-        <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: RIVAL_COLOR + "66", letterSpacing: 1 }}>VS</Text>
-      </View>
-      {renderRival(profiles[1], handCount2)}
-    </Animated.View>
-  );
-}
 
 // ─── CPU opponent zone ────────────────────────────────────────────────────
-function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSkipped, backColors, backAccent, isTeammate, isCoop }: {
+function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSkipped, backColors, backAccent }: {
   handCount: number; profile: CpuProfile; color: string;
   isThinking: boolean; isCurrent: boolean; side?: "left" | "right";
   isSkipped?: boolean;
   backColors?: [string, string, string]; backAccent?: string;
-  isTeammate?: boolean; isCoop?: boolean;
 }) {
   const glow = useSharedValue(0);
   const zoneOpacity = useSharedValue(1);
@@ -473,12 +361,6 @@ function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSki
         ))}
       </View>
 
-      {/* Coop team badge */}
-      {isCoop && (
-        <View style={[gameStyles.teamBadge, { backgroundColor: isTeammate ? "#4A90E222" : "#E74C3C22", borderColor: isTeammate ? "#4A90E244" : "#E74C3C44" }]}>
-          <Ionicons name={isTeammate ? "people" : "flame"} size={8} color={isTeammate ? "#4A90E2" : "#E74C3C"} />
-        </View>
-      )}
 
       {/* Thinking indicator */}
       {isThinking && <Text style={gameStyles.thinkingText}>...</Text>}
@@ -824,7 +706,7 @@ export default function OnlineGameScreen() {
   // ─── Skip-lobby: initialize game immediately for ranked/coop pre-lobbied games ──
   useEffect(() => {
     if (!skipLobby) return;
-    const gs = initMultiGame(allNames, 8, modeParam === "coop" && playerCount === 4);
+    const gs = initMultiGame(allNames, 8, false);
     gs.phase = "playing";
     setGameState(gs);
   }, [skipLobby]);
@@ -894,7 +776,7 @@ export default function OnlineGameScreen() {
     }
 
     timers.push(setTimeout(() => {
-      const gs = initMultiGame(allNames, 8, modeParam === "coop" && playerCount === 4);
+      const gs = initMultiGame(allNames, 8, false);
       gs.phase = "playing"; // Online starts directly, no pass_device for human
       setGameState(gs);
       setLobbyPhase("dealing");
@@ -990,8 +872,7 @@ export default function OnlineGameScreen() {
         setGameState(prev => {
           if (!prev || prev.currentPlayerIndex !== pidx) return prev;
           const acted = prev.currentPlayerIndex;
-          const next = cpuPlayMulti(prev);
-          return syncCoopHands(next, acted);
+          return cpuPlayMulti(prev);
         });
       }, delay);
       return () => {
@@ -1101,15 +982,14 @@ export default function OnlineGameScreen() {
       lastActionTime.current = Date.now();
       setShowInactivityBar(false);
       playCardFlip().catch(() => {});
-      const actedIdx = gameState.currentPlayerIndex;
       if (card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0)) {
-        setGameState(syncCoopHands(multiPlayCard(gameState, card), actedIdx));
+        setGameState(multiPlayCard(gameState, card));
         if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
           setShowEffect(true);
         }
         return;
       }
-      setGameState(syncCoopHands(multiPlayCard(gameState, card), actedIdx));
+      setGameState(multiPlayCard(gameState, card));
       setSelectedCard(null);
       if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
         setShowEffect(true);
@@ -1144,8 +1024,7 @@ export default function OnlineGameScreen() {
       setSelectedCard(null);
       return;
     }
-    const actedIdx = gameState.currentPlayerIndex;
-    setGameState(syncCoopHands(multiDraw(gameState), actedIdx));
+    setGameState(multiDraw(gameState));
     setSelectedCard(null);
   }, [gameState, isPlaying, isOnline]);
 
@@ -1159,7 +1038,7 @@ export default function OnlineGameScreen() {
     const newProfiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
     setCurrentCpuProfiles(newProfiles);
     const newNames = [humanName, ...newProfiles.map(c => c.name)];
-    const gs = initMultiGame(newNames, 8, modeParam === "coop" && playerCount === 4);
+    const gs = initMultiGame(newNames, 8, false);
     gs.phase = "playing";
     setGameState(gs);
     setSelectedCard(null);
@@ -1176,12 +1055,6 @@ export default function OnlineGameScreen() {
         { idx: 1, pos: "topLeft" as const },
         { idx: 2, pos: "topRight" as const },
       ];
-    }
-    if (modeParam === "coop") {
-      // Turn order: Me(0) → Rival1(1) → Partner(2) → Rival2(3)
-      // CoopRivalTeam handles rivals at top; partner shown inline in player label.
-      // No CpuZone needed — return empty to avoid individual card fans.
-      return [];
     }
     return [
       { idx: 1, pos: "right" as const },
@@ -1250,8 +1123,8 @@ export default function OnlineGameScreen() {
   const topSuitColor = suitColor(gs.currentSuit);
   const playableCount = isPlaying ? currentHand.filter(c => multiCanPlay(c, gs)).length : 0;
 
-  const modePillColor = modeParam === "ranked" ? Colors.gold : modeParam === "coop" ? "#9B59B6" : "#2ecc71";
-  const modePillLabel = modeParam === "ranked" ? "RANKED" : modeParam === "coop" ? "COOP" : "ONLINE";
+  const modePillColor = modeParam === "ranked" ? Colors.gold : "#2ecc71";
+  const modePillLabel = modeParam === "ranked" ? "RANKED" : "ONLINE";
 
   const activeCpuIdx = gs.currentPlayerIndex > 0 ? gs.currentPlayerIndex - 1 : null;
   const activeCpuProfile = activeCpuIdx !== null ? (currentCpuProfiles[activeCpuIdx] ?? null) : null;
@@ -1351,41 +1224,24 @@ export default function OnlineGameScreen() {
           const isCurrent = gs.currentPlayerIndex === cp.idx;
           const isSkipped = gs.lastSkipped === cp.idx;
           const side = cp.pos === "left" ? "left" : cp.pos === "right" ? "right" : undefined;
-          const isCoop = modeParam === "coop";
-          const isTeammate = isCoop && cp.idx === 2; // partner is player 2
-          const coopColor = isCoop ? "#4A90E2" : PLAYER_COLORS[cp.idx % PLAYER_COLORS.length];
+          const cpuColor = PLAYER_COLORS[cp.idx % PLAYER_COLORS.length];
           return (
             <View key={cp.idx} style={posStyles[cp.pos]}>
               <CpuZone
                 handCount={handCount}
                 profile={cpu}
-                color={coopColor}
+                color={cpuColor}
                 isThinking={isCurrent && gs.phase === "playing"}
                 isCurrent={isCurrent}
                 side={side as "left" | "right" | undefined}
                 isSkipped={isSkipped}
                 backColors={backColors}
                 backAccent={backAccent}
-                isTeammate={isTeammate}
-                isCoop={isCoop}
               />
             </View>
           );
         })}
 
-        {/* ─── Coop 2v2: rival team at top (two avatars + shared card stack) ─── */}
-        {modeParam === "coop" && playerCount === 4 && currentCpuProfiles[0] && currentCpuProfiles[2] && (
-          <View style={{ position: "absolute", top: 4, left: 0, right: 0, pointerEvents: "none" } as any}>
-            <CoopRivalTeam
-              profiles={[currentCpuProfiles[0], currentCpuProfiles[2]]}
-              handCount1={gs.hands[1]?.length ?? 0}
-              handCount2={gs.hands[3]?.length ?? 0}
-              backColors={backColors}
-              backAccent={backAccent}
-              isActive={gs.currentPlayerIndex === 1 || gs.currentPlayerIndex === 3}
-            />
-          </View>
-        )}
 
         {/* ─── Human player hand (arc fan layout) ─── */}
         <View style={[gameStyles.playerZone, { bottom: 0 }]}>
@@ -1401,25 +1257,6 @@ export default function OnlineGameScreen() {
             <Text style={gameStyles.playerName} numberOfLines={1}>
               {humanName} · {currentHand.length} {T("cards")}
             </Text>
-            {/* Coop: partner avatar badge inline */}
-            {modeParam === "coop" && currentCpuProfiles[1] && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 3,
-                backgroundColor: "#4A90E218", borderRadius: 12, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: "#4A90E244" }}>
-                <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: "#4A90E222", borderWidth: 1, borderColor: "#4A90E2", alignItems: "center", justifyContent: "center" }}>
-                  {currentCpuProfiles[1].photoUrl ? (
-                    <Image source={{ uri: currentCpuProfiles[1].photoUrl }} style={{ width: 18, height: 18, borderRadius: 9 }} />
-                  ) : (
-                    <Ionicons name={currentCpuProfiles[1].avatarIcon as any} size={9} color="#4A90E2" />
-                  )}
-                </View>
-                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 8, color: "#4A90E2" }} numberOfLines={1}>
-                  {currentCpuProfiles[1].name}
-                </Text>
-                {gs.currentPlayerIndex === 2 && (
-                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: "#4A90E2" }}>●</Text>
-                )}
-              </View>
-            )}
             {isPlaying && playableCount > 0 && (
               <View style={gameStyles.playableBadge}>
                 <Text style={gameStyles.playableText}>{playableCount} {T("playableCountPlural")}</Text>
@@ -2010,15 +1847,4 @@ const gameStyles = StyleSheet.create({
     fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.gold,
   },
 
-  // Coop team connector
-  coopTeamBar: {
-    position: "absolute", bottom: 0, left: 0, right: 0,
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    paddingHorizontal: 8, gap: 6, pointerEvents: "none",
-  } as any,
-  coopTeamLabel: {
-    fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 1,
-    paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6,
-    overflow: "hidden",
-  },
 });

@@ -440,13 +440,8 @@ export default function PlayScreen() {
       return;
     }
     await playSound("mode_select").catch(() => {});
-    const useOnlineLobby = modeId === "coop";
-    if (useOnlineLobby) {
-      router.push({ pathname: "/online-lobby", params: { mode: modeId, playerCount: "4", directSearch: "true" } });
-    } else {
-      startGame(modeId as any, "normal");
-      router.push("/game");
-    }
+    startGame(modeId as any, "normal");
+    router.push("/game");
   };
 
   const handleDifficultySelect = async (difficulty: Difficulty) => {
@@ -653,15 +648,16 @@ export default function PlayScreen() {
         </View>
 
         <View style={styles.modesGrid}>
-          {GAME_MODES.map((mode) => {
+          {GAME_MODES.map((mode, idx) => {
             const wins = profile.stats.winsByMode[mode.id] ?? 0;
             const games = profile.stats.gamesByMode[mode.id] ?? 0;
             const wr = games > 0 ? Math.round((wins / games) * 100) : null;
+            const isLastAlone = idx === GAME_MODES.length - 1 && GAME_MODES.length % 2 !== 0;
             return (
               <Pressable
                 key={mode.id}
                 onPress={() => handleModePress(mode.id)}
-                style={({ pressed }) => [styles.modeCard, pressed && styles.modeCardPressed]}
+                style={({ pressed }) => [styles.modeCard, isLastAlone && styles.modeCardFull, pressed && styles.modeCardPressed]}
               >
                 <LinearGradient
                   colors={[mode.color + "28", mode.color + "08", "transparent"]}
@@ -1164,6 +1160,7 @@ const styles = StyleSheet.create({
   // Mode grid
   modesGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   modeCard: { width: "47.5%", borderRadius: 16, overflow: "hidden" },
+  modeCardFull: { width: "100%" },
   modeCardPressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
   modeGrad: {
     padding: 14, minHeight: 150, justifyContent: "space-between",
@@ -1174,12 +1171,12 @@ const styles = StyleSheet.create({
     position: "absolute", top: 8, right: 8,
     borderRadius: 5, paddingHorizontal: 5, paddingVertical: 1,
   },
-  newBadgeText: { fontFamily: "Nunito_900ExtraBold", fontSize: 7, color: "#fff", letterSpacing: 1 },
+  newBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: "#fff", letterSpacing: 1 },
   modeIconWrap: {
     width: 44, height: 44, borderRadius: 22,
     alignItems: "center", justifyContent: "center", marginBottom: 8,
   },
-  modeName: { fontFamily: "Nunito_900ExtraBold", fontSize: 14, marginBottom: 4 },
+  modeName: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, marginBottom: 4 },
   modeDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted, lineHeight: 15, flex: 1 },
   modeFooter: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 8, flexWrap: "wrap" },
   modeReward: { flexDirection: "row", alignItems: "center", gap: 3 },

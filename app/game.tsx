@@ -869,11 +869,10 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
 }
 
 // ─── AI hand display ──────────────────────────────────────────────────────────
-function AiHand({ count, isThinking, cpuProfile, backColors, backAccent, cardColors, isCoop }: {
+function AiHand({ count, isThinking, cpuProfile, backColors, backAccent, cardColors }: {
   count: number; isThinking: boolean; cpuProfile: CpuProfile | null;
   backColors: [string, string, string]; backAccent: string;
   cardColors?: [string, string, string];
-  isCoop?: boolean;
 }) {
   const T = useT();
   const pulse = useSharedValue(1);
@@ -908,11 +907,6 @@ function AiHand({ count, isThinking, cpuProfile, backColors, backAccent, cardCol
             Nv.{cpuProfile?.level ?? "?"} · {cpuProfile?.titleId?.replace("title_", "").replace(/_/g, " ") ?? "Rival"}
           </Text>
         </View>
-        {isCoop && (
-          <View style={[styles.modePill, { backgroundColor: "#27AE6022", borderColor: "#27AE6088", marginLeft: 8 }]}>
-            <Text style={{ fontSize: 9, fontFamily: "Nunito_800ExtraBold", color: "#27AE60" }}>ALIADO</Text>
-          </View>
-        )}
         <View style={[styles.turnDot, { backgroundColor: isThinking ? Colors.gold : "rgba(255,255,255,0.1)" }]} />
         {isThinking && <Text style={styles.thinkingText}>{T("thinking")}</Text>}
       </View>
@@ -1182,7 +1176,6 @@ export default function GameScreen() {
   const timerTotal = 8;
 
   const activeCpu = session?.cpuProfile ?? null;
-  const isCoop = session?.mode === "coop";
 
   const currentModeConfig = session?.mode ? getModeById(session.mode) : null;
   const modeName = currentModeConfig ? T(`mode${currentModeConfig.id.charAt(0).toUpperCase() + currentModeConfig.id.slice(1)}` as any) : "";
@@ -1396,7 +1389,6 @@ export default function GameScreen() {
       if (session.difficulty === "hard" || session.difficulty === "expert") updateAchievementProgress("hard_win", 1);
       if (session.mode === "lightning") updateAchievementProgress("lightning_king", 1);
       if (session.mode === "tournament") updateAchievementProgress("tournament_champ", 1);
-      if (session.mode === "coop") updateAchievementProgress("coop_hero", 1);
       if (session.mode === "challenge") updateAchievementProgress("challenge_master", 1);
       if (isPerfect) updateAchievementProgress("perfect_hand", 1);
       if (isComeback) updateAchievementProgress("comeback_king", 1);
@@ -1725,7 +1717,7 @@ export default function GameScreen() {
 
       {/* AI section with CPU emote */}
       <View style={styles.aiSectionWrapper}>
-        <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={activeCpu} backColors={backColors} backAccent={backAccent} cardColors={cardColors} isCoop={isCoop} />
+        <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={activeCpu} backColors={backColors} backAccent={backAccent} cardColors={cardColors} />
         <EmoteBubble emote={cpuEmote} side="cpu" muted={muteCpuEmotes} />
       </View>
 
