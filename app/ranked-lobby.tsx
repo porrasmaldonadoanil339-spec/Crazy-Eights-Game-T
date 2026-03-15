@@ -10,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
-import { playButton } from "@/lib/audioManager";
+import { playButton, startMenuMusic } from "@/lib/audioManager";
 import { getLocalizedRankInfo } from "@/lib/ranked";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 
@@ -69,7 +69,7 @@ export default function RankedLobbyScreen() {
 
   const mySlot: FriendSlot = {
     id: "me",
-    name: profile.name || "Tú",
+    name: profile.name || T("you"),
     avatarColor: AVATAR_COLORS[0],
     avatarIcon: "person",
     level: level || 1,
@@ -108,6 +108,10 @@ export default function RankedLobbyScreen() {
     setSlots(newSlots);
     if (removed) setInvitedIds(prev => prev.filter(id => id !== removed.id));
   };
+
+  useEffect(() => {
+    startMenuMusic().catch(() => {});
+  }, []);
 
   const handleSearch = useCallback(async () => {
     await playButton().catch(() => {});

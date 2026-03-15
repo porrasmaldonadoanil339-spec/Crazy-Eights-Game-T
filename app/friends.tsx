@@ -111,7 +111,7 @@ const TITLE_NAMES: Record<string, string> = {
   title_veteran: "Veterano", title_strategist: "Estratega",
 };
 
-const LAST_SEEN = ["Hace 2 min", "Hace 15 min", "Hace 1 hora", "Hace 3 horas", "Ayer", "Hace 2 días"];
+const LAST_SEEN = ["2 min", "15 min", "1h", "3h", "24h", "2d"];
 
 function buildInitialFriends(): Friend[] {
   return [];
@@ -268,8 +268,8 @@ export default function FriendsScreen() {
             photoUrl: req.photoUrl,
             online: Math.random() > 0.4,
             wins: Math.floor(req.level * 12),
-            lastSeen: "Ahora",
-            titleName: "Jugador",
+            lastSeen: T("statusNow"),
+            titleName: T("player"),
           };
           const currentFriends = [newFriend, ...friendsRef.current.filter(f => f.id !== req.id)];
           await saveDirectly(currentFriends, currentRequests);
@@ -315,7 +315,7 @@ export default function FriendsScreen() {
         online: seededRand(i + 22) > 0.5,
         wins: Math.floor(p.level * 12),
         lastSeen: LAST_SEEN[Math.floor(seededRand(i + 6) * LAST_SEEN.length)],
-        titleName: TITLE_NAMES[p.titleId] ?? "Jugador",
+        titleName: TITLE_NAMES[p.titleId] ?? T("player"),
       }));
     setSearchResults(results);
   };
@@ -356,8 +356,8 @@ export default function FriendsScreen() {
             photoUrl: cpuProfile.photoUrl,
             online: Math.random() > 0.4,
             wins: Math.floor(cpuProfile.level * 12),
-            lastSeen: "Ahora",
-            titleName: TITLE_NAMES[cpuProfile.titleId] ?? "Jugador",
+            lastSeen: T("statusNow"),
+            titleName: TITLE_NAMES[cpuProfile.titleId] ?? T("player"),
           };
           const currentFriends = [newFriend, ...friendsRef.current.filter(f => f.id !== name)];
           await saveDirectly(currentFriends, currentRequests);
@@ -387,8 +387,8 @@ export default function FriendsScreen() {
       photoUrl: req.photoUrl,
       online: true,
       wins: Math.floor(req.level * 12),
-      lastSeen: "Ahora",
-      titleName: "Jugador",
+      lastSeen: T("statusNow"),
+      titleName: T("player"),
     };
     setFriends(prev => [newFriend, ...prev]);
     setRequests(prev => prev.filter(r => r.id !== req.id));
@@ -546,7 +546,7 @@ export default function FriendsScreen() {
         <View style={styles.friendInfo}>
           <Text style={[styles.friendName, { color: textColor }]} numberOfLines={1}>{item.name}</Text>
           <Text style={[styles.friendSub, { color: textMuted }]}>
-            Nv.{item.level} · {item.online ? "En línea" : item.lastSeen}
+            Nv.{item.level} · {item.online ? T("statusOnline") : item.lastSeen}
           </Text>
         </View>
       </View>
@@ -792,16 +792,16 @@ export default function FriendsScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.friendName, { color: textColor }]}>{chatFriend.name}</Text>
-                  <Text style={[styles.friendSub, { color: textMuted }]}>{chatFriend.online ? "En línea" : chatFriend.lastSeen}</Text>
+                  <Text style={[styles.friendSub, { color: textMuted }]}>{chatFriend.online ? T("statusOnline") : chatFriend.lastSeen}</Text>
                 </View>
                 <Pressable
                   onPress={() => {
                     Alert.alert(
-                      "Eliminar conversación",
-                      "¿Borrar todos los mensajes con este amigo?",
+                      T("deleteConvTitle"),
+                      T("deleteConvMsg"),
                       [
-                        { text: "Cancelar", style: "cancel" },
-                        { text: "Eliminar", style: "destructive", onPress: () => {
+                        { text: T("cancel"), style: "cancel" },
+                        { text: T("deleteAction"), style: "destructive", onPress: () => {
                             setChatMessages([]);
                             if (chatFriend) {
                               delete chatHistoryRef.current[chatFriend.id];

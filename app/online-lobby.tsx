@@ -17,7 +17,7 @@ import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
 import { getLocalizedRankInfo } from "@/lib/ranked";
-import { playButton } from "@/lib/audioManager";
+import { playButton, startMenuMusic } from "@/lib/audioManager";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 
@@ -162,7 +162,7 @@ export default function OnlineLobbyScreen() {
   const rankInfo = getLocalizedRankInfo(profile.rankedProfile, lang);
 
   const myProfile: PlayerInfo = {
-    name: profile.name || "Tú",
+    name: profile.name || T("you"),
     playerIndex: 0,
     avatarColor: rankInfo.color,
     avatarIcon: "person",
@@ -200,6 +200,7 @@ export default function OnlineLobbyScreen() {
   }, []);
 
   useEffect(() => {
+    startMenuMusic().catch(() => {});
     return () => {
       cleanup();
     };

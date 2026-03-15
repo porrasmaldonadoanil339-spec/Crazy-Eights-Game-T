@@ -133,7 +133,7 @@ export default function RankedScreen() {
     if (visibleCount >= MY_POSITION + 1) {
       players[MY_POSITION] = {
         id: "player_me",
-        name: profile.name || "Tú",
+        name: profile.name || T("you"),
         avatarIcon: "person",
         avatarColor: AVATAR_COLORS[2],
         photoUrl: profile.photoUri ?? undefined,

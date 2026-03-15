@@ -582,7 +582,7 @@ export default function OnlineGameScreen() {
     }
     return profiles;
   });
-  const humanName = profile.name || "Tú";
+  const humanName = profile.name || T("you");
 
   // All player names: human is index 0, CPUs are 1..n
   const allNames = [humanName, ...currentCpuProfiles.map(c => c.name)];

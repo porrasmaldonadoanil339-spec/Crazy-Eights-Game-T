@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -12,55 +12,23 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
-
-interface Rule {
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  desc: string;
-}
-
-const RULES: Rule[] = [
-  {
-    icon: "shuffle",
-    title: "Objetivo",
-    desc: "Ser el primero en quedarse sin cartas en la mano.",
-  },
-  {
-    icon: "layers",
-    title: "Repartir",
-    desc: "Cada jugador recibe 7 cartas. Se voltea una carta para iniciar la pila de descarte.",
-  },
-  {
-    icon: "play-circle",
-    title: "Jugar",
-    desc: "Juega una carta que coincida en PALO o en NÚMERO con la carta en la cima de la pila.",
-  },
-  {
-    icon: "star",
-    title: "Los 8 — Locos",
-    desc: "Los 8 son comodines. Puedes jugarlos en cualquier momento y elegir el palo que quieras.",
-  },
-  {
-    icon: "add-circle",
-    title: "Robar carta",
-    desc: "Si no puedes jugar ninguna carta, debes robar una del mazo.",
-  },
-  {
-    icon: "sync",
-    title: "Sin cartas en mazo",
-    desc: "Si el mazo se agota, se barajan las cartas descartadas (excepto la carta superior) para formar un nuevo mazo.",
-  },
-  {
-    icon: "trophy",
-    title: "Victoria",
-    desc: "Gana el jugador que se quede sin cartas primero. ¡Juega tus 8 estratégicamente!",
-  },
-];
+import { useT } from "@/hooks/useT";
 
 export default function RulesScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
+  const T = useT();
+
+  const RULES = useMemo(() => [
+    { icon: "shuffle" as const,     title: T("ruleGoalT" as any),   desc: T("ruleGoalD" as any) },
+    { icon: "layers" as const,      title: T("ruleDealT" as any),   desc: T("ruleDealD" as any) },
+    { icon: "play-circle" as const, title: T("rulePlayT" as any),   desc: T("rulePlayD" as any) },
+    { icon: "star" as const,        title: T("ruleEightsT" as any), desc: T("ruleEightsD" as any) },
+    { icon: "add-circle" as const,  title: T("ruleDrawT" as any),   desc: T("ruleDrawD" as any) },
+    { icon: "sync" as const,        title: T("ruleDeckT" as any),   desc: T("ruleDeckD" as any) },
+    { icon: "trophy" as const,      title: T("ruleWinT" as any),    desc: T("ruleWinD" as any) },
+  ], [T]);
 
   return (
     <View style={[styles.container, { paddingTop: topPad, paddingBottom: botPad }]}>
@@ -76,44 +44,35 @@ export default function RulesScreen() {
         >
           <Ionicons name="arrow-back" size={22} color={Colors.gold} />
         </Pressable>
-        <Text style={styles.headerTitle}>REGLAS</Text>
+        <Text style={styles.headerTitle}>{T("rules").toUpperCase()}</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
-        style={styles.scroll}
+        style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.intro}>
-          <View style={styles.suitRow}>
-            <Text style={[styles.introSuit, { color: Colors.red }]}>♥</Text>
-            <Text style={[styles.introSuit, { color: "#111" }]}>♠</Text>
-            <Text style={[styles.introSuit, { color: Colors.red }]}>♦</Text>
-            <Text style={[styles.introSuit, { color: "#111" }]}>♣</Text>
-          </View>
-          <Text style={styles.introTitle}>Ocho Locos</Text>
-          <Text style={styles.introSub}>Crazy Eights — Juego de cartas clásico</Text>
-        </View>
-
-        {RULES.map((rule, i) => (
-          <View key={i} style={styles.ruleCard}>
-            <View style={styles.ruleIconWrap}>
-              <Ionicons name={rule.icon} size={22} color={Colors.gold} />
-            </View>
-            <View style={styles.ruleContent}>
-              <Text style={styles.ruleTitle}>{rule.title}</Text>
-              <Text style={styles.ruleDesc}>{rule.desc}</Text>
-            </View>
+        {RULES.map((rule, idx) => (
+          <View key={idx} style={styles.ruleCard}>
+            <LinearGradient
+              colors={["rgba(255,255,255,0.05)", "rgba(255,255,255,0.02)"]}
+              style={styles.ruleGrad}
+            >
+              <View style={styles.ruleIconWrap}>
+                <Ionicons name={rule.icon} size={22} color={Colors.gold} />
+              </View>
+              <View style={styles.ruleText}>
+                <Text style={styles.ruleTitle}>{rule.title}</Text>
+                <Text style={styles.ruleDesc}>{rule.desc}</Text>
+              </View>
+            </LinearGradient>
           </View>
         ))}
 
-        <View style={styles.tipBox}>
-          <Ionicons name="bulb-outline" size={18} color={Colors.gold} />
-          <Text style={styles.tipText}>
-            <Text style={styles.tipBold}>Consejo: </Text>
-            Guarda tus 8 para momentos clave. Son tus mejores armas cuando el CPU tiene pocas cartas.
-          </Text>
+        <View style={styles.footerNote}>
+          <Text style={styles.footerNoteText}>OCHO LOCOS</Text>
+          <Text style={styles.footerNoteSubtext}>{T("rulesTitle")}</Text>
         </View>
       </ScrollView>
     </View>
@@ -123,117 +82,91 @@ export default function RulesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: "#061209",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
     justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(212,175,55,0.2)",
   },
   backBtn: {
     width: 40,
     height: 40,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "rgba(212,175,55,0.1)",
   },
   headerTitle: {
     fontFamily: "Nunito_800ExtraBold",
     fontSize: 18,
     color: Colors.gold,
-    letterSpacing: 3,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-    gap: 12,
-  },
-  intro: {
-    alignItems: "center",
-    paddingVertical: 20,
-    gap: 6,
-  },
-  suitRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 4,
-  },
-  introSuit: {
-    fontSize: 28,
-    fontWeight: "900",
-  },
-  introTitle: {
-    fontFamily: "Nunito_800ExtraBold",
-    fontSize: 28,
-    color: Colors.gold,
     letterSpacing: 2,
   },
-  introSub: {
-    fontFamily: "Nunito_400Regular",
-    fontSize: 13,
-    color: Colors.textMuted,
-    letterSpacing: 1,
+  scrollContent: {
+    padding: 16,
+    gap: 10,
+    paddingBottom: 32,
   },
   ruleCard: {
-    flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 14,
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 16,
-    gap: 14,
+    borderColor: "rgba(212,175,55,0.12)",
+  },
+  ruleGrad: {
+    flexDirection: "row",
     alignItems: "flex-start",
+    padding: 14,
+    gap: 12,
   },
   ruleIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.card,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: "rgba(212,175,55,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.3)",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: Colors.borderStrong,
     flexShrink: 0,
   },
-  ruleContent: {
+  ruleText: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   ruleTitle: {
-    fontFamily: "Nunito_700Bold",
-    fontSize: 15,
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 14,
     color: Colors.gold,
+    letterSpacing: 0.5,
   },
   ruleDesc: {
     fontFamily: "Nunito_400Regular",
     fontSize: 13,
-    color: Colors.text,
-    lineHeight: 20,
+    color: Colors.textMuted,
+    lineHeight: 19,
   },
-  tipBox: {
-    flexDirection: "row",
-    backgroundColor: "rgba(212,175,55,0.08)",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.borderStrong,
-    padding: 16,
-    gap: 10,
-    alignItems: "flex-start",
-    marginTop: 4,
+  footerNote: {
+    marginTop: 12,
+    alignItems: "center",
+    gap: 4,
   },
-  tipText: {
-    flex: 1,
-    fontFamily: "Nunito_400Regular",
-    fontSize: 13,
-    color: Colors.text,
-    lineHeight: 20,
-  },
-  tipBold: {
-    fontFamily: "Nunito_700Bold",
+  footerNoteText: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 16,
     color: Colors.gold,
+    opacity: 0.4,
+    letterSpacing: 3,
+  },
+  footerNoteSubtext: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 11,
+    color: Colors.textMuted,
+    opacity: 0.5,
   },
 });

@@ -17,8 +17,6 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
   lightning_king_d:      { es: "Gana 10 partidas en modo Relámpago.", en: "Win 10 games in Lightning mode.", pt: "Vença 10 partidas no modo Relâmpago." },
   tournament_champ_t:    { es: "Campeón de Torneo",          en: "Tournament Champion",         pt: "Campeão de Torneio" },
   tournament_champ_d:    { es: "Gana 3 torneos.",            en: "Win 3 tournaments.",          pt: "Vença 3 torneios." },
-  coop_hero_t:           { es: "Héroe Ranked",               en: "Ranked Hero",                 pt: "Herói Ranqueado" },
-  coop_hero_d:           { es: "Gana 5 partidas clasificatorias.", en: "Win 5 ranked games.", pt: "Vença 5 partidas ranqueadas." },
   challenge_master_t:    { es: "Maestro de Desafíos",        en: "Challenge Master",            pt: "Mestre dos Desafios" },
   challenge_master_d:    { es: "Completa 10 desafíos.",      en: "Complete 10 challenges.",     pt: "Complete 10 desafios." },
   expert_survivor_t:     { es: "Superviviente Experto",      en: "Expert Survivor",             pt: "Sobrevivente Especialista" },
@@ -264,12 +262,6 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
   tournament_10_d:       { es: "Gana 10 torneos.",            en: "Win 10 tournaments.",         pt: "Vença 10 torneios." },
   tournament_25_t:       { es: "Leyenda del Torneo",          en: "Tournament Legend",           pt: "Lenda do Torneio" },
   tournament_25_d:       { es: "Gana 25 torneos.",            en: "Win 25 tournaments.",         pt: "Vença 25 torneios." },
-  coop_3_t:              { es: "Competidor Ranked",           en: "Ranked Competitor",           pt: "Competidor Ranqueado" },
-  coop_3_d:              { es: "Gana 3 partidas clasificatorias.", en: "Win 3 ranked games.", pt: "Vença 3 partidas ranqueadas." },
-  coop_15_t:             { es: "Veterano Ranked",             en: "Ranked Veteran",              pt: "Veterano Ranqueado" },
-  coop_15_d:             { es: "Gana 15 partidas clasificatorias.", en: "Win 15 ranked games.", pt: "Vença 15 partidas ranqueadas." },
-  coop_30_t:             { es: "Maestro Ranked",              en: "Ranked Master",               pt: "Mestre Ranqueado" },
-  coop_30_d:             { es: "Gana 30 partidas clasificatorias.", en: "Win 30 ranked games.", pt: "Vença 30 partidas ranqueadas." },
   challenge_1_t:         { es: "El Primer Desafío",           en: "First Challenge",             pt: "Primeiro Desafio" },
   challenge_1_d:         { es: "Completa 1 desafío.",         en: "Complete 1 challenge.",       pt: "Complete 1 desafio." },
   challenge_5_t:         { es: "Desafiante en Serio",         en: "Serious Challenger",          pt: "Desafiador Sério" },
@@ -438,8 +430,6 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
   audio_lover_d:         { es: "Juega 50 partidas con todos los sonidos activos.", en: "Play 50 games with all sounds on.", pt: "Jogue 50 partidas com todos os sons ativos." },
   tournament_perfect_t:  { es: "Torneo Sin Derrota",          en: "Flawless Tournament",         pt: "Torneio Sem Derrota" },
   tournament_perfect_d:  { es: "Gana un torneo sin perder ninguna ronda.", en: "Win a tournament without losing.", pt: "Vença um torneio sem perder nenhuma rodada." },
-  coop_undefeated_t:     { es: "Imbatible Ranked",            en: "Undefeated Ranked",           pt: "Invicto Ranqueado" },
-  coop_undefeated_d:     { es: "Gana 10 clasificatorias sin perder.", en: "Win 10 ranked games without losing.", pt: "Vença 10 partidas ranqueadas sem perder." },
   domination_5_t:        { es: "Dominación Cinco",            en: "Domination Five",             pt: "Dominação Cinco" },
   domination_5_d:        { es: "Gana 5 partidas en Difícil sin robar.", en: "Win 5 Hard games without drawing.", pt: "Vença 5 partidas no modo Difícil sem comprar." },
   perfect_streak_t:      { es: "Perfectas Seguidas",          en: "Consecutive Perfects",        pt: "Perfeitas Seguidas" },
@@ -1967,7 +1957,7 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
 };
 
 function get3(obj: { es: string; en: string; pt: string } | undefined, lang: Lang): string {
-  return (obj as any)?.[lang] ?? obj?.es ?? "";
+  return (obj as any)?.[lang] ?? obj?.en ?? obj?.es ?? "";
 }
 
 export function achTitle(id: string, lang: Lang): string {

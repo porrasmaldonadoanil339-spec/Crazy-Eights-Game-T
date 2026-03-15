@@ -306,7 +306,7 @@ function CountryPickerModal({
               {COUNTRY_SECTIONS.map((section, sIdx) => (
                 <View key={`section-${sIdx}`}>
                   <Text style={styles.sectionHeader}>
-                    {(section.continent as any)[lang] || section.continent["es"]}
+                    {(section.continent as any)[lang] || section.continent["en"] || section.continent["es"]}
                   </Text>
                   {section.countries.map((code) => {
                     const c = COUNTRIES.find(cnt => cnt.code === code);
@@ -605,15 +605,15 @@ export default function ProfileScreen() {
                 <View style={{ flexDirection: "row", gap: 6 }}>
                   <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
                     <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: textColor }}>{games}</Text>
-                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{lang === "es" ? "PARTIDAS" : "PLAYED"}</Text>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsGames").toUpperCase()}</Text>
                   </View>
                   <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
                     <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#27AE60" }}>{wins}</Text>
-                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{lang === "es" ? "VICTORIAS" : "WINS"}</Text>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsWins").toUpperCase()}</Text>
                   </View>
                   <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
                     <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: winRate >= 50 ? "#D4AF37" : textMuted }}>{winRate}%</Text>
-                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>WINRATE</Text>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsWinRate").toUpperCase()}</Text>
                   </View>
                 </View>
               </View>

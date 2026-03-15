@@ -373,6 +373,11 @@ export default function PlayScreen() {
   const theme = isDark ? Colors : LightColors;
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
 
+  // Initialize localized player name placeholders
+  useEffect(() => {
+    setMultiPlayerNames(Array.from({ length: 6 }, (_, i) => `${T("player")} ${i + 1}`));
+  }, [lang]);
+
   // Load challenges
   useEffect(() => {
     if (isLoaded) {
@@ -394,6 +399,27 @@ export default function PlayScreen() {
   const swipeHandlers = useSwipeTabs(0);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
+
+  const onlineGlow = useSharedValue(0);
+  useEffect(() => {
+    onlineGlow.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 1400, easing: Easing.inOut(Easing.sin) })
+      ), -1, false
+    );
+  }, []);
+  const onlineGlowStyle = useAnimatedStyle(() => ({
+    borderColor: `rgba(74,144,226,${0.18 + onlineGlow.value * 0.52})`,
+    shadowColor: "#4A90E2",
+    shadowOpacity: 0.12 + onlineGlow.value * 0.38,
+    shadowRadius: 6 + onlineGlow.value * 14,
+    elevation: 3 + Math.round(onlineGlow.value * 8),
+  }));
+  const liveDotStyle = useAnimatedStyle(() => ({
+    opacity: 0.55 + onlineGlow.value * 0.45,
+    transform: [{ scale: 0.85 + onlineGlow.value * 0.25 }],
+  }));
 
   // Show daily reward on mount if available
   useEffect(() => {
@@ -715,29 +741,31 @@ export default function PlayScreen() {
             </LinearGradient>
           </Pressable>
 
-          {/* Online */}
-          <Pressable
-            style={({ pressed }) => [styles.multiCard, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
-            onPress={() => { playButton().catch(() => {}); setShowOnlineModal(true); }}
-          >
-            <LinearGradient colors={["#080f22", "#0a1430"]} style={styles.multiCardGrad}>
-              <View style={[styles.multiCardIcon, { borderColor: "#4A90E255" }]}>
-                <Ionicons name="globe" size={22} color="#4A90E2" />
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                <Text style={[styles.multiCardTitle, { color: "#4A90E2" }]}>{T("multiOnline")}</Text>
-                <View style={styles.onlineDotPill}>
-                  <View style={styles.onlineDotSmall} />
-                  <Text style={styles.onlineDotText}>{T("multiOnlineDesc")}</Text>
+          {/* Online — highlighted with pulsing glow */}
+          <Animated.View style={[styles.multiCard, { borderWidth: 1.5, borderRadius: 14, overflow: "hidden" }, onlineGlowStyle]}>
+            <Pressable
+              style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
+              onPress={() => { playButton().catch(() => {}); setShowOnlineModal(true); }}
+            >
+              <LinearGradient colors={["#060d1e", "#091428", "#0a1830"]} style={styles.multiCardGrad}>
+                <View style={[styles.multiCardIcon, { borderColor: "#4A90E266", backgroundColor: "#4A90E211" }]}>
+                  <Ionicons name="globe" size={24} color="#4A90E2" />
                 </View>
-              </View>
-              <Text style={styles.multiCardDesc}>{T("multiOnlineDesc2")}</Text>
-              <View style={[styles.multiCardBadge, { backgroundColor: "#4A90E222", borderColor: "#4A90E244" }]}>
-                <Ionicons name="wifi" size={10} color="#4A90E2" />
-                <Text style={[styles.multiCardBadgeText, { color: "#4A90E2" }]}>2 – 4 {T("players")}</Text>
-              </View>
-            </LinearGradient>
-          </Pressable>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                  <Text style={[styles.multiCardTitle, { color: "#6AADFF", fontSize: 17 }]}>{T("multiOnline")}</Text>
+                  <View style={styles.onlineDotPill}>
+                    <Animated.View style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#2ecc71" }, liveDotStyle]} />
+                    <Text style={styles.onlineDotText}>{T("multiOnlineDesc")}</Text>
+                  </View>
+                </View>
+                <Text style={styles.multiCardDesc}>{T("multiOnlineDesc2")}</Text>
+                <View style={[styles.multiCardBadge, { backgroundColor: "#4A90E222", borderColor: "#4A90E255" }]}>
+                  <Ionicons name="wifi" size={10} color="#4A90E2" />
+                  <Text style={[styles.multiCardBadgeText, { color: "#6AADFF" }]}>2 – 4 {T("players")}</Text>
+                </View>
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
         </View>
 
         {/* Earn Coins / Watch Ads section */}

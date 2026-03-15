@@ -1,0 +1,70 @@
+⭐ Detalles importantes para mejorar tu juego
+1️⃣ Eliminar todo lo del cooperativo
+Esto es lo más urgente.
+Debes eliminar completamente:
+•	Misiones del cooperativo
+•	Logros del cooperativo
+•	Textos del cooperativo
+•	Cualquier referencia a ese modo
+Porque si el modo no existe, no debe aparecer en ningún lado.
+________________________________________
+2️⃣ Animaciones más vivas
+Tu diseño es bueno, pero puedes hacerlo más moderno agregando:
+•	brillo en botones
+•	animación al tocar
+•	efecto cuando aparece una carta
+•	transiciones suaves entre pantallas
+Eso hace que el juego se sienta más profesional.
+________________________________________
+3️⃣ Mejorar efectos de cartas
+Cuando un jugador lanza una carta debería haber:
+•	pequeño brillo
+•	sonido claro
+•	animación rápida
+Eso hace la partida más emocionante.
+________________________________________
+4️⃣ Que el Online funcione perfecto
+Esto es lo más importante de todo.
+Tu sistema de:
+•	jugadores reales
+•	
+o	bots que rellenan
+es muy bueno, pero debes asegurar:
+•	que encuentre partida rápido
+•	que no se quede cargando mucho
+________________________________________
+5️⃣ Música del menú durante búsqueda
+Cuando el juego esté:
+buscando jugadores / cargando partida
+la música del menú debe seguir sonando hasta que empiece la partida.
+Eso hace que el juego no se sienta vacío.
+________________________________________
+6️⃣ Cambio de idioma perfecto
+Cuando el jugador cambie idioma:
+todo debe cambiar:
+•	botones
+•	menús
+•	textos
+•	misiones
+•	logros
+Sin mezclar idiomas.
+________________________________________
+7️⃣ Hacer el modo Online más visible
+El modo Online en vivo es el más importante.
+Podrías hacerlo:
+•	más grande
+•	más brillante
+•	más destacado
+________________________________________
+8️⃣ Reducir textos largos
+Algunas descripciones son un poco largas.
+En móvil es mejor algo corto como:
+❌ "Compite en torneos de eliminación con grupos..."
+✔ "Torneo de eliminación. Gana premios."
+________________________________________
+9️⃣ Revisar errores (bugs)
+Antes de publicar revisa:
+•	botones que no funcionen
+•	textos cortados
+•	errores en partidas
+•	problemas de conexión
