@@ -157,7 +157,6 @@ export default function OnlineLobbyScreen() {
   const mode = params.mode ?? "classic";
   const playerCount = parseInt(params.playerCount ?? "2", 10);
   const directSearch = params.directSearch === "true";
-  const isCoopMode = mode === "coop";
 
   const lang = profile.language ?? "es";
   const rankInfo = getLocalizedRankInfo(profile.rankedProfile, lang);
@@ -458,33 +457,9 @@ export default function OnlineLobbyScreen() {
         <View style={styles.teamsContainer}>
           <PreMatchTeamCard
             players={team1}
-            teamName={isCoopMode ? T("teamOne") : T("playersCount" as any)}
+            teamName={T("playersCount" as any)}
             isMyTeam={myTeam === 1}
           />
-          {isCoopMode && team2.length > 0 && (
-            <>
-              <Animated.View entering={FadeIn.delay(300).duration(400)} style={styles.vsContainer}>
-                <LinearGradient
-                  colors={["#D4AF3722", "#D4AF3766", "#D4AF3722"]}
-                  style={styles.vsLine}
-                  start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
-                />
-                <View style={styles.vsCircle}>
-                  <Text style={styles.vsText}>VS</Text>
-                </View>
-                <LinearGradient
-                  colors={["#D4AF3722", "#D4AF3766", "#D4AF3722"]}
-                  style={styles.vsLine}
-                  start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
-                />
-              </Animated.View>
-              <PreMatchTeamCard
-                players={team2}
-                teamName={T("teamTwo" as any)}
-                isMyTeam={myTeam === 2}
-              />
-            </>
-          )}
         </View>
 
         <Animated.View entering={FadeInUp.delay(500).duration(500)} style={styles.preMatchFooter}>
@@ -502,9 +477,6 @@ export default function OnlineLobbyScreen() {
 
     // ── First interface: player slot list (all modes) ──────────────────────
     const allPlayers = [{ ...myProfile, playerIndex: 0 }, ...fakePlayers];
-    const isCoopDirect = isCoopMode;
-    const team1 = isCoopDirect ? allPlayers.slice(0, 2) : allPlayers;
-    const team2 = isCoopDirect ? allPlayers.slice(2) : [];
 
     return (
       <View style={[styles.fullBg, { paddingTop: topPad + 10, paddingBottom: botPad + 10 }]}>
@@ -531,36 +503,16 @@ export default function OnlineLobbyScreen() {
             {isFound ? T("rivalFound" as any) : T("waitingPlayers")}
           </Text>
 
-          {!isCoopDirect ? (
-            <View style={styles.slotsList}>
-              {Array.from({ length: playerCount }).map((_, i) => (
-                <PlayerSlot
-                  key={i}
-                  player={i === 0 ? myProfile : (fakePlayers[i - 1] ?? null)}
-                  isSelf={i === 0}
-                  delay={i * 200}
-                />
-              ))}
-            </View>
-          ) : (
-            <View style={styles.teamsContainer}>
-              <View style={styles.coopTeam}>
-                <Text style={[styles.teamLabel, { color: "#27AE60" }]}>{T("teamOne")}</Text>
-                {team1.map((p, i) => (
-                  <PlayerSlot key={i} player={p} isSelf={i === 0} delay={i * 200} />
-                ))}
-              </View>
-              <View style={styles.vsContainer}>
-                <View style={styles.vsCircle}><Text style={styles.vsText}>VS</Text></View>
-              </View>
-              <View style={styles.coopTeam}>
-                <Text style={[styles.teamLabel, { color: "#E74C3C" }]}>{T("teamRival" as any)}</Text>
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <PlayerSlot key={i} player={team2[i] ?? null} isSelf={false} delay={(team1.length + i) * 200} />
-                ))}
-              </View>
-            </View>
-          )}
+          <View style={styles.slotsList}>
+            {Array.from({ length: playerCount }).map((_, i) => (
+              <PlayerSlot
+                key={i}
+                player={i === 0 ? myProfile : (fakePlayers[i - 1] ?? null)}
+                isSelf={i === 0}
+                delay={i * 200}
+              />
+            ))}
+          </View>
 
           {!isFound && (
             <Pressable onPress={() => { directSearchTimers.current.forEach(t => clearTimeout(t)); router.back(); }} style={styles.cancelBtn}>
@@ -978,7 +930,6 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#1a0a00", letterSpacing: 2,
   },
   teamsContainer: { flex: 1, paddingHorizontal: 20, justifyContent: "center", gap: 12 },
-  coopTeam: { gap: 6 },
   teamCard: {
     backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 16,
     borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", padding: 16, gap: 10,

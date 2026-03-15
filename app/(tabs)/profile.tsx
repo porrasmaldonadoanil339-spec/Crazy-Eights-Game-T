@@ -578,7 +578,6 @@ export default function ProfileScreen() {
           <StatRow label={T("perfectWins")} value={profile.stats.perfectWins} textColor={textColor} textMuted={textMuted} />
           <StatRow label={T("comebacks")} value={profile.stats.comebackWins} textColor={textColor} textMuted={textMuted} />
           <StatRow label={T("tournamentsWon")} value={profile.stats.tournamentsWon} textColor={textColor} textMuted={textMuted} />
-          <StatRow label={T("coopWins")} value={profile.stats.coopWins} textColor={textColor} textMuted={textMuted} />
           <StatRow label={T("challengesCompleted")} value={profile.stats.challengesCompleted} textColor={textColor} textMuted={textMuted} />
           <StatRow label={T("localMultiWins")} value={profile.stats.localMultiWins ?? 0} textColor={textColor} textMuted={textMuted} />
           <StatRow label={T("localMultiGames")} value={profile.stats.localMultiGames ?? 0} textColor={textColor} textMuted={textMuted} />

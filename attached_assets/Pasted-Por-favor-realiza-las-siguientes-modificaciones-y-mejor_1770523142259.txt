@@ -1,0 +1,44 @@
+Por favor realiza las siguientes modificaciones y mejoras en mi juego:
+
+1. **Eliminar completamente todo lo relacionado con el modo cooperativo.**
+   Ya decidí quitar el modo cooperativo del juego, por lo tanto debes eliminar absolutamente todo lo que tenga relación con él, incluyendo:
+
+   * Misiones diarias del modo cooperativo
+   * Eventos o recompensas del cooperativo
+   * Referencias en menús, modos de juego o configuraciones
+   * Cualquier sistema interno que dependa de ese modo
+
+   Si el modo cooperativo ya no existe, entonces no debería aparecer nada relacionado con él dentro del juego.
+
+2. **Efectos de cartas en partidas online.**
+   En los modos online, cuando un jugador selecciona o lanza una carta, debe mostrarse el **efecto visual correspondiente**, tal como ocurre normalmente en las partidas. Esto debe funcionar correctamente en todas las partidas online.
+
+3. **Modo Clasificatoria (Ranked).**
+   Las partidas clasificatorias siempre deben tener **4 jugadores en total**.
+
+   El sistema debe permitir que dentro de una partida puedan entrar:
+
+   * **Jugadores reales (amigos que tengan el juego instalado)**
+   * **Jugadores falsos o bots para completar la partida**
+
+   Ejemplos:
+
+   * Yo solo → el sistema agrega 3 bots.
+   * Yo + 1 amigo → el sistema agrega 2 bots.
+   * Yo + 2 amigos → el sistema agrega 1 bot.
+   * Yo + 3 amigos → partida completa sin bots.
+
+   De esta manera, las partidas pueden mezclar **jugadores reales con bots**, pero siempre deben ser **4 jugadores en total**.
+
+4. **Mejorar el juego agregando buenos detalles.**
+   Además, por favor analiza el juego y **agrega mejoras o detalles que consideres necesarios para optimizarlo**, como:
+
+   * Mejor fluidez en las animaciones.
+   * Mejor claridad en los efectos de cartas.
+   * Mejor organización de menús.
+   * Mejor estabilidad en partidas online.
+   * Pequeños detalles visuales que hagan el juego más profesional.
+
+   Es importante que estas mejoras **no cambien la base ni la jugabilidad principal del juego**, solo deben servir para **perfeccionarlo y hacerlo funcionar al 100%**.
+
+Por favor realiza todas estas modificaciones correctamente para que el juego quede mejor optimizado y más pulido.

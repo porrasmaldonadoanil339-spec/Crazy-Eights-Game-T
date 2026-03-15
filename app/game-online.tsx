@@ -706,7 +706,7 @@ export default function OnlineGameScreen() {
   // ─── Skip-lobby: initialize game immediately for ranked/coop pre-lobbied games ──
   useEffect(() => {
     if (!skipLobby) return;
-    const gs = initMultiGame(allNames, 8, false);
+    const gs = initMultiGame(allNames, 8);
     gs.phase = "playing";
     setGameState(gs);
   }, [skipLobby]);
@@ -776,7 +776,7 @@ export default function OnlineGameScreen() {
     }
 
     timers.push(setTimeout(() => {
-      const gs = initMultiGame(allNames, 8, false);
+      const gs = initMultiGame(allNames, 8);
       gs.phase = "playing"; // Online starts directly, no pass_device for human
       setGameState(gs);
       setLobbyPhase("dealing");
@@ -972,6 +972,12 @@ export default function OnlineGameScreen() {
         setShowInactivityBar(false);
         playCardFlip().catch(() => {});
         socketRef.current?.emit("play_card", { card });
+        if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
+          setShowEffect(true);
+        }
+        if (card.rank === "2") showFloatLabel("+2", "#E74C3C");
+        else if (card.rank === "7") showFloatLabel("+7", "#E74C3C");
+        else if (card.rank === "A") showFloatLabel("⚡", "#9B59B6");
         setSelectedCard(null);
       } else {
         setSelectedCard(card);
@@ -1008,6 +1014,9 @@ export default function OnlineGameScreen() {
     playCardFlip().catch(() => {});
     if (isOnline) {
       socketRef.current?.emit("choose_suit", { suit });
+      if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
+        setShowEffect(true);
+      }
       setSelectedCard(null);
       return;
     }
@@ -1038,7 +1047,7 @@ export default function OnlineGameScreen() {
     const newProfiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
     setCurrentCpuProfiles(newProfiles);
     const newNames = [humanName, ...newProfiles.map(c => c.name)];
-    const gs = initMultiGame(newNames, 8, false);
+    const gs = initMultiGame(newNames, 8);
     gs.phase = "playing";
     setGameState(gs);
     setSelectedCard(null);

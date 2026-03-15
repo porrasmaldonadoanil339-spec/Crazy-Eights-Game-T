@@ -496,7 +496,7 @@ function startGame(room: Room, io: SocketServer) {
   // Sort players by playerIndex to ensure correct hand assignment
   const sortedPlayers = [...room.players].sort((a, b) => a.playerIndex - b.playerIndex);
   const names = sortedPlayers.map(p => p.name);
-  const gs = initMultiGame(names, 8, false);
+  const gs = initMultiGame(names, 8);
   room.gameState = gs;
   room.hands = [...gs.hands];
 

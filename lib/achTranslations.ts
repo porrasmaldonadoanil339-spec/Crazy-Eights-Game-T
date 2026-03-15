@@ -17,8 +17,8 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
   lightning_king_d:      { es: "Gana 10 partidas en modo Relámpago.", en: "Win 10 games in Lightning mode.", pt: "Vença 10 partidas no modo Relâmpago." },
   tournament_champ_t:    { es: "Campeón de Torneo",          en: "Tournament Champion",         pt: "Campeão de Torneio" },
   tournament_champ_d:    { es: "Gana 3 torneos.",            en: "Win 3 tournaments.",          pt: "Vença 3 torneios." },
-  coop_hero_t:           { es: "Héroe Cooperativo",          en: "Co-op Hero",                  pt: "Herói Cooperativo" },
-  coop_hero_d:           { es: "Gana 5 partidas en modo Cooperativo.", en: "Win 5 games in Co-op mode.", pt: "Vença 5 partidas no modo Cooperativo." },
+  coop_hero_t:           { es: "Héroe Ranked",               en: "Ranked Hero",                 pt: "Herói Ranqueado" },
+  coop_hero_d:           { es: "Gana 5 partidas clasificatorias.", en: "Win 5 ranked games.", pt: "Vença 5 partidas ranqueadas." },
   challenge_master_t:    { es: "Maestro de Desafíos",        en: "Challenge Master",            pt: "Mestre dos Desafios" },
   challenge_master_d:    { es: "Completa 10 desafíos.",      en: "Complete 10 challenges.",     pt: "Complete 10 desafios." },
   expert_survivor_t:     { es: "Superviviente Experto",      en: "Expert Survivor",             pt: "Sobrevivente Especialista" },
@@ -264,12 +264,12 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
   tournament_10_d:       { es: "Gana 10 torneos.",            en: "Win 10 tournaments.",         pt: "Vença 10 torneios." },
   tournament_25_t:       { es: "Leyenda del Torneo",          en: "Tournament Legend",           pt: "Lenda do Torneio" },
   tournament_25_d:       { es: "Gana 25 torneos.",            en: "Win 25 tournaments.",         pt: "Vença 25 torneios." },
-  coop_3_t:              { es: "Equipo Unido",                en: "United Team",                 pt: "Time Unido" },
-  coop_3_d:              { es: "Gana 3 partidas en modo Cooperativo.", en: "Win 3 Co-op games.", pt: "Vença 3 partidas no modo Cooperativo." },
-  coop_15_t:             { es: "Cooperador Veterano",         en: "Veteran Cooperator",          pt: "Cooperador Veterano" },
-  coop_15_d:             { es: "Gana 15 partidas en modo Cooperativo.", en: "Win 15 Co-op games.", pt: "Vença 15 partidas no modo Cooperativo." },
-  coop_30_t:             { es: "Maestro del Equipo",          en: "Team Master",                 pt: "Mestre da Equipe" },
-  coop_30_d:             { es: "Gana 30 partidas en modo Cooperativo.", en: "Win 30 Co-op games.", pt: "Vença 30 partidas no modo Cooperativo." },
+  coop_3_t:              { es: "Competidor Ranked",           en: "Ranked Competitor",           pt: "Competidor Ranqueado" },
+  coop_3_d:              { es: "Gana 3 partidas clasificatorias.", en: "Win 3 ranked games.", pt: "Vença 3 partidas ranqueadas." },
+  coop_15_t:             { es: "Veterano Ranked",             en: "Ranked Veteran",              pt: "Veterano Ranqueado" },
+  coop_15_d:             { es: "Gana 15 partidas clasificatorias.", en: "Win 15 ranked games.", pt: "Vença 15 partidas ranqueadas." },
+  coop_30_t:             { es: "Maestro Ranked",              en: "Ranked Master",               pt: "Mestre Ranqueado" },
+  coop_30_d:             { es: "Gana 30 partidas clasificatorias.", en: "Win 30 ranked games.", pt: "Vença 30 partidas ranqueadas." },
   challenge_1_t:         { es: "El Primer Desafío",           en: "First Challenge",             pt: "Primeiro Desafio" },
   challenge_1_d:         { es: "Completa 1 desafío.",         en: "Complete 1 challenge.",       pt: "Complete 1 desafio." },
   challenge_5_t:         { es: "Desafiante en Serio",         en: "Serious Challenger",          pt: "Desafiador Sério" },
@@ -438,8 +438,8 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
   audio_lover_d:         { es: "Juega 50 partidas con todos los sonidos activos.", en: "Play 50 games with all sounds on.", pt: "Jogue 50 partidas com todos os sons ativos." },
   tournament_perfect_t:  { es: "Torneo Sin Derrota",          en: "Flawless Tournament",         pt: "Torneio Sem Derrota" },
   tournament_perfect_d:  { es: "Gana un torneo sin perder ninguna ronda.", en: "Win a tournament without losing.", pt: "Vença um torneio sem perder nenhuma rodada." },
-  coop_undefeated_t:     { es: "Cooperativo Invicto",         en: "Undefeated Coop",             pt: "Cooperativo Invicto" },
-  coop_undefeated_d:     { es: "Gana 10 partidas coop sin perder.", en: "Win 10 coop games without losing.", pt: "Vença 10 partidas cooperativas sem perder." },
+  coop_undefeated_t:     { es: "Imbatible Ranked",            en: "Undefeated Ranked",           pt: "Invicto Ranqueado" },
+  coop_undefeated_d:     { es: "Gana 10 clasificatorias sin perder.", en: "Win 10 ranked games without losing.", pt: "Vença 10 partidas ranqueadas sem perder." },
   domination_5_t:        { es: "Dominación Cinco",            en: "Domination Five",             pt: "Dominação Cinco" },
   domination_5_d:        { es: "Gana 5 partidas en Difícil sin robar.", en: "Win 5 Hard games without drawing.", pt: "Vença 5 partidas no modo Difícil sem comprar." },
   perfect_streak_t:      { es: "Perfectas Seguidas",          en: "Consecutive Perfects",        pt: "Perfeitas Seguidas" },
@@ -533,7 +533,7 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
   silent_champion_t:     { es: "Campeón Silencioso",          en: "Silent Champion",             pt: "Campeão Silencioso" },
   silent_champion_d:     { es: "Gana 20 partidas sin usar ningún emote.", en: "Win 20 games without emotes.", pt: "Vença 20 partidas sem usar nenhum emote." },
   team_player_t:         { es: "Jugador de Equipo",           en: "Team Player",                 pt: "Jogador de Equipe" },
-  team_player_d:         { es: "Gana 20 partidas cooperativas.", en: "Win 20 cooperative games.", pt: "Vença 20 partidas cooperativas." },
+  team_player_d:         { es: "Gana 20 partidas clasificatorias.", en: "Win 20 ranked games.", pt: "Vença 20 partidas ranqueadas." },
   bp_collector_10_t:     { es: "10 Premios del Pase",         en: "10 Pass Rewards",             pt: "10 Prêmios do Passe" },
   bp_collector_10_d:     { es: "Reclama 10 recompensas del Pase de Batalla.", en: "Claim 10 Battle Pass rewards.", pt: "Resgate 10 recompensas do Passe de Batalha." },
   bp_collector_50_t:     { es: "50 Premios del Pase",         en: "50 Pass Rewards",             pt: "50 Prêmios do Passe" },
@@ -1995,13 +1995,11 @@ const modeDescs: Record<string, { es: string; en: string; pt: string }> = {
   classic:      { es: "1 vs 1. Todas las cartas especiales activas. El primero en vaciar su mano gana.", en: "1 vs 1. All special cards active. First to empty hand wins.", pt: "1 vs 1. Todas as cartas especiais ativas. Quem esvaziar a mão primeiro vence." },
   lightning:    { es: "5 cartas, partida exprés. ¡Velocidad y reflejos al límite!", en: "5 cards, express match. Speed and reflexes to the limit!", pt: "5 cartas, partida expresso. Velocidade e reflexos no limite!" },
   tournament:   { es: "Mejor de 3 rondas. Gana 2 rondas para llevarte el trofeo.", en: "Best of 3 rounds. Win 2 rounds to take the trophy.", pt: "Melhor de 3 rodadas. Vença 2 rodadas para levar o troféu." },
-  coop:         { es: "2 vs 2: Tú + Aliado vs 2 rivales. Turnos: Tú → Aliado → Rival 1 → Rival 2.", en: "2 vs 2: You + Ally vs 2 rivals. Turns: You → Ally → Rival 1 → Rival 2.", pt: "2 vs 2: Você + Aliado vs 2 rivais. Turnos: Você → Aliado → Rival 1 → Rival 2." },
   challenge:    { es: "Reglas mutantes por partida. Completa desafíos diarios para recompensas únicas.", en: "Mutant rules each match. Complete daily challenges for unique rewards.", pt: "Regras mutantes por partida. Complete desafios diários para recompensas únicas." },
   practice:     { es: "IA fácil + pistas visuales. Aprende sin presión ni penalización.", en: "Easy AI + visual hints. Learn without pressure or penalties.", pt: "IA fácil + dicas visuais. Aprenda sem pressão ou penalidades." },
   clasico:      { es: "1 vs 1. Todas las cartas especiales activas. El primero en vaciar su mano gana.", en: "1 vs 1. All special cards active. First to empty hand wins.", pt: "1 vs 1. Todas as cartas especiais ativas. Quem esvaziar a mão primeiro vence." },
   relampago:    { es: "5 cartas, partida exprés. ¡Velocidad y reflejos al límite!", en: "5 cards, express match. Speed and reflexes to the limit!", pt: "5 cartas, partida expresso. Velocidade e reflexos no limite!" },
   torneo:       { es: "Mejor de 3 rondas. Gana 2 rondas para llevarte el trofeo.", en: "Best of 3 rounds. Win 2 rounds to take the trophy.", pt: "Melhor de 3 rodadas. Vença 2 rodadas para levar o troféu." },
-  cooperativo:  { es: "2 vs 2: Tú + Aliado vs 2 rivales. Turnos: Tú → Aliado → Rival 1 → Rival 2.", en: "2 vs 2: You + Ally vs 2 rivals. Turns: You → Ally → Rival 1 → Rival 2.", pt: "2 vs 2: Você + Aliado vs 2 rivais. Turnos: Você → Aliado → Rival 1 → Rival 2." },
   desafios:     { es: "Reglas mutantes por partida. Completa desafíos diarios para recompensas únicas.", en: "Mutant rules each match. Complete daily challenges for unique rewards.", pt: "Regras mutantes por partida. Complete desafios diários para recompensas únicas." },
   practica:     { es: "IA fácil + pistas visuales. Aprende sin presión ni penalización.", en: "Easy AI + visual hints. Learn without pressure or penalties.", pt: "IA fácil + dicas visuais. Aprenda sem pressão ou penalidades." },
 };
@@ -2009,7 +2007,7 @@ const modeDescs: Record<string, { es: string; en: string; pt: string }> = {
 export function modeDesc(id: string, lang: Lang): string {
   const i18nKeyMap: Record<string, string> = {
     classic: "modeClassicDesc", lightning: "modeLightningDesc", tournament: "modeTournamentDesc",
-    coop: "modeCoopDesc", challenge: "modeChallengeDesc", practice: "modePracticeDesc",
+    challenge: "modeChallengeDesc", practice: "modePracticeDesc",
   };
   const i18nKey = i18nKeyMap[id];
   if (i18nKey) {
@@ -2047,7 +2045,6 @@ const modeNames: Record<string, { es: string; en: string; pt: string }> = {
   classic:     { es: "Clásico",     en: "Classic",    pt: "Clássico" },
   lightning:   { es: "Relámpago",   en: "Lightning",  pt: "Relâmpago" },
   tournament:  { es: "Torneo",      en: "Tournament", pt: "Torneio" },
-  coop:        { es: "Cooperativo", en: "Co-op",      pt: "Cooperativo" },
   challenge:   { es: "Desafíos",    en: "Challenges", pt: "Desafios" },
   practice:    { es: "Práctica",    en: "Practice",   pt: "Prática" },
 };
@@ -2055,7 +2052,7 @@ const modeNames: Record<string, { es: string; en: string; pt: string }> = {
 export function modeName(id: string, lang: Lang): string {
   const i18nKeyMap: Record<string, string> = {
     classic: "modeClassic", lightning: "modeLightning", tournament: "modeTournament",
-    coop: "modeCoop", challenge: "modeChallenge", practice: "modePractice", ranked: "rankedMode",
+    challenge: "modeChallenge", practice: "modePractice", ranked: "rankedMode",
   };
   const i18nKey = i18nKeyMap[id];
   if (i18nKey) {

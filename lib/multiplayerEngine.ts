@@ -22,25 +22,14 @@ export interface MultiGameState {
   jActive: boolean;
   jSuit: Suit | null;
   lastSkipped?: number;
-  coopMode?: boolean;
 }
 
-export function coopTeamIndex(playerIndex: number): number {
-  return playerIndex % 2;
-}
-
-export function initMultiGame(playerNames: string[], cardsPerPlayer = 8, coopMode = false): MultiGameState {
+export function initMultiGame(playerNames: string[], cardsPerPlayer = 8): MultiGameState {
   const deck = createDeck();
   const playerCount = playerNames.length;
   const hands: Card[][] = [];
-  if (coopMode && playerCount === 4) {
-    const teamAHand = deck.splice(0, 8);
-    const teamBHand = deck.splice(0, 8);
-    hands.push(teamAHand, teamBHand, teamAHand, teamBHand);
-  } else {
-    for (let i = 0; i < playerCount; i++) {
-      hands.push(deck.splice(0, cardsPerPlayer));
-    }
+  for (let i = 0; i < playerCount; i++) {
+    hands.push(deck.splice(0, cardsPerPlayer));
   }
 
   let topCard = deck.splice(0, 1)[0];
@@ -72,7 +61,6 @@ export function initMultiGame(playerNames: string[], cardsPerPlayer = 8, coopMod
     jActive: false,
     jSuit: null,
     lastSkipped: undefined,
-    coopMode: coopMode && playerCount === 4 ? true : undefined,
   };
 }
 
@@ -118,17 +106,6 @@ function clone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
-function syncCoopTeamHands(ns: MultiGameState, actingPlayerIdx: number): void {
-  if (!ns.coopMode || ns.playerCount !== 4) return;
-  if (actingPlayerIdx % 2 === 0) {
-    ns.hands[2] = [...ns.hands[actingPlayerIdx === 0 ? 0 : 2]];
-    ns.hands[0] = ns.hands[2];
-  } else {
-    ns.hands[3] = [...ns.hands[actingPlayerIdx === 1 ? 1 : 3]];
-    ns.hands[1] = ns.hands[3];
-  }
-}
-
 function drawCards(ns: MultiGameState, playerIdx: number, count: number): MultiGameState {
   for (let i = 0; i < count; i++) {
     if (ns.drawPile.length === 0) ns = reshuffleMulti(ns);
@@ -136,7 +113,6 @@ function drawCards(ns: MultiGameState, playerIdx: number, count: number): MultiG
       ns.hands[playerIdx] = [...ns.hands[playerIdx], ns.drawPile.pop()!];
     }
   }
-  syncCoopTeamHands(ns, playerIdx);
   return ns;
 }
 
@@ -163,7 +139,6 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
   const pidx = ns.currentPlayerIndex;
 
   ns.hands[pidx] = ns.hands[pidx].filter(c => c.id !== card.id);
-  syncCoopTeamHands(ns, pidx);
   ns.discardPile.push(card);
   ns.jActive = false;
   ns.jSuit = null;
@@ -326,7 +301,6 @@ export function multiDraw(state: MultiGameState): MultiGameState {
 
   const card = ns.drawPile.pop()!;
   ns.hands[pidx] = [...ns.hands[pidx], card];
-  syncCoopTeamHands(ns, pidx);
 
   if (multiCanPlay(card, ns)) {
     ns.message = gm("drewCard");

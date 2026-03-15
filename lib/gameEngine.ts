@@ -275,7 +275,6 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
   let ns = deepClone(state);
   ns.turnId = (ns.turnId ?? 0) + 1;
 
-  const isCoop = mode === "coop";
 
   // Handle J active for AI — same suit OR face card (J/Q/K) OR wild
   if (ns.jActive && ns.jSuit) {
@@ -284,7 +283,7 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
       c.rank === "8" || c.rank === "Joker"
     );
     if (jPlayable.length > 0) {
-      const pick = aiChooseCard(jPlayable, ns, difficulty, isCoop);
+      const pick = aiChooseCard(jPlayable, ns, difficulty);
       ns.aiHand = ns.aiHand.filter(c => c.id !== pick.id);
       ns.discardPile.push(pick);
       ns.lastPlayedCard = pick;
@@ -336,7 +335,7 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
     return ns;
   }
 
-  const chosen = aiChooseCard(playable, ns, difficulty, isCoop);
+  const chosen = aiChooseCard(playable, ns, difficulty);
   ns.aiHand = ns.aiHand.filter(c => c.id !== chosen.id);
   ns.discardPile.push(chosen);
   ns.lastPlayedCard = chosen;
@@ -399,7 +398,7 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
       c.rank === "8" || c.rank === "Joker"
     );
     if (jFollow.length > 0) {
-      const follow = aiChooseCard(jFollow, ns, difficulty, isCoop);
+      const follow = aiChooseCard(jFollow, ns, difficulty);
       ns.aiHand = ns.aiHand.filter(c => c.id !== follow.id);
       ns.discardPile.push(follow);
       ns.jActive = false; ns.jSuit = null;
@@ -428,17 +427,7 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
   return ns;
 }
 
-function aiChooseCard(playable: Card[], state: GameState, difficulty: string, isCoop: boolean = false): Card {
-  if (isCoop) {
-    // Ally logic: try to play low value cards if player is close to winning
-    if (state.playerHand.length <= 2) {
-      const lowValue = playable.filter(c => !["2","7","Joker"].includes(c.rank));
-      if (lowValue.length > 0) return lowValue[0];
-    }
-    // Prioritize penalty cards if AI is winning or just to mess with other imaginary players
-    // But since it's 2-player game here mostly, let's keep it simple.
-  }
-
+function aiChooseCard(playable: Card[], state: GameState, difficulty: string): Card {
   if (difficulty === "easy" && Math.random() > 0.5) {
     return playable[Math.floor(Math.random() * playable.length)];
   }

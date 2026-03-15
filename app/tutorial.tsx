@@ -102,7 +102,7 @@ const STEPS: Step[] = [
     subtitle: "Variedad y diversión",
     icon: "grid",
     iconColor: "#9B59B6",
-    body: "Clásico (8 cartas), Relámpago (5 cartas y más rápido), Torneo (mejor de 3), Cooperativo (2v2), Desafíos y Práctica. ¡Cada modo tiene sus propias recompensas!",
+    body: "Clásico (8 cartas), Relámpago (5 cartas y más rápido), Torneo (mejor de 3 rondas), Clasificatoria (4 jugadores), Desafíos y Práctica. ¡Cada modo tiene sus propias recompensas!",
   },
   {
     title: "Recompensas",
