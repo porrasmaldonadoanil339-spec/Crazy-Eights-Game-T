@@ -93,27 +93,111 @@ function FloatingIcon({ icon, SW, SH }: { icon: any; SW: number; SH: number }) {
 }
 
 // ─── Epic Victory/Defeat Overlay ──────────────────────────────────────────────
-function EpicResultOverlay({ type, coins, quality }: { type: "win" | "lose"; coins: number; quality?: string }) {
-  const T = useT();
-  const scale = useSharedValue(0.5);
-  const opacity = useSharedValue(0);
+// ─── Particle confetti (falling from top) ─────────────────────────────────────
+const CONFETTI_COLORS = [
+  "#D4AF37","#FFD700","#E74C3C","#27AE60","#9B59B6","#00D4FF",
+  "#FF6F00","#FFFFFF","#E91E8C","#3498DB","#F39C12","#1ABC9C",
+];
+const CONFETTI_SYMS = ["♠","♥","♦","♣","★","●","■","▲"];
+
+function ConfettiPiece({ idx, SH }: { idx: number; SH: number }) {
+  const seed = idx * 37 + 17;
+  const startX = ((seed * 127) % SW);
+  const startY = useSharedValue(-30 - (seed % 80));
+  const x = useSharedValue(startX);
+  const op = useSharedValue(0);
+  const rot = useSharedValue(0);
+  const sc = useSharedValue(0.6 + (seed % 7) * 0.1);
+  const color = CONFETTI_COLORS[seed % CONFETTI_COLORS.length];
+  const sym = CONFETTI_SYMS[seed % CONFETTI_SYMS.length];
+  const size = 10 + (seed % 3) * 5;
+  const duration = 1400 + (seed % 600);
+  const wobble = 20 + (seed % 30);
+  const delay = (seed % 300);
 
   useEffect(() => {
-    const dur = quality === "low" ? 200 : 400;
-    scale.value = withSpring(1, { damping: quality === "high" ? 6 : 8, stiffness: 100 });
-    opacity.value = withTiming(1, { duration: dur });
+    const targetY = SH + 60;
+    op.value = withDelay(delay, withTiming(1, { duration: 200 }));
+    startY.value = withDelay(delay, withTiming(targetY, { duration: duration, easing: Easing.in(Easing.quad) }));
+    x.value = withDelay(delay, withSequence(
+      withTiming(startX + wobble, { duration: duration / 2, easing: Easing.inOut(Easing.quad) }),
+      withTiming(startX - wobble / 2, { duration: duration / 2, easing: Easing.inOut(Easing.quad) }),
+    ));
+    rot.value = withDelay(delay, withTiming((seed % 2 === 0 ? 1 : -1) * 720, { duration: duration }));
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    position: "absolute",
+    left: x.value,
+    top: startY.value,
+    opacity: op.value,
+    transform: [{ rotate: `${rot.value}deg` }, { scale: sc.value }],
+  }));
+  return (
+    <Animated.Text style={[style, { fontSize: size, color }]}>{sym}</Animated.Text>
+  );
+}
+
+function WinParticles({ quality = "high" }: { quality?: string }) {
+  const SH = Dimensions.get("window").height;
+  const total = quality === "low" ? 12 : quality === "medium" ? 24 : 42;
+  return (
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" } as any]}>
+      {Array.from({ length: total }).map((_, i) => (
+        <ConfettiPiece key={i} idx={i} SH={SH} />
+      ))}
+    </View>
+  );
+}
+
+// ─── Epic flash overlay ────────────────────────────────────────────────────────
+function EpicResultOverlay({ type, coins, quality }: { type: "win" | "lose"; coins: number; quality?: string }) {
+  const T = useT();
+  const scale = useSharedValue(2.2);
+  const opacity = useSharedValue(0);
+  const flash = useSharedValue(0);
+  const glowPulse = useSharedValue(0.4);
+
+  const isWin = type === "win";
+  const mainColor = isWin ? Colors.gold : "#E74C3C";
+
+  useEffect(() => {
+    // Flash effect
+    flash.value = withSequence(
+      withTiming(0.85, { duration: 80 }),
+      withTiming(0, { duration: 250 }),
+    );
+    // Text pops in with overshoot
+    scale.value = withSpring(1, { damping: 5, stiffness: 180, mass: 0.7 });
+    opacity.value = withTiming(1, { duration: 120 });
+    // Pulse glow
+    glowPulse.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 600, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.4, { duration: 600, easing: Easing.inOut(Easing.sin) }),
+      ), -1
+    );
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     opacity: opacity.value,
   }));
-
-  const isWin = type === "win";
-  const mainColor = isWin ? Colors.gold : Colors.red;
+  const flashStyle = useAnimatedStyle(() => ({
+    opacity: flash.value,
+  }));
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowPulse.value * 0.6,
+    transform: [{ scale: 0.8 + glowPulse.value * 0.4 }],
+  }));
 
   return (
     <View style={[StyleSheet.absoluteFill, styles.epicOverlay]}>
+      {isWin && <WinParticles quality={quality} />}
+      {/* Flash */}
+      <Animated.View style={[StyleSheet.absoluteFill, flashStyle, { backgroundColor: isWin ? "#D4AF37" : "#E74C3C", pointerEvents: "none" } as any]} />
+      {/* Glow orb */}
+      <Animated.View style={[styles.epicGlowOrb, { backgroundColor: mainColor }, glowStyle]} />
       <Animated.View style={[styles.epicContent, animatedStyle]}>
         <Text style={[styles.epicTitle, { color: mainColor }]}>
           {isWin ? T("youWon") : T("defeat")}
@@ -124,54 +208,11 @@ function EpicResultOverlay({ type, coins, quality }: { type: "win" | "lose"; coi
           </Text>
         )}
       </Animated.View>
-      {isWin && <WinParticles quality={quality} />}
     </View>
   );
 }
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
-
-// ─── Particle confetti for win ───────────────────────────────────────────────
-const PARTICLE_SYMS = ["♠","♥","♦","♣"];
-function WinParticle({ index, total, quality }: { index: number; total: number; quality: string }) {
-  const x = useSharedValue(SW * 0.5);
-  const y = useSharedValue(300);
-  const op = useSharedValue(0);
-  const sc = useSharedValue(0);
-  useEffect(() => {
-    const angle = (index / total) * Math.PI * 2;
-    const dist = quality === "high" ? 100 + Math.random() * 130 : 80 + Math.random() * 80;
-    const tx = SW * 0.5 + Math.cos(angle) * dist;
-    const ty = 300 + Math.sin(angle) * dist - 140;
-    const dur = quality === "low" ? 400 : quality === "high" ? 900 : 700;
-    op.value = withTiming(1, { duration: 80 });
-    sc.value = withSpring(quality === "high" ? 1.5 : 1.2, { damping: quality === "high" ? 8 : 12 });
-    x.value = withTiming(tx, { duration: dur, easing: Easing.out(Easing.quad) });
-    y.value = withTiming(ty, { duration: dur, easing: Easing.out(Easing.quad) });
-    setTimeout(() => { op.value = withTiming(0, { duration: quality === "low" ? 150 : 300 }); }, dur - 150);
-  }, []);
-  const s = useAnimatedStyle(() => ({
-    position: "absolute", left: x.value - 6, top: y.value - 6,
-    opacity: op.value, transform: [{ scale: sc.value }],
-  }));
-  const isRed = index % 4 === 1 || index % 4 === 2;
-  return (
-    <Animated.Text style={[s, { fontSize: quality === "high" ? 18 : 14, color: isRed ? "#C0392B" : Colors.gold }]}>
-      {PARTICLE_SYMS[index % 4]}
-    </Animated.Text>
-  );
-}
-
-function WinParticles({ quality = "high" }: { quality?: string }) {
-  const total = quality === "low" ? 4 : quality === "medium" ? 8 : 16;
-  return (
-    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" } as any]}>
-      {Array.from({ length: total }).map((_, i) => (
-        <WinParticle key={i} index={i} total={total} quality={quality} />
-      ))}
-    </View>
-  );
-}
 
 // ─── Advice Badge ────────────────────────────────────────────────────────────
 function AdviceBadge({ card, T }: { card: Card; T: any }) {
@@ -378,47 +419,94 @@ const crStyles = StyleSheet.create({
 });
 
 // ─── Ranked promotion/demotion overlay ────────────────────────────────────────
+// ─── Individual animating star for promotion overlay ──────────────────────────
+function PromotionStar({ idx }: { idx: number }) {
+  const sc = useSharedValue(0);
+  const rot = useSharedValue(-30);
+  useEffect(() => {
+    const delay = 500 + idx * 150;
+    setTimeout(() => {
+      sc.value = withSpring(1, { damping: 4, stiffness: 250 });
+      rot.value = withSpring(0, { damping: 8 });
+    }, delay);
+  }, []);
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: sc.value }, { rotate: `${rot.value}deg` }],
+  }));
+  return (
+    <Animated.View style={style}>
+      <Ionicons name="star" size={26} color={Colors.gold} />
+    </Animated.View>
+  );
+}
+
 function RankedResultOverlay({ type, onDone }: { type: "promotion" | "demotion"; onDone: () => void }) {
   const T = useT();
-  const sc = useSharedValue(0.5);
+  const sc = useSharedValue(0.4);
   const op = useSharedValue(0);
+  const iconBounce = useSharedValue(0);
+  const flash = useSharedValue(0);
   const isPromo = type === "promotion";
   const accentColor = isPromo ? Colors.gold : "#E74C3C";
+
   useEffect(() => {
-    sc.value = withSpring(1, { damping: 11 });
-    op.value = withTiming(1, { duration: 300 });
-    const t = setTimeout(onDone, 3200);
+    flash.value = withSequence(
+      withTiming(isPromo ? 0.6 : 0.4, { duration: 100 }),
+      withTiming(0, { duration: 350 }),
+    );
+    sc.value = withSpring(1, { damping: isPromo ? 5 : 10, stiffness: 160 });
+    op.value = withTiming(1, { duration: 250 });
+    iconBounce.value = withDelay(200, withSpring(1, { damping: 5, stiffness: 200 }));
+    const t = setTimeout(onDone, isPromo ? 4000 : 3000);
     return () => clearTimeout(t);
   }, []);
+
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
+  const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: iconBounce.value }] }));
+  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+
   return (
     <View style={rrStyles.overlay}>
-      <Animated.View style={[rrStyles.card, { borderColor: accentColor + "55" }, animStyle]}>
-        <LinearGradient colors={isPromo ? ["#1A1200", "#221800", "#1A1200"] : ["#1A0000", "#220000", "#1A0000"]} style={rrStyles.grad}>
-          <Ionicons name={isPromo ? "trending-up" : "trending-down"} size={52} color={accentColor} />
+      {isPromo && <WinParticles quality="medium" />}
+      <Animated.View style={[StyleSheet.absoluteFill, flashStyle, { backgroundColor: accentColor, pointerEvents: "none" } as any]} />
+      <Animated.View style={[rrStyles.card, { borderColor: accentColor + "66", borderWidth: isPromo ? 2.5 : 2, shadowColor: accentColor, shadowRadius: isPromo ? 30 : 10, shadowOpacity: 0.6, shadowOffset: { width: 0, height: 0 }, elevation: 20 }, animStyle]}>
+        <LinearGradient
+          colors={isPromo ? ["#1A1400", "#2A2000", "#1A1400"] : ["#1A0000", "#280000", "#1A0000"]}
+          style={rrStyles.grad}
+        >
+          <Animated.View style={iconStyle}>
+            <Ionicons name={isPromo ? "arrow-up-circle" : "arrow-down-circle"} size={64} color={accentColor} />
+          </Animated.View>
           <Text style={[rrStyles.title, { color: accentColor }]}>
             {isPromo ? T("rankPromoted") : T("rankDemoted")}
           </Text>
           <Text style={rrStyles.sub}>
             {isPromo ? T("rankPromotedSub") : T("rankDemotedSub")}
           </Text>
-          <View style={rrStyles.starsRow}>
-            {[0, 1, 2, 3, 4].map(i => (
-              <Ionicons key={i} name={isPromo ? "star" : "star-outline"} size={22} color={isPromo ? Colors.gold : "#E74C3C66"} style={{ opacity: isPromo ? 1 : 0.5 }} />
-            ))}
-          </View>
+          {isPromo && (
+            <View style={rrStyles.starsRow}>
+              {[0, 1, 2, 3, 4].map(i => <PromotionStar key={i} idx={i} />)}
+            </View>
+          )}
+          {!isPromo && (
+            <View style={rrStyles.starsRow}>
+              {[0, 1, 2, 3, 4].map(i => (
+                <Ionicons key={i} name="star-outline" size={22} color="#E74C3C55" />
+              ))}
+            </View>
+          )}
         </LinearGradient>
       </Animated.View>
     </View>
   );
 }
 const rrStyles = StyleSheet.create({
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.8)", alignItems: "center", justifyContent: "center", zIndex: 250 },
-  card: { width: 300, borderRadius: 24, overflow: "hidden", borderWidth: 2 },
-  grad: { padding: 28, alignItems: "center", gap: 12 },
-  title: { fontFamily: "Nunito_800ExtraBold", fontSize: 26, textAlign: "center" },
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", zIndex: 250 },
+  card: { width: 310, borderRadius: 24, overflow: "hidden" },
+  grad: { padding: 32, alignItems: "center", gap: 14 },
+  title: { fontFamily: "Nunito_800ExtraBold", fontSize: 28, textAlign: "center" },
   sub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: "rgba(255,255,255,0.6)", textAlign: "center", lineHeight: 18 },
-  starsRow: { flexDirection: "row", gap: 8 },
+  starsRow: { flexDirection: "row", gap: 10, marginTop: 4 },
 });
 
 // ─── Exit confirm modal ────────────────────────────────────────────────────────
@@ -513,7 +601,7 @@ function TournamentModal({ scores, round, onContinue, onQuit, lastRoundWon }: {
     ? (lastRoundWon !== false ? "¡ROUND FINAL!" : "¡ROUND FINAL!")
     : lastRoundWon
     ? `${T("you")} — Round ${lastRound}`
-    : `CPU — Round ${lastRound}`;
+    : `Rival — Round ${lastRound}`;
 
   return (
     <View style={styles.endOverlay}>
@@ -603,59 +691,108 @@ const tStyles = StyleSheet.create({
 });
 
 // ─── Ranked star section inside EndModal ────────────────────────────────────
-function RankedStarSection({ rankedProfile }: { rankedProfile: RankedProfile }) {
-  const T = useT();
-  const starScale = useSharedValue(0);
-  const starGlow = useSharedValue(0);
-  const rankInfo = getRankInfo(rankedProfile);
-  const rankColor = RANK_COLORS[rankedProfile.rank] || Colors.gold;
+// ─── Animated single star for the gain/loss effect ────────────────────────────
+function FlyingStar({ idx, isWin }: { idx: number; isWin: boolean }) {
+  const tx = useSharedValue(isWin ? 60 + idx * 32 : -(20 + idx * 20));
+  const ty = useSharedValue(isWin ? -20 : 0);
+  const op = useSharedValue(0);
+  const sc = useSharedValue(isWin ? 0.2 : 1.4);
+  const delay = idx * 120 + 300;
 
   useEffect(() => {
-    starScale.value = withDelay(400, withSpring(1, { damping: 6, stiffness: 120 }));
-    starGlow.value = withDelay(600, withRepeat(withSequence(
-      withTiming(1, { duration: 500 }),
-      withTiming(0.4, { duration: 500 }),
-    ), -1, true));
+    if (isWin) {
+      tx.value = withDelay(delay, withSpring(idx * 26, { damping: 9, stiffness: 120 }));
+      ty.value = withDelay(delay, withSpring(0, { damping: 9 }));
+      sc.value = withDelay(delay, withSpring(1, { damping: 6, stiffness: 200 }));
+      op.value = withDelay(delay, withTiming(1, { duration: 180 }));
+    } else {
+      tx.value = withDelay(delay, withTiming(-(40 + idx * 16), { duration: 500, easing: Easing.in(Easing.quad) }));
+      ty.value = withDelay(delay, withTiming(-30, { duration: 500 }));
+      sc.value = withDelay(delay, withTiming(0, { duration: 500 }));
+      op.value = withSequence(
+        withTiming(0.7, { duration: 50 }),
+        withDelay(delay, withTiming(0, { duration: 400 }))
+      );
+    }
+  }, []);
+  const style = useAnimatedStyle(() => ({
+    position: "absolute",
+    left: tx.value,
+    top: ty.value,
+    opacity: op.value,
+    transform: [{ scale: sc.value }],
+  }));
+  return (
+    <Animated.View style={style}>
+      <Ionicons name="star" size={20} color={isWin ? Colors.gold : "#E74C3C"} />
+    </Animated.View>
+  );
+}
+
+function RankedStarSection({ rankedProfile, isWin }: { rankedProfile: RankedProfile; isWin: boolean }) {
+  const rankInfo = getRankInfo(rankedProfile);
+  const rankColor = RANK_COLORS[rankedProfile.rank] || Colors.gold;
+  const delta = isWin ? 2 : -1;
+  const deltaLabel = isWin ? "+2" : "-1";
+  const maxStars = rankedProfile.maxStars || 3;
+  const currentStars = Math.max(0, Math.min(rankedProfile.stars, maxStars));
+  const barPct = currentStars / maxStars;
+  const barAnim = useSharedValue(0);
+  const labelScale = useSharedValue(0.3);
+
+  useEffect(() => {
+    barAnim.value = withDelay(200, withTiming(barPct, { duration: 900, easing: Easing.out(Easing.cubic) }));
+    labelScale.value = withDelay(150, withSpring(1, { damping: 6, stiffness: 180 }));
   }, []);
 
-  const starStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: starScale.value }],
+  const barStyle = useAnimatedStyle(() => ({
+    width: `${barAnim.value * 100}%`,
   }));
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: starGlow.value,
+  const labelStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: labelScale.value }],
   }));
 
   return (
     <View style={styles.rankedStarSection}>
-      <View style={styles.rankedStarRow}>
-        <Animated.View style={[styles.rankedStarBig, starStyle]}>
-          <Ionicons name="star" size={48} color={Colors.gold} />
-          <Animated.View style={[styles.rankedStarGlow, glowStyle]}>
-            <View style={[styles.rankedStarGlowCircle, { shadowColor: Colors.gold }]} />
-          </Animated.View>
-        </Animated.View>
-        <View style={styles.rankedStarInfo}>
-          <Text style={styles.rankedStarLabel}>
-            {T("starEarned" as any) || "+1 Estrella"}
-          </Text>
-          <Text style={[styles.rankedStarRankName, { color: rankColor }]}>
-            {rankInfo.rankName} {rankInfo.divisionName}
-          </Text>
-          <View style={styles.rankedStarPips}>
-            {Array.from({ length: rankedProfile.maxStars }).map((_, i) => (
-              <Ionicons
-                key={i}
-                name={i < rankedProfile.stars ? "star" : "star-outline"}
-                size={14}
-                color={i < rankedProfile.stars ? Colors.gold : "rgba(255,255,255,0.2)"}
-              />
-            ))}
-          </View>
-          <Text style={styles.rankedStarProgress}>
-            {rankedProfile.stars}/{rankedProfile.maxStars}
-          </Text>
+      {/* Delta badge */}
+      <Animated.View style={[styles.rankedDeltaBadge, { backgroundColor: isWin ? "#D4AF3722" : "#E74C3C22", borderColor: isWin ? "#D4AF3755" : "#E74C3C55" }, labelStyle]}>
+        <Ionicons name={isWin ? "trending-up" : "trending-down"} size={14} color={isWin ? Colors.gold : "#E74C3C"} />
+        <Text style={[styles.rankedDeltaText, { color: isWin ? Colors.gold : "#E74C3C" }]}>
+          {deltaLabel} {isWin ? "Estrellas" : "Estrella"}
+        </Text>
+      </Animated.View>
+
+      {/* Rank name */}
+      <Text style={[styles.rankedStarRankName, { color: rankColor, marginBottom: 8 }]}>
+        {rankInfo.rankName} {rankInfo.divisionName}
+      </Text>
+
+      {/* Star pips with flying animation */}
+      <View style={styles.rankedFlyingStarsWrap}>
+        {Array.from({ length: maxStars }).map((_, i) => (
+          <Ionicons
+            key={i}
+            name={i < currentStars ? "star" : "star-outline"}
+            size={22}
+            color={i < currentStars ? Colors.gold : "rgba(255,255,255,0.15)"}
+          />
+        ))}
+        {/* Flying stars overlay */}
+        <View style={{ position: "absolute", left: 0, top: 0, height: 24 }}>
+          {isWin && Array.from({ length: Math.min(2, delta) }).map((_, i) => (
+            <FlyingStar key={i} idx={i} isWin={true} />
+          ))}
+          {!isWin && currentStars < maxStars && (
+            <FlyingStar idx={0} isWin={false} />
+          )}
         </View>
       </View>
+
+      {/* Progress bar */}
+      <View style={styles.rankedProgressTrack}>
+        <Animated.View style={[styles.rankedProgressFill, { backgroundColor: rankColor }, barStyle]} />
+      </View>
+      <Text style={styles.rankedStarProgress}>{currentStars} / {maxStars}</Text>
     </View>
   );
 }
@@ -791,9 +928,9 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
             </Text>
           </Animated.View>
 
-          {/* Ranked star section */}
-          {mode === "ranked" && isWin && rankedProfile && (
-            <RankedStarSection rankedProfile={rankedProfile} />
+          {/* Ranked star section (win and loss) */}
+          {mode === "ranked" && !isDraw && rankedProfile && (
+            <RankedStarSection rankedProfile={rankedProfile} isWin={isWin} />
           )}
 
           {/* Friend Request Button */}
@@ -1953,8 +2090,13 @@ export default function GameScreen() {
           coinsEarned={endCoins}
           xpEarned={endXp}
           onRestart={() => {
+            if (session?.mode === "ranked") {
+              router.replace("/ranked-lobby");
+              return;
+            }
             retryCount.current += 1;
             setShowMatchmaking(true);
+            startGameMusic().catch(() => {});
             if (session) startGame(session.mode, session.difficulty);
           }}
           onHome={() => router.back()}
@@ -2355,6 +2497,13 @@ const styles = StyleSheet.create({
     color: "#4ade80",
     marginTop: 10,
   },
+  epicGlowOrb: {
+    position: "absolute",
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    opacity: 0.25,
+  },
 
   // Friend Add Button in EndModal
   friendAddBtn: {
@@ -2568,9 +2717,10 @@ const styles = StyleSheet.create({
   },
   gameMenuCloseTxt: { fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.gold },
   rankedStarSection: {
-    backgroundColor: "rgba(212,175,55,0.08)", borderRadius: 12,
-    borderWidth: 1, borderColor: "rgba(212,175,55,0.25)",
+    backgroundColor: "rgba(20,16,4,0.6)", borderRadius: 14,
+    borderWidth: 1, borderColor: "rgba(212,175,55,0.3)",
     paddingVertical: 14, paddingHorizontal: 16, width: "100%",
+    alignItems: "center", gap: 8,
   },
   rankedStarRow: { flexDirection: "row", alignItems: "center", gap: 16 },
   rankedStarBig: { alignItems: "center", justifyContent: "center", position: "relative" },
@@ -2581,9 +2731,22 @@ const styles = StyleSheet.create({
   },
   rankedStarInfo: { flex: 1, gap: 4 },
   rankedStarLabel: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: Colors.gold },
-  rankedStarRankName: { fontFamily: "Nunito_700Bold", fontSize: 13 },
+  rankedStarRankName: { fontFamily: "Nunito_700Bold", fontSize: 13, textAlign: "center" },
   rankedStarPips: { flexDirection: "row", gap: 3, marginTop: 2 },
   rankedStarProgress: {
     fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2,
   },
+  rankedDeltaBadge: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1,
+  },
+  rankedDeltaText: { fontFamily: "Nunito_800ExtraBold", fontSize: 14 },
+  rankedFlyingStarsWrap: {
+    flexDirection: "row", gap: 6, alignItems: "center", position: "relative", minHeight: 30,
+  },
+  rankedProgressTrack: {
+    width: "100%", height: 6, backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 3, overflow: "hidden", marginTop: 4,
+  },
+  rankedProgressFill: { height: "100%", borderRadius: 3 },
 });

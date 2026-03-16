@@ -72,7 +72,7 @@ const STEPS: Step[] = [
     subtitle: "Vacía tu mano",
     icon: "trophy",
     iconColor: Colors.gold,
-    body: "Debes deshacerte de todas tus cartas antes que el CPU. Juega cartas que coincidan en PALO o en NÚMERO con la carta superior de la pila.",
+    body: "Debes deshacerte de todas tus cartas antes que el Rival. Juega cartas que coincidan en PALO o en NÚMERO con la carta superior de la pila.",
   },
   {
     title: "Jugar una carta",
@@ -116,7 +116,7 @@ const STEPS: Step[] = [
     subtitle: "Suerte en la mesa",
     icon: "rocket",
     iconColor: Colors.success,
-    body: "Ya conoces las bases. Recuerda: guarda tus 8 para momentos clave, observa las cartas del CPU y siempre planifica tu próxima jugada. ¡Buena suerte!",
+    body: "Ya conoces las bases. Recuerda: guarda tus 8 para momentos clave, observa las cartas del Rival y siempre planifica tu próxima jugada. ¡Buena suerte!",
     interactive: "done",
   },
 ];

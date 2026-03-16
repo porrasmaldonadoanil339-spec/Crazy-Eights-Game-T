@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence,
-  withSpring, Easing, FadeIn, FadeInDown, SlideInDown,
+  withSpring, withDelay, Easing, FadeIn, FadeInDown, SlideInDown,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
@@ -406,37 +406,108 @@ function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
 }
 
 // ─── Win/Lose overlay ────────────────────────────────────────────────────
+// ─── Mini confetti for result overlay ────────────────────────────────────────
+const CONFETTI_COLORS_OL = ["#D4AF37","#FFD700","#E74C3C","#27AE60","#9B59B6","#00D4FF","#FF6F00","#FFFFFF","#E91E8C","#3498DB"];
+const CONFETTI_SYMS_OL = ["♠","♥","♦","♣","★","●","■","▲"];
+function OLConfettiPiece({ idx, SW: screenW, SH: screenH }: { idx: number; SW: number; SH: number }) {
+  const seed = idx * 41 + 23;
+  const startX = (seed * 131) % screenW;
+  const startY = useSharedValue(-20 - (seed % 60));
+  const x = useSharedValue(startX);
+  const op = useSharedValue(0);
+  const rot = useSharedValue(0);
+  const sc = useSharedValue(0.7 + (seed % 5) * 0.08);
+  const color = CONFETTI_COLORS_OL[seed % CONFETTI_COLORS_OL.length];
+  const sym = CONFETTI_SYMS_OL[seed % CONFETTI_SYMS_OL.length];
+  const size = 10 + (seed % 3) * 5;
+  const duration = 1200 + (seed % 700);
+  const wobble = 18 + (seed % 28);
+  const delay = seed % 350;
+
+  useEffect(() => {
+    op.value = withDelay(delay, withTiming(1, { duration: 180 }));
+    startY.value = withDelay(delay, withTiming(screenH + 50, { duration: duration, easing: Easing.in(Easing.quad) }));
+    x.value = withDelay(delay, withSequence(
+      withTiming(startX + wobble, { duration: duration / 2, easing: Easing.inOut(Easing.quad) }),
+      withTiming(startX - wobble / 2, { duration: duration / 2, easing: Easing.inOut(Easing.quad) }),
+    ));
+    rot.value = withDelay(delay, withTiming((seed % 2 === 0 ? 1 : -1) * 720, { duration: duration }));
+  }, []);
+  const style = useAnimatedStyle(() => ({
+    position: "absolute", left: x.value, top: startY.value, opacity: op.value,
+    transform: [{ rotate: `${rot.value}deg` }, { scale: sc.value }],
+  }));
+  return <Animated.Text style={[style, { fontSize: size, color }]}>{sym}</Animated.Text>;
+}
+function OLWinConfetti({ SW: screenW, SH: screenH }: { SW: number; SH: number }) {
+  return (
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" } as any]}>
+      {Array.from({ length: 36 }).map((_, i) => (
+        <OLConfettiPiece key={i} idx={i} SW={screenW} SH={screenH} />
+      ))}
+    </View>
+  );
+}
+
 function ResultOverlay({ isWin, winnerName, winnerColor, onClose, onPlayAgain }: {
   isWin: boolean; winnerName: string; winnerColor: string; onClose: () => void; onPlayAgain: () => void;
 }) {
   const T = useT();
+  const { width: SW, height: SH } = useWindowDimensions();
+  const sc = useSharedValue(2.0);
+  const op = useSharedValue(0);
+  const flash = useSharedValue(0);
+  const iconScale = useSharedValue(0);
+  const btnOp = useSharedValue(0);
+  const accentColor = isWin ? Colors.gold : Colors.red;
+
+  useEffect(() => {
+    flash.value = withSequence(
+      withTiming(isWin ? 0.7 : 0.5, { duration: 90 }),
+      withTiming(0, { duration: 300 }),
+    );
+    sc.value = withSpring(1, { damping: 5, stiffness: 170, mass: 0.8 });
+    op.value = withTiming(1, { duration: 150 });
+    iconScale.value = withDelay(150, withSpring(1, { damping: 5, stiffness: 220 }));
+    btnOp.value = withDelay(500, withTiming(1, { duration: 400 }));
+  }, []);
+
+  const titleStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
+  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+  const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: iconScale.value }] }));
+  const btnStyle = useAnimatedStyle(() => ({ opacity: btnOp.value }));
+
   return (
     <View style={gameStyles.resultOverlay}>
       <LinearGradient
-        colors={isWin ? ["#041a04", "#062206"] : ["#1a0404", "#220606"]}
+        colors={isWin ? ["#041a04", "#062206", "#041408"] : ["#1a0404", "#220606", "#180404"]}
         style={StyleSheet.absoluteFill}
       />
-      <Ionicons name={isWin ? "trophy" : "close-circle"} size={72} color={isWin ? Colors.gold : Colors.red} />
-      <Text style={[gameStyles.resultTitle, { color: isWin ? Colors.gold : Colors.red }]}>
+      {isWin && <OLWinConfetti SW={SW} SH={SH} />}
+      <Animated.View style={[StyleSheet.absoluteFill, flashStyle, { backgroundColor: accentColor, pointerEvents: "none" } as any]} />
+
+      <Animated.View style={iconStyle}>
+        <Ionicons name={isWin ? "trophy" : "close-circle"} size={80} color={accentColor} />
+      </Animated.View>
+      <Animated.Text style={[gameStyles.resultTitle, { color: accentColor }, titleStyle]}>
         {isWin ? T("youWon") : T("defeat")}
-      </Text>
+      </Animated.Text>
       {!isWin && (
         <Text style={[gameStyles.resultSub, { color: winnerColor }]}>{winnerName} {T("wonSuffix")}</Text>
       )}
-      <Pressable style={gameStyles.resultBtn} onPress={onPlayAgain}>
-        <LinearGradient colors={[Colors.gold, "#A07800"]} style={gameStyles.resultBtnGrad}>
-          <Ionicons name="refresh" size={16} color="#1a0a00" />
-          <Text style={gameStyles.resultBtnText}>{T("playAgain")}</Text>
-        </LinearGradient>
-      </Pressable>
-      <Pressable style={[gameStyles.resultBtn, { marginTop: 8 }]} onPress={onClose}>
-        <LinearGradient
-          colors={["#333", "#222"]}
-          style={gameStyles.resultBtnGrad}
-        >
-          <Text style={[gameStyles.resultBtnText, { color: "#ccc" }]}>{T("returnMenu")}</Text>
-        </LinearGradient>
-      </Pressable>
+      <Animated.View style={[{ width: "100%", alignItems: "center", gap: 12 }, btnStyle]}>
+        <Pressable style={gameStyles.resultBtn} onPress={onPlayAgain}>
+          <LinearGradient colors={[Colors.gold, "#A07800"]} style={gameStyles.resultBtnGrad}>
+            <Ionicons name="refresh" size={16} color="#1a0a00" />
+            <Text style={gameStyles.resultBtnText}>{T("playAgain")}</Text>
+          </LinearGradient>
+        </Pressable>
+        <Pressable style={[gameStyles.resultBtn, { marginTop: 0 }]} onPress={onClose}>
+          <LinearGradient colors={["#333", "#222"]} style={gameStyles.resultBtnGrad}>
+            <Text style={[gameStyles.resultBtnText, { color: "#ccc" }]}>{T("returnMenu")}</Text>
+          </LinearGradient>
+        </Pressable>
+      </Animated.View>
     </View>
   );
 }
@@ -501,35 +572,77 @@ const raStyles = StyleSheet.create({
 });
 
 // ─── Ranked promotion / demotion overlay ──────────────────────────────────
+function OLPromotionStar({ idx }: { idx: number }) {
+  const sc = useSharedValue(0);
+  const rot = useSharedValue(-30);
+  useEffect(() => {
+    setTimeout(() => {
+      sc.value = withSpring(1, { damping: 4, stiffness: 250 });
+      rot.value = withSpring(0, { damping: 8 });
+    }, 500 + idx * 150);
+  }, []);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }, { rotate: `${rot.value}deg` }] }));
+  return <Animated.View style={style}><Ionicons name="star" size={26} color={Colors.gold} /></Animated.View>;
+}
+
 function RankedResultOverlay({ type, onDone }: { type: "promotion" | "demotion"; onDone: () => void }) {
   const T = useT();
-  const sc = useSharedValue(0.5);
+  const { width: SW, height: SH } = useWindowDimensions();
+  const sc = useSharedValue(0.4);
   const op = useSharedValue(0);
+  const iconBounce = useSharedValue(0);
+  const flash = useSharedValue(0);
   const isPromo = type === "promotion";
   const accentColor = isPromo ? Colors.gold : "#E74C3C";
+
   useEffect(() => {
-    sc.value = withSpring(1, { damping: 11 });
-    op.value = withTiming(1, { duration: 300 });
-    const t = setTimeout(onDone, 3200);
+    flash.value = withSequence(
+      withTiming(isPromo ? 0.6 : 0.4, { duration: 100 }),
+      withTiming(0, { duration: 350 }),
+    );
+    sc.value = withSpring(1, { damping: isPromo ? 5 : 10, stiffness: 160 });
+    op.value = withTiming(1, { duration: 250 });
+    iconBounce.value = withDelay(200, withSpring(1, { damping: 5, stiffness: 200 }));
+    const t = setTimeout(onDone, isPromo ? 4000 : 3000);
     return () => clearTimeout(t);
   }, []);
+
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }], opacity: op.value }));
+  const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: iconBounce.value }] }));
+  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+
   return (
-    <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.8)", alignItems: "center", justifyContent: "center", zIndex: 250 } as any}>
-      <Animated.View style={[{ width: 300, borderRadius: 24, overflow: "hidden", borderWidth: 2, borderColor: accentColor + "55" }, animStyle]}>
-        <LinearGradient colors={isPromo ? ["#1A1200", "#221800", "#1A1200"] : ["#1A0000", "#220000", "#1A0000"]} style={{ padding: 28, alignItems: "center", gap: 12 } as any}>
-          <Ionicons name={isPromo ? "trending-up" : "trending-down"} size={52} color={accentColor} />
-          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 26, color: accentColor, textAlign: "center" }}>
+    <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.88)", alignItems: "center", justifyContent: "center", zIndex: 250 } as any}>
+      {isPromo && <OLWinConfetti SW={SW} SH={SH} />}
+      <Animated.View style={[StyleSheet.absoluteFill, flashStyle, { backgroundColor: accentColor, pointerEvents: "none" } as any]} />
+      <Animated.View style={[{
+        width: 310, borderRadius: 24, overflow: "hidden",
+        borderWidth: isPromo ? 2.5 : 2, borderColor: accentColor + "66",
+        shadowColor: accentColor, shadowRadius: isPromo ? 28 : 10, shadowOpacity: 0.6,
+        shadowOffset: { width: 0, height: 0 }, elevation: 20,
+      }, animStyle]}>
+        <LinearGradient
+          colors={isPromo ? ["#1A1400", "#2A2000", "#1A1400"] : ["#1A0000", "#280000", "#1A0000"]}
+          style={{ padding: 32, alignItems: "center", gap: 14 } as any}
+        >
+          <Animated.View style={iconStyle}>
+            <Ionicons name={isPromo ? "arrow-up-circle" : "arrow-down-circle"} size={64} color={accentColor} />
+          </Animated.View>
+          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 28, color: accentColor, textAlign: "center" }}>
             {isPromo ? (T("rankPromoted" as any) || "¡Subiste de rango!") : (T("rankDemoted" as any) || "Bajaste de rango")}
           </Text>
           <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 13, color: "rgba(255,255,255,0.6)", textAlign: "center", lineHeight: 18 }}>
             {isPromo ? (T("rankPromotedSub" as any) || "¡Sigue así!") : (T("rankDemotedSub" as any) || "Puedes recuperarte")}
           </Text>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            {[0, 1, 2, 3, 4].map(i => (
-              <Ionicons key={i} name={isPromo ? "star" : "star-outline"} size={22} color={isPromo ? Colors.gold : "#E74C3C66"} style={{ opacity: isPromo ? 1 : 0.5 }} />
-            ))}
-          </View>
+          {isPromo ? (
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
+              {[0, 1, 2, 3, 4].map(i => <OLPromotionStar key={i} idx={i} />)}
+            </View>
+          ) : (
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
+              {[0, 1, 2, 3, 4].map(i => <Ionicons key={i} name="star-outline" size={22} color="#E74C3C55" />)}
+            </View>
+          )}
         </LinearGradient>
       </Animated.View>
     </View>
@@ -716,7 +829,7 @@ export default function OnlineGameScreen() {
     // Player left during an active game — converted to bot on server side,
     // game continues. Show a brief notification to remaining players.
     s.on("player_disconnected", ({ playerName }: { playerName: string; playerIndex: number }) => {
-      const msg = `${playerName} salió → BOT`;
+      const msg = `${playerName} salió → Rival (IA)`;
       setDisconnectedPlayerMsg(msg);
       setTimeout(() => setDisconnectedPlayerMsg(null), 3500);
     });
@@ -1073,6 +1186,10 @@ export default function OnlineGameScreen() {
       router.replace("/online-lobby");
       return;
     }
+    if (modeParam === "ranked") {
+      router.replace("/ranked-lobby");
+      return;
+    }
     const newProfiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
     setCurrentCpuProfiles(newProfiles);
     const newNames = [humanName, ...newProfiles.map(c => c.name)];
@@ -1081,7 +1198,9 @@ export default function OnlineGameScreen() {
     setGameState(gs);
     setSelectedCard(null);
     cpuThinking.current = false;
-  }, [playerCount, humanName, isOnline]);
+    rankedUpdatedRef.current = false;
+    startGameMusic().catch(() => {});
+  }, [playerCount, humanName, isOnline, modeParam]);
 
   // ─── CPU zones (opponents around table) ──────────────────────────────────
   const cpuZonePositions = React.useMemo(() => {

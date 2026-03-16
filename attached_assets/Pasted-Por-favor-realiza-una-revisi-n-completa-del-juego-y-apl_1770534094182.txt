@@ -1,0 +1,30 @@
+Por favor realiza una revisión completa del juego y aplica las siguientes correcciones y mejoras:
+
+1. **Eliminar cualquier texto que diga “CPU”** en cualquier parte del juego. En todos los casos debe aparecer **“Rival”**.
+
+2. **Corregir el problema de la música cuando se presiona “Volver a jugar”**, ya que actualmente deja de escucharse. La música debe reiniciarse o mantenerse funcionando correctamente en cada nueva partida.
+
+3. **Mejorar mucho más las animaciones de victoria y derrota**, haciéndolas más fluidas, dinámicas y atractivas para que el juego se vea más profesional y emocionante para el público.
+
+4. **Cuando el jugador presione “Jugar de nuevo” en cualquier modo**, el sistema debe **volver a buscar jugadores automáticamente según su nivel o rango**, como si iniciara una nueva búsqueda de partida.
+
+5. **Revisar todos los modos de juego y mejorarlos al 100%**, asegurándote de que funcionen correctamente, que la lógica sea clara y que la experiencia sea fluida.
+
+6. **Revisar todo el juego en busca de errores o detalles que puedan mejorarse** (textos, botones, animaciones, tiempos de carga, interfaz, efectos, etc.) y corregirlos.
+
+7. **Implementar rivales automáticos (bots)** para que siempre haya oponentes disponibles cuando no haya suficientes jugadores reales conectados.
+
+8. **Crear aproximadamente 100,000 perfiles adicionales de rivales** (aparte de los perfiles que ya existen actualmente en el juego), con:
+
+   * **Nombres realistas y variados**.
+   * **Avatares estilo humano** (imágenes tipo perfil o avatares generados), para que parezcan perfiles reales dentro del juego.
+
+9. Asegurarse de que **en una misma partida no se repita el mismo rival o perfil**, para mantener el realismo del juego.
+
+10. Ajustar el **nivel de dificultad de estos rivales según el rango o nivel del jugador**, para que las partidas sean equilibradas.
+
+11. **En el modo clasificatoria**, asegurarse de que funcione correctamente **el sistema de estrellas, la subida y bajada de rangos y toda la lógica de progresión**, tal como ya se explicó anteriormente. El sistema debe reflejar correctamente cuando el jugador gana o pierde, aumentando o disminuyendo las estrellas y permitiendo subir de rango según corresponda.
+
+12. Puedes **mejorar cualquier detalle adicional que consideres necesario** para que el juego se vea **más pulido, profesional y atractivo para los jugadores**, pero **sin cambiar la base ni la jugabilidad principal del juego**.
+
+Ten en cuenta que **este juego será publicado en Play Store**, por lo que es muy importante **dejarlo lo más optimizado, estable y profesional posible**.
