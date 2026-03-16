@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useProfile } from "@/context/ProfileContext";
 import {
   View, Text, StyleSheet, Pressable, Platform, Dimensions,
 } from "react-native";
@@ -207,6 +208,7 @@ function InteractivePlayDemo({ onSuccess }: { onSuccess: () => void }) {
 
 export default function TutorialScreen() {
   const insets = useSafeAreaInsets();
+  const { markTutorialSeen } = useProfile();
   const [step, setStep] = useState(0);
   const [interactiveDone, setInteractiveDone] = useState(false);
   const slideX = useSharedValue(0);
@@ -224,6 +226,7 @@ export default function TutorialScreen() {
     if (!canAdvance) return;
     await playSound("button_press");
     if (isLast) {
+      markTutorialSeen();
       router.back();
       return;
     }
@@ -240,7 +243,7 @@ export default function TutorialScreen() {
   };
 
   const goBack = async () => {
-    if (step === 0) { router.back(); return; }
+    if (step === 0) { markTutorialSeen(); router.back(); return; }
     await playSound("button_press");
     opacity.value = withTiming(0, { duration: 150 });
     setTimeout(() => {
@@ -260,7 +263,7 @@ export default function TutorialScreen() {
       <LinearGradient colors={["#061209", "#0a1a0f", "#0d2418"]} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.closeBtn}>
+        <Pressable onPress={() => { markTutorialSeen(); router.back(); }} style={styles.closeBtn}>
           <Ionicons name="close" size={22} color={Colors.textMuted} />
         </Pressable>
         <Text style={styles.headerTitle}>TUTORIAL</Text>

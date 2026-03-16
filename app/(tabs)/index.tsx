@@ -348,7 +348,7 @@ function PokerTitle() {
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
-  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen } = useProfile();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
@@ -420,6 +420,16 @@ export default function PlayScreen() {
     opacity: 0.55 + onlineGlow.value * 0.45,
     transform: [{ scale: 0.85 + onlineGlow.value * 0.25 }],
   }));
+
+  // Auto-redirect new players to tutorial on very first launch
+  useEffect(() => {
+    if (isLoaded && !profile.tutorialSeen) {
+      const timer = setTimeout(() => {
+        router.push("/tutorial");
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoaded]);
 
   // Show daily reward on mount if available
   useEffect(() => {

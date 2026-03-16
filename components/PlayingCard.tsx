@@ -5,6 +5,9 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withTiming,
+  withRepeat,
+  withSequence,
+  cancelAnimation,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/colors";
@@ -252,6 +255,8 @@ export function PlayingCard({
   const ty = useSharedValue(0);
   const sc = useSharedValue(1);
   const glowOp = useSharedValue(0);
+  const floatY = useSharedValue(0);
+  const glowPulse = useSharedValue(0.5);
 
   useEffect(() => {
     ty.value = withSpring(isSelected ? -16 : 0, { damping: 13 });
@@ -259,12 +264,41 @@ export function PlayingCard({
     glowOp.value = withTiming(isSelected ? 1 : 0, { duration: 180 });
   }, [isSelected]);
 
+  useEffect(() => {
+    if (isPlayable && !isSelected) {
+      floatY.value = withRepeat(
+        withSequence(
+          withTiming(-4, { duration: 550 }),
+          withTiming(0, { duration: 550 }),
+        ),
+        -1,
+        false,
+      );
+      glowPulse.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 700 }),
+          withTiming(0.3, { duration: 700 }),
+        ),
+        -1,
+        false,
+      );
+    } else {
+      cancelAnimation(floatY);
+      cancelAnimation(glowPulse);
+      floatY.value = withTiming(0, { duration: 200 });
+      glowPulse.value = withTiming(0.5, { duration: 200 });
+    }
+  }, [isPlayable, isSelected]);
+
   const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: ty.value }, { scale: sc.value }],
+    transform: [
+      { translateY: ty.value + (isPlayable && !isSelected ? floatY.value : 0) },
+      { scale: sc.value },
+    ],
   }));
 
   const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowOp.value,
+    opacity: isPlayable && !isSelected ? glowPulse.value * 0.85 : glowOp.value,
   }));
 
   const accentGlow = backAccent ?? Colors.gold;

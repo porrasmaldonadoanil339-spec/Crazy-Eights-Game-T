@@ -114,6 +114,7 @@ export interface PlayerProfile {
   fastAnimations: boolean;
   confirmSpecialCards: boolean;
   showTutorials: boolean;
+  tutorialSeen: boolean;
   // Graphics settings
   graphicsQuality: "low" | "medium" | "high";
   specialEffectsEnabled: boolean;
@@ -189,6 +190,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   fastAnimations: false,
   confirmSpecialCards: true,
   showTutorials: true,
+  tutorialSeen: false,
   graphicsQuality: "high" as "low" | "medium" | "high",
   specialEffectsEnabled: true,
   animationsEnabled: true,
@@ -244,6 +246,7 @@ interface ProfileContextValue {
   removeOutgoingFriendRequest: (id: string) => void;
   linkAccount: (provider: "google" | "facebook", email: string) => void;
   unlinkAccount: (provider: "google" | "facebook") => void;
+  markTutorialSeen: () => void;
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
@@ -673,6 +676,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }));
   }, [update]);
 
+  const markTutorialSeen = useCallback(() => {
+    update((p) => ({ ...p, tutorialSeen: true }));
+  }, [update]);
+
   return (
     <ProfileContext.Provider
       value={{
@@ -713,6 +720,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         removeOutgoingFriendRequest,
         linkAccount,
         unlinkAccount,
+        markTutorialSeen,
       }}
     >
       {children}
