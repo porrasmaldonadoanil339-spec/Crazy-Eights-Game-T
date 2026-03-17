@@ -3,7 +3,7 @@ import { STORE_ITEMS, localizeItem } from "./storeItems";
 export interface BattlePassTier {
   tier: number;
   xpRequired: number;
-  rewardType: "coins" | "item" | "title" | "avatar" | "frame" | "effect";
+  rewardType: "coins" | "item" | "title" | "avatar" | "frame" | "effect" | "chest";
   rewardValue: string | number;
   rewardLabel: string;
   icon: string;
@@ -21,7 +21,7 @@ export const BATTLE_PASS_TIERS: BattlePassTier[] = [
   { tier: 7,  xpRequired: 1350,   rewardType: "coins",   rewardValue: 60,                   rewardLabel: "60 Monedas",                  icon: "cash",             iconColor: "#F1C40F" },
   { tier: 8,  xpRequired: 1750,   rewardType: "item",    rewardValue: "back_emerald",        rewardLabel: "Dorso: Esmeralda",            icon: "card",             iconColor: "#0E6655" },
   { tier: 9,  xpRequired: 2200,   rewardType: "title",   rewardValue: "title_pro",           rewardLabel: "Título: Profesional",         icon: "ribbon",           iconColor: "#2196F3" },
-  { tier: 10, xpRequired: 2750,   rewardType: "coins",   rewardValue: 100,                  rewardLabel: "100 Monedas",                 icon: "cash",             iconColor: "#F1C40F" },
+  { tier: 10, xpRequired: 2750,   rewardType: "chest",   rewardValue: "common",             rewardLabel: "Cofre Común",                 icon: "cube",             iconColor: "#95A5A6" },
   { tier: 11, xpRequired: 3400,   rewardType: "avatar",  rewardValue: "avatar_samurai",      rewardLabel: "Avatar: Samurái",             icon: "cut",              iconColor: "#E74C3C" },
   { tier: 12, xpRequired: 4200,   rewardType: "item",    rewardValue: "back_gold",           rewardLabel: "Dorso: Oro Real",             icon: "card",             iconColor: "#D4AF37" },
   { tier: 13, xpRequired: 5100,   rewardType: "coins",   rewardValue: 150,                  rewardLabel: "150 Monedas",                 icon: "cash",             iconColor: "#F1C40F" },
@@ -31,7 +31,7 @@ export const BATTLE_PASS_TIERS: BattlePassTier[] = [
   { tier: 17, xpRequired: 10100,  rewardType: "coins",   rewardValue: 200,                  rewardLabel: "200 Monedas",                 icon: "cash",             iconColor: "#F1C40F" },
   { tier: 18, xpRequired: 12000,  rewardType: "avatar",  rewardValue: "avatar_dragon",       rewardLabel: "Avatar: Dragón",              icon: "flame",            iconColor: "#E67E22" },
   { tier: 19, xpRequired: 14200,  rewardType: "title",   rewardValue: "title_grandmaster",   rewardLabel: "Título: Gran Maestro",        icon: "medal",            iconColor: "#D4AF37" },
-  { tier: 20, xpRequired: 16800,  rewardType: "item",    rewardValue: "back_ocean",          rewardLabel: "Dorso: Océano",               icon: "card",             iconColor: "#006994" },
+  { tier: 20, xpRequired: 16800,  rewardType: "chest",   rewardValue: "rare",               rewardLabel: "Cofre Raro",                  icon: "cube-outline",     iconColor: "#4A90D9" },
   // ─── Tiers 21-40: Epic rewards ──────────────────────────────────────────────
   { tier: 21, xpRequired: 19800,  rewardType: "coins",   rewardValue: 300,                  rewardLabel: "300 Monedas",                 icon: "cash",             iconColor: "#F1C40F" },
   { tier: 22, xpRequired: 23200,  rewardType: "avatar",  rewardValue: "avatar_pirate",       rewardLabel: "Avatar: Pirata",              icon: "skull",            iconColor: "#2C3E50" },
@@ -42,7 +42,7 @@ export const BATTLE_PASS_TIERS: BattlePassTier[] = [
   { tier: 27, xpRequired: 48200,  rewardType: "avatar",  rewardValue: "avatar_gladiator",    rewardLabel: "Avatar: Gladiador",           icon: "trophy",           iconColor: "#C0392B" },
   { tier: 28, xpRequired: 55200,  rewardType: "title",   rewardValue: "title_ace",           rewardLabel: "Título: El As",               icon: "star",             iconColor: "#E74C3C" },
   { tier: 29, xpRequired: 63000,  rewardType: "item",    rewardValue: "back_arctic",         rewardLabel: "Dorso: Ártico",               icon: "card",             iconColor: "#B8DDEF" },
-  { tier: 30, xpRequired: 72000,  rewardType: "coins",   rewardValue: 1000,                 rewardLabel: "¡1000 Monedas!",              icon: "diamond",          iconColor: "#A855F7" },
+  { tier: 30, xpRequired: 72000,  rewardType: "chest",   rewardValue: "epic",               rewardLabel: "Cofre Épico",                 icon: "diamond",          iconColor: "#9B59B6" },
   { tier: 31, xpRequired: 82000,  rewardType: "avatar",  rewardValue: "avatar_cyber",        rewardLabel: "Avatar: Cyber",               icon: "hardware-chip",    iconColor: "#00D4FF" },
   { tier: 32, xpRequired: 93000,  rewardType: "item",    rewardValue: "back_galaxy",         rewardLabel: "Dorso: Galaxia",              icon: "card",             iconColor: "#A855F7" },
   { tier: 33, xpRequired: 105000, rewardType: "title",   rewardValue: "title_legend",        rewardLabel: "Título: Leyenda Viviente",    icon: "trophy",           iconColor: "#FFD700" },
@@ -63,7 +63,7 @@ export const BATTLE_PASS_TIERS: BattlePassTier[] = [
   { tier: 47, xpRequired: 462000, rewardType: "coins",   rewardValue: 1200,                 rewardLabel: "1200 Monedas",                icon: "cash",             iconColor: "#F1C40F" },
   { tier: 48, xpRequired: 507000, rewardType: "avatar",  rewardValue: "avatar_oracle",       rewardLabel: "Avatar: Oráculo",             icon: "eye",              iconColor: "#9B59B6" },
   { tier: 49, xpRequired: 555000, rewardType: "item",    rewardValue: "back_blood",          rewardLabel: "Dorso: Sangre",               icon: "card",             iconColor: "#6B0000" },
-  { tier: 50, xpRequired: 606000, rewardType: "coins",   rewardValue: 2000,                 rewardLabel: "¡2000 Monedas!",              icon: "diamond",          iconColor: "#A855F7" },
+  { tier: 50, xpRequired: 606000, rewardType: "chest",   rewardValue: "legendary",          rewardLabel: "Cofre Legendario",            icon: "star",             iconColor: "#D4AF37" },
   { tier: 51, xpRequired: 660000, rewardType: "effect",  rewardValue: "effect_fire",         rewardLabel: "Efecto: Llamas",              icon: "flame",            iconColor: "#E74C3C" },
   { tier: 52, xpRequired: 717000, rewardType: "frame",   rewardValue: "frame_fire",          rewardLabel: "Marco: Fuego",                icon: "ellipse",          iconColor: "#E67E22" },
   { tier: 53, xpRequired: 777000, rewardType: "item",    rewardValue: "back_void",           rewardLabel: "Dorso: El Vacío",             icon: "card",             iconColor: "#8800FF" },
@@ -836,6 +836,17 @@ export function getBPRewardLabel(tier: BattlePassTier, lang: "es" | "en" | "pt")
     const coinWord = lang === "pt" ? "Moedas" : "Coins";
     const isSpecial = tier.rewardLabel.startsWith("¡");
     return isSpecial ? `${n} ${coinWord}!` : `${n} ${coinWord}`;
+  }
+
+  if (tier.rewardType === "chest") {
+    const chestNames: Record<string, { en: string; pt: string }> = {
+      common:    { en: "Common Chest",    pt: "Cofre Comum"    },
+      rare:      { en: "Rare Chest",      pt: "Cofre Raro"     },
+      epic:      { en: "Epic Chest",      pt: "Cofre Épico"    },
+      legendary: { en: "Legendary Chest", pt: "Cofre Lendário" },
+    };
+    const v = String(tier.rewardValue);
+    return chestNames[v]?.[lang] ?? tier.rewardLabel;
   }
 
   const prefixMap: Record<string, { en: string; pt: string }> = {

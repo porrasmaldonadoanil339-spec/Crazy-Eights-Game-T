@@ -364,10 +364,16 @@ export const CPU_PROFILES: CpuProfile[] = [
   { name: "AsanteMX21",    avatarId: "avatar_emperor",   titleId: "title_eternal",      level: 99, avatarColor: "#D4AF37", avatarIcon: "ribbon" },
 ];
 
-export function getRandomCpuProfile(seed?: number, playerLevel?: number, isExpert?: boolean): CpuProfile {
+export function getRandomCpuProfile(seed?: number, playerLevel?: number, isExpert?: boolean, excludeAvatarId?: string): CpuProfile {
+  const dedup = (pool: CpuProfile[]) => {
+    if (!excludeAvatarId) return pool;
+    const filtered = pool.filter(p => p.avatarId !== excludeAvatarId);
+    return filtered.length > 0 ? filtered : pool;
+  };
+
   if (isExpert) {
-    const experts = CPU_PROFILES.filter(p => p.level >= 80);
-    const pool = experts.length > 0 ? experts : CPU_PROFILES;
+    const experts = dedup(CPU_PROFILES.filter(p => p.level >= 80));
+    const pool = experts.length > 0 ? experts : dedup(CPU_PROFILES);
     const idx = seed !== undefined ? Math.abs(seed) % pool.length : Math.floor(Math.random() * pool.length);
     return pool[idx];
   }
@@ -375,24 +381,24 @@ export function getRandomCpuProfile(seed?: number, playerLevel?: number, isExper
   if (playerLevel !== undefined) {
     const minLevel = Math.max(1, playerLevel - 5);
     const maxLevel = playerLevel + 5;
-    const nearby = CPU_PROFILES.filter(p => p.level >= minLevel && p.level <= maxLevel);
-    
+    const nearby = dedup(CPU_PROFILES.filter(p => p.level >= minLevel && p.level <= maxLevel));
+
     if (nearby.length > 0) {
       const idx = seed !== undefined ? Math.abs(seed) % nearby.length : Math.floor(Math.random() * nearby.length);
       return nearby[idx];
     }
-    
-    // Fallback: pick from 10 closest
-    const sorted = [...CPU_PROFILES].sort((a, b) => Math.abs(a.level - playerLevel) - Math.abs(b.level - playerLevel));
+
+    const sorted = dedup([...CPU_PROFILES].sort((a, b) => Math.abs(a.level - playerLevel!) - Math.abs(b.level - playerLevel!)));
     const pool = sorted.slice(0, 10);
     const idx = seed !== undefined ? Math.abs(seed) % pool.length : Math.floor(Math.random() * pool.length);
     return pool[idx];
   }
 
+  const pool = dedup(CPU_PROFILES);
   const idx = seed !== undefined
-    ? Math.abs(seed) % CPU_PROFILES.length
-    : Math.floor(Math.random() * CPU_PROFILES.length);
-  return CPU_PROFILES[idx];
+    ? Math.abs(seed) % pool.length
+    : Math.floor(Math.random() * pool.length);
+  return pool[idx];
 }
 
 export function pickCpuProfiles(n: number, playerLevelOrSeed?: number, playerLevel?: number, isExpert?: boolean): CpuProfile[] {

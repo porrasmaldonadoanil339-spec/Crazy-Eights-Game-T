@@ -59,7 +59,7 @@ const GameContext = createContext<GameContextValue | null>(null);
 import { useProfile } from "./ProfileContext";
 
 export function GameProvider({ children }: { children: ReactNode }) {
-  const { level: playerLevel } = useProfile();
+  const { level: playerLevel, profile: playerProfile } = useProfile();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [session, setSession] = useState<GameSession | null>(null);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
@@ -68,7 +68,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const startGame = useCallback((mode: GameModeId, difficulty: Difficulty, overrideCpuProfile?: any) => {
     const modeConfig = getModeById(mode);
     const isExpert = difficulty === "expert";
-    const cpuProfile = overrideCpuProfile || getRandomCpuProfile(undefined, playerLevel, isExpert);
+    const cpuProfile = overrideCpuProfile || getRandomCpuProfile(undefined, playerLevel, isExpert, playerProfile?.avatarId);
 
     let challengeRules: ActiveChallengeRules | undefined;
     let cardsPerPlayer = modeConfig.cardsPerPlayer;
@@ -149,7 +149,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const modeConfig = getModeById(prev.mode);
       const newState = initGame(modeConfig.cardsPerPlayer, prev.difficulty);
       const isExpert = prev.difficulty === "expert";
-      const cpuProfile = getRandomCpuProfile(undefined, playerLevel, isExpert);
+      const cpuProfile = getRandomCpuProfile(undefined, playerLevel, isExpert, playerProfile?.avatarId);
 
       setDealAnimationDone(false);
       setGameState(newState);

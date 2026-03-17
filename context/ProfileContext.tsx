@@ -522,12 +522,25 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const newProgress = p.achievementProgress.map((ap) =>
         ap.id === id ? { ...ap, claimedReward: true } : ap
       );
-      return {
+      let next = {
         ...p,
         coins: p.coins + achievement.coinsReward,
         totalXp: p.totalXp + achievement.xpReward,
         achievementProgress: newProgress,
       };
+      const rarityToChest: Record<string, ChestType | undefined> = {
+        rare: "common",
+        epic: "rare",
+        legendary: "epic",
+      };
+      const chestType = rarityToChest[achievement.rarity];
+      if (chestType) {
+        const inventory = next.chestInventory ?? [];
+        if (inventory.length < 10) {
+          next = { ...next, chestInventory: [...inventory, createChest(chestType, "achievement")] };
+        }
+      }
+      return next;
     });
   }, [update]);
 
@@ -544,6 +557,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         const itemId = bpTier.rewardValue as string;
         if (!next.ownedItems.includes(itemId)) {
           next = { ...next, ownedItems: [...next.ownedItems, itemId] };
+        }
+      }
+      if (bpTier.rewardType === "chest") {
+        const chestT = bpTier.rewardValue as ChestType;
+        const inv = next.chestInventory ?? [];
+        if (inv.length < 10) {
+          next = { ...next, chestInventory: [...inv, createChest(chestT, "mission")] };
         }
       }
       return next;

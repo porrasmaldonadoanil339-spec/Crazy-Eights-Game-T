@@ -731,7 +731,7 @@ function FlyingStar({ idx, isWin }: { idx: number; isWin: boolean }) {
   );
 }
 
-function RankedStarSection({ rankedProfile, isWin }: { rankedProfile: RankedProfile; isWin: boolean }) {
+function RankedStarSection({ rankedProfile, isWin, rankChanged }: { rankedProfile: RankedProfile; isWin: boolean; rankChanged?: "promotion" | "demotion" | null }) {
   const rankInfo = getRankInfo(rankedProfile);
   const rankColor = RANK_COLORS[rankedProfile.rank] || Colors.gold;
   const delta = isWin ? 2 : -1;
@@ -763,6 +763,13 @@ function RankedStarSection({ rankedProfile, isWin }: { rankedProfile: RankedProf
           {deltaLabel} {isWin ? "Estrellas" : "Estrella"}
         </Text>
       </Animated.View>
+
+      {/* Demotion / star loss message */}
+      {!isWin && (
+        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 13, color: rankChanged === "demotion" ? "#E74C3C" : "rgba(255,255,255,0.55)", marginBottom: 4, textAlign: "center" }}>
+          {rankChanged === "demotion" ? "Has descendido de rango" : "Perdiste una estrella"}
+        </Text>
+      )}
 
       {/* Rank name */}
       <Text style={[styles.rankedStarRankName, { color: rankColor, marginBottom: 8 }]}>
@@ -852,7 +859,7 @@ function ChestEarnedBadge({ chestType, onTap }: { chestType: ChestType; onTap: (
 }
 
 // ─── End modal ────────────────────────────────────────────────────────────────
-function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap, winStreak }: {
+function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap, winStreak, rankChanged }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
   cpuProfile?: CpuProfile | null; mode?: string;
   rankedProfile?: RankedProfile | null;
@@ -860,6 +867,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
   chestType?: ChestType | null;
   onChestTap?: () => void;
   winStreak?: number;
+  rankChanged?: "promotion" | "demotion" | null;
 }) {
   const T = useT();
   const isWin = phase === "player_wins";
@@ -1003,7 +1011,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
 
           {/* Ranked star section (win and loss) */}
           {mode === "ranked" && !isDraw && rankedProfile && (
-            <RankedStarSection rankedProfile={rankedProfile} isWin={isWin} />
+            <RankedStarSection rankedProfile={rankedProfile} isWin={isWin} rankChanged={rankChanged} />
           )}
 
           {/* Friend Request Button */}
@@ -1614,6 +1622,20 @@ export default function GameScreen() {
           addChestToInventory(chestType, "win");
           setPendingChestType(chestType);
           setShowChestReward(true);
+        }
+        // Win streak milestone chests (shown only if no win-count chest already triggered)
+        if (!chestType && session.mode !== "practice") {
+          const newStreak = (profile.stats.winStreak ?? 0) + 1;
+          let streakChest: ChestType | null = null;
+          if (newStreak === 20) streakChest = "legendary";
+          else if (newStreak === 10) streakChest = "epic";
+          else if (newStreak === 5) streakChest = "rare";
+          else if (newStreak === 3) streakChest = "common";
+          if (streakChest) {
+            addChestToInventory(streakChest, "streak");
+            setPendingChestType(streakChest);
+            setShowChestReward(true);
+          }
         }
       }
       if (session.mode === "ranked") {
@@ -2227,6 +2249,7 @@ export default function GameScreen() {
           mode={session?.mode}
           rankedProfile={session?.mode === "ranked" ? profile.rankedProfile : null}
           winStreak={profile.stats.winStreak}
+          rankChanged={rankedPromotion}
           showChest={showChestReward}
           chestType={pendingChestType}
           onChestTap={() => {

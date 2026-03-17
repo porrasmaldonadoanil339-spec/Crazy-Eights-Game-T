@@ -810,8 +810,10 @@ export default function PlayScreen() {
             )}
             {chestInventory.length === 0 && (
               <View style={{ alignItems: "center", paddingVertical: 8 }}>
-                <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: theme.textMuted }}>
-                  Gana partidas para obtener cofres
+                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 12, color: theme.textMuted }}>
+                  {chestWinsLeft === 1
+                    ? "¡Una victoria más para tu cofre!"
+                    : `Te falta${chestWinsLeft !== CHEST_CYCLE ? `n ${chestWinsLeft}` : `n ${CHEST_CYCLE}`} victorias para un cofre`}
                 </Text>
               </View>
             )}
@@ -1055,6 +1057,12 @@ export default function PlayScreen() {
               <Text style={styles.statChipText}>{profile.stats.totalWins}V</Text>
               <Text style={styles.statChipSep}>·</Text>
               <Text style={styles.statChipText}>{profile.stats.totalGames}P</Text>
+            </View>
+          )}
+          {(profile.stats.winStreak ?? 0) >= 2 && (
+            <View style={[styles.statChip, { backgroundColor: "#E67E2222", borderColor: "#E67E2255" }]}>
+              <Ionicons name="flame" size={14} color="#E67E22" />
+              <Text style={[styles.statChipText, { color: "#E67E22" }]}>Racha x{profile.stats.winStreak}</Text>
             </View>
           )}
         </View>
