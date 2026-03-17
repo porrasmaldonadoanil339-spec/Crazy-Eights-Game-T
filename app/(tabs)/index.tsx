@@ -124,6 +124,19 @@ function RankedPreviewCard({ isDark }: { isDark: boolean }) {
     const subtitle = isLocked ? T("rankedLockedDesc" as any) : T("rankedUnlockedDesc" as any);
     const playText = T("playRanked");
 
+    const breathe = useSharedValue(1);
+    useEffect(() => {
+      if (!isLocked) {
+        breathe.value = withRepeat(
+          withSequence(
+            withTiming(1.04, { duration: 900, easing: Easing.inOut(Easing.sin) }),
+            withTiming(1.0, { duration: 900, easing: Easing.inOut(Easing.sin) })
+          ), -1
+        );
+      }
+    }, [isLocked]);
+    const btnAnimStyle = useAnimatedStyle(() => ({ transform: [{ scale: breathe.value }] }));
+
       return (
     <Pressable 
       onPress={() => { 
@@ -177,12 +190,12 @@ function RankedPreviewCard({ isDark }: { isDark: boolean }) {
         )}
 
         {!isLocked && (
-          <View style={styles.rankedAction}>
+          <Animated.View style={[styles.rankedAction, btnAnimStyle]}>
             <LinearGradient colors={["#D4AF37", "#B8860B"]} style={styles.rankedBtnGrad}>
               <Text style={styles.rankedBtnText}>{playText}</Text>
               <Ionicons name="chevron-forward" size={16} color="#000" />
             </LinearGradient>
-          </View>
+          </Animated.View>
         )}
       </View>
     </Pressable>

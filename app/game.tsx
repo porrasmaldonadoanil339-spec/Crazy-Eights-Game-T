@@ -2211,7 +2211,10 @@ export default function GameScreen() {
           playerPhotoUri={profile.photoUri || undefined}
           playerName={profile.name}
           cpuProfile={activeCpu}
-          onComplete={() => setShowMatchmaking(false)}
+          onComplete={() => {
+            setShowMatchmaking(false);
+            startGameMusic().catch(() => {});
+          }}
         />
       )}
 
@@ -2241,7 +2244,6 @@ export default function GameScreen() {
             }
             retryCount.current += 1;
             setShowMatchmaking(true);
-            startGameMusic().catch(() => {});
             if (session) startGame(session.mode, session.difficulty);
           }}
           onHome={() => router.back()}

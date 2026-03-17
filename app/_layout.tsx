@@ -452,57 +452,22 @@ function NotificationManager() {
 
 function SplashWithAuth({ onComplete }: { onComplete: () => void }) {
   const { user, isLoading, loginAsGuest } = useAuth();
-  const [oauthModal, setOauthModal] = useState<"google" | "facebook" | null>(null);
   const [authResolved, setAuthResolved] = useState(false);
+  const autoLoginDone = useRef(false);
 
   useEffect(() => {
     if (!isLoading) setAuthResolved(true);
   }, [isLoading]);
 
-  const isFirstLaunch = authResolved && !user;
+  // Auto-login as guest on first launch — no login screen shown
+  useEffect(() => {
+    if (authResolved && !user && !autoLoginDone.current) {
+      autoLoginDone.current = true;
+      loginAsGuest();
+    }
+  }, [authResolved, user]);
 
-  const handleGuestLogin = () => {
-    loginAsGuest();
-    onComplete();
-  };
-
-  const handleGoogleLogin = () => {
-    setOauthModal("google");
-  };
-
-  const handleFacebookLogin = () => {
-    setOauthModal("facebook");
-  };
-
-  const handleOAuthDone = () => {
-    setOauthModal(null);
-    onComplete();
-  };
-
-  const handleOAuthSkip = () => {
-    setOauthModal(null);
-  };
-
-  return (
-    <>
-      <CustomSplashScreen
-        onComplete={onComplete}
-        authProps={isFirstLaunch ? {
-          isFirstLaunch: true,
-          onGuestLogin: handleGuestLogin,
-          onGoogleLogin: handleGoogleLogin,
-          onFacebookLogin: handleFacebookLogin,
-        } : undefined}
-      />
-      {oauthModal && (
-        <SplashOAuthModal
-          provider={oauthModal}
-          onDone={handleOAuthDone}
-          onCancel={handleOAuthSkip}
-        />
-      )}
-    </>
-  );
+  return <CustomSplashScreen onComplete={onComplete} />;
 }
 
 function SplashOAuthModal({ provider, onDone, onCancel }: {

@@ -1,0 +1,73 @@
+Por favor, realiza una revisión completa del juego y aplica todas las mejoras necesarias para dejarlo totalmente pulido, profesional y listo para publicación.
+
+---
+
+### 🔹 OBJETIVO PRINCIPAL
+
+Generar el archivo **Android App Bundle (AAB)** listo para subir a Play Console, asegurando que el juego funcione correctamente, sin errores y optimizado.
+
+---
+
+### 🔹 1. EXPORTACIÓN ANDROID (PRIORIDAD TOTAL)
+
+* Generar archivo **.AAB (Android App Bundle)** listo para Play Store
+* Asegurar que:
+
+  * la app compile sin errores
+  * no haya fallos al iniciar o jugar
+  * todo funcione correctamente en dispositivos móviles
+* Configurar correctamente:
+
+  * nombre de la app
+  * icono de alta calidad
+  * pantalla de carga (splash screen)
+
+---
+
+### 🔹 2. CORRECCIONES IMPORTANTES
+
+* Eliminar cualquier texto que diga “CPU” → reemplazar por “Rival” (excepto modo práctico)
+* Corregir el error donde la música deja de sonar al presionar “Volver a jugar”
+* Asegurar que al jugar de nuevo se busquen nuevos rivales correctamente
+
+---
+
+### 🔹 3. MEJORAS DE CALIDAD (PULIDO FINAL)
+
+Sin cambiar la base del juego:
+
+* Mejorar animaciones (más fluidas y dinámicas)
+* Añadir micro-animaciones en botones y elementos
+* Mejorar efectos visuales y partículas
+* Hacer que el juego se sienta más “vivo” y responsivo
+* Optimizar tiempos de carga
+* Revisar y corregir cualquier error visual o funcional
+
+---
+
+### 🔹 4. EXPERIENCIA DE USUARIO
+
+* No mostrar login (Google/Facebook) en la pantalla principal
+* El jugador debe entrar directamente a jugar (modo invitado)
+* Mejorar sensación de progreso (rangos, recompensas, cofres)
+
+---
+
+### 🔹 5. RESULTADO FINAL
+
+El juego debe quedar:
+
+* Estable
+* Fluido
+* Sin errores
+* Visualmente atractivo
+* Optimizado para móviles
+* Listo para publicación en Play Store
+
+---
+
+### 🔹 IMPORTANTE
+
+Sigue todas estas instrucciones y aplica cualquier mejora adicional que consideres necesaria para que el juego alcance un nivel **10/10**, sin modificar la base ni la jugabilidad principal.
+
+El objetivo es que el juego quede completamente profesional y listo para ser publicado sin problemas en Play Console.

@@ -457,6 +457,30 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <Text style={[styles.screenTitle, { color: themeGold }]}>{T("profile")}</Text>
 
+        {/* Connect Account banner — only for guest users */}
+        {user?.isGuest && (
+          <Pressable
+            onPress={() => { playSound("button_press").catch(() => {}); router.push("/login"); }}
+            style={({ pressed }) => [styles.connectBanner, pressed && { opacity: 0.85 }]}
+          >
+            <LinearGradient
+              colors={["#1A3A1A", "#0D2E0D"]}
+              style={styles.connectBannerGrad}
+            >
+              <View style={styles.connectBannerLeft}>
+                <View style={styles.connectBannerIcon}>
+                  <Ionicons name="shield-checkmark" size={22} color={Colors.gold} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.connectBannerTitle}>Conectar cuenta</Text>
+                  <Text style={styles.connectBannerSub}>Guarda tu progreso y juega en todos tus dispositivos</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={Colors.gold} />
+            </LinearGradient>
+          </Pressable>
+        )}
+
         {/* Avatar + name card */}
         <LinearGradient
           colors={[themeGold + "22", surfaceColor]}
@@ -779,8 +803,21 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 16, paddingBottom: 24 },
   screenTitle: {
     fontFamily: "Nunito_800ExtraBold", fontSize: 22, color: Colors.gold,
-    letterSpacing: 4, marginBottom: 16,
+    letterSpacing: 4, marginBottom: 12,
   },
+  connectBanner: { marginBottom: 12, borderRadius: 14, overflow: "hidden" },
+  connectBannerGrad: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderWidth: 1, borderColor: Colors.gold + "44", borderRadius: 14,
+  },
+  connectBannerLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
+  connectBannerIcon: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.gold + "22",
+    alignItems: "center", justifyContent: "center",
+  },
+  connectBannerTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: Colors.gold, marginBottom: 2 },
+  connectBannerSub: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted },
   profileCard: {
     borderRadius: 18, padding: 16, flexDirection: "row", gap: 16,
     alignItems: "center", borderWidth: 1, borderColor: Colors.border, marginBottom: 12,
