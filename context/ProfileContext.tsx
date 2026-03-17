@@ -13,6 +13,7 @@ import { STORE_ITEMS, StoreItem } from "@/lib/storeItems";
 import { BATTLE_PASS_TIERS, getCurrentBattlePassTier, getPlayerLevel, getXpProgress } from "@/lib/battlePass";
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { RankedProfile, addStars, getRankUpRewards, getRankUpBonusCoins } from "@/lib/ranked";
+import { Chest, ChestReward, ChestType, createChest, openChest as openChestReward } from "@/lib/chestSystem";
 
 export interface PlayerStats {
   totalGames: number;
@@ -26,6 +27,7 @@ export interface PlayerStats {
   perfectWins: number;
   comebackWins: number;
   dailyStreak: number;
+  winStreak: number;
   lastPlayedDate: string;
   challengesCompleted: number;
   tournamentsWon: number;
@@ -125,6 +127,7 @@ export interface PlayerProfile {
   linkedGoogle?: string;
   linkedFacebook?: string;
   rankedProfile: RankedProfile;
+  chestInventory: Chest[];
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -139,6 +142,7 @@ const DEFAULT_STATS: PlayerStats = {
   perfectWins: 0,
   comebackWins: 0,
   dailyStreak: 0,
+  winStreak: 0,
   lastPlayedDate: "",
   challengesCompleted: 0,
   tournamentsWon: 0,
@@ -195,6 +199,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   specialEffectsEnabled: true,
   animationsEnabled: true,
   rankedProfile: { rank: 0, division: 0, stars: 0, maxStars: 5, totalWins: 0, totalLosses: 0 },
+  chestInventory: [],
 };
 
 interface ProfileContextValue {
@@ -247,6 +252,9 @@ interface ProfileContextValue {
   linkAccount: (provider: "google" | "facebook", email: string) => void;
   unlinkAccount: (provider: "google" | "facebook") => void;
   markTutorialSeen: () => void;
+  addChestToInventory: (type: ChestType, source: Chest["source"]) => void;
+  openChestFromInventory: (chestId: string) => ChestReward | null;
+  chestInventory: Chest[];
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
@@ -591,11 +599,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         ? (p.stats.lastPlayedDate === yesterday ? p.stats.dailyStreak + 1 : 1)
         : p.stats.dailyStreak;
 
+      const newWinStreak = params.won ? (p.stats.winStreak ?? 0) + 1 : 0;
+
       const newStats: PlayerStats = {
         ...p.stats,
         totalGames: p.stats.totalGames + 1,
         totalWins: params.won ? p.stats.totalWins + 1 : p.stats.totalWins,
         totalLosses: params.won ? p.stats.totalLosses : p.stats.totalLosses + 1,
+        winStreak: newWinStreak,
         winsByMode: {
           ...p.stats.winsByMode,
           [params.mode]: (p.stats.winsByMode[params.mode] ?? 0) + (params.won ? 1 : 0),
@@ -680,6 +691,34 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     update((p) => ({ ...p, tutorialSeen: true }));
   }, [update]);
 
+  const addChestToInventory = useCallback((type: ChestType, source: Chest["source"]) => {
+    update((p) => {
+      const inventory = p.chestInventory ?? [];
+      if (inventory.length >= 10) return p;
+      return { ...p, chestInventory: [...inventory, createChest(type, source)] };
+    });
+  }, [update]);
+
+  const openChestFromInventory = useCallback((chestId: string): ChestReward | null => {
+    let reward: ChestReward | null = null;
+    update((p) => {
+      const inventory = p.chestInventory ?? [];
+      const chest = inventory.find((c) => c.id === chestId);
+      if (!chest) return p;
+      reward = openChestReward(chest, p.ownedItems);
+      const newInventory = inventory.filter((c) => c.id !== chestId);
+      const newOwnedItems = reward.item ? [...p.ownedItems, reward.item.id] : p.ownedItems;
+      return {
+        ...p,
+        coins: p.coins + reward.coins,
+        totalXp: p.totalXp + reward.xp,
+        ownedItems: newOwnedItems,
+        chestInventory: newInventory,
+      };
+    });
+    return reward;
+  }, [update]);
+
   return (
     <ProfileContext.Provider
       value={{
@@ -721,6 +760,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         linkAccount,
         unlinkAccount,
         markTutorialSeen,
+        addChestToInventory,
+        openChestFromInventory,
+        chestInventory: profile.chestInventory ?? [],
       }}
     >
       {children}

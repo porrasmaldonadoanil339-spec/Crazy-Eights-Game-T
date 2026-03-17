@@ -28,6 +28,8 @@ import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
 import { getModeById } from "@/lib/gameModes";
+import ChestOpeningModal from "@/components/ChestOpeningModal";
+import { ChestType, ChestReward } from "@/lib/chestSystem";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
@@ -654,7 +656,7 @@ export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
   const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string; skipLobby?: string; names?: string }>();
-  const { profile, level: playerLevel, addXp, updateRanked, recordGameResult } = useProfile();
+  const { profile, level: playerLevel, addXp, updateRanked, recordGameResult, addChestToInventory, openChestFromInventory, chestInventory } = useProfile();
   const T = useT();
 
   const isOnline = !!params.code;
@@ -718,6 +720,9 @@ export default function OnlineGameScreen() {
   const [inGameSfxEnabled, setInGameSfxEnabled] = useState(profile.sfxEnabled ?? true);
   const [muteCpuEmotes, setMuteCpuEmotes] = useState(false);
   const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
+  const [showChestModal, setShowChestModal] = useState(false);
+  const [pendingChestType, setPendingChestType] = useState<ChestType | null>(null);
+  const [chestModalReward, setChestModalReward] = useState<ChestReward | null>(null);
   const rankedUpdatedRef = useRef(false);
   const resultRecordedRef = useRef(false);
 
@@ -881,6 +886,18 @@ export default function OnlineGameScreen() {
     const xp = isWin ? mc.xpReward : mc.xpLoss;
     const coins = isWin ? mc.coinsReward : mc.coinsLoss;
     recordGameResult({ won: isWin, mode, difficulty: "normal", coinsEarned: coins, xpEarned: xp, eightsPlayed: 0, cardsDrawn: 0, isPerfect: false, isComeback: false, gameDurationMs: 60000 });
+    if (isWin) {
+      const newTotalWins = profile.stats.totalWins + 1;
+      let chestType: ChestType | null = null;
+      if (newTotalWins % 25 === 0) chestType = "legendary";
+      else if (newTotalWins % 15 === 0) chestType = "epic";
+      else if (newTotalWins % 7 === 0) chestType = "rare";
+      else if (newTotalWins % 3 === 0) chestType = "common";
+      if (chestType) {
+        addChestToInventory(chestType, "win");
+        setPendingChestType(chestType);
+      }
+    }
   }, [gameState?.phase, gameState?.winnerIndex]);
 
   // ─── Lobby sequence (local/simulated only — skip when real online socket or pre-lobbied) ──
@@ -1552,6 +1569,35 @@ export default function OnlineGameScreen() {
           onPlayAgain={handlePlayAgain}
         />
       )}
+
+      {pendingChestType && gs?.phase === "game_over" && !showChestModal && (
+        <Pressable
+          style={{ position: "absolute", bottom: 160, alignSelf: "center", zIndex: 200 }}
+          onPress={() => {
+            const latestChest = (chestInventory ?? []).slice().reverse().find(c => c.type === pendingChestType);
+            if (latestChest) {
+              const rw = openChestFromInventory(latestChest.id);
+              setChestModalReward(rw);
+              setShowChestModal(true);
+            }
+          }}
+        >
+          <LinearGradient
+            colors={["#D4AF37", "#A07800"]}
+            style={{ paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, flexDirection: "row", alignItems: "center", gap: 8, shadowColor: "#D4AF37", shadowOpacity: 0.9, shadowRadius: 16, elevation: 20 }}
+          >
+            <Ionicons name="gift" size={22} color="#1a0a00" />
+            <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#1a0a00", textTransform: "uppercase", letterSpacing: 1 }}>Open Chest</Text>
+          </LinearGradient>
+        </Pressable>
+      )}
+
+      <ChestOpeningModal
+        visible={showChestModal}
+        chestType={pendingChestType ?? "common"}
+        reward={chestModalReward}
+        onClose={() => { setShowChestModal(false); setChestModalReward(null); setPendingChestType(null); }}
+      />
 
       {/* Rival abandoned overlay */}
       {rivalAbandoned && (

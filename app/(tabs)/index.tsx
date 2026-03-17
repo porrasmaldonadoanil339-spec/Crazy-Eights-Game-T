@@ -26,6 +26,9 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
 import { getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
 import { FlatList } from "react-native";
+import ChestOpeningModal from "@/components/ChestOpeningModal";
+import { ChestType, ChestReward, CHEST_CONFIG, getChestProgress } from "@/lib/chestSystem";
+import type { Chest } from "@/lib/chestSystem";
 import { ModeInfoModal } from "@/components/ModeInfoModal";
 
 const { width: SW } = Dimensions.get("window");
@@ -348,7 +351,7 @@ function PokerTitle() {
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
-  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory } = useProfile();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
@@ -367,6 +370,9 @@ export default function PlayScreen() {
   const [joinCode, setJoinCode] = useState("");
 
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [showChestModal, setShowChestModal] = useState(false);
+  const [selectedChestType, setSelectedChestType] = useState<ChestType>("common");
+  const [chestModalReward, setChestModalReward] = useState<ChestReward | null>(null);
 
   const T = useT();
   const isDark = profile.darkMode !== false;
@@ -399,6 +405,16 @@ export default function PlayScreen() {
   const swipeHandlers = useSwipeTabs(0);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
+
+  const CHEST_CYCLE = 3;
+  const chestProg = profile.stats.totalWins % CHEST_CYCLE;
+  const chestWinsLeft = CHEST_CYCLE - chestProg;
+  const nextChestType: ChestType =
+    profile.stats.totalWins > 0 && (profile.stats.totalWins + chestWinsLeft) % 25 === 0 ? "legendary" :
+    profile.stats.totalWins > 0 && (profile.stats.totalWins + chestWinsLeft) % 15 === 0 ? "epic" :
+    profile.stats.totalWins > 0 && (profile.stats.totalWins + chestWinsLeft) % 7 === 0 ? "rare" : "common";
+  const nextCfg = CHEST_CONFIG[nextChestType];
+  const showChestSection = chestInventory.length > 0 || profile.stats.totalWins > 0;
 
   const onlineGlow = useSharedValue(0);
   useEffect(() => {
@@ -601,6 +617,72 @@ export default function PlayScreen() {
         <PokerTitle />
 
         <RankedPreviewCard isDark={isDark} />
+
+        {/* Chest Inventory Section */}
+        {showChestSection && (
+          <View style={{ marginHorizontal: 16, marginBottom: 12 }}>
+            <View style={[styles.sectionHeader, { marginBottom: 10, marginTop: 4 }]}>
+              <Ionicons name="cube" size={14} color={theme.gold} />
+              <Text style={[styles.sectionLabel, { color: theme.gold }]}>Cofres</Text>
+              {chestInventory.length > 0 && (
+                <View style={{ marginLeft: "auto", backgroundColor: theme.gold + "22", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: theme.gold }}>{chestInventory.length}</Text>
+                </View>
+              )}
+            </View>
+            <View style={{
+              backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)",
+              borderRadius: 12, padding: 12, marginBottom: 10,
+              borderWidth: 1, borderColor: nextCfg.borderColor + "44",
+            }}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 8 }}>
+                <Ionicons
+                  name={nextChestType === "legendary" ? "star" : nextChestType === "epic" ? "diamond" : nextChestType === "rare" ? "cube-outline" : "cube"}
+                  size={18} color={nextCfg.glowColor}
+                />
+                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 13, color: nextCfg.glowColor, flex: 1 }}>
+                  {nextCfg.name}
+                </Text>
+                <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: theme.textMuted }}>
+                  {chestWinsLeft === 1 ? "¡1 victoria más!" : `${chestWinsLeft} victorias más`}
+                </Text>
+              </View>
+              <View style={{ height: 6, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
+                <View style={{ height: 6, borderRadius: 3, width: `${(chestProg / CHEST_CYCLE) * 100}%`, backgroundColor: nextCfg.glowColor }} />
+              </View>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: theme.textMuted, marginTop: 4 }}>
+                {chestProg}/{CHEST_CYCLE} victorias
+              </Text>
+            </View>
+            {chestInventory.length > 0 && (
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={chestInventory}
+                keyExtractor={(c) => c.id}
+                contentContainerStyle={{ gap: 10, paddingRight: 4 }}
+                renderItem={({ item }) => (
+                  <ChestInventoryItem
+                    chest={item}
+                    onTap={() => {
+                      setSelectedChestType(item.type);
+                      const rw = openChestFromInventory(item.id);
+                      setChestModalReward(rw);
+                      setShowChestModal(true);
+                    }}
+                  />
+                )}
+              />
+            )}
+            {chestInventory.length === 0 && (
+              <View style={{ alignItems: "center", paddingVertical: 8 }}>
+                <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: theme.textMuted }}>
+                  Gana partidas para obtener cofres
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Daily Challenges Section */}
         {challenges.length > 0 && (
@@ -876,6 +958,13 @@ export default function PlayScreen() {
         visible={showDailyModal}
         reward={canClaimDailyReward ? todaysDailyReward : null}
         onClaim={handleClaimDaily}
+      />
+
+      <ChestOpeningModal
+        visible={showChestModal}
+        chestType={selectedChestType}
+        reward={chestModalReward}
+        onClose={() => { setShowChestModal(false); setChestModalReward(null); }}
       />
 
       {/* Online modal */}
@@ -1592,3 +1681,47 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 });
+
+// ─── Chest Inventory Item ────────────────────────────────────────────────────
+function ChestInventoryItem({ chest, onTap }: { chest: Chest; onTap: () => void }) {
+  const cfg = CHEST_CONFIG[chest.type];
+  const chestIcon = chest.type === "legendary" ? "star" :
+    chest.type === "epic" ? "diamond" :
+    chest.type === "rare" ? "cube-outline" : "cube";
+  const bounce = useSharedValue(0);
+  const glow = useSharedValue(0);
+  useEffect(() => {
+    bounce.value = withRepeat(
+      withSequence(withTiming(-4, { duration: 500 }), withTiming(0, { duration: 500 })), -1, true
+    );
+    glow.value = withRepeat(
+      withSequence(withTiming(1, { duration: 800 }), withTiming(0.4, { duration: 800 })), -1, false
+    );
+  }, []);
+  const bounceStyle = useAnimatedStyle(() => ({ transform: [{ translateY: bounce.value }] }));
+  const glowStyle = useAnimatedStyle(() => ({
+    shadowOpacity: glow.value * 0.8,
+    shadowRadius: glow.value * 12,
+  }));
+  return (
+    <Pressable onPress={onTap}>
+      <Animated.View style={[{
+        width: 80, alignItems: "center", gap: 6,
+        backgroundColor: cfg.bgColors[1],
+        borderRadius: 12, padding: 12,
+        borderWidth: 1.5, borderColor: cfg.borderColor,
+        shadowColor: cfg.glowColor, shadowOffset: { width: 0, height: 0 }, elevation: 6,
+      }, glowStyle]}>
+        <Animated.View style={bounceStyle}>
+          <Ionicons name={chestIcon as any} size={28} color={cfg.glowColor} />
+        </Animated.View>
+        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: cfg.glowColor, textAlign: "center" }}>
+          {cfg.name.replace("Cofre ", "")}
+        </Text>
+        <View style={{ backgroundColor: cfg.color + "33", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
+          <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: cfg.glowColor }}>Abrir</Text>
+        </View>
+      </Animated.View>
+    </Pressable>
+  );
+}

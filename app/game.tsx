@@ -33,6 +33,8 @@ import { playSound } from "@/lib/sounds";
 import { stopMusic, startGameMusic, syncSettings } from "@/lib/audioManager";
 import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
+import ChestOpeningModal from "@/components/ChestOpeningModal";
+import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
@@ -797,57 +799,66 @@ function RankedStarSection({ rankedProfile, isWin }: { rankedProfile: RankedProf
   );
 }
 
-// ─── Chest reward badge (shown every 3rd win) ─────────────────────────────────
-function ChestRewardBadge() {
-  const T = useT();
+// ─── Chest earned badge (shown when a chest is earned) ────────────────────────
+function ChestEarnedBadge({ chestType, onTap }: { chestType: ChestType; onTap: () => void }) {
+  const config = CHEST_CONFIG[chestType];
   const sc = useSharedValue(0.3);
   const glow = useSharedValue(0);
-  const chestBounce = useSharedValue(0);
+  const bounce = useSharedValue(0);
   useEffect(() => {
     sc.value = withSpring(1, { damping: 5, stiffness: 200 });
     glow.value = withRepeat(
       withSequence(withTiming(1, { duration: 800 }), withTiming(0.4, { duration: 800 })), -1, false
     );
-    chestBounce.value = withDelay(300, withRepeat(
-      withSequence(withTiming(-5, { duration: 400 }), withTiming(0, { duration: 400 })), -1, false
+    bounce.value = withDelay(300, withRepeat(
+      withSequence(withTiming(-6, { duration: 450 }), withTiming(0, { duration: 450 })), -1, true
     ));
   }, []);
   const wrapStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
   const glowStyle = useAnimatedStyle(() => ({
-    shadowOpacity: glow.value * 0.9, shadowRadius: glow.value * 16,
+    shadowOpacity: glow.value * 0.9,
+    shadowRadius: glow.value * 18,
   }));
-  const bounceStyle = useAnimatedStyle(() => ({ transform: [{ translateY: chestBounce.value }] }));
+  const bounceStyle = useAnimatedStyle(() => ({ transform: [{ translateY: bounce.value }] }));
+  const chestIcon = chestType === "legendary" ? "star" :
+    chestType === "epic" ? "diamond" :
+    chestType === "rare" ? "cube-outline" : "cube";
   return (
-    <Animated.View style={[{
-      flexDirection: "row", alignItems: "center", gap: 10,
-      backgroundColor: "#1A1400", borderRadius: 14, paddingVertical: 10, paddingHorizontal: 16,
-      borderWidth: 1.5, borderColor: Colors.gold + "66",
-      shadowColor: Colors.gold, shadowOffset: { width: 0, height: 0 }, elevation: 8,
-    }, wrapStyle, glowStyle]}>
-      <Animated.View style={bounceStyle}>
-        <Ionicons name="cube" size={28} color={Colors.gold} />
+    <Pressable onPress={onTap}>
+      <Animated.View style={[{
+        flexDirection: "row", alignItems: "center", gap: 10,
+        backgroundColor: config.bgColors[1], borderRadius: 14,
+        paddingVertical: 10, paddingHorizontal: 16,
+        borderWidth: 1.5, borderColor: config.borderColor,
+        shadowColor: config.glowColor, shadowOffset: { width: 0, height: 0 }, elevation: 8,
+      }, wrapStyle, glowStyle]}>
+        <Animated.View style={bounceStyle}>
+          <Ionicons name={chestIcon as any} size={30} color={config.glowColor} />
+        </Animated.View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: config.glowColor }}>
+            ¡{config.name} ganado!
+          </Text>
+          <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.6)" }}>
+            Toca para abrirlo
+          </Text>
+        </View>
+        <View style={{ backgroundColor: config.color + "33", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}>
+          <Ionicons name="gift" size={20} color={config.glowColor} />
+        </View>
       </Animated.View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: Colors.gold }}>
-          {T("chestReward" as any) || "¡Cofre de victorias!"}
-        </Text>
-        <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
-          {T("chestRewardSub" as any) || "+20 monedas por rachas de 3 victorias"}
-        </Text>
-      </View>
-      <View style={{ backgroundColor: Colors.gold + "22", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
-        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.gold }}>+20</Text>
-      </View>
-    </Animated.View>
+    </Pressable>
   );
 }
 
 // ─── End modal ────────────────────────────────────────────────────────────────
-function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest }: {
+function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
   cpuProfile?: CpuProfile | null; mode?: string;
   rankedProfile?: RankedProfile | null;
   showChest?: boolean;
+  chestType?: ChestType | null;
+  onChestTap?: () => void;
 }) {
   const T = useT();
   const isWin = phase === "player_wins";
@@ -1027,9 +1038,9 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
             </View>
           )}
 
-          {/* Chest reward bonus (every 3rd win) */}
-          {showChest && (
-            <ChestRewardBadge />
+          {/* Chest earned notification */}
+          {showChest && chestType && onChestTap && (
+            <ChestEarnedBadge chestType={chestType} onTap={onChestTap} />
           )}
 
           {/* Buttons */}
@@ -1158,7 +1169,7 @@ export default function GameScreen() {
     runAiTurn, selectedCard, setSelectedCard, dealAnimationDone, setDealAnimationDone,
     startNextTournamentRound, startGame, getGameResult, forceGameOver, forceAiDraw,
   } = useGame();
-  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins } = useProfile();
+  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins, addChestToInventory, openChestFromInventory, chestInventory } = useProfile();
   const T = useT();
   useEffect(() => { setEngineLang(profile.language ?? "es"); }, [profile.language]);
 
@@ -1202,6 +1213,10 @@ export default function GameScreen() {
   const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showChestReward, setShowChestReward] = useState(false);
+  const [pendingChestType, setPendingChestType] = useState<ChestType | null>(null);
+  const [pendingChestId, setPendingChestId] = useState<string | null>(null);
+  const [chestModalReward, setChestModalReward] = useState<ChestReward | null>(null);
+  const [showChestModal, setShowChestModal] = useState(false);
 
   const [lastPlayerEmoteTime, setLastPlayerEmoteTime] = useState(0);
   const lastCardBannerAnim = useSharedValue(0);
@@ -1571,9 +1586,20 @@ export default function GameScreen() {
         setShowTournamentModal(true);
       }, 1500);
     } else {
-      const isChestGame = won && profile.stats.totalWins > 0 && profile.stats.totalWins % 3 === 2;
-      if (isChestGame) { setShowChestReward(true); addCoins(20); }
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
+      if (won) {
+        const newTotalWins = profile.stats.totalWins + 1;
+        let chestType: ChestType | null = null;
+        if (newTotalWins % 25 === 0) chestType = "legendary";
+        else if (newTotalWins % 15 === 0) chestType = "epic";
+        else if (newTotalWins % 7 === 0) chestType = "rare";
+        else if (newTotalWins % 3 === 0) chestType = "common";
+        if (chestType) {
+          addChestToInventory(chestType, "win");
+          setPendingChestType(chestType);
+          setShowChestReward(true);
+        }
+      }
       if (session.mode === "ranked") {
         const beforeRank = profile.rankedProfile?.rank ?? 0;
         const nextRanked = addStars(profile.rankedProfile, won ? 2 : -1);
@@ -2185,6 +2211,16 @@ export default function GameScreen() {
           mode={session?.mode}
           rankedProfile={session?.mode === "ranked" ? profile.rankedProfile : null}
           showChest={showChestReward}
+          chestType={pendingChestType}
+          onChestTap={() => {
+            const latestChest = (chestInventory ?? []).slice().reverse().find(c => c.type === pendingChestType);
+            if (latestChest) {
+              setPendingChestId(latestChest.id);
+              const rw = openChestFromInventory(latestChest.id);
+              setChestModalReward(rw);
+              setShowChestModal(true);
+            }
+          }}
         />
       )}
 
@@ -2199,6 +2235,18 @@ export default function GameScreen() {
       )}
 
       {showLightningBanner && <LightningBanner />}
+
+      <ChestOpeningModal
+        visible={showChestModal}
+        chestType={pendingChestType ?? "common"}
+        reward={chestModalReward}
+        onClose={() => {
+          setShowChestModal(false);
+          setChestModalReward(null);
+          setPendingChestType(null);
+          setShowChestReward(false);
+        }}
+      />
 
       {/* In-game menu modal */}
       {showGameMenu && (
