@@ -112,119 +112,6 @@ function AnimatedBackground({ isDark }: { isDark: boolean }) {
   );
 }
 
-// ─── Events ─────────────────────────────────────────────────────────────────
-const ALL_EVENTS = [
-  { id: "speed", name: "Velocidad Extrema", desc: "Todas las cartas tienen temporizador de 5s", icon: "flash", color: "#F39C12", durationDays: 2 },
-  { id: "random", name: "Cartas Aleatorias", desc: "Las cartas especiales cambian aleatoriamente", icon: "shuffle", color: "#9B59B6", durationDays: 2 },
-  { id: "double", name: "Doble Efecto", desc: "Las cartas especiales tienen efecto doble", icon: "copy", color: "#E74C3C", durationDays: 2 },
-  { id: "survival", name: "Supervivencia", desc: "Comienza con 12 cartas. ¡Vacía tu mano!", icon: "shield", color: "#27AE60", durationDays: 2 },
-];
-
-function getEventStatus(level: number): { event: typeof ALL_EVENTS[0]; status: "live" | "upcoming" | "locked"; hoursLeft: number; nextInHours: number } {
-  if (level < 5) {
-    return { event: ALL_EVENTS[0], status: "locked", hoursLeft: 0, nextInHours: 0 };
-  }
-  const BASE = new Date("2026-03-01T00:00:00Z").getTime();
-  const now = Date.now();
-  const CYCLE = 3 * 24 * 3600 * 1000;
-  const elapsed = now - BASE;
-  const cycleIndex = Math.floor(elapsed / CYCLE);
-  const eventIdx = cycleIndex % ALL_EVENTS.length;
-  const event = ALL_EVENTS[eventIdx];
-  const cyclePosMs = elapsed % CYCLE;
-  const eventDurMs = event.durationDays * 24 * 3600 * 1000;
-  const isLive = cyclePosMs < eventDurMs;
-  const hoursLeft = isLive ? Math.ceil((eventDurMs - cyclePosMs) / 3600000) : 0;
-  const nextInHours = isLive ? 0 : Math.ceil((CYCLE - cyclePosMs) / 3600000);
-  return { event, status: isLive ? "live" : "upcoming", hoursLeft, nextInHours };
-}
-
-function EventsCard({ isDark }: { isDark: boolean }) {
-  const { level } = useProfile();
-  const { event, status, hoursLeft, nextInHours } = getEventStatus(level);
-
-  const bgColors: [string, string, string] = status === "live"
-    ? [`${event.color}22`, `${event.color}0a`, "transparent"]
-    : status === "locked"
-    ? ["#1a1a1a", "#111111", "transparent"]
-    : ["#0d1520", "#091020", "transparent"];
-
-  const statusLabel = status === "live"
-    ? "EVENTO EN VIVO"
-    : status === "locked"
-    ? "NIVEL 5 REQUERIDO"
-    : "PROXIMO EVENTO";
-
-  const statusColor = status === "live" ? event.color : status === "locked" ? "#666" : "#4A90E2";
-  const statusIcon = status === "live" ? "radio" : status === "locked" ? "lock-closed" : "time";
-
-  return (
-    <View style={{
-      marginHorizontal: 16, marginBottom: 12, borderRadius: 14, overflow: "hidden",
-      borderWidth: 1.5, borderColor: status === "live" ? event.color + "88" : status === "locked" ? "#33333388" : "#4A90E244",
-      shadowColor: event.color, shadowOpacity: status === "live" ? 0.4 : 0.1, shadowRadius: 10, elevation: 6,
-    }}>
-      <LinearGradient colors={bgColors} style={{ padding: 14 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
-          <Ionicons name={statusIcon as any} size={11} color={statusColor} />
-          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: statusColor, letterSpacing: 1.5 }}>
-            {statusLabel}
-          </Text>
-          {status === "live" && (
-            <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="time-outline" size={11} color={event.color} />
-              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: event.color }}>{hoursLeft}h</Text>
-            </View>
-          )}
-          {status === "upcoming" && nextInHours > 0 && (
-            <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: "#4A90E2" }}>en {nextInHours}h</Text>
-            </View>
-          )}
-        </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <View style={[{
-            width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center",
-            borderWidth: 1.5, borderColor: status === "locked" ? "#33333388" : event.color + "66",
-            backgroundColor: status === "locked" ? "#22222244" : event.color + "18",
-          }]}>
-            <Ionicons name={(status === "locked" ? "lock-closed" : event.icon) as any} size={22} color={status === "locked" ? "#666" : event.color} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: status === "locked" ? "#666" : "#fff", marginBottom: 2 }}>
-              {status === "locked" ? "Eventos Especiales" : event.name}
-            </Text>
-            <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: status === "locked" ? "#555" : "#aaa" }} numberOfLines={1}>
-              {status === "locked" ? "Desbloquea eventos al llegar a nivel 5" : event.desc}
-            </Text>
-          </View>
-          {status === "live" && (
-            <View style={{ backgroundColor: event.color, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 }}>
-              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#000" }}>Jugar</Text>
-            </View>
-          )}
-        </View>
-        {status === "live" && (
-          <View style={{ flexDirection: "row", marginTop: 10, gap: 8 }}>
-            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
-              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+2</Text>
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>pts por victoria</Text>
-            </View>
-            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
-              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+1</Text>
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>pts por derrota</Text>
-            </View>
-            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
-              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>Cofre</Text>
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>a 10 puntos</Text>
-            </View>
-          </View>
-        )}
-      </LinearGradient>
-    </View>
-  );
-}
-
 function RankedPreviewCard({ isDark }: { isDark: boolean }) {
     const { profile, level } = useProfile();
     const T = useT();
@@ -559,6 +446,34 @@ export default function PlayScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
 
+  // ─── Events data (no IIFE, React Compiler safe) ──────────────────────────
+  const evIsLocked = level < 5;
+  const EV_BASE = new Date("2026-03-01T00:00:00Z").getTime();
+  const EV_CYCLE = 3 * 24 * 3600 * 1000;
+  const EV_ELAPSED = Date.now() - EV_BASE;
+  const EV_IDX = evIsLocked ? 0 : Math.floor(EV_ELAPSED / EV_CYCLE) % 4;
+  const EV_NAMES = ["Velocidad Extrema", "Cartas Aleatorias", "Doble Efecto", "Supervivencia"] as const;
+  const EV_DESCS = ["Todas las cartas tienen temporizador de 5s", "Las cartas especiales cambian aleatoriamente", "Las cartas especiales tienen efecto doble", "Comienza con 12 cartas. ¡Vacía tu mano!"] as const;
+  const EV_ICONS = ["flash", "shuffle", "copy", "shield"] as const;
+  const EV_COLORS = ["#F39C12", "#9B59B6", "#E74C3C", "#27AE60"] as const;
+  const EV_DURS = [2, 2, 2, 2] as const;
+  const evColor = EV_COLORS[EV_IDX];
+  const evName = EV_NAMES[EV_IDX];
+  const evDesc = EV_DESCS[EV_IDX];
+  const evIcon = EV_ICONS[EV_IDX];
+  const evCyclePosMs = EV_ELAPSED % EV_CYCLE;
+  const evDurMs = EV_DURS[EV_IDX] * 24 * 3600 * 1000;
+  const evIsLive = !evIsLocked && evCyclePosMs < evDurMs;
+  const evStatus = evIsLocked ? "locked" : evIsLive ? "live" : "upcoming";
+  const evHoursLeft = evIsLive ? Math.ceil((evDurMs - evCyclePosMs) / 3600000) : 0;
+  const evNextInHours = evIsLocked || evIsLive ? 0 : Math.ceil((EV_CYCLE - evCyclePosMs) / 3600000);
+  const evStatusLabel = evStatus === "live" ? "EVENTO EN VIVO" : evStatus === "locked" ? "NIVEL 5 REQUERIDO" : "PROXIMO EVENTO";
+  const evStatusColor = evStatus === "live" ? evColor : evStatus === "locked" ? "#666" : "#4A90E2";
+  const evStatusIcon = evStatus === "live" ? "radio" : evStatus === "locked" ? "lock-closed" : "time";
+  const evBgColors: [string, string, string] = evStatus === "live"
+    ? [`${evColor}22`, `${evColor}0a`, "transparent"]
+    : evStatus === "locked" ? ["#1a1a1a", "#111111", "transparent"] : ["#0d1520", "#091020", "transparent"];
+
   const CHEST_CYCLE = 3;
   const chestProg = profile.stats.totalWins % CHEST_CYCLE;
   const chestWinsLeft = CHEST_CYCLE - chestProg;
@@ -771,8 +686,71 @@ export default function PlayScreen() {
 
         <RankedPreviewCard isDark={isDark} />
 
-        {/* Events Section — always visible */}
-        <EventsCard isDark={isDark} />
+        {/* Events Section — inlined for React Compiler compatibility */}
+        <View style={{
+          marginHorizontal: 16, marginBottom: 12, borderRadius: 14, overflow: "hidden",
+          borderWidth: 1.5,
+          borderColor: evStatus === "live" ? evColor + "88" : evStatus === "locked" ? "#33333388" : "#4A90E244",
+          shadowColor: evColor, shadowOpacity: evStatus === "live" ? 0.4 : 0.1, shadowRadius: 10, elevation: 6,
+        }}>
+          <LinearGradient colors={evBgColors} style={{ padding: 14 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
+              <Ionicons name={evStatusIcon as any} size={11} color={evStatusColor} />
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: evStatusColor, letterSpacing: 1.5 }}>
+                {evStatusLabel}
+              </Text>
+              {evStatus === "live" && (
+                <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Ionicons name="time-outline" size={11} color={evColor} />
+                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: evColor }}>{evHoursLeft}h</Text>
+                </View>
+              )}
+              {evStatus === "upcoming" && evNextInHours > 0 && (
+                <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: "#4A90E2" }}>en {evNextInHours}h</Text>
+                </View>
+              )}
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View style={{
+                width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center",
+                borderWidth: 1.5, borderColor: evStatus === "locked" ? "#33333388" : evColor + "66",
+                backgroundColor: evStatus === "locked" ? "#22222244" : evColor + "18",
+              }}>
+                <Ionicons name={(evStatus === "locked" ? "lock-closed" : evIcon) as any} size={22} color={evStatus === "locked" ? "#666" : evColor} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: evStatus === "locked" ? "#666" : "#fff", marginBottom: 2 }}>
+                  {evStatus === "locked" ? "Eventos Especiales" : evName}
+                </Text>
+                <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: evStatus === "locked" ? "#555" : "#aaa" }} numberOfLines={1}>
+                  {evStatus === "locked" ? "Desbloquea eventos al llegar a nivel 5" : evDesc}
+                </Text>
+              </View>
+              {evStatus === "live" && (
+                <View style={{ backgroundColor: evColor, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 }}>
+                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#000" }}>Jugar</Text>
+                </View>
+              )}
+            </View>
+            {evStatus === "live" && (
+              <View style={{ flexDirection: "row", marginTop: 10, gap: 8 }}>
+                <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
+                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: evColor }}>+2</Text>
+                  <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>pts por victoria</Text>
+                </View>
+                <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
+                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: evColor }}>+1</Text>
+                  <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>pts por derrota</Text>
+                </View>
+                <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
+                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: evColor }}>Cofre</Text>
+                  <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>a 10 puntos</Text>
+                </View>
+              </View>
+            )}
+          </LinearGradient>
+        </View>
 
         {/* Chest Inventory Section */}
         {showChestSection && (
