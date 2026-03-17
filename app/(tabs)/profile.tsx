@@ -12,7 +12,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Colors, LightColors } from "@/constants/colors";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, GameRecord } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { STORE_ITEMS, AVATARS, AVATAR_FRAMES } from "@/lib/storeItems";
 import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS } from "@/lib/battlePass";
@@ -565,7 +565,50 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={16} color={textMuted} />
         </Pressable>
 
-        {/* Stats */}
+        {/* Recent Match History */}
+        {(profile.stats.recentGames ?? []).length > 0 && (
+          <>
+            <Text style={[styles.sectionLabel, { color: themeGold }]}>HISTORIAL RECIENTE</Text>
+            <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0", paddingVertical: 4, paddingHorizontal: 0 }]}>
+              {(profile.stats.recentGames ?? []).slice(0, 8).map((game: GameRecord, idx: number) => {
+                const modeInfo = GAME_MODES.find(m => m.id === game.mode);
+                const isLast = idx === Math.min(7, (profile.stats.recentGames ?? []).length - 1);
+                const date = new Date(game.timestamp);
+                const dateStr = date.toLocaleDateString("es", { day: "2-digit", month: "2-digit" });
+                const timeStr = date.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" });
+                return (
+                  <View key={game.id} style={{
+                    flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 14,
+                    borderBottomWidth: isLast ? 0 : 1, borderBottomColor: isDark ? Colors.border : "#aacfa0",
+                    gap: 10,
+                  }}>
+                    <View style={{
+                      width: 8, height: 8, borderRadius: 4,
+                      backgroundColor: game.won ? "#27AE60" : "#E74C3C",
+                    }} />
+                    <View style={[{ width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: (modeInfo?.color ?? "#888") + "22" }]}>
+                      <Ionicons name={(modeInfo?.icon ?? "card") as any} size={15} color={modeInfo?.color ?? "#888"} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 13, color: textColor }}>
+                        {game.won ? "Victoria" : "Derrota"}
+                        {game.opponentName ? ` · ${game.opponentName}` : ""}
+                      </Text>
+                      <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: textMuted }}>{modeInfo?.name ?? game.mode}</Text>
+                    </View>
+                    <View style={{ alignItems: "flex-end", gap: 2 }}>
+                      {game.coinsEarned > 0 && (
+                        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.gold }}>+{game.coinsEarned} <Ionicons name="cash" size={10} color={Colors.gold} /></Text>
+                      )}
+                      <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: textMuted }}>{dateStr} {timeStr}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </>
+        )}
+
         <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("statistics") || "ESTADÍSTICAS"}</Text>
         <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}>
           <StatRow label={T("gamesPlayed")} value={profile.stats.totalGames} textColor={textColor} textMuted={textMuted} />

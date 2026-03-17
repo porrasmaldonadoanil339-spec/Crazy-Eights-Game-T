@@ -852,13 +852,14 @@ function ChestEarnedBadge({ chestType, onTap }: { chestType: ChestType; onTap: (
 }
 
 // ─── End modal ────────────────────────────────────────────────────────────────
-function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap }: {
+function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap, winStreak }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
   cpuProfile?: CpuProfile | null; mode?: string;
   rankedProfile?: RankedProfile | null;
   showChest?: boolean;
   chestType?: ChestType | null;
   onChestTap?: () => void;
+  winStreak?: number;
 }) {
   const T = useT();
   const isWin = phase === "player_wins";
@@ -984,6 +985,21 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
               {isWin ? winMsg : isDraw ? T("drawMsg") : loseMsg}
             </Text>
           </Animated.View>
+
+          {/* Win streak badge */}
+          {isWin && winStreak && winStreak >= 2 && (
+            <View style={{
+              flexDirection: "row", alignItems: "center", gap: 6,
+              backgroundColor: "#E67E2222", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6,
+              borderWidth: 1, borderColor: "#E67E2266",
+            }}>
+              <Ionicons name="flame" size={16} color="#E67E22" />
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#E67E22" }}>
+                Racha x{winStreak}
+              </Text>
+              {winStreak >= 5 && <Ionicons name="flame" size={14} color="#FF6B35" />}
+            </View>
+          )}
 
           {/* Ranked star section (win and loss) */}
           {mode === "ranked" && !isDraw && rankedProfile && (
@@ -2210,6 +2226,7 @@ export default function GameScreen() {
           cpuProfile={activeCpu}
           mode={session?.mode}
           rankedProfile={session?.mode === "ranked" ? profile.rankedProfile : null}
+          winStreak={profile.stats.winStreak}
           showChest={showChestReward}
           chestType={pendingChestType}
           onChestTap={() => {

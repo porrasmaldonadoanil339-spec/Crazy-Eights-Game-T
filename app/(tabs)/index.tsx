@@ -112,6 +112,119 @@ function AnimatedBackground({ isDark }: { isDark: boolean }) {
   );
 }
 
+// ─── Events ─────────────────────────────────────────────────────────────────
+const ALL_EVENTS = [
+  { id: "speed", name: "Velocidad Extrema", desc: "Todas las cartas tienen temporizador de 5s", icon: "flash", color: "#F39C12", durationDays: 2 },
+  { id: "random", name: "Cartas Aleatorias", desc: "Las cartas especiales cambian aleatoriamente", icon: "shuffle", color: "#9B59B6", durationDays: 2 },
+  { id: "double", name: "Doble Efecto", desc: "Las cartas especiales tienen efecto doble", icon: "copy", color: "#E74C3C", durationDays: 2 },
+  { id: "survival", name: "Supervivencia", desc: "Comienza con 12 cartas. ¡Vacía tu mano!", icon: "shield", color: "#27AE60", durationDays: 2 },
+];
+
+function getEventStatus(level: number): { event: typeof ALL_EVENTS[0]; status: "live" | "upcoming" | "locked"; hoursLeft: number; nextInHours: number } {
+  if (level < 5) {
+    return { event: ALL_EVENTS[0], status: "locked", hoursLeft: 0, nextInHours: 0 };
+  }
+  const BASE = new Date("2026-03-01T00:00:00Z").getTime();
+  const now = Date.now();
+  const CYCLE = 3 * 24 * 3600 * 1000;
+  const elapsed = now - BASE;
+  const cycleIndex = Math.floor(elapsed / CYCLE);
+  const eventIdx = cycleIndex % ALL_EVENTS.length;
+  const event = ALL_EVENTS[eventIdx];
+  const cyclePosMs = elapsed % CYCLE;
+  const eventDurMs = event.durationDays * 24 * 3600 * 1000;
+  const isLive = cyclePosMs < eventDurMs;
+  const hoursLeft = isLive ? Math.ceil((eventDurMs - cyclePosMs) / 3600000) : 0;
+  const nextInHours = isLive ? 0 : Math.ceil((CYCLE - cyclePosMs) / 3600000);
+  return { event, status: isLive ? "live" : "upcoming", hoursLeft, nextInHours };
+}
+
+function EventsCard({ isDark }: { isDark: boolean }) {
+  const { level } = useProfile();
+  const { event, status, hoursLeft, nextInHours } = getEventStatus(level);
+
+  const bgColors: [string, string, string] = status === "live"
+    ? [`${event.color}22`, `${event.color}0a`, "transparent"]
+    : status === "locked"
+    ? ["#1a1a1a", "#111111", "transparent"]
+    : ["#0d1520", "#091020", "transparent"];
+
+  const statusLabel = status === "live"
+    ? "EVENTO EN VIVO"
+    : status === "locked"
+    ? "NIVEL 5 REQUERIDO"
+    : "PROXIMO EVENTO";
+
+  const statusColor = status === "live" ? event.color : status === "locked" ? "#666" : "#4A90E2";
+  const statusIcon = status === "live" ? "radio" : status === "locked" ? "lock-closed" : "time";
+
+  return (
+    <View style={{
+      marginHorizontal: 16, marginBottom: 12, borderRadius: 14, overflow: "hidden",
+      borderWidth: 1.5, borderColor: status === "live" ? event.color + "88" : status === "locked" ? "#33333388" : "#4A90E244",
+      shadowColor: event.color, shadowOpacity: status === "live" ? 0.4 : 0.1, shadowRadius: 10, elevation: 6,
+    }}>
+      <LinearGradient colors={bgColors} style={{ padding: 14 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
+          <Ionicons name={statusIcon as any} size={11} color={statusColor} />
+          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: statusColor, letterSpacing: 1.5 }}>
+            {statusLabel}
+          </Text>
+          {status === "live" && (
+            <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Ionicons name="time-outline" size={11} color={event.color} />
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: event.color }}>{hoursLeft}h</Text>
+            </View>
+          )}
+          {status === "upcoming" && nextInHours > 0 && (
+            <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: "#4A90E2" }}>en {nextInHours}h</Text>
+            </View>
+          )}
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <View style={[{
+            width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center",
+            borderWidth: 1.5, borderColor: status === "locked" ? "#33333388" : event.color + "66",
+            backgroundColor: status === "locked" ? "#22222244" : event.color + "18",
+          }]}>
+            <Ionicons name={(status === "locked" ? "lock-closed" : event.icon) as any} size={22} color={status === "locked" ? "#666" : event.color} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: status === "locked" ? "#666" : "#fff", marginBottom: 2 }}>
+              {status === "locked" ? "Eventos Especiales" : event.name}
+            </Text>
+            <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: status === "locked" ? "#555" : "#aaa" }} numberOfLines={1}>
+              {status === "locked" ? "Desbloquea eventos al llegar a nivel 5" : event.desc}
+            </Text>
+          </View>
+          {status === "live" && (
+            <View style={{ backgroundColor: event.color, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 }}>
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#000" }}>Jugar</Text>
+            </View>
+          )}
+        </View>
+        {status === "live" && (
+          <View style={{ flexDirection: "row", marginTop: 10, gap: 8 }}>
+            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+2</Text>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>pts por victoria</Text>
+            </View>
+            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+1</Text>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>pts por derrota</Text>
+            </View>
+            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>Cofre</Text>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>a 10 puntos</Text>
+            </View>
+          </View>
+        )}
+      </LinearGradient>
+    </View>
+  );
+}
+
 function RankedPreviewCard({ isDark }: { isDark: boolean }) {
     const { profile, level } = useProfile();
     const T = useT();
@@ -274,42 +387,82 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
   );
 }
 
+const CHEST_COLORS: Record<string, string> = { common: "#A0522D", rare: "#4A90E2", epic: "#9B59B6", legendary: "#D4AF37" };
+
 // Daily reward modal
 function DailyRewardModal({ visible, reward, onClaim }: {
   visible: boolean;
-  reward: { coins: number; xp: number; label: string; icon: string; iconColor: string } | null;
+  reward: { coins: number; xp: number; label: string; icon: string; iconColor: string; chestType?: string } | null;
   onClaim: () => void;
 }) {
   const T = useT();
   const sc = useSharedValue(0.7);
+  const chestPulse = useSharedValue(1);
   useEffect(() => {
-    if (visible) sc.value = withSpring(1, { damping: 12 });
-    else sc.value = 0.7;
+    if (visible) {
+      sc.value = withSpring(1, { damping: 12 });
+      if (reward?.chestType) {
+        chestPulse.value = withRepeat(withSequence(
+          withTiming(1.12, { duration: 700, easing: Easing.inOut(Easing.sin) }),
+          withTiming(1, { duration: 700, easing: Easing.inOut(Easing.sin) })
+        ), -1, true);
+      }
+    } else {
+      sc.value = 0.7;
+    }
   }, [visible]);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const chestStyle = useAnimatedStyle(() => ({ transform: [{ scale: chestPulse.value }] }));
   if (!reward) return null;
+
+  const isChestDay = !!reward.chestType;
+  const chestColor = isChestDay ? (CHEST_COLORS[reward.chestType!] ?? "#A0522D") : reward.iconColor;
+  const gradColors: [string, string] = isChestDay
+    ? (reward.chestType === "legendary" ? ["#1a1200", "#2a1f00"] : reward.chestType === "epic" ? ["#1a0a2e", "#0a0520"] : reward.chestType === "rare" ? ["#0a1628", "#051020"] : ["#1a0f08", "#0d0806"])
+    : ["#1a2e10", "#0a1a08"];
+
   return (
     <Modal transparent animationType="fade" visible={visible}>
       <View style={styles.dailyOverlay}>
         <Animated.View style={[styles.dailyModal, animStyle]}>
-          <LinearGradient colors={["#1a2e10", "#0a1a08"]} style={styles.dailyGrad}>
+          <LinearGradient colors={gradColors} style={styles.dailyGrad}>
             <Text style={styles.dailyTitle}>{T("dailyReward")}</Text>
-            <View style={[styles.dailyIconWrap, { borderColor: reward.iconColor + "88" }]}>
-              <Ionicons name={reward.icon as any} size={42} color={reward.iconColor} />
-            </View>
-            <Text style={styles.dailyLabel}>{reward.label}</Text>
+            {isChestDay ? (
+              <Animated.View style={[styles.dailyIconWrap, { borderColor: chestColor + "99", backgroundColor: chestColor + "18" }, chestStyle]}>
+                <Ionicons name={reward.icon as any} size={52} color={chestColor} />
+                <View style={{ position: "absolute", bottom: -6, right: -6, backgroundColor: chestColor, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 }}>
+                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: "#000" }}>
+                    {reward.chestType === "legendary" ? "LEGENDARIO" : reward.chestType === "epic" ? "EPICO" : reward.chestType === "rare" ? "RARO" : "COMUN"}
+                  </Text>
+                </View>
+              </Animated.View>
+            ) : (
+              <View style={[styles.dailyIconWrap, { borderColor: reward.iconColor + "88" }]}>
+                <Ionicons name={reward.icon as any} size={42} color={reward.iconColor} />
+              </View>
+            )}
+            <Text style={[styles.dailyLabel, isChestDay && { color: chestColor, fontSize: 17 }]}>{reward.label}</Text>
+            {isChestDay && (
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: "#aaa", textAlign: "center", marginBottom: 4 }}>
+                Se ha agregado a tu inventario de cofres
+              </Text>
+            )}
             <View style={styles.dailyChips}>
-              <View style={styles.dailyChip}>
-                <Ionicons name="cash" size={14} color={Colors.gold} />
-                <Text style={styles.dailyChipText}>+{reward.coins}</Text>
-              </View>
-              <View style={styles.dailyChipXp}>
-                <Ionicons name="star" size={12} color={Colors.gold} />
-                <Text style={styles.dailyChipText}>+{reward.xp} XP</Text>
-              </View>
+              {reward.coins > 0 && (
+                <View style={styles.dailyChip}>
+                  <Ionicons name="cash" size={14} color={Colors.gold} />
+                  <Text style={styles.dailyChipText}>+{reward.coins}</Text>
+                </View>
+              )}
+              {reward.xp > 0 && (
+                <View style={styles.dailyChipXp}>
+                  <Ionicons name="star" size={12} color={Colors.gold} />
+                  <Text style={styles.dailyChipText}>+{reward.xp} XP</Text>
+                </View>
+              )}
             </View>
             <Pressable onPress={onClaim} style={styles.dailyClaimBtn}>
-              <LinearGradient colors={[Colors.gold, Colors.goldLight]} style={styles.dailyClaimGrad}>
+              <LinearGradient colors={isChestDay ? [chestColor, chestColor + "BB"] : [Colors.gold, Colors.goldLight]} style={styles.dailyClaimGrad}>
                 <Text style={styles.dailyClaimText}>{T("claimReward").toUpperCase()}</Text>
               </LinearGradient>
             </Pressable>
@@ -617,6 +770,9 @@ export default function PlayScreen() {
         <PokerTitle />
 
         <RankedPreviewCard isDark={isDark} />
+
+        {/* Events Section — always visible */}
+        <EventsCard isDark={isDark} />
 
         {/* Chest Inventory Section */}
         {showChestSection && (

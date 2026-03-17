@@ -15,6 +15,16 @@ import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { RankedProfile, addStars, getRankUpRewards, getRankUpBonusCoins } from "@/lib/ranked";
 import { Chest, ChestReward, ChestType, createChest, openChest as openChestReward } from "@/lib/chestSystem";
 
+export interface GameRecord {
+  id: string;
+  mode: GameModeId;
+  won: boolean;
+  coinsEarned: number;
+  xpEarned: number;
+  timestamp: number;
+  opponentName?: string;
+}
+
 export interface PlayerStats {
   totalGames: number;
   totalWins: number;
@@ -36,6 +46,7 @@ export interface PlayerStats {
   localMultiGames: number;
   onlineMultiWins: number;
   onlineMultiGames: number;
+  recentGames: GameRecord[];
 }
 
 export interface AchievementProgress {
@@ -52,16 +63,17 @@ export interface DailyReward {
   label: string;
   icon: string;
   iconColor: string;
+  chestType?: ChestType;
 }
 
 export const DAILY_REWARDS: DailyReward[] = [
-  { day: 1, coins: 15,  xp: 30,  label: "15 monedas",         icon: "cash",      iconColor: "#F1C40F" },
-  { day: 2, coins: 20,  xp: 40,  label: "20 monedas",         icon: "cash",      iconColor: "#F1C40F" },
-  { day: 3, coins: 30,  xp: 60,  label: "30 monedas + XP",    icon: "star",      iconColor: "#D4AF37" },
-  { day: 4, coins: 25,  xp: 80,  label: "25 monedas + XP",    icon: "cash",      iconColor: "#F1C40F" },
-  { day: 5, coins: 40,  xp: 100, label: "40 monedas + XP",    icon: "gift",      iconColor: "#9B59B6" },
-  { day: 6, coins: 50,  xp: 120, label: "50 monedas",         icon: "cash",      iconColor: "#E67E22" },
-  { day: 7, coins: 100, xp: 250, label: "¡100 monedas! Gran recompensa", icon: "trophy", iconColor: "#D4AF37" },
+  { day: 1, coins: 15,  xp: 30,  label: "15 monedas",              icon: "cash",      iconColor: "#F1C40F" },
+  { day: 2, coins: 20,  xp: 60,  label: "20 monedas + XP",         icon: "star",      iconColor: "#D4AF37" },
+  { day: 3, coins: 10,  xp: 50,  label: "¡Cofre Común!",           icon: "cube",      iconColor: "#A0522D", chestType: "common" },
+  { day: 4, coins: 30,  xp: 80,  label: "30 monedas + XP",         icon: "cash",      iconColor: "#F1C40F" },
+  { day: 5, coins: 50,  xp: 100, label: "50 monedas",              icon: "gift",      iconColor: "#9B59B6" },
+  { day: 6, coins: 25,  xp: 100, label: "¡Cofre Raro!",            icon: "cube-outline", iconColor: "#4A90E2", chestType: "rare" },
+  { day: 7, coins: 100, xp: 250, label: "¡Cofre Épico! Gran recompensa", icon: "diamond", iconColor: "#9B59B6", chestType: "epic" },
 ];
 
 export interface OutgoingRequest {
@@ -151,6 +163,7 @@ const DEFAULT_STATS: PlayerStats = {
   localMultiGames: 0,
   onlineMultiWins: 0,
   onlineMultiGames: 0,
+  recentGames: [],
 };
 
 const DEFAULT_PROFILE: PlayerProfile = {
@@ -541,13 +554,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const today = new Date().toDateString();
     if (profile.lastDailyRewardDate === today) return null;
     const reward = DAILY_REWARDS[profile.dailyRewardIndex % DAILY_REWARDS.length];
-    update((p) => ({
-      ...p,
-      coins: p.coins + reward.coins,
-      totalXp: p.totalXp + reward.xp,
-      lastDailyRewardDate: today,
-      dailyRewardIndex: (p.dailyRewardIndex + 1) % DAILY_REWARDS.length,
-    }));
+    update((p) => {
+      const newInventory = [...(p.chestInventory ?? [])];
+      if (reward.chestType) {
+        const newChest = createChest(reward.chestType, "daily");
+        newInventory.push(newChest);
+      }
+      return {
+        ...p,
+        coins: p.coins + reward.coins,
+        totalXp: p.totalXp + reward.xp,
+        lastDailyRewardDate: today,
+        dailyRewardIndex: (p.dailyRewardIndex + 1) % DAILY_REWARDS.length,
+        chestInventory: newInventory,
+      };
+    });
     return reward;
   }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, update]);
 
@@ -590,6 +611,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     isPerfect: boolean;
     isComeback: boolean;
     gameDurationMs?: number;
+    opponentName?: string;
   }) => {
     update((p) => {
       const today = new Date().toDateString();
@@ -632,6 +654,18 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         fastestLightningWin: (params.mode === "lightning" && params.won && params.gameDurationMs)
           ? Math.min(p.stats.fastestLightningWin, params.gameDurationMs)
           : p.stats.fastestLightningWin,
+        recentGames: [
+          {
+            id: `${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+            mode: params.mode,
+            won: params.won,
+            coinsEarned: params.coinsEarned,
+            xpEarned: params.xpEarned,
+            timestamp: Date.now(),
+            opponentName: params.opponentName,
+          },
+          ...(p.stats.recentGames ?? []).slice(0, 19),
+        ],
       };
 
       return {
