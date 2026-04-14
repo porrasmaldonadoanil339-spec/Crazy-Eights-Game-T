@@ -27,6 +27,7 @@ import {
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
 import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, syncSettings } from "@/lib/audioManager";
+import * as ScreenOrientation from "expo-screen-orientation";
 import { useProfile } from "@/context/ProfileContext";
 import { useT } from "@/hooks/useT";
 import { playSound } from "@/lib/sounds";
@@ -372,6 +373,11 @@ function AudioManager() {
   const segments = useSegments();
   const isFirstRun = useRef(true);
   const { profile, isLoaded } = useProfile();
+
+  // Lock to portrait on mount (runtime enforcement in addition to app.json)
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+  }, []);
 
   // One-time init — no cleanup (music should outlive this effect)
   useEffect(() => {

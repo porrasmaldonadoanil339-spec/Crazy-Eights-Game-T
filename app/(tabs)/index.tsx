@@ -3,7 +3,6 @@ import {
   View, Text, StyleSheet, Pressable, ScrollView,
   Modal, Platform, Dimensions, TextInput, BackHandler, Alert, Image,
 } from "react-native";
-import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { useT } from "@/hooks/useT";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -455,7 +454,6 @@ export default function PlayScreen() {
     const updated = await claimChallenge(id);
     setChallenges(updated);
   };
-  const swipeHandlers = useSwipeTabs(0);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
 
@@ -632,7 +630,7 @@ export default function PlayScreen() {
     : ["#d4edd0", "#dff2da", "#e8f5e2", "#dff2da", "#d4edd0"];
 
   return (
-    <View style={[styles.container, { paddingTop: topPad, backgroundColor: theme.background }]} {...swipeHandlers}>
+    <View style={[styles.container, { paddingTop: topPad, backgroundColor: theme.background }]}>
       <LinearGradient
         colors={bgGradient}
         locations={[0, 0.2, 0.5, 0.8, 1]}

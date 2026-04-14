@@ -3,7 +3,6 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable,
   Platform, Modal, FlatList,
 } from "react-native";
-import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -539,7 +538,6 @@ export default function StoreScreen() {
 
   const T = useT();
   const theme = useTheme();
-  const swipeHandlers = useSwipeTabs(2);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
@@ -639,7 +637,7 @@ export default function StoreScreen() {
   const equippedId = getEquippedId(category);
 
   return (
-    <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
+    <View style={[styles.container, { paddingTop: topPad }]}>
       <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>

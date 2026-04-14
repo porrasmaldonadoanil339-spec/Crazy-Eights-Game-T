@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import NetInfo from "@react-native-community/netinfo";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { t } from "@/lib/i18n";
@@ -30,7 +31,7 @@ import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge 
 import { getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
-import { stopMusic, startGameMusic, syncSettings } from "@/lib/audioManager";
+import { stopMusic, startGameMusic, startMenuMusic, syncSettings } from "@/lib/audioManager";
 import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
@@ -1427,6 +1428,40 @@ export default function GameScreen() {
   const currentModeConfig = session?.mode ? getModeById(session.mode) : null;
   const modeName = currentModeConfig ? T(`mode${currentModeConfig.id.charAt(0).toUpperCase() + currentModeConfig.id.slice(1)}` as any) : "";
 
+  // Play menu music during matchmaking, switch to game music when it ends
+  useEffect(() => {
+    if (showMatchmaking) {
+      startMenuMusic().catch(() => {});
+    } else {
+      startGameMusic().catch(() => {});
+    }
+  }, [showMatchmaking]);
+
+  // NetInfo disconnection: navigate home if offline for >15 seconds
+  useEffect(() => {
+    let disconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    const unsub = NetInfo.addEventListener((state) => {
+      const connected = state.isConnected === true && state.isInternetReachable !== false;
+      if (!connected) {
+        if (!disconnectTimer) {
+          disconnectTimer = setTimeout(() => {
+            stopMusic();
+            router.replace("/(tabs)/");
+          }, 15000);
+        }
+      } else {
+        if (disconnectTimer) {
+          clearTimeout(disconnectTimer);
+          disconnectTimer = null;
+        }
+      }
+    });
+    return () => {
+      unsub();
+      if (disconnectTimer) clearTimeout(disconnectTimer);
+    };
+  }, []);
+
   useEffect(() => {
     if (!dealAnimationDone) {
       aiThinking.current = false;
@@ -2211,7 +2246,6 @@ export default function GameScreen() {
           cpuProfile={activeCpu}
           onComplete={() => {
             setShowMatchmaking(false);
-            startGameMusic().catch(() => {});
           }}
         />
       )}
