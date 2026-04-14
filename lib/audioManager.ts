@@ -31,6 +31,7 @@ let isInitialized = false;
 // If multiple requests come in during a transition, only the last one is applied.
 let transitionInProgress = false;
 let pendingTrack: "menu" | "game" | null = null;
+let lastRequestedTrack: "menu" | "game" | null = null;
 
 async function safe(fn: () => Promise<void>) {
   try { await fn(); } catch {}
@@ -77,6 +78,7 @@ async function applyMusicTransition(track: "menu" | "game") {
 
 async function requestMusicTrack(track: "menu" | "game") {
   // Record the latest desired track
+  lastRequestedTrack = track;
   pendingTrack = track;
 
   // If a transition is already in progress, let it pick up pendingTrack when done
@@ -117,6 +119,13 @@ async function _stopMusicInternal() {
 export async function stopMusic() {
   pendingTrack = null; // Cancel any pending transition
   await _stopMusicInternal();
+}
+
+export async function resumeCurrentMusic() {
+  if (!isMusicEnabled || !lastRequestedTrack) return;
+  if (bgPlayer) return; // Already playing
+  const track = lastRequestedTrack;
+  await requestMusicTrack(track);
 }
 
 export async function pauseMusic() {

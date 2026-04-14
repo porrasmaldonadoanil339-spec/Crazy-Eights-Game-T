@@ -1627,7 +1627,7 @@ export default function GameScreen() {
       : modeConfig.coinsLoss;
     const xp = won
       ? Math.round(modeConfig.xpReward * (modeConfig.hasDifficulty ? diffConfig.xpMultiplier : 1))
-      : modeConfig.xpLoss;
+      : 0;
     const isPerfect = session.cardsDrawnThisGame === 0 && won;
     const isComeback = (gameState?.playerHand?.length ?? 0) >= 10 && won;
 

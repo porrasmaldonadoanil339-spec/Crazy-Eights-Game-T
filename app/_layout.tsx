@@ -26,7 +26,7 @@ import {
   Nunito_800ExtraBold as Nunito_800ExtraBold_Asset,
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
-import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, syncSettings } from "@/lib/audioManager";
+import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, resumeCurrentMusic, syncSettings } from "@/lib/audioManager";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useProfile } from "@/context/ProfileContext";
 import { useT } from "@/hooks/useT";
@@ -418,12 +418,8 @@ function AudioManager() {
       if (nextState === "background" || nextState === "inactive") {
         stopMusic().catch(() => {});
       } else if (nextState === "active") {
-        const inGame = isGameRoute(segments as string[]);
-        if (inGame) {
-          startGameMusic().catch(() => {});
-        } else {
-          startMenuMusic().catch(() => {});
-        }
+        // Resume whichever track was last playing (preserves matchmaking state)
+        resumeCurrentMusic().catch(() => {});
       }
     });
     return () => sub.remove();
