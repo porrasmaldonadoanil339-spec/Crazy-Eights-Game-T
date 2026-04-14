@@ -1579,7 +1579,7 @@ export default function GameScreen() {
     prevTopCardIdRef.current = topCard.id;
     const isSpecial = topCard.rank === "8" || topCard.rank === "Joker" || topCard.rank === "2" || topCard.rank === "7";
     if (isSpecial) {
-      const label = topCard.rank === "2" ? "+2" : topCard.rank === "Joker" ? "+4" : topCard.rank === "7" ? "SKIP" : "WILD";
+      const label = topCard.rank === "2" ? "+2" : topCard.rank === "Joker" ? "+5" : topCard.rank === "7" ? "SKIP" : "WILD";
       const color = topCard.rank === "2" ? "#FF4444" : topCard.rank === "Joker" ? "#CC44FF" : Colors.gold;
       triggerCardFloat(label, color);
     } else {
