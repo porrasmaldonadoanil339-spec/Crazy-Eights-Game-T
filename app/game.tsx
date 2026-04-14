@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions, Image,
+  View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions, Image, Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -1446,7 +1446,12 @@ export default function GameScreen() {
         if (!disconnectTimer) {
           disconnectTimer = setTimeout(() => {
             stopMusic();
-            router.replace("/(tabs)/");
+            Alert.alert(
+              "Sin conexión",
+              "Se perdió la conexión a internet. Volviendo al menú principal.",
+              [{ text: "OK", onPress: () => router.replace("/(tabs)/") }],
+              { cancelable: false }
+            );
           }, 15000);
         }
       } else {
@@ -2274,8 +2279,23 @@ export default function GameScreen() {
               router.replace("/ranked-lobby");
               return;
             }
+            // Reset all end-game / in-game overlay state before replay
             setEndCoins(0);
             setEndXp(0);
+            setRankedPromotion(null);
+            setShowChestReward(false);
+            setPendingChestType(null);
+            setPendingChestId(null);
+            setChestModalReward(null);
+            setShowChestModal(false);
+            setChallengeRuleViolation(null);
+            setShowLastCardBanner(false);
+            setShowLightningBanner(false);
+            setShowEpicResult(null);
+            setShowLevelUp(false);
+            setFloatingCardLabel(null);
+            setShowTournamentModal(false);
+            setLastTournamentRoundWon(undefined);
             retryCount.current += 1;
             setShowMatchmaking(true);
             if (session) startGame(session.mode, session.difficulty);
