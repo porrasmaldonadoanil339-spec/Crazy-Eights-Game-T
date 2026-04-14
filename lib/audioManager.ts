@@ -21,6 +21,7 @@ let sfxPlayers: Map<SoundKey, AudioPlayer> = new Map();
 let currentTrack: "menu" | "game" | null = null;
 let isMusicEnabled = true;
 let isSfxMuted = false;
+let isHapticEnabled = true;
 let musicVolume = 0.35;
 let sfxVolume = 0.85;
 let isInitialized = false;
@@ -143,7 +144,7 @@ async function playSfx(key: SoundKey, volume?: number) {
 }
 
 function haptic(fn: () => Promise<void>) {
-  if (Platform.OS !== "web") safe(fn);
+  if (Platform.OS !== "web" && isHapticEnabled) safe(fn);
 }
 
 // ─── Core card sounds ────────────────────────────────────────────────────────
@@ -378,9 +379,10 @@ export async function playTension() {
 
 // ─── Settings ────────────────────────────────────────────────────────────────
 
-export function syncSettings(musicEnabled: boolean, sfxEnabled: boolean) {
+export function syncSettings(musicEnabled: boolean, sfxEnabled: boolean, vibrationEnabled?: boolean) {
   isMusicEnabled = musicEnabled;
   isSfxMuted = !sfxEnabled;
+  if (vibrationEnabled !== undefined) isHapticEnabled = vibrationEnabled;
   if (!musicEnabled && bgPlayer) {
     pauseMusic().catch(() => {});
   } else if (musicEnabled && bgPlayer) {

@@ -2,7 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import { Animated, View, Text, Image, StyleSheet, Platform, Dimensions, TextInput, Pressable, LogBox } from "react-native";
+import { Animated, View, Text, Image, StyleSheet, Platform, Dimensions, TextInput, Pressable, LogBox, AppState } from "react-native";
 
 LogBox.ignoreLogs([
   '"shadow*" style props are deprecated',
@@ -377,7 +377,7 @@ function AudioManager() {
   useEffect(() => {
     if (!isLoaded) return;
     initAudio().then(() => {
-      syncSettings(profile.musicEnabled, profile.sfxEnabled);
+      syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled ?? true);
       preloadSounds().catch(() => {});
       const inGame = isGameRoute(segments as string[]);
       if (inGame) {
@@ -390,8 +390,8 @@ function AudioManager() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    syncSettings(profile.musicEnabled, profile.sfxEnabled);
-  }, [profile.musicEnabled, profile.sfxEnabled, isLoaded]);
+    syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled ?? true);
+  }, [profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled, isLoaded]);
 
   // React to route changes — skip the very first run (handled by init above)
   useEffect(() => {
@@ -404,6 +404,24 @@ function AudioManager() {
       startMenuMusic().catch(() => {});
     }
   }, [segments.join(","), isLoaded]);
+
+  // Stop music when app goes to background, resume when it returns to foreground
+  useEffect(() => {
+    if (!isLoaded) return;
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "background" || nextState === "inactive") {
+        stopMusic().catch(() => {});
+      } else if (nextState === "active") {
+        const inGame = isGameRoute(segments as string[]);
+        if (inGame) {
+          startGameMusic().catch(() => {});
+        } else {
+          startMenuMusic().catch(() => {});
+        }
+      }
+    });
+    return () => sub.remove();
+  }, [isLoaded, segments.join(",")]);
 
   return null;
 }

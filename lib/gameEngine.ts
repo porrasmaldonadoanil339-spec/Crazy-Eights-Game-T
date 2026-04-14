@@ -157,21 +157,10 @@ export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameS
       return ns;
     }
   } else if (card.rank === "Joker") {
-    if (ns.pendingDraw > 0) {
-      ns.pendingDraw += 5;
-      ns.currentPlayer = "ai";
-      ns.message = gm("jokerCpuDraw", { n: String(ns.pendingDraw) });
-    } else {
-      if (chosenSuit) {
-        ns.currentSuit = chosenSuit;
-        ns.currentPlayer = "ai";
-        ns.message = gm("jokerSuit", { s: suitName(chosenSuit) });
-      } else {
-        ns.phase = "choosing_suit";
-        ns.message = gm("chooseSuitJkr");
-        return ns;
-      }
-    }
+    ns.pendingDraw += 5;
+    ns.pendingDrawType = "seven";
+    ns.currentPlayer = "ai";
+    ns.message = gm("jokerCpuDraw", { n: String(ns.pendingDraw) });
   } else if (card.rank === "2") {
     ns.pendingDraw += 2;
     ns.pendingDrawType = "two";
@@ -349,16 +338,10 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
     ns.message = gm("cpuCrazy8", { s: suitName(suit) });
     ns.currentPlayer = "player";
   } else if (chosen.rank === "Joker") {
-    if (ns.pendingDraw > 0) {
-      ns.pendingDraw += 5;
-      ns.message = gm("cpuJkrDraw", { n: String(ns.pendingDraw) });
-      ns.currentPlayer = "player";
-    } else {
-      const suit = aiChooseSuit(ns.aiHand, difficulty);
-      ns.currentSuit = suit;
-      ns.message = gm("cpuJkrSuit", { s: suitName(suit) });
-      ns.currentPlayer = "player";
-    }
+    ns.pendingDraw += 5;
+    ns.pendingDrawType = "seven";
+    ns.message = gm("cpuJkrDraw", { n: String(ns.pendingDraw) });
+    ns.currentPlayer = "player";
   } else if (chosen.rank === "2") {
     ns.pendingDraw += 2;
     ns.pendingDrawType = "two";

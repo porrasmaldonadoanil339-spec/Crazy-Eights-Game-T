@@ -688,10 +688,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         ],
       };
 
+      const xpLoss = (!params.won && params.mode !== "practice") ? 10 : 0;
       return {
         ...p,
         coins: p.coins + params.coinsEarned,
-        totalXp: p.totalXp + params.xpEarned,
+        totalXp: Math.max(0, p.totalXp + params.xpEarned - xpLoss),
         stats: newStats,
       };
     });

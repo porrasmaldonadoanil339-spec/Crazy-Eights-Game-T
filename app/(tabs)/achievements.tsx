@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
 } from "react-native";
-import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { useT } from "@/hooks/useT";
 import { useTheme } from "@/hooks/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -57,7 +56,6 @@ export default function AchievementsScreen() {
     showToast(`${T("battlePass")} ${T("level")} ${tier} ✓`);
   };
 
-  const swipeHandlers = useSwipeTabs(1);
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
   const unlockedCount = profile.achievementProgress.filter((a) => a.unlocked).length;
   const claimableCount = profile.achievementProgress.filter((a) => a.unlocked && !a.claimedReward).length;
@@ -83,7 +81,7 @@ export default function AchievementsScreen() {
   const claimLabel = T("claim");
 
   return (
-    <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
+    <View style={[styles.container, { paddingTop: topPad }]}>
       <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>

@@ -1800,7 +1800,7 @@ export default function GameScreen() {
     if (selectedCard?.id === card.id) {
       lastActionTime.current = Date.now();
       setShowInactivityBar(false);
-      const needsSuitPick = card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0);
+      const needsSuitPick = card.rank === "8";
       const willHaveLastCard = gameState.playerHand.length === 2;
       
       if (needsSuitPick) {
@@ -2074,11 +2074,9 @@ export default function GameScreen() {
             <Text style={styles.selectedHintText}>
               {selectedCard.rank === "8"
                 ? T("crazy8Hint")
-                : selectedCard.rank === "Joker" && gameState.pendingDraw === 0
-                  ? T("jokerChooseSuitHint")
-                  : selectedCard.rank === "Joker" && gameState.pendingDraw > 0
-                    ? T("jokerAddStackHint").replace("{n}", String(gameState.pendingDraw + 5))
-                    : T("tapToPlay")}
+                : selectedCard.rank === "Joker"
+                  ? T("jokerAddStackHint").replace("{n}", String(gameState.pendingDraw + 5))
+                  : T("tapToPlay")}
             </Text>
           </View>
         )}
@@ -2242,6 +2240,8 @@ export default function GameScreen() {
               router.replace("/ranked-lobby");
               return;
             }
+            setEndCoins(0);
+            setEndXp(0);
             retryCount.current += 1;
             setShowMatchmaking(true);
             if (session) startGame(session.mode, session.difficulty);
@@ -2571,11 +2571,10 @@ const styles = StyleSheet.create({
   playerSection: { paddingBottom: 6, gap: 5, alignItems: "center" },
   handScroll: { height: 138 },
   handContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
     alignItems: "flex-end",
     paddingBottom: 6,
     paddingTop: 28,
+    paddingHorizontal: 12,
   },
 
   // Suit picker

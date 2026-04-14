@@ -4,7 +4,6 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable,
   TextInput, Modal, Platform, Alert, Image,
 } from "react-native";
-import { useSwipeTabs } from "@/hooks/useSwipeTabs";
 import { useT } from "@/hooks/useT";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -362,7 +361,6 @@ export default function ProfileScreen() {
 
   const T = useT();
   const lang = (profile.language ?? "es") as Lang;
-  const swipeHandlers = useSwipeTabs(3);
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
 
@@ -451,7 +449,7 @@ export default function ProfileScreen() {
   const themeGold = isDark ? themeColors.gold : themeColors.gold;
 
   return (
-    <View style={[styles.container, { paddingTop: topPad }]} {...swipeHandlers}>
+    <View style={[styles.container, { paddingTop: topPad }]}>
       <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
