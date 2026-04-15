@@ -244,6 +244,8 @@ export const AVATARS: StoreItem[] = [
   { id: "avatar_odin",      category: "avatar", name: "Odín",            description: "El padre de todos los guerreros de cartas.",      price: 500, preview: "people",         previewColor: "#4682B4", rarity: "legendary" },
   { id: "avatar_thoth",     category: "avatar", name: "Thoth",           description: "Dios del conocimiento y del destino.",            price: 470, preview: "book",           previewColor: "#DAA520", rarity: "legendary" },
   { id: "avatar_ares",      category: "avatar", name: "Ares",            description: "El dios de la guerra en la mesa.",                price: 490, preview: "flash",          previewColor: "#CC0000", rarity: "legendary" },
+  // DEVELOPER (system — not purchasable)
+  { id: "avatar_developer", category: "avatar", name: "Desarrollador",   description: "El creador del juego.",                           price: 999, preview: "code-slash",     previewColor: "#D4AF37", rarity: "legendary" },
 ];
 
 // ═══════════════════════════════════════════════════════════════

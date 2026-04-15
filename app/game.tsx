@@ -1222,6 +1222,8 @@ export default function GameScreen() {
   const resultRecorded = useRef(false);
   const gameStartTimeRef = useRef<number>(Date.now());
   const abandonmentTriggered = useRef(false);
+  const prevAiHandSize = useRef(0);
+  const aiDrawStreak = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cpuEmoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryCount = useRef(0);
@@ -1482,6 +1484,8 @@ export default function GameScreen() {
       aiThinking.current = false;
       resultRecorded.current = false;
       abandonmentTriggered.current = false;
+      prevAiHandSize.current = 0;
+      aiDrawStreak.current = 0;
       gameStartTimeRef.current = Date.now();
       prevLevel.current = level;
     }
@@ -1610,22 +1614,6 @@ export default function GameScreen() {
     if (gameState.phase !== "playing") return;
     msgOpacity.value = withSequence(withTiming(0.2, { duration: 80 }), withTiming(1, { duration: 200 }));
 
-    // Rival abandonment simulation for ranked mode (one-shot, time-gated)
-    if (
-      session?.mode === "ranked" &&
-      !resultRecorded.current &&
-      !abandonmentTriggered.current &&
-      gameState.currentPlayer === "ai" &&
-      gameState.aiHand.length >= 8 &&
-      gameState.playerHand.length <= 3 &&
-      Date.now() - gameStartTimeRef.current >= 30_000 &&
-      Math.random() < 0.35
-    ) {
-      abandonmentTriggered.current = true;
-      forcePlayerWin();
-      return;
-    }
-
     if (gameState.currentPlayer === "ai" && !aiThinking.current) {
       aiThinking.current = true;
       setIsAiThinkingVis(true);
@@ -1637,6 +1625,30 @@ export default function GameScreen() {
       }, delay);
     }
   }, [gameState?.currentPlayer, gameState?.turnId, dealAnimationDone]);
+
+  // Deterministic rival abandonment: trigger when AI draws 5+ consecutive turns in ranked
+  useEffect(() => {
+    if (!gameState || !session || !dealAnimationDone) return;
+    if (gameState.phase !== "playing") return;
+    if (session.mode !== "ranked") return;
+    if (abandonmentTriggered.current || resultRecorded.current) return;
+    if (gameState.currentPlayer !== "player") return;
+
+    const currentAiSize = gameState.aiHand.length;
+    if (prevAiHandSize.current > 0) {
+      if (currentAiSize > prevAiHandSize.current) {
+        aiDrawStreak.current += 1;
+        if (aiDrawStreak.current >= 5) {
+          abandonmentTriggered.current = true;
+          forcePlayerWin();
+          return;
+        }
+      } else {
+        aiDrawStreak.current = 0;
+      }
+    }
+    prevAiHandSize.current = currentAiSize;
+  }, [gameState?.currentPlayer, gameState?.turnId]);
 
   // Game result handling
   useEffect(() => {

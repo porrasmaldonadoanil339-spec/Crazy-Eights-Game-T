@@ -23,6 +23,7 @@ import { getRandomCpuProfile, CpuProfile } from "@/lib/cpuProfiles";
 
 import { generateChallengeRules, ActiveChallengeRules } from "@/lib/challengeRules";
 
+const _biyisDomain = process.env.EXPO_PUBLIC_DOMAIN;
 const BIYIS_PROFILE: CpuProfile = {
   name: "Biyis",
   avatarId: "avatar_developer",
@@ -30,6 +31,7 @@ const BIYIS_PROFILE: CpuProfile = {
   level: 99,
   avatarColor: "#D4AF37",
   avatarIcon: "code-slash",
+  photoUrl: _biyisDomain ? `https://${_biyisDomain}/assets/images/biyis-logo.png` : undefined,
 };
 
 export interface GameSession {
