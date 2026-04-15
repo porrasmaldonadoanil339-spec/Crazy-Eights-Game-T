@@ -1204,6 +1204,8 @@ export default function GameScreen() {
   } = useGame();
   const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins, addChestToInventory, openChestFromInventory, chestInventory } = useProfile();
   const T = useT();
+  const gameStateRef = useRef(gameState);
+  useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
   useEffect(() => { setEngineLang(profile.language ?? "es"); }, [profile.language]);
 
   const cardBack = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
@@ -1221,6 +1223,7 @@ export default function GameScreen() {
   const aiThinking = useRef(false);
   const resultRecorded = useRef(false);
   const gameStartTimeRef = useRef<number>(Date.now());
+  const abandonmentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cpuEmoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryCount = useRef(0);
@@ -1478,10 +1481,25 @@ export default function GameScreen() {
 
   useEffect(() => {
     if (!dealAnimationDone) {
+      // Game is resetting — clear any pending abandonment timer
+      if (abandonmentTimerRef.current) {
+        clearTimeout(abandonmentTimerRef.current);
+        abandonmentTimerRef.current = null;
+      }
       aiThinking.current = false;
       resultRecorded.current = false;
       gameStartTimeRef.current = Date.now();
       prevLevel.current = level;
+    } else if (session?.mode === "ranked") {
+      // Ranked game started — schedule one-shot abandonment check at 45s
+      abandonmentTimerRef.current = setTimeout(() => {
+        abandonmentTimerRef.current = null;
+        const gs = gameStateRef.current;
+        if (!gs || gs.phase !== "playing" || resultRecorded.current) return;
+        if (gs.aiHand.length > gs.playerHand.length + 3) {
+          forcePlayerWin();
+        }
+      }, 45_000);
     }
   }, [dealAnimationDone]);
 
@@ -1627,6 +1645,7 @@ export default function GameScreen() {
     if (!result) return;
     resultRecorded.current = true;
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (abandonmentTimerRef.current) { clearTimeout(abandonmentTimerRef.current); abandonmentTimerRef.current = null; }
 
     const won = result === "player_wins";
     const modeConfig = getModeById(session.mode);
