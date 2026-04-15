@@ -20,7 +20,18 @@ import {
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { getModeById, getDifficultyById } from "@/lib/gameModes";
 import { getRandomCpuProfile, CpuProfile } from "@/lib/cpuProfiles";
+
 import { generateChallengeRules, ActiveChallengeRules } from "@/lib/challengeRules";
+
+const BIYIS_PROFILE: CpuProfile = {
+  name: "Biyis",
+  avatarId: "avatar_developer",
+  titleId: "title_god",
+  level: 99,
+  avatarColor: "#D4AF37",
+  avatarIcon: "code-slash",
+  photoUrl: "https://i.pravatar.cc/80?img=68",
+};
 
 export interface GameSession {
   mode: GameModeId;
@@ -52,6 +63,7 @@ interface GameContextValue {
   getGameResult: () => "player_wins" | "ai_wins" | "draw" | null;
   forceGameOver: () => void;
   forceAiDraw: () => void;
+  forcePlayerWin: () => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -68,7 +80,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const startGame = useCallback((mode: GameModeId, difficulty: Difficulty, overrideCpuProfile?: any) => {
     const modeConfig = getModeById(mode);
     const isExpert = difficulty === "expert";
-    const cpuProfile = overrideCpuProfile || getRandomCpuProfile(undefined, playerLevel, isExpert, playerProfile?.avatarId);
+    const cpuProfile = mode === "practice"
+      ? BIYIS_PROFILE
+      : (overrideCpuProfile || getRandomCpuProfile(undefined, playerLevel, isExpert, playerProfile?.avatarId));
 
     let challengeRules: ActiveChallengeRules | undefined;
     let cardsPerPlayer = modeConfig.cardsPerPlayer;
@@ -149,7 +163,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const modeConfig = getModeById(prev.mode);
       const newState = initGame(modeConfig.cardsPerPlayer, prev.difficulty);
       const isExpert = prev.difficulty === "expert";
-      const cpuProfile = getRandomCpuProfile(undefined, playerLevel, isExpert, playerProfile?.avatarId);
+      const cpuProfile = prev.mode === "practice"
+        ? BIYIS_PROFILE
+        : getRandomCpuProfile(undefined, playerLevel, isExpert, playerProfile?.avatarId);
 
       setDealAnimationDone(false);
       setGameState(newState);
@@ -188,6 +204,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const forcePlayerWin = useCallback(() => {
+    setGameState(prev => prev ? { ...prev, phase: "player_wins", message: "rival_abandoned" } : prev);
+  }, []);
+
   return (
     <GameContext.Provider
       value={{
@@ -206,6 +226,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         getGameResult,
         forceGameOver,
         forceAiDraw,
+        forcePlayerWin,
       }}
     >
       {children}

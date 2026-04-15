@@ -732,11 +732,11 @@ function FlyingStar({ idx, isWin }: { idx: number; isWin: boolean }) {
   );
 }
 
-function RankedStarSection({ rankedProfile, isWin, rankChanged }: { rankedProfile: RankedProfile; isWin: boolean; rankChanged?: "promotion" | "demotion" | null }) {
+function RankedStarSection({ rankedProfile, isWin, rankChanged, rivalAbandoned }: { rankedProfile: RankedProfile; isWin: boolean; rankChanged?: "promotion" | "demotion" | null; rivalAbandoned?: boolean }) {
   const rankInfo = getRankInfo(rankedProfile);
   const rankColor = RANK_COLORS[rankedProfile.rank] || Colors.gold;
-  const delta = isWin ? 2 : -1;
-  const deltaLabel = isWin ? "+2" : "-1";
+  const delta = isWin ? (rivalAbandoned ? 1 : 2) : -1;
+  const deltaLabel = isWin ? (rivalAbandoned ? "+1" : "+2") : "-1";
   const maxStars = rankedProfile.maxStars || 3;
   const currentStars = Math.max(0, Math.min(rankedProfile.stars, maxStars));
   const barPct = currentStars / maxStars;
@@ -761,14 +761,21 @@ function RankedStarSection({ rankedProfile, isWin, rankChanged }: { rankedProfil
       <Animated.View style={[styles.rankedDeltaBadge, { backgroundColor: isWin ? "#D4AF3722" : "#E74C3C22", borderColor: isWin ? "#D4AF3755" : "#E74C3C55" }, labelStyle]}>
         <Ionicons name={isWin ? "trending-up" : "trending-down"} size={14} color={isWin ? Colors.gold : "#E74C3C"} />
         <Text style={[styles.rankedDeltaText, { color: isWin ? Colors.gold : "#E74C3C" }]}>
-          {deltaLabel} {isWin ? "Estrellas" : "Estrella"}
+          {deltaLabel} {isWin ? "Estrella" + (delta > 1 ? "s" : "") : "Estrella"}
         </Text>
       </Animated.View>
+
+      {/* Abandonment message */}
+      {isWin && rivalAbandoned && (
+        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 13, color: Colors.gold, marginBottom: 4, textAlign: "center" }}>
+          ¡Ganaste una estrella! Tu rival abandonó
+        </Text>
+      )}
 
       {/* Demotion / star loss message */}
       {!isWin && (
         <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 13, color: rankChanged === "demotion" ? "#E74C3C" : "rgba(255,255,255,0.55)", marginBottom: 4, textAlign: "center" }}>
-          {rankChanged === "demotion" ? "Has descendido de rango" : "Perdiste una estrella"}
+          {rankChanged === "demotion" ? "Bajaste de rango" : "Perdiste 1 estrella"}
         </Text>
       )}
 
@@ -860,7 +867,7 @@ function ChestEarnedBadge({ chestType, onTap }: { chestType: ChestType; onTap: (
 }
 
 // ─── End modal ────────────────────────────────────────────────────────────────
-function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap, winStreak, rankChanged }: {
+function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap, winStreak, rankChanged, rivalAbandoned }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
   cpuProfile?: CpuProfile | null; mode?: string;
   rankedProfile?: RankedProfile | null;
@@ -869,6 +876,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
   onChestTap?: () => void;
   winStreak?: number;
   rankChanged?: "promotion" | "demotion" | null;
+  rivalAbandoned?: boolean;
 }) {
   const T = useT();
   const isWin = phase === "player_wins";
@@ -1012,7 +1020,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
 
           {/* Ranked star section (win and loss) */}
           {mode === "ranked" && !isDraw && rankedProfile && (
-            <RankedStarSection rankedProfile={rankedProfile} isWin={isWin} rankChanged={rankChanged} />
+            <RankedStarSection rankedProfile={rankedProfile} isWin={isWin} rankChanged={rankChanged} rivalAbandoned={rivalAbandoned} />
           )}
 
           {/* Friend Request Button */}
@@ -1192,7 +1200,7 @@ export default function GameScreen() {
   const {
     gameState, session, handlePlayCard, handleDraw, handleChooseSuit,
     runAiTurn, selectedCard, setSelectedCard, dealAnimationDone, setDealAnimationDone,
-    startNextTournamentRound, startGame, getGameResult, forceGameOver, forceAiDraw,
+    startNextTournamentRound, startGame, getGameResult, forceGameOver, forceAiDraw, forcePlayerWin,
   } = useGame();
   const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins, addChestToInventory, openChestFromInventory, chestInventory } = useProfile();
   const T = useT();
@@ -1236,6 +1244,7 @@ export default function GameScreen() {
   const [challengeRuleViolation, setChallengeRuleViolation] = useState<string | null>(null);
   const [showInactivityBar, setShowInactivityBar] = useState(false);
   const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
+  const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showChestReward, setShowChestReward] = useState(false);
   const [pendingChestType, setPendingChestType] = useState<ChestType | null>(null);
@@ -1598,6 +1607,20 @@ export default function GameScreen() {
     if (!gameState || !dealAnimationDone) return;
     if (gameState.phase !== "playing") return;
     msgOpacity.value = withSequence(withTiming(0.2, { duration: 80 }), withTiming(1, { duration: 200 }));
+
+    // Rival abandonment simulation for ranked mode
+    if (
+      session?.mode === "ranked" &&
+      !resultRecorded.current &&
+      gameState.currentPlayer === "ai" &&
+      gameState.aiHand.length >= 8 &&
+      gameState.playerHand.length <= 3 &&
+      Math.random() < 0.12
+    ) {
+      forcePlayerWin();
+      return;
+    }
+
     if (gameState.currentPlayer === "ai" && !aiThinking.current) {
       aiThinking.current = true;
       setIsAiThinkingVis(true);
@@ -1679,9 +1702,12 @@ export default function GameScreen() {
         }
       }
       if (session.mode === "ranked") {
+        const isAbandonment = gameState?.message === "rival_abandoned";
+        if (isAbandonment) setRivalAbandoned(true);
         const beforeRank = profile.rankedProfile?.rank ?? 0;
-        const nextRanked = addStars(profile.rankedProfile, won ? 2 : -1);
-        updateRanked(won ? 2 : -1);
+        const rankedDelta = won ? (isAbandonment ? 1 : 2) : -1;
+        const nextRanked = addStars(profile.rankedProfile, rankedDelta);
+        updateRanked(rankedDelta);
         if (nextRanked.rank > beforeRank) setRankedPromotion("promotion");
         else if (nextRanked.rank < beforeRank) setRankedPromotion("demotion");
       }
@@ -2283,6 +2309,7 @@ export default function GameScreen() {
             setEndCoins(0);
             setEndXp(0);
             setRankedPromotion(null);
+            setRivalAbandoned(false);
             setShowChestReward(false);
             setPendingChestType(null);
             setPendingChestId(null);
@@ -2306,6 +2333,7 @@ export default function GameScreen() {
           rankedProfile={session?.mode === "ranked" ? profile.rankedProfile : null}
           winStreak={profile.stats.winStreak}
           rankChanged={rankedPromotion}
+          rivalAbandoned={rivalAbandoned}
           showChest={showChestReward}
           chestType={pendingChestType}
           onChestTap={() => {

@@ -695,12 +695,22 @@ export default function PlayScreen() {
         <RankedPreviewCard isDark={isDark} />
 
         {/* Events Section — inlined for React Compiler compatibility */}
-        <View style={{
-          marginHorizontal: 16, marginBottom: 12, borderRadius: 14, overflow: "hidden",
-          borderWidth: 1.5,
-          borderColor: evStatus === "live" ? evColor + "88" : evStatus === "locked" ? "#33333388" : "#4A90E244",
-          shadowColor: evColor, shadowOpacity: evStatus === "live" ? 0.4 : 0.1, shadowRadius: 10, elevation: 6,
-        }}>
+        <Pressable
+          onPress={() => {
+            if (evStatus !== "live") return;
+            playSound("mode_select").catch(() => {});
+            const evGameMode: GameModeId = EV_IDX === 0 ? "lightning" : "classic";
+            startGame(evGameMode, "normal");
+            router.push("/game");
+          }}
+          style={({ pressed }) => ({
+            marginHorizontal: 16, marginBottom: 12, borderRadius: 14, overflow: "hidden",
+            borderWidth: 1.5,
+            borderColor: evStatus === "live" ? evColor + "88" : evStatus === "locked" ? "#33333388" : "#4A90E244",
+            shadowColor: evColor, shadowOpacity: evStatus === "live" ? 0.4 : 0.1, shadowRadius: 10, elevation: 6,
+            opacity: pressed && evStatus === "live" ? 0.85 : 1,
+          })}
+        >
           <LinearGradient colors={evBgColors} style={{ padding: 14 }}>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
               <Ionicons name={evStatusIcon as any} size={11} color={evStatusColor} />
@@ -758,7 +768,7 @@ export default function PlayScreen() {
               </View>
             )}
           </LinearGradient>
-        </View>
+        </Pressable>
 
         {/* Chest Inventory Section */}
         {showChestSection && (
