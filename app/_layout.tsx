@@ -28,6 +28,7 @@ import {
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
 import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, resumeCurrentMusic, syncSettings } from "@/lib/audioManager";
+import { markSplashComplete } from "@/lib/splashState";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useProfile } from "@/context/ProfileContext";
 import { useT } from "@/hooks/useT";
@@ -744,6 +745,7 @@ export default function RootLayout() {
 
   const handleSplashComplete = () => {
     splashShownThisSession = true;
+    markSplashComplete();
     setShowSplash(false);
   };
 

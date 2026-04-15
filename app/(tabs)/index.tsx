@@ -19,6 +19,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
 import { playButton, syncSettings } from "@/lib/audioManager";
 import { playSound } from "@/lib/sounds";
+import { isSplashComplete } from "@/lib/splashState";
 import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName, diffDesc as getDiffDesc } from "@/lib/achTranslations";
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -524,13 +525,19 @@ export default function PlayScreen() {
   }, [isLoaded]);
 
   const dailyModalShown = useRef(false);
-  // Show daily reward once per session, after profile has loaded
+  // Show daily reward once per session, only after profile loaded AND splash fully dismissed
   useEffect(() => {
-    if (isLoaded && canClaimDailyReward && !dailyModalShown.current) {
-      dailyModalShown.current = true;
-      const timer = setTimeout(() => setShowDailyModal(true), 1500);
-      return () => clearTimeout(timer);
-    }
+    if (!isLoaded || !canClaimDailyReward || dailyModalShown.current) return;
+    const show = () => {
+      if (!dailyModalShown.current) {
+        dailyModalShown.current = true;
+        setShowDailyModal(true);
+      }
+    };
+    // If splash already dismissed, show after a short delay; otherwise wait for it
+    const delay = isSplashComplete() ? 800 : 3500;
+    const timer = setTimeout(show, delay);
+    return () => clearTimeout(timer);
   }, [isLoaded, canClaimDailyReward]);
 
   // Android hardware back button → exit confirmation

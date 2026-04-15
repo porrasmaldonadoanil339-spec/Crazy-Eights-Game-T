@@ -173,6 +173,10 @@ export default function SettingsScreen() {
     if (next) Vibration.vibrate(80);
   };
 
+  const toggleMuteEmotes = () => {
+    updateSettings({ muteEmotes: !(profile.muteEmotes ?? false) });
+  };
+
   const selectLanguage = (code: string) => {
     updateSettings({ language: code });
     setShowLangModal(false);
@@ -231,8 +235,14 @@ export default function SettingsScreen() {
           <SettingRow
             label={T("vibration")} sub={T("vibrationDesc")}
             icon="phone-portrait" iconColor="#9B59B6" iconBg="#2a1a3a"
-            isDark={isDark} last
+            isDark={isDark}
             right={<Switch value={profile.vibrationEnabled ?? true} onValueChange={toggleVibration} {...sw(profile.vibrationEnabled ?? true, "#9B59B6")} />}
+          />
+          <SettingRow
+            label={T("muteEmotes" as any) || "Silenciar Emotes CPU"} sub={T("muteEmotesDesc" as any) || "Ocultar mensajes del rival"}
+            icon="chatbubble-ellipses" iconColor="#E67E22" iconBg="#2a1a0a"
+            isDark={isDark} last
+            right={<Switch value={profile.muteEmotes ?? false} onValueChange={toggleMuteEmotes} {...sw(profile.muteEmotes ?? false, "#E67E22")} />}
           />
         </View>
 

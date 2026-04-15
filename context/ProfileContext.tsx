@@ -115,6 +115,7 @@ export interface PlayerProfile {
   musicEnabled: boolean;
   sfxEnabled: boolean;
   vibrationEnabled: boolean;
+  muteEmotes: boolean;
   language: string;
   darkMode: boolean;
   country: string;
@@ -196,6 +197,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   musicEnabled: true,
   sfxEnabled: true,
   vibrationEnabled: true,
+  muteEmotes: false,
   language: "es",
   darkMode: true,
   country: "CO",
@@ -251,7 +253,7 @@ interface ProfileContextValue {
   claimDailyReward: () => DailyReward | null;
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
-  updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
+  updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
   updateEquippedEmotes: (emoteIds: string[]) => void;
   updateRanked: (delta: number) => void;
   watchAd: () => boolean;
@@ -592,7 +594,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return reward;
   }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, update]);
 
-  const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
+  const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
     update((p) => ({ ...p, ...settings }));
   }, [update]);
 

@@ -1409,7 +1409,7 @@ export default function GameScreen() {
       );
     }
   }, [gameState?.lastPlayedCard]);
-  const [muteCpuEmotes, setMuteCpuEmotes] = useState(false);
+  const [muteCpuEmotes, setMuteCpuEmotes] = useState(() => profile.muteEmotes ?? false);
   const [showGameMenu, setShowGameMenu] = useState(false);
   const [menuCountdown, setMenuCountdown] = useState(10);
   const menuCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1900,7 +1900,7 @@ export default function GameScreen() {
         if (hint) {
           if (practiceSpecialHintTimer.current) clearTimeout(practiceSpecialHintTimer.current);
           setPracticeSpecialHint(hint);
-          practiceSpecialHintTimer.current = setTimeout(() => setPracticeSpecialHint(null), 2800);
+          practiceSpecialHintTimer.current = setTimeout(() => setPracticeSpecialHint(null), 1800);
         }
       }
       
