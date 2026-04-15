@@ -49,11 +49,20 @@ const PARTICLE_COLORS = [
 
 const NUM_PARTICLES = 18;
 
+const RARITY_CONFIG = {
+  common:    { shakeAmp: 7,  scalePeak: 1.25, flashDur: 80,  flashOut: 350, particleDist: 100, scaleDown: 0.75, flashColor: "#FFFFFF", glowPulses: 3, lidAngle: -28 },
+  rare:      { shakeAmp: 11, scalePeak: 1.40, flashDur: 100, flashOut: 420, particleDist: 130, scaleDown: 0.72, flashColor: "#88CCFF", glowPulses: 4, lidAngle: -35 },
+  epic:      { shakeAmp: 15, scalePeak: 1.60, flashDur: 130, flashOut: 500, particleDist: 160, scaleDown: 0.68, flashColor: "#CC88FF", glowPulses: 5, lidAngle: -42 },
+  legendary: { shakeAmp: 20, scalePeak: 1.90, flashDur: 180, flashOut: 600, particleDist: 200, scaleDown: 0.65, flashColor: "#FFE566", glowPulses: 7, lidAngle: -50 },
+};
+
 type Phase = "idle" | "shaking" | "opening" | "showing" | "done";
 
 export default function ChestOpeningModal({ visible, chestType, reward, onClose }: Props) {
   const config = CHEST_CONFIG[chestType];
+  const rc = RARITY_CONFIG[chestType] ?? RARITY_CONFIG.common;
   const [phase, setPhase] = useState<Phase>("idle");
+  const [flashColor, setFlashColor] = useState("#FFFFFF");
 
   const bgOpacity = useSharedValue(0);
   const chestScale = useSharedValue(0.5);
@@ -66,6 +75,8 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
   const rewardOpacity = useSharedValue(0);
   const glowRadius = useSharedValue(0);
   const tapHintOpacity = useSharedValue(0);
+  const ringScale = useSharedValue(0);
+  const ringOpacity = useSharedValue(0);
 
   const particles = useRef<Particle[]>(
     Array.from({ length: NUM_PARTICLES }, () => ({
@@ -102,28 +113,31 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
     if (phase === "idle") {
       setPhase("shaking");
       tapHintOpacity.value = withTiming(0, { duration: 200 });
+      const a = rc.shakeAmp;
+      const a2 = Math.round(a * 0.8);
+      const a3 = Math.round(a * 0.6);
 
       shakeX.value = withSequence(
-        withTiming(-10, { duration: 60 }),
-        withTiming(10, { duration: 60 }),
-        withTiming(-8, { duration: 60 }),
-        withTiming(8, { duration: 60 }),
-        withTiming(-6, { duration: 60 }),
-        withTiming(6, { duration: 60 }),
-        withTiming(0, { duration: 60 })
+        withTiming(-a, { duration: 55 }),
+        withTiming(a, { duration: 55 }),
+        withTiming(-a2, { duration: 55 }),
+        withTiming(a2, { duration: 55 }),
+        withTiming(-a3, { duration: 55 }),
+        withTiming(a3, { duration: 55 }),
+        withTiming(0, { duration: 55 })
       );
       shakeY.value = withSequence(
-        withTiming(3, { duration: 90 }),
-        withTiming(-3, { duration: 90 }),
-        withTiming(2, { duration: 90 }),
-        withTiming(0, { duration: 90 })
+        withTiming(4, { duration: 85 }),
+        withTiming(-4, { duration: 85 }),
+        withTiming(2, { duration: 85 }),
+        withTiming(0, { duration: 85 })
       );
 
       glowRadius.value = withRepeat(
         withSequence(
-          withTiming(1, { duration: 300 }),
-          withTiming(0.6, { duration: 300 })
-        ), 4, true
+          withTiming(1, { duration: 280 }),
+          withTiming(0.5, { duration: 280 })
+        ), rc.glowPulses, true
       );
 
       setTimeout(() => startOpening(), 550);
@@ -134,53 +148,73 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
 
   function startOpening() {
     setPhase("opening");
+    setFlashColor(rc.flashColor);
     shakeX.value = withTiming(0, { duration: 100 });
     shakeY.value = withTiming(0, { duration: 100 });
 
     chestScale.value = withSequence(
-      withSpring(1.3, { damping: 4, stiffness: 200 }),
-      withSpring(0.9, { damping: 6 })
+      withSpring(rc.scalePeak, { damping: 3, stiffness: 220 }),
+      withSpring(rc.scaleDown, { damping: 6 })
     );
 
     lidRotate.value = withSequence(
-      withDelay(100, withSpring(-35, { damping: 5, stiffness: 100 }))
+      withDelay(100, withSpring(rc.lidAngle, { damping: 5, stiffness: 100 }))
     );
 
     flashOpacity.value = withSequence(
-      withDelay(300, withTiming(1, { duration: 80 })),
-      withTiming(0, { duration: 400 })
+      withDelay(300, withTiming(1, { duration: rc.flashDur })),
+      withTiming(0, { duration: rc.flashOut })
+    );
+
+    if (chestType === "legendary") {
+      flashOpacity.value = withSequence(
+        withDelay(300, withTiming(1, { duration: 120 })),
+        withTiming(0, { duration: 200 }),
+        withDelay(200, withTiming(0.7, { duration: 80 })),
+        withTiming(0, { duration: 400 })
+      );
+    }
+
+    ringScale.value = withDelay(300,
+      withSequence(withTiming(3, { duration: 600, easing: Easing.out(Easing.quad) }), withTiming(3, { duration: 100 }))
+    );
+    ringOpacity.value = withDelay(300,
+      withSequence(withTiming(0.9, { duration: 80 }), withTiming(0, { duration: 500 }))
     );
 
     particles.forEach((p, i) => {
       const angle = (i / NUM_PARTICLES) * Math.PI * 2;
-      const dist = 100 + Math.random() * 100;
+      const spread = chestType === "legendary" ? 60 : chestType === "epic" ? 45 : chestType === "rare" ? 35 : 25;
+      const dist = rc.particleDist + Math.random() * spread;
       p.x.value = 0;
       p.y.value = 0;
       p.opacity.value = 0;
       p.scale.value = 0;
 
+      const pScale = chestType === "legendary" ? 1.8 : chestType === "epic" ? 1.5 : 1.2;
       p.opacity.value = withDelay(
         300,
         withSequence(
           withTiming(1, { duration: 100 }),
-          withDelay(400, withTiming(0, { duration: 300 }))
+          withDelay(350, withTiming(0, { duration: 350 }))
         )
       );
-      p.scale.value = withDelay(300, withSpring(1.2, { damping: 6 }));
+      p.scale.value = withDelay(300, withSpring(pScale, { damping: 5 }));
       p.x.value = withDelay(300,
         withTiming(Math.cos(angle) * dist, { duration: 700, easing: Easing.out(Easing.quad) })
       );
       p.y.value = withDelay(300,
-        withTiming(Math.sin(angle) * dist - 20, { duration: 700, easing: Easing.out(Easing.quad) })
+        withTiming(Math.sin(angle) * dist - 25, { duration: 700, easing: Easing.out(Easing.quad) })
       );
     });
 
+    const openDelay = chestType === "legendary" ? 800 : 700;
     setTimeout(() => {
       setPhase("showing");
       rewardScale.value = withSpring(1, { damping: 7, stiffness: 150 });
       rewardOpacity.value = withTiming(1, { duration: 200 });
-      chestScale.value = withTiming(0.7, { duration: 300 });
-    }, 700);
+      chestScale.value = withTiming(rc.scaleDown * 0.9, { duration: 300 });
+    }, openDelay);
   }
 
   function doClose() {
@@ -207,13 +241,13 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
   const lidStyle = useAnimatedStyle(() => ({
     transform: [
       { rotate: `${lidRotate.value}deg` },
-      { translateY: interpolate(lidRotate.value, [0, -35], [0, -20], Extrapolation.CLAMP) },
+      { translateY: interpolate(lidRotate.value, [0, -50], [0, -24], Extrapolation.CLAMP) },
     ],
   }));
 
   const glowStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: interpolate(glowRadius.value, [0, 1], [0.8, 1.4], Extrapolation.CLAMP) }],
-    opacity: interpolate(glowRadius.value, [0, 1], [0.3, 0.7], Extrapolation.CLAMP),
+    transform: [{ scale: interpolate(glowRadius.value, [0, 1], [0.7, 1.5], Extrapolation.CLAMP) }],
+    opacity: interpolate(glowRadius.value, [0, 1], [0.2, 0.8], Extrapolation.CLAMP),
   }));
 
   const flashStyle = useAnimatedStyle(() => ({
@@ -227,6 +261,11 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
 
   const tapStyle = useAnimatedStyle(() => ({
     opacity: tapHintOpacity.value,
+  }));
+
+  const ringStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: ringScale.value }],
+    opacity: ringOpacity.value,
   }));
 
   if (!visible) return null;
@@ -243,7 +282,7 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
           style={StyleSheet.absoluteFill}
         />
 
-        <Animated.View style={[styles.flash, flashStyle]} />
+        <Animated.View style={[styles.flash, flashStyle, { backgroundColor: flashColor }]} />
 
         <View style={styles.container}>
           <Text style={[styles.chestTitle, { color: config.glowColor }]}>
@@ -252,6 +291,7 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
 
           <View style={styles.chestArea}>
             <Animated.View style={[styles.glowRing, { borderColor: config.glowColor }, glowStyle]} />
+            <Animated.View style={[styles.burstRing, { borderColor: config.glowColor }, ringStyle]} />
 
             <Animated.View style={chestStyle}>
               <View style={[styles.chestBody, { borderColor: config.borderColor }]}>
@@ -432,6 +472,14 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 90,
     borderWidth: 2,
+    backgroundColor: "transparent",
+  },
+  burstRing: {
+    position: "absolute",
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    borderWidth: 3,
     backgroundColor: "transparent",
   },
   chestBody: {

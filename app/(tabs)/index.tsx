@@ -492,6 +492,17 @@ export default function PlayScreen() {
   const nextCfg = CHEST_CONFIG[nextChestType];
   const showChestSection = chestInventory.length > 0 || profile.stats.totalWins > 0;
 
+  const quickPlayPulse = useSharedValue(1);
+  useEffect(() => {
+    quickPlayPulse.value = withRepeat(
+      withSequence(
+        withTiming(1.035, { duration: 720, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1.0, { duration: 720, easing: Easing.inOut(Easing.ease) })
+      ), -1, true
+    );
+  }, []);
+  const quickPlayAnimStyle = useAnimatedStyle(() => ({ transform: [{ scale: quickPlayPulse.value }] }));
+
   const onlineGlow = useSharedValue(0);
   useEffect(() => {
     onlineGlow.value = withRepeat(
@@ -920,6 +931,19 @@ export default function PlayScreen() {
           <Ionicons name="game-controller" size={14} color={theme.textMuted} />
           <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>{T("gameModes")}</Text>
         </View>
+
+        <Animated.View style={[{ marginBottom: 12 }, quickPlayAnimStyle]}>
+          <Pressable
+            onPress={() => { startGame("classic", "normal"); router.push("/game"); }}
+            style={({ pressed }) => [styles.quickPlayBtn, pressed && { opacity: 0.85 }]}
+          >
+            <LinearGradient colors={["#D4AF37", "#A07800", "#D4AF37"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.quickPlayGrad}>
+              <Ionicons name="flash" size={22} color="#000" />
+              <Text style={styles.quickPlayLabel}>JUGAR RÁPIDO</Text>
+              <Ionicons name="chevron-forward" size={18} color="#00000066" />
+            </LinearGradient>
+          </Pressable>
+        </Animated.View>
 
         <View style={styles.modesGrid}>
           {GAME_MODES.map((mode, idx) => {
@@ -1439,6 +1463,17 @@ const styles = StyleSheet.create({
   // Section header
   sectionHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10 },
   sectionLabel: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textMuted, letterSpacing: 2 },
+
+  // Quick play button
+  quickPlayBtn: {
+    borderRadius: 18, overflow: "hidden",
+    elevation: 6, shadowColor: "#D4AF37", shadowOpacity: 0.5, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
+  },
+  quickPlayGrad: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    paddingVertical: 16, paddingHorizontal: 24, gap: 10,
+  },
+  quickPlayLabel: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: "#000", letterSpacing: 2.5 },
 
   // Mode grid
   modesGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, Switch, Platform, ScrollView,
-  Modal, Pressable, Vibration, Linking, Alert,
+  Modal, Pressable, Vibration, Linking, Alert, TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -131,6 +131,35 @@ function QualitySelector({ value, onChange, isDark }: {
   );
 }
 
+const FAQ_ES = [
+  { q: "¿Cómo se juega Ocho Locos?", a: "El objetivo es ser el primero en vaciar tu mano de cartas. En tu turno puedes jugar una carta del mismo palo o mismo valor, o robar si no puedes." },
+  { q: "¿Qué hace el 8?", a: "El 8 es 'loco': puedes jugarlo sobre cualquier carta y elegir el nuevo palo que seguirá la ronda." },
+  { q: "¿Qué hace el 2?", a: "Obliga al siguiente jugador a robar 2 cartas (o 4 si ya había un 2 activo). Se puede encadenar." },
+  { q: "¿Qué hace el 3?", a: "Bloquea el turno del siguiente jugador y le hace robar 3 cartas." },
+  { q: "¿Qué hace el 7?", a: "Invierte el sentido del juego (sentido horario ↔ antihorario)." },
+  { q: "¿Qué hace el 10?", a: "Quema el mazo: el siguiente jugador pierde su turno." },
+  { q: "¿Qué hace la J?", a: "Jota especial: puede cambiarse de palo o aplicar efecto según el modo activo." },
+  { q: "¿Qué hace el Comodín (Joker)?", a: "Carta comodín: puedes jugarlo en cualquier momento y elegir palo libremente. ¡Muy poderoso!" },
+  { q: "¿Qué es el modo Relámpago?", a: "Partidas ultra-rápidas con sólo 5 cartas por jugador y 8 segundos por turno. Gana el primero en vaciar." },
+  { q: "¿Cómo funciona el modo Ranked?", a: "Compites por estrellas y rangos. Gana para subir; pierde y puedes bajar. Hay 12 rangos desde Novato hasta Leyenda." },
+  { q: "¿Para qué sirven las monedas?", a: "Las monedas se usan en la Tienda para desbloquear avatares, marcos, efectos de cartas y emotes." },
+  { q: "¿Qué son los Cofres?", a: "Recompensas que consigues al ganar partidas. Tócalos para abrirlos y recibir monedas, XP y objetos exclusivos." },
+];
+const FAQ_EN = [
+  { q: "How do you play Crazy Eights?", a: "Be the first to empty your hand. On your turn play a card matching suit or rank, or draw if you can't." },
+  { q: "What does the 8 do?", a: "The 8 is 'crazy': play it on any card and choose the new suit." },
+  { q: "What does the 2 do?", a: "Forces the next player to draw 2 cards (or 4 if a 2 was already active). Can be chained." },
+  { q: "What does the 3 do?", a: "Blocks the next player's turn and makes them draw 3 cards." },
+  { q: "What does the 7 do?", a: "Reverses the direction of play (clockwise ↔ counterclockwise)." },
+  { q: "What does the 10 do?", a: "Burns the deck: the next player loses their turn." },
+  { q: "What does the J (Jack) do?", a: "Special Jack: change suit or apply an effect depending on the active mode." },
+  { q: "What does the Joker do?", a: "Wild card: play it anytime and choose any suit freely. Very powerful!" },
+  { q: "What is Lightning mode?", a: "Ultra-fast games with only 5 cards per player and 8 seconds per turn. First to empty their hand wins." },
+  { q: "How does Ranked mode work?", a: "Compete for stars and ranks. Win to climb; lose and you might drop. There are 12 ranks from Rookie to Legend." },
+  { q: "What are coins for?", a: "Coins are spent in the Store to unlock avatars, card frames, effects and emotes." },
+  { q: "What are Chests?", a: "Rewards earned by winning games. Tap them to open and receive coins, XP and exclusive items." },
+];
+
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { profile, updateSettings } = useProfile();
@@ -138,6 +167,10 @@ export default function SettingsScreen() {
   const T = useT();
   const [showLangModal, setShowLangModal] = useState(false);
   const [langSearch, setLangSearch] = useState("");
+  const [showFaqModal, setShowFaqModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportPlayerName, setReportPlayerName] = useState("");
+  const [reportReason, setReportReason] = useState<string | null>(null);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const isDark = profile.darkMode !== false;
@@ -446,7 +479,7 @@ export default function SettingsScreen() {
           <SettingRow
             label={T("faq")} sub={T("faqDesc")}
             icon="help-circle" iconColor="#4FC3F7" iconBg="#1a2a3a"
-            isDark={isDark} onPress={() => Alert.alert(T("faq"), T("faqText" as any))}
+            isDark={isDark} onPress={() => setShowFaqModal(true)}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
@@ -458,7 +491,7 @@ export default function SettingsScreen() {
           <SettingRow
             label={T("reportPlayer")} sub={T("reportPlayerDesc")}
             icon="flag" iconColor="#E74C3C" iconBg="#3a1a1a"
-            isDark={isDark} last onPress={() => Alert.alert(T("reportPlayer"), T("reportPlayerText" as any))}
+            isDark={isDark} last onPress={() => { setReportPlayerName(""); setReportReason(null); setShowReportModal(true); }}
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
         </View>
@@ -494,6 +527,90 @@ export default function SettingsScreen() {
           </LinearGradient>
         </View>
       </ScrollView>
+
+      {/* ──── FAQ Modal ──── */}
+      <Modal visible={showFaqModal} transparent animationType="slide" onRequestClose={() => setShowFaqModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.faqModal, { backgroundColor: isDark ? "#0a1a0c" : "#f0f8f0" }]}>
+            <LinearGradient colors={isDark ? ["#0a1a0c", "#061209"] : ["#f0f8f0", "#e0f0e0"]} style={StyleSheet.absoluteFill} />
+            <View style={styles.langModalHeader}>
+              <Text style={[styles.langModalTitle, { color: isDark ? "#4FC3F7" : "#0a4a8a" }]}>{T("faq")}</Text>
+              <Pressable onPress={() => setShowFaqModal(false)} style={styles.langModalClose}>
+                <Ionicons name="close" size={22} color={isDark ? "#6B7A5C" : "#666"} />
+              </Pressable>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 520 }}>
+              {((profile.language ?? "es") === "es" ? FAQ_ES : FAQ_EN).map((item, i) => (
+                <View key={i} style={[styles.faqItem, { borderBottomColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)" }]}>
+                  <View style={styles.faqQ}>
+                    <View style={[styles.faqBadge, { backgroundColor: "#4FC3F722" }]}>
+                      <Text style={[styles.faqBadgeText, { color: "#4FC3F7" }]}>Q</Text>
+                    </View>
+                    <Text style={[styles.faqQuestion, { color: isDark ? "#D4AF37" : "#0a4a2a", flex: 1 }]}>{item.q}</Text>
+                  </View>
+                  <Text style={[styles.faqAnswer, { color: isDark ? "#B0C4A0" : "#2a5a2a" }]}>{item.a}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ──── Report Player Modal ──── */}
+      <Modal visible={showReportModal} transparent animationType="slide" onRequestClose={() => setShowReportModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.faqModal, { backgroundColor: isDark ? "#0a0808" : "#fff0f0" }]}>
+            <LinearGradient colors={isDark ? ["#1a0808", "#0a0606"] : ["#fff0f0", "#ffe0e0"]} style={StyleSheet.absoluteFill} />
+            <View style={styles.langModalHeader}>
+              <Text style={[styles.langModalTitle, { color: "#E74C3C" }]}>{T("reportPlayer")}</Text>
+              <Pressable onPress={() => setShowReportModal(false)} style={styles.langModalClose}>
+                <Ionicons name="close" size={22} color={isDark ? "#6B7A5C" : "#666"} />
+              </Pressable>
+            </View>
+            <Text style={[styles.reportLabel, { color: isDark ? "#B0A0A0" : "#5a2a2a" }]}>
+              {(profile.language ?? "es") === "es" ? "Nombre del jugador" : "Player username"}
+            </Text>
+            <TextInput
+              style={[styles.reportInput, { color: isDark ? "#E8DCC8" : "#1a1a1a", borderColor: isDark ? "rgba(231,76,60,0.4)" : "rgba(231,76,60,0.3)", backgroundColor: isDark ? "rgba(231,76,60,0.08)" : "rgba(231,76,60,0.04)" }]}
+              placeholder={(profile.language ?? "es") === "es" ? "Ej: JugadorMalo123" : "e.g. BadPlayer123"}
+              placeholderTextColor={isDark ? "#6B4040" : "#aa8888"}
+              value={reportPlayerName}
+              onChangeText={setReportPlayerName}
+              autoCapitalize="none"
+            />
+            <Text style={[styles.reportLabel, { color: isDark ? "#B0A0A0" : "#5a2a2a", marginTop: 14 }]}>
+              {(profile.language ?? "es") === "es" ? "Motivo del reporte" : "Reason for report"}
+            </Text>
+            {[(profile.language ?? "es") === "es" ? ["trap", "Trampa / Trampas"] : ["trap", "Cheating"],
+              (profile.language ?? "es") === "es" ? ["language", "Lenguaje ofensivo"] : ["language", "Offensive language"],
+              (profile.language ?? "es") === "es" ? ["abandon", "Abandono de partida"] : ["abandon", "Game abandonment"],
+              (profile.language ?? "es") === "es" ? ["other", "Otro motivo"] : ["other", "Other reason"],
+            ].map(([key, label]) => (
+              <Pressable key={key} onPress={() => setReportReason(key)} style={[styles.reportReasonRow, { borderColor: reportReason === key ? "#E74C3C" : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)", backgroundColor: reportReason === key ? "#E74C3C22" : "transparent" }]}>
+                <View style={[styles.reportRadio, { borderColor: reportReason === key ? "#E74C3C" : isDark ? "#555" : "#ccc" }]}>
+                  {reportReason === key && <View style={styles.reportRadioFill} />}
+                </View>
+                <Text style={[styles.reportReasonText, { color: reportReason === key ? "#E74C3C" : isDark ? "#E8DCC8" : "#2a2a2a" }]}>{label}</Text>
+              </Pressable>
+            ))}
+            <TouchableOpacity
+              style={[styles.reportSubmitBtn, { opacity: (reportPlayerName.trim().length > 0 && reportReason) ? 1 : 0.45 }]}
+              disabled={!reportPlayerName.trim() || !reportReason}
+              onPress={() => {
+                const subject = (profile.language ?? "es") === "es" ? `Reporte de jugador: ${reportPlayerName}` : `Player report: ${reportPlayerName}`;
+                const body = (profile.language ?? "es") === "es" ? `Jugador: ${reportPlayerName}\nMotivo: ${reportReason}\n\nDescripción:` : `Player: ${reportPlayerName}\nReason: ${reportReason}\n\nDetails:`;
+                Linking.openURL(`mailto:support@biyisprime.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`).catch(() => {});
+                setShowReportModal(false);
+              }}
+            >
+              <LinearGradient colors={["#E74C3C", "#A01A1A"]} style={styles.reportSubmitGrad}>
+                <Ionicons name="flag" size={18} color="#fff" />
+                <Text style={styles.reportSubmitText}>{(profile.language ?? "es") === "es" ? "Enviar Reporte" : "Send Report"}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Language Modal */}
       <Modal visible={showLangModal} transparent animationType="slide" onRequestClose={() => setShowLangModal(false)}>
@@ -586,4 +703,32 @@ const styles = StyleSheet.create({
   langFlag: { fontSize: 26 },
   langOptionName: { fontFamily: "Nunito_700Bold", fontSize: 15, color: "#E8DCC8" },
   langOptionSub: { fontFamily: "Nunito_400Regular", fontSize: 11, color: "#6B7A5C", marginTop: 1 },
+  // FAQ
+  faqModal: {
+    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 44,
+    overflow: "hidden", borderTopWidth: 1, borderColor: "rgba(79,195,247,0.25)",
+  },
+  faqItem: { paddingVertical: 14, borderBottomWidth: 1, gap: 6 },
+  faqQ: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  faqBadge: { width: 24, height: 24, borderRadius: 8, alignItems: "center", justifyContent: "center", marginTop: 1 },
+  faqBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 12 },
+  faqQuestion: { fontFamily: "Nunito_700Bold", fontSize: 14 },
+  faqAnswer: { fontFamily: "Nunito_400Regular", fontSize: 13, lineHeight: 20, paddingLeft: 34 },
+  // Report Player
+  reportLabel: { fontFamily: "Nunito_700Bold", fontSize: 13, marginBottom: 8 },
+  reportInput: {
+    borderWidth: 1.5, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
+    fontFamily: "Nunito_400Regular", fontSize: 14,
+  },
+  reportReasonRow: {
+    flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 12,
+    borderRadius: 12, borderWidth: 1.5, marginBottom: 8,
+  },
+  reportRadio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, alignItems: "center", justifyContent: "center" },
+  reportRadioFill: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#E74C3C" },
+  reportReasonText: { fontFamily: "Nunito_700Bold", fontSize: 13 },
+  reportSubmitBtn: { borderRadius: 14, overflow: "hidden", marginTop: 18 },
+  reportSubmitGrad: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14 },
+  reportSubmitText: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#fff" },
 });

@@ -297,12 +297,52 @@ function SuitPicker({ visible, onSelect, isJoker }: {
   visible: boolean; onSelect: (s: Suit) => void; isJoker?: boolean;
 }) {
   const T = useT();
+  const [countdown, setCountdown] = useState(5);
+  const countdownAnim = useSharedValue(1);
+
+  useEffect(() => {
+    if (!visible) {
+      setCountdown(5);
+      return;
+    }
+    setCountdown(5);
+    countdownAnim.value = 1;
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        const next = prev - 1;
+        countdownAnim.value = withSequence(
+          withTiming(1.4, { duration: 120 }),
+          withTiming(1, { duration: 200 })
+        );
+        if (next <= 0) {
+          clearInterval(interval);
+          const randomSuit = SUITS[Math.floor(Math.random() * SUITS.length)];
+          onSelect(randomSuit);
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [visible]);
+
+  const countdownStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: countdownAnim.value }],
+  }));
+
+  const cdColor = countdown <= 2 ? "#E74C3C" : countdown <= 3 ? "#F39C12" : "#27AE60";
+
   return (
     <Modal transparent animationType="fade" visible={visible}>
       <View style={styles.suitOverlay}>
         <View style={styles.suitModal}>
           <LinearGradient colors={["#1a2e1a", Colors.surface]} style={styles.suitGrad}>
-            <Text style={styles.suitTitle}>{isJoker ? T("joker") : T("chooseSuit")}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <Text style={styles.suitTitle}>{isJoker ? T("joker") : T("chooseSuit")}</Text>
+              <Animated.Text style={[suitPickerStyles.countdown, { color: cdColor }, countdownStyle]}>
+                {countdown}
+              </Animated.Text>
+            </View>
             <Text style={styles.suitSub}>{isJoker ? T("jokerDesc") : T("chooseSuitSub8")}</Text>
             <View style={styles.suitGrid}>
               {SUITS.map((suit) => (
@@ -318,7 +358,15 @@ function SuitPicker({ visible, onSelect, isJoker }: {
     </Modal>
   );
 }
-
+const suitPickerStyles = StyleSheet.create({
+  countdown: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 26,
+    fontVariant: ["tabular-nums" as any],
+    minWidth: 28,
+    textAlign: "center",
+  },
+});
 // ─── Lightning mode banner ────────────────────────────────────────────────────
 function LightningBanner() {
   const sc = useSharedValue(0.6);
