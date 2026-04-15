@@ -449,7 +449,7 @@ function NotificationManager() {
         rewardNotifications: profile.rewardNotifications ?? true,
         eventNotifications: profile.eventNotifications ?? true,
         reminderNotifications: profile.reminderNotifications ?? true,
-      }).catch(() => {});
+      }, profile.lastDailyRewardDate ?? "").catch(() => {});
     }
   }, [isLoaded]);
 
@@ -462,7 +462,7 @@ function NotificationManager() {
         rewardNotifications: profile.rewardNotifications ?? true,
         eventNotifications: profile.eventNotifications ?? true,
         reminderNotifications: profile.reminderNotifications ?? true,
-      }).catch(() => {});
+      }, profile.lastDailyRewardDate ?? "").catch(() => {});
     }
   }, [
     profile.notificationsEnabled,
@@ -470,6 +470,7 @@ function NotificationManager() {
     profile.rewardNotifications,
     profile.eventNotifications,
     profile.reminderNotifications,
+    profile.lastDailyRewardDate,
   ]);
 
   useEffect(() => {

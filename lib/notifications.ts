@@ -52,7 +52,25 @@ async function cancelById(id: string): Promise<void> {
   } catch {}
 }
 
-export async function scheduleAllNotifications(settings: NotificationSettings): Promise<void> {
+function computeNextDailyRewardDate(lastClaimDateStr: string): Date | null {
+  // Daily reward resets at midnight of the next calendar day after lastClaimDateStr.
+  // Only schedule if the reward was claimed today; if it's already available, skip.
+  const todayStr = new Date().toDateString();
+  if (!lastClaimDateStr || lastClaimDateStr !== todayStr) {
+    // Reward already available — no need to notify
+    return null;
+  }
+  // Claimed today: fire at 9 AM tomorrow (after tonight's midnight reset)
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(9, 0, 0, 0);
+  return tomorrow;
+}
+
+export async function scheduleAllNotifications(
+  settings: NotificationSettings,
+  lastDailyRewardDate: string = ""
+): Promise<void> {
   if (Platform.OS === "web") return;
   try {
     await cancelById(IDS.DAILY_REWARD);
@@ -69,20 +87,22 @@ export async function scheduleAllNotifications(settings: NotificationSettings): 
     if (!granted) return;
 
     if (settings.rewardNotifications) {
-      await Notifications.scheduleNotificationAsync({
-        identifier: IDS.DAILY_REWARD,
-        content: {
-          title: "OCHO LOCOS",
-          body: "¡Tu recompensa diaria está lista para reclamar!",
-          sound: true,
-          data: { type: "daily_reward" },
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour: 10,
-          minute: 0,
-        },
-      });
+      const nextDate = computeNextDailyRewardDate(lastDailyRewardDate);
+      if (nextDate) {
+        await Notifications.scheduleNotificationAsync({
+          identifier: IDS.DAILY_REWARD,
+          content: {
+            title: "OCHO LOCOS",
+            body: "¡Tu recompensa diaria está lista para reclamar!",
+            sound: true,
+            data: { type: "daily_reward" },
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: nextDate,
+          },
+        });
+      }
     }
 
     if (settings.missionNotifications) {
