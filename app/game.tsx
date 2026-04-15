@@ -1221,6 +1221,7 @@ export default function GameScreen() {
   const aiThinking = useRef(false);
   const resultRecorded = useRef(false);
   const gameStartTimeRef = useRef<number>(Date.now());
+  const abandonmentTriggered = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cpuEmoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryCount = useRef(0);
@@ -1480,6 +1481,7 @@ export default function GameScreen() {
     if (!dealAnimationDone) {
       aiThinking.current = false;
       resultRecorded.current = false;
+      abandonmentTriggered.current = false;
       gameStartTimeRef.current = Date.now();
       prevLevel.current = level;
     }
@@ -1608,15 +1610,18 @@ export default function GameScreen() {
     if (gameState.phase !== "playing") return;
     msgOpacity.value = withSequence(withTiming(0.2, { duration: 80 }), withTiming(1, { duration: 200 }));
 
-    // Rival abandonment simulation for ranked mode
+    // Rival abandonment simulation for ranked mode (one-shot, time-gated)
     if (
       session?.mode === "ranked" &&
       !resultRecorded.current &&
+      !abandonmentTriggered.current &&
       gameState.currentPlayer === "ai" &&
       gameState.aiHand.length >= 8 &&
       gameState.playerHand.length <= 3 &&
-      Math.random() < 0.12
+      Date.now() - gameStartTimeRef.current >= 30_000 &&
+      Math.random() < 0.35
     ) {
+      abandonmentTriggered.current = true;
       forcePlayerWin();
       return;
     }

@@ -30,7 +30,6 @@ const BIYIS_PROFILE: CpuProfile = {
   level: 99,
   avatarColor: "#D4AF37",
   avatarIcon: "code-slash",
-  photoUrl: "https://i.pravatar.cc/80?img=68",
 };
 
 export interface GameSession {
