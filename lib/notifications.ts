@@ -60,11 +60,11 @@ function computeNextDailyRewardDate(lastClaimDateStr: string): Date | null {
     // Reward already available — no need to notify
     return null;
   }
-  // Claimed today: fire at 9 AM tomorrow (after tonight's midnight reset)
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(9, 0, 0, 0);
-  return tomorrow;
+  // Claimed today: fire at midnight (start of next calendar day) — same boundary used by canClaimDailyReward
+  const nextReset = new Date();
+  nextReset.setDate(nextReset.getDate() + 1);
+  nextReset.setHours(0, 1, 0, 0); // 00:01 — just after the toDateString() day rollover
+  return nextReset;
 }
 
 export async function scheduleAllNotifications(
