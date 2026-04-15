@@ -1821,6 +1821,9 @@ export default function GameScreen() {
   const [adviceCardId, setAdviceCardId] = useState<string | null>(null);
   const [practiceSpecialHint, setPracticeSpecialHint] = useState<{ text: string; color: string } | null>(null);
   const practiceSpecialHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => { if (practiceSpecialHintTimer.current) clearTimeout(practiceSpecialHintTimer.current); };
+  }, []);
 
   // Practice Advice Logic — must be before early return to respect Rules of Hooks
   useEffect(() => {

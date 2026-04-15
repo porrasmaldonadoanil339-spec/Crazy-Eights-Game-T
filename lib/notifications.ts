@@ -79,8 +79,14 @@ export async function scheduleAllNotifications(
     await cancelById(IDS.REMINDER);
 
     if (!settings.notificationsEnabled) {
-      await cancelById(IDS.RE_ENGAGEMENT);
+      // Cancel all app-owned notifications (including chest and re-engagement IDs)
+      await Notifications.cancelAllScheduledNotificationsAsync();
       return;
+    }
+
+    // Cancel re-engagement if reminder category is disabled
+    if (!settings.reminderNotifications) {
+      await cancelById(IDS.RE_ENGAGEMENT);
     }
 
     const granted = await requestNotificationPermissions();
