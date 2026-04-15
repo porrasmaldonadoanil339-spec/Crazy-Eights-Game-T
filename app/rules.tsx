@@ -50,7 +50,7 @@ export default function RulesScreen() {
       icon: "star" as const,
       title: T("ruleEightsT" as any),
       desc: T("ruleEightsD" as any),
-      detail: "Al jugar un 8, elige el palo que deseas continuar. El rival debe jugar del palo que elegiste. Los Jokers obligan al rival a robar 5 cartas. Los 2 y los 7 obligan a robar 2 cartas (los 7 pueden encadenarse con otro 7 o Joker). Los 3 saltan el turno rival. Los 10 invierten el sentido.",
+      detail: "Al jugar un 8, elige el palo que deseas continuar. El rival debe jugar del palo que elegiste. Los Jokers obligan al rival a robar 5 cartas. Los 7 obligan al rival a robar 7 cartas (encadenables con otro 7 o Joker). Los 2 obligan a robar 2 cartas. Los 3 saltan el turno rival. Los 10 invierten el sentido.",
     },
     {
       icon: "add-circle" as const,

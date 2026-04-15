@@ -19,7 +19,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
 import { playButton, syncSettings } from "@/lib/audioManager";
 import { playSound } from "@/lib/sounds";
-import { isSplashComplete } from "@/lib/splashState";
+import { useUIState } from "@/context/UIStateContext";
 import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName, diffDesc as getDiffDesc } from "@/lib/achTranslations";
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -30,7 +30,6 @@ import ChestOpeningModal from "@/components/ChestOpeningModal";
 import { ChestType, ChestReward, CHEST_CONFIG, getChestProgress } from "@/lib/chestSystem";
 import type { Chest } from "@/lib/chestSystem";
 import { ModeInfoModal } from "@/components/ModeInfoModal";
-import { useUIState } from "@/context/UIStateContext";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -401,7 +400,7 @@ export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
   const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory } = useProfile();
-  const { setTabBarVisible } = useUIState();
+  const { setTabBarVisible, splashReady } = useUIState();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
@@ -525,20 +524,13 @@ export default function PlayScreen() {
   }, [isLoaded]);
 
   const dailyModalShown = useRef(false);
-  // Show daily reward once per session, only after profile loaded AND splash fully dismissed
+  // Show daily reward once per session, only after profile loaded AND splash dismissed (splashReady is set in _layout after splash overlay exits)
   useEffect(() => {
-    if (!isLoaded || !canClaimDailyReward || dailyModalShown.current) return;
-    const show = () => {
-      if (!dailyModalShown.current) {
-        dailyModalShown.current = true;
-        setShowDailyModal(true);
-      }
-    };
-    // If splash already dismissed, show after a short delay; otherwise wait for it
-    const delay = isSplashComplete() ? 800 : 3500;
-    const timer = setTimeout(show, delay);
+    if (!isLoaded || !canClaimDailyReward || !splashReady || dailyModalShown.current) return;
+    dailyModalShown.current = true;
+    const timer = setTimeout(() => setShowDailyModal(true), 800);
     return () => clearTimeout(timer);
-  }, [isLoaded, canClaimDailyReward]);
+  }, [isLoaded, canClaimDailyReward, splashReady]);
 
   // Android hardware back button → exit confirmation
   useEffect(() => {

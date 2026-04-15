@@ -1891,7 +1891,7 @@ export default function GameScreen() {
         const specialHints: Record<string, { text: string; color: string }> = {
           "8":     { text: "¡El 8 es comodín! Elige el palo que prefieras", color: "#D4AF37" },
           "2":     { text: "¡El 2 obliga al rival a robar 2 cartas!", color: "#E74C3C" },
-          "7":     { text: "¡El 7 obliga al rival a robar 2 cartas! (rival puede contraatacar con otro 7 o Joker)", color: "#F39C12" },
+          "7":     { text: "¡El 7 obliga al rival a robar 7 cartas! (rival puede contraatacar con otro 7 o Joker)", color: "#F39C12" },
           "Joker": { text: "¡El Joker obliga al rival a robar 5 cartas!", color: "#9B59B6" },
           "3":     { text: "¡El 3 salta el turno del rival y tú vuelves a jugar!", color: "#27AE60" },
           "10":    { text: "¡El 10 invierte el sentido del juego!", color: "#16A085" },

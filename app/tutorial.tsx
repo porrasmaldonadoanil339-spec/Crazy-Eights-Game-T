@@ -104,13 +104,13 @@ const STEPS: Step[] = [
     centerBadge: { label: "+2", color: "#E74C3C" },
   },
   {
-    title: "El Siete — +2 Cartas",
+    title: "El Siete — Robar 7",
     subtitle: "Carta de castigo encadenable",
     icon: "flash",
     iconColor: "#F39C12",
-    body: "Al jugar un 7, tu rival debe robar 2 cartas. El rival puede contraatacar jugando otro 7 o un Joker, acumulando aún más cartas. ¡Encadena varios 7 para castigar al rival!",
+    body: "Al jugar un 7, tu rival debe robar 7 cartas. El rival puede contraatacar jugando otro 7 o un Joker, acumulando aún más cartas. ¡Encadena varios 7 para castigar al rival!",
     centerCard: { id: "c7", suit: "clubs", rank: "7" },
-    centerBadge: { label: "+2", color: "#F39C12" },
+    centerBadge: { label: "+7", color: "#F39C12" },
   },
   {
     title: "El Joker — +5 Cartas",

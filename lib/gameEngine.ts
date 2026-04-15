@@ -178,7 +178,7 @@ export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameS
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
     ns.message = gm("player3skip");
   } else if (card.rank === "7") {
-    ns.pendingDraw += 2;
+    ns.pendingDraw += 7;
     ns.pendingDrawType = "seven";
     ns.currentSuit = card.suit;
     ns.currentPlayer = "ai";
@@ -360,7 +360,7 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
     ns.message = gm("cpuPlay3");
     // AI goes again
   } else if (chosen.rank === "7") {
-    ns.pendingDraw += 2;
+    ns.pendingDraw += 7;
     ns.pendingDrawType = "seven";
     ns.currentSuit = chosen.suit;
     ns.message = gm("cpuPlay7", { n: String(ns.pendingDraw) });
