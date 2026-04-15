@@ -1504,6 +1504,13 @@ export default function GameScreen() {
     }
   }, [dealAnimationDone]);
 
+  // Skip deal animation immediately when animations disabled
+  useEffect(() => {
+    if (profile.animationsEnabled === false && !dealAnimationDone && !showMatchmaking) {
+      setDealAnimationDone(true);
+    }
+  }, [profile.animationsEnabled, dealAnimationDone, showMatchmaking]);
+
   // Detect level up after game result
   useEffect(() => {
     if (!resultRecorded.current) return;
@@ -1909,7 +1916,7 @@ export default function GameScreen() {
         if (willHaveLastCard) {
           setTimeout(() => playSound("last_card").catch(() => {}), 350);
         }
-        if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
+        if ((profile.specialEffectsEnabled !== false) && profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
           setShowEffect(true);
         }
       }
@@ -1923,7 +1930,7 @@ export default function GameScreen() {
     setSuitPickerVisible(false);
     if (selectedCard) {
       handlePlayCard(selectedCard, suit);
-      if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
+      if ((profile.specialEffectsEnabled !== false) && profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
         setShowEffect(true);
       }
       setSelectedCard(null);

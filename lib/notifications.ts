@@ -60,7 +60,10 @@ export async function scheduleAllNotifications(settings: NotificationSettings): 
     await cancelById(IDS.EVENT);
     await cancelById(IDS.REMINDER);
 
-    if (!settings.notificationsEnabled) return;
+    if (!settings.notificationsEnabled) {
+      await cancelById(IDS.RE_ENGAGEMENT);
+      return;
+    }
 
     const granted = await requestNotificationPermissions();
     if (!granted) return;
