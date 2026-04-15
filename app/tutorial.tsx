@@ -418,10 +418,10 @@ const styles = StyleSheet.create({
     textAlign: "center", lineHeight: 22,
   },
   specialCardPanel: {
-    alignItems: "center", marginTop: 4,
+    alignItems: "center", alignSelf: "center", marginTop: 4, paddingVertical: 8,
   },
   specialCardWrap: {
-    alignItems: "center", gap: 8,
+    alignItems: "center", gap: 10, paddingHorizontal: 16,
   },
   specialBadge: {
     paddingHorizontal: 18, paddingVertical: 6,
