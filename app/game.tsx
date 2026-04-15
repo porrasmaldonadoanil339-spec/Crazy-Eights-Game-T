@@ -1675,14 +1675,14 @@ export default function GameScreen() {
       setTournamentRound((r) => r + 1);
       setLastTournamentRoundWon(won);
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
-      scheduleReEngagementNotification().catch(() => {});
+      scheduleReEngagementNotification(86400, { notificationsEnabled: profile.notificationsEnabled ?? true, reminderNotifications: profile.reminderNotifications ?? true }).catch(() => {});
       setTimeout(() => {
         setShowEpicResult(null);
         setShowTournamentModal(true);
       }, 1500);
     } else {
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
-      scheduleReEngagementNotification().catch(() => {});
+      scheduleReEngagementNotification(86400, { notificationsEnabled: profile.notificationsEnabled ?? true, reminderNotifications: profile.reminderNotifications ?? true }).catch(() => {});
       if (won) {
         const newTotalWins = profile.stats.totalWins + 1;
         let chestType: ChestType | null = null;
@@ -1886,6 +1886,8 @@ export default function GameScreen() {
           "2":     { text: "¡El 2 obliga al rival a robar 2 cartas!", color: "#E74C3C" },
           "7":     { text: "¡El 7 obliga al rival a robar 2 cartas! (rival puede contraatacar con otro 7 o Joker)", color: "#F39C12" },
           "Joker": { text: "¡El Joker obliga al rival a robar 5 cartas!", color: "#9B59B6" },
+          "3":     { text: "¡El 3 salta el turno del rival y tú vuelves a jugar!", color: "#27AE60" },
+          "10":    { text: "¡El 10 invierte el sentido del juego!", color: "#16A085" },
         };
         const hint = specialHints[card.rank];
         if (hint) {

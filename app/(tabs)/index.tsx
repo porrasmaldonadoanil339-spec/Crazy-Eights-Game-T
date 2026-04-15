@@ -523,13 +523,15 @@ export default function PlayScreen() {
     }
   }, [isLoaded]);
 
-  // Show daily reward on mount if available
+  const dailyModalShown = useRef(false);
+  // Show daily reward once per session, after profile has loaded
   useEffect(() => {
-    if (canClaimDailyReward) {
+    if (isLoaded && canClaimDailyReward && !dailyModalShown.current) {
+      dailyModalShown.current = true;
       const timer = setTimeout(() => setShowDailyModal(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isLoaded, canClaimDailyReward]);
 
   // Android hardware back button → exit confirmation
   useEffect(() => {

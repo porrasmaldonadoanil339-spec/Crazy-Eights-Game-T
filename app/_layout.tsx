@@ -478,7 +478,10 @@ function NotificationManager() {
       const newChests = chestInventory.slice(prevChestCount.current);
       newChests.forEach((chest) => {
         const chestLabel = CHEST_CONFIG[chest.type]?.name ?? "cofre";
-        scheduleChestReadyNotification(chest.id, chestLabel).catch(() => {});
+        scheduleChestReadyNotification(chest.id, chestLabel, {
+          notificationsEnabled: profile.notificationsEnabled ?? true,
+          rewardNotifications: profile.rewardNotifications ?? true,
+        }).catch(() => {});
       });
     }
     prevChestCount.current = currentCount;

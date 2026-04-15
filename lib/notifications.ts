@@ -19,6 +19,15 @@ export type NotificationSettings = {
   reminderNotifications: boolean;
 };
 
+const IDS = {
+  DAILY_REWARD: "ocho_daily_reward",
+  MISSIONS: "ocho_missions",
+  EVENT: "ocho_event",
+  REMINDER: "ocho_reminder",
+  RE_ENGAGEMENT: "ocho_re_engagement",
+  chest: (id: string) => `ocho_chest_${id}`,
+};
+
 export async function requestNotificationPermissions(): Promise<boolean> {
   if (Platform.OS === "web") return false;
   try {
@@ -37,10 +46,20 @@ export async function cancelAllNotifications(): Promise<void> {
   } catch {}
 }
 
+async function cancelById(id: string): Promise<void> {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(id);
+  } catch {}
+}
+
 export async function scheduleAllNotifications(settings: NotificationSettings): Promise<void> {
   if (Platform.OS === "web") return;
   try {
-    await cancelAllNotifications();
+    await cancelById(IDS.DAILY_REWARD);
+    await cancelById(IDS.MISSIONS);
+    await cancelById(IDS.EVENT);
+    await cancelById(IDS.REMINDER);
+
     if (!settings.notificationsEnabled) return;
 
     const granted = await requestNotificationPermissions();
@@ -48,8 +67,9 @@ export async function scheduleAllNotifications(settings: NotificationSettings): 
 
     if (settings.rewardNotifications) {
       await Notifications.scheduleNotificationAsync({
+        identifier: IDS.DAILY_REWARD,
         content: {
-          title: "🏆 OCHO LOCOS",
+          title: "OCHO LOCOS",
           body: "¡Tu recompensa diaria está lista para reclamar!",
           sound: true,
           data: { type: "daily_reward" },
@@ -64,8 +84,9 @@ export async function scheduleAllNotifications(settings: NotificationSettings): 
 
     if (settings.missionNotifications) {
       await Notifications.scheduleNotificationAsync({
+        identifier: IDS.MISSIONS,
         content: {
-          title: "🎯 OCHO LOCOS",
+          title: "OCHO LOCOS",
           body: "¡Hay misiones nuevas disponibles! ¿Las aceptas?",
           sound: true,
           data: { type: "missions" },
@@ -80,8 +101,9 @@ export async function scheduleAllNotifications(settings: NotificationSettings): 
 
     if (settings.eventNotifications) {
       await Notifications.scheduleNotificationAsync({
+        identifier: IDS.EVENT,
         content: {
-          title: "⭐ OCHO LOCOS",
+          title: "OCHO LOCOS",
           body: "¡Hay eventos especiales activos! No te los pierdas.",
           sound: true,
           data: { type: "event" },
@@ -96,8 +118,9 @@ export async function scheduleAllNotifications(settings: NotificationSettings): 
 
     if (settings.reminderNotifications) {
       await Notifications.scheduleNotificationAsync({
+        identifier: IDS.REMINDER,
         content: {
-          title: "🃏 OCHO LOCOS",
+          title: "OCHO LOCOS",
           body: "¡Te echamos de menos! Ven a jugar una partida.",
           sound: true,
           data: { type: "reminder" },
@@ -112,12 +135,20 @@ export async function scheduleAllNotifications(settings: NotificationSettings): 
   } catch {}
 }
 
-export async function scheduleChestReadyNotification(chestId: string, chestLabel: string): Promise<void> {
+export async function scheduleChestReadyNotification(
+  chestId: string,
+  chestLabel: string,
+  settings?: Pick<NotificationSettings, "notificationsEnabled" | "rewardNotifications">
+): Promise<void> {
   if (Platform.OS === "web") return;
+  if (settings && (!settings.notificationsEnabled || !settings.rewardNotifications)) return;
   try {
     const granted = await requestNotificationPermissions();
     if (!granted) return;
+    const id = IDS.chest(chestId);
+    await cancelById(id);
     await Notifications.scheduleNotificationAsync({
+      identifier: id,
       content: {
         title: "OCHO LOCOS",
         body: `¡Tu ${chestLabel} está listo para abrir!`,
@@ -133,12 +164,18 @@ export async function scheduleChestReadyNotification(chestId: string, chestLabel
   } catch {}
 }
 
-export async function scheduleReEngagementNotification(delaySecs: number = 86400): Promise<void> {
+export async function scheduleReEngagementNotification(
+  delaySecs: number = 86400,
+  settings?: Pick<NotificationSettings, "notificationsEnabled" | "reminderNotifications">
+): Promise<void> {
   if (Platform.OS === "web") return;
+  if (settings && (!settings.notificationsEnabled || !settings.reminderNotifications)) return;
   try {
     const granted = await requestNotificationPermissions();
     if (!granted) return;
+    await cancelById(IDS.RE_ENGAGEMENT);
     await Notifications.scheduleNotificationAsync({
+      identifier: IDS.RE_ENGAGEMENT,
       content: {
         title: "OCHO LOCOS",
         body: "¡Llevas un día sin jugar! Hay recompensas esperándote.",
