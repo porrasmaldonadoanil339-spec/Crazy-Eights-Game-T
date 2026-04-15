@@ -1435,7 +1435,7 @@ const styles = StyleSheet.create({
   modeCardFull: { width: "100%" },
   modeCardPressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
   modeGrad: {
-    padding: 14, minHeight: 150, justifyContent: "space-between",
+    padding: 14, minHeight: 150, justifyContent: "space-between", alignItems: "center",
     borderWidth: 1.5, borderRadius: 16,
     backgroundColor: "rgba(255,255,255,0.02)",
   },
@@ -1449,12 +1449,11 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", marginBottom: 8,
     alignSelf: "center",
   },
-  modeName: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, marginBottom: 4 },
-  modeDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted, lineHeight: 15, flex: 1 },
-  modeFooter: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 8, flexWrap: "wrap" },
+  modeName: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, marginBottom: 4, textAlign: "center" },
+  modeDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted, lineHeight: 15, flex: 1, textAlign: "center" },
+  modeFooter: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 8, flexWrap: "wrap" },
   modeReward: { flexDirection: "row", alignItems: "center", gap: 3 },
   modeRewardText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.gold },
-  modeWR: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim, flex: 1, textAlign: "right" },
 
   // Quick actions
   quickRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 14 },
