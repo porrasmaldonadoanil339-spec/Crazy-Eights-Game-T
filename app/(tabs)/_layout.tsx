@@ -6,11 +6,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useProfile } from "@/context/ProfileContext";
 import { useT } from "@/hooks/useT";
 import { playTabSwitch } from "@/lib/audioManager";
+import { useUIState } from "@/context/UIStateContext";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { profile } = useProfile();
   const T = useT();
+  const { tabBarVisible } = useUIState();
 
   const isDark = profile.darkMode !== false;
   const activeTint = isDark ? "#D4AF37" : "#A07800";
@@ -27,7 +29,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: activeTint,
         tabBarInactiveTintColor: inactiveTint,
-        tabBarStyle: {
+        tabBarStyle: tabBarVisible ? {
           position: "absolute",
           backgroundColor: Platform.select({
             ios: "transparent",
@@ -38,7 +40,7 @@ export default function TabLayout() {
           elevation: 0,
           height: 50 + (Platform.OS === "web" ? 34 : insets.bottom),
           paddingBottom: Platform.OS === "web" ? 34 : insets.bottom,
-        },
+        } : { display: "none" },
         tabBarBackground: () =>
           Platform.OS === "ios" ? (
             <BlurView intensity={80} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />

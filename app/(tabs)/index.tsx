@@ -29,6 +29,7 @@ import ChestOpeningModal from "@/components/ChestOpeningModal";
 import { ChestType, ChestReward, CHEST_CONFIG, getChestProgress } from "@/lib/chestSystem";
 import type { Chest } from "@/lib/chestSystem";
 import { ModeInfoModal } from "@/components/ModeInfoModal";
+import { useUIState } from "@/context/UIStateContext";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -225,7 +226,6 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
   const { profile: diffProfile } = useProfile();
   const diffLang = (diffProfile.language ?? "es") as Lang;
   const subtitle = T_diff("selectDifficulty");
-  const rewardLabel = T_diff("rewardLabel" as any);
   const timerLabel = T_diff("timer8s" as any);
 
   return (
@@ -261,18 +261,14 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
                         <StarRating stars={d.stars} />
                       </View>
                       <Text style={styles.diffRowDesc}>{detail}</Text>
-                      <View style={styles.diffRowBottom}>
-                        <View style={styles.diffReward}>
-                          <Ionicons name="cash" size={10} color={Colors.gold} />
-                          <Text style={styles.diffRewardText}>{rewardLabel} x{d.coinMultiplier}</Text>
-                        </View>
-                        {d.id === "expert" && (
+                      {d.id === "expert" && (
+                        <View style={styles.diffRowBottom}>
                           <View style={[styles.expertBadge, { backgroundColor: color + "20" }]}>
                             <Ionicons name="timer" size={9} color={color} />
                             <Text style={[styles.expertBadgeText, { color }]}>{timerLabel}</Text>
                           </View>
-                        )}
-                      </View>
+                        </View>
+                      )}
                     </View>
                     <Ionicons name="chevron-forward" size={16} color={color + "88"} />
                   </Pressable>
@@ -404,6 +400,7 @@ export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
   const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory } = useProfile();
+  const { setTabBarVisible } = useUIState();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
@@ -814,6 +811,7 @@ export default function PlayScreen() {
                       const rw = openChestFromInventory(item.id);
                       setChestModalReward(rw);
                       setShowChestModal(true);
+                      setTabBarVisible(false);
                     }}
                   />
                 )}
@@ -914,9 +912,6 @@ export default function PlayScreen() {
 
         <View style={styles.modesGrid}>
           {GAME_MODES.map((mode, idx) => {
-            const wins = profile.stats.winsByMode[mode.id] ?? 0;
-            const games = profile.stats.gamesByMode[mode.id] ?? 0;
-            const wr = games > 0 ? Math.round((wins / games) * 100) : null;
             const isLastAlone = idx === GAME_MODES.length - 1 && GAME_MODES.length % 2 !== 0;
             return (
               <Pressable
@@ -943,9 +938,6 @@ export default function PlayScreen() {
                       <Ionicons name="cash" size={11} color={Colors.gold} />
                       <Text style={[styles.modeRewardText, { color: theme.gold }]}>{mode.coinsReward}</Text>
                     </View>
-                    {wr !== null && (
-                      <Text style={[styles.modeWR, { color: theme.textMuted }]}>{wr}% WR</Text>
-                    )}
                     {mode.hasDifficulty && (
                       <Ionicons name="chevron-forward" size={12} color={mode.color + "88"} />
                     )}
@@ -1117,7 +1109,7 @@ export default function PlayScreen() {
         visible={showChestModal}
         chestType={selectedChestType}
         reward={chestModalReward}
-        onClose={() => { setShowChestModal(false); setChestModalReward(null); }}
+        onClose={() => { setShowChestModal(false); setChestModalReward(null); setTabBarVisible(true); }}
       />
 
       {/* Online modal */}
@@ -1327,7 +1319,7 @@ export default function PlayScreen() {
               <Ionicons name="play-circle" size={48} color={Colors.gold} />
             </View>
             <Text style={[styles.adModalTitle, { color: theme.gold }]}>
-              {adComplete ? "+50" : T("adWatching")}
+              {adComplete ? "+15" : T("adWatching")}
             </Text>
             {!adComplete && (
               <View style={styles.adCountdownWrap}>
@@ -1341,7 +1333,7 @@ export default function PlayScreen() {
                 </Text>
                 <View style={styles.adRewardRow}>
                   <Ionicons name="cash" size={20} color={Colors.gold} />
-                  <Text style={[styles.adRewardText, { color: theme.gold }]}>+50 {T("coins")}</Text>
+                  <Text style={[styles.adRewardText, { color: theme.gold }]}>+15 {T("coins")}</Text>
                 </View>
                 <Pressable onPress={handleClaimAd} style={styles.adClaimBtn}>
                   <LinearGradient colors={[Colors.goldLight, Colors.gold]} style={styles.adClaimGrad}>
@@ -1455,6 +1447,7 @@ const styles = StyleSheet.create({
   modeIconWrap: {
     width: 44, height: 44, borderRadius: 22,
     alignItems: "center", justifyContent: "center", marginBottom: 8,
+    alignSelf: "center",
   },
   modeName: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, marginBottom: 4 },
   modeDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textMuted, lineHeight: 15, flex: 1 },

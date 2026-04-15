@@ -392,10 +392,16 @@ export default function ProfileScreen() {
       mediaTypes: "images",
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
+      quality: 0.5,
+      base64: true,
     });
     if (!result.canceled && result.assets[0]) {
-      updatePhotoUri(result.assets[0].uri);
+      const b64 = result.assets[0].base64;
+      if (b64) {
+        updatePhotoUri(`data:image/jpeg;base64,${b64}`);
+      } else {
+        updatePhotoUri(result.assets[0].uri);
+      }
       setShowAvatarPicker(false);
     }
   };
@@ -408,9 +414,12 @@ export default function ProfileScreen() {
       input.onchange = (e: any) => {
         const file = e.target.files[0];
         if (file) {
-          const url = URL.createObjectURL(file);
-          updatePhotoUri(url);
-          setShowAvatarPicker(false);
+          const reader = new (window as any).FileReader();
+          reader.onload = (ev: any) => {
+            updatePhotoUri(ev.target.result as string);
+            setShowAvatarPicker(false);
+          };
+          reader.readAsDataURL(file);
         }
       };
       input.click();
@@ -425,10 +434,16 @@ export default function ProfileScreen() {
       mediaTypes: "images",
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
+      quality: 0.5,
+      base64: true,
     });
     if (!result.canceled && result.assets[0]) {
-      updatePhotoUri(result.assets[0].uri);
+      const b64 = result.assets[0].base64;
+      if (b64) {
+        updatePhotoUri(`data:image/jpeg;base64,${b64}`);
+      } else {
+        updatePhotoUri(result.assets[0].uri);
+      }
       setShowAvatarPicker(false);
     }
   };
@@ -526,6 +541,9 @@ export default function ProfileScreen() {
 
             <View style={styles.badgeRow}>
               <Pressable onPress={() => setShowTitlePicker(true)} style={[styles.titleBadge, { backgroundColor: themeGold + "22", borderColor: themeGold + "44" }]}>
+                {titleItem?.preview && (
+                  <Ionicons name={titleItem.preview as any} size={11} color={themeGold} />
+                )}
                 <Text style={[styles.titleText, { color: themeGold }]}>{titleItem?.name ?? T("noTitle")}</Text>
                 <Ionicons name="chevron-down" size={12} color={themeGold} />
               </Pressable>

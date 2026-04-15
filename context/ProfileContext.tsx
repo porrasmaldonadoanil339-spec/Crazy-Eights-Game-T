@@ -597,7 +597,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [update]);
 
   const AD_DAILY_LIMIT = 5;
-  const AD_COINS_REWARD = 50;
+  const AD_COINS_REWARD = 15;
   const watchAd = useCallback((): boolean => {
     const today = new Date().toDateString();
     let success = false;

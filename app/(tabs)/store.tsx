@@ -20,6 +20,34 @@ const RARITY_COLORS_MAP: Record<string, string> = {
   legendary: "#D4AF37",
 };
 
+const RARITY_PRICE_MULTIPLIER: Record<string, number> = {
+  common: 3,
+  rare: 5,
+  epic: 8,
+  legendary: 15,
+};
+
+const RARITY_SORT_ORDER: Record<string, number> = {
+  common: 0,
+  rare: 1,
+  epic: 2,
+  legendary: 3,
+};
+
+function applyPriceMultiplier(item: StoreItem): StoreItem {
+  if (item.price === 0 || item.isDefault) return item;
+  const mult = RARITY_PRICE_MULTIPLIER[item.rarity] ?? 1;
+  return { ...item, price: Math.round(item.price * mult) };
+}
+
+function sortItemsByRarityAndPrice(items: StoreItem[]): StoreItem[] {
+  return [...items].sort((a, b) => {
+    const rarityDiff = (RARITY_SORT_ORDER[a.rarity] ?? 0) - (RARITY_SORT_ORDER[b.rarity] ?? 0);
+    if (rarityDiff !== 0) return rarityDiff;
+    return a.price - b.price;
+  });
+}
+
 const RARITY_BORDER: Record<string, number> = { common: 1.5, rare: 2, epic: 2.5, legendary: 3 };
 const RARITY_BORDER_COLOR: Record<string, string> = {
   common: "#95A5A655",
@@ -541,7 +569,9 @@ export default function StoreScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
-  const items = STORE_ITEMS.filter((i) => i.category === category).map((i) => localizeItem(i, lang));
+  const items = sortItemsByRarityAndPrice(
+    STORE_ITEMS.filter((i) => i.category === category).map(applyPriceMultiplier)
+  ).map((i) => localizeItem(i, lang));
   const isEffects = category === "effect";
   const isEmotes = category === "emote";
 

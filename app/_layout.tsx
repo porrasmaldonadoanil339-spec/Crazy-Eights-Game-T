@@ -17,6 +17,7 @@ import { GameProvider } from "@/context/GameContext";
 import { ProfileProvider } from "@/context/ProfileContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { NetworkProvider, useNetwork } from "@/context/NetworkContext";
+import { UIStateProvider } from "@/context/UIStateContext";
 import { OfflineScreen } from "@/components/OfflineScreen";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -734,6 +735,7 @@ export default function RootLayout() {
           <NetworkProvider>
             <AuthProvider>
               <ProfileProvider>
+                <UIStateProvider>
                 <NetworkGuard>
                   <GameProvider>
                     <StatusBar style="light" />
@@ -743,6 +745,7 @@ export default function RootLayout() {
                     )}
                   </GameProvider>
                 </NetworkGuard>
+                </UIStateProvider>
               </ProfileProvider>
             </AuthProvider>
           </NetworkProvider>
