@@ -32,6 +32,7 @@ import { getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/chal
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { stopMusic, startGameMusic, startMenuMusic, syncSettings, playWin, playLose } from "@/lib/audioManager";
+import { scheduleReEngagementNotification } from "@/lib/notifications";
 import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
@@ -1674,12 +1675,14 @@ export default function GameScreen() {
       setTournamentRound((r) => r + 1);
       setLastTournamentRoundWon(won);
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
+      scheduleReEngagementNotification().catch(() => {});
       setTimeout(() => {
         setShowEpicResult(null);
         setShowTournamentModal(true);
       }, 1500);
     } else {
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
+      scheduleReEngagementNotification().catch(() => {});
       if (won) {
         const newTotalWins = profile.stats.totalWins + 1;
         let chestType: ChestType | null = null;
@@ -1881,7 +1884,7 @@ export default function GameScreen() {
         const specialHints: Record<string, { text: string; color: string }> = {
           "8":     { text: "¡El 8 es comodín! Elige el palo que prefieras", color: "#D4AF37" },
           "2":     { text: "¡El 2 obliga al rival a robar 2 cartas!", color: "#E74C3C" },
-          "7":     { text: "¡El 7 bloquea el turno del rival!", color: "#F39C12" },
+          "7":     { text: "¡El 7 obliga al rival a robar 2 cartas! (rival puede contraatacar con otro 7 o Joker)", color: "#F39C12" },
           "Joker": { text: "¡El Joker obliga al rival a robar 5 cartas!", color: "#9B59B6" },
         };
         const hint = specialHints[card.rank];
