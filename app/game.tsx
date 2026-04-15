@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming,
-  withRepeat, withDelay, Easing, runOnJS, FadeIn, ZoomIn,
+  withRepeat, withDelay, Easing, runOnJS, FadeIn, FadeOut, ZoomIn,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
