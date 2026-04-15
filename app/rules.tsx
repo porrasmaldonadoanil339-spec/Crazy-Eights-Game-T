@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  LayoutAnimation,
+  UIManager,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,21 +16,66 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 export default function RulesScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
   const T = useT();
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const RULES = useMemo(() => [
-    { icon: "shuffle" as const,     title: T("ruleGoalT" as any),   desc: T("ruleGoalD" as any) },
-    { icon: "layers" as const,      title: T("ruleDealT" as any),   desc: T("ruleDealD" as any) },
-    { icon: "play-circle" as const, title: T("rulePlayT" as any),   desc: T("rulePlayD" as any) },
-    { icon: "star" as const,        title: T("ruleEightsT" as any), desc: T("ruleEightsD" as any) },
-    { icon: "add-circle" as const,  title: T("ruleDrawT" as any),   desc: T("ruleDrawD" as any) },
-    { icon: "sync" as const,        title: T("ruleDeckT" as any),   desc: T("ruleDeckD" as any) },
-    { icon: "trophy" as const,      title: T("ruleWinT" as any),    desc: T("ruleWinD" as any) },
+    {
+      icon: "shuffle" as const,
+      title: T("ruleGoalT" as any),
+      desc: T("ruleGoalD" as any),
+      detail: "Cada jugador empieza con cartas en mano. El turno pasa en orden. Cuando solo te quede una carta, debes decir '¡OCHO LOCOS!' antes de jugarla o recibirás penalización.",
+    },
+    {
+      icon: "layers" as const,
+      title: T("ruleDealT" as any),
+      desc: T("ruleDealD" as any),
+      detail: "El repartidor da las cartas una a una en sentido horario. La primera carta del mazo se coloca boca arriba para iniciar la pila de descarte. Si es un 8, se mezcla de vuelta.",
+    },
+    {
+      icon: "play-circle" as const,
+      title: T("rulePlayT" as any),
+      desc: T("rulePlayD" as any),
+      detail: "Debes jugar una carta que coincida en PALO (♠♥♦♣) o en NÚMERO con la carta superior de la pila. Los 8 son comodines y pueden jugarse en cualquier momento.",
+    },
+    {
+      icon: "star" as const,
+      title: T("ruleEightsT" as any),
+      desc: T("ruleEightsD" as any),
+      detail: "Al jugar un 8, elige el palo que deseas continuar. El rival debe jugar del palo que elegiste. Los Jokers obligan al rival a robar 5 cartas. Los 2 obligan a robar 2. Los 7 bloquean el turno rival.",
+    },
+    {
+      icon: "add-circle" as const,
+      title: T("ruleDrawT" as any),
+      desc: T("ruleDrawD" as any),
+      detail: "Si no tienes ninguna carta jugable, roba del mazo. Puedes jugar la carta que robaste si es válida. Solo robas una carta por turno (a menos que una carta especial te obligue a robar más).",
+    },
+    {
+      icon: "sync" as const,
+      title: T("ruleDeckT" as any),
+      desc: T("ruleDeckD" as any),
+      detail: "Cuando el mazo se agota, las cartas de la pila de descarte (excepto la carta superior) se barajan y forman un nuevo mazo. El juego continúa sin interrupción.",
+    },
+    {
+      icon: "trophy" as const,
+      title: T("ruleWinT" as any),
+      desc: T("ruleWinD" as any),
+      detail: "El primer jugador que se quede sin cartas gana la ronda. En modo Torneo, se juega al mejor de 3 rondas. En modo Clasificatoria, los puntos acumulan hacia el ranking.",
+    },
   ], [T]);
+
+  const toggle = (idx: number) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedIndex(prev => prev === idx ? null : idx);
+  };
 
   return (
     <View style={[styles.container, { paddingTop: topPad, paddingBottom: botPad }]}>
@@ -53,22 +100,48 @@ export default function RulesScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {RULES.map((rule, idx) => (
-          <View key={idx} style={styles.ruleCard}>
-            <LinearGradient
-              colors={["rgba(255,255,255,0.05)", "rgba(255,255,255,0.02)"]}
-              style={styles.ruleGrad}
+        {RULES.map((rule, idx) => {
+          const isExpanded = expandedIndex === idx;
+          return (
+            <Pressable
+              key={idx}
+              onPress={() => toggle(idx)}
+              style={({ pressed }) => [
+                styles.ruleCard,
+                isExpanded && styles.ruleCardExpanded,
+                pressed && { opacity: 0.88 },
+              ]}
             >
-              <View style={styles.ruleIconWrap}>
-                <Ionicons name={rule.icon} size={22} color={Colors.gold} />
-              </View>
-              <View style={styles.ruleText}>
-                <Text style={styles.ruleTitle}>{rule.title}</Text>
-                <Text style={styles.ruleDesc}>{rule.desc}</Text>
-              </View>
-            </LinearGradient>
-          </View>
-        ))}
+              <LinearGradient
+                colors={isExpanded
+                  ? ["rgba(212,175,55,0.08)", "rgba(212,175,55,0.04)"]
+                  : ["rgba(255,255,255,0.05)", "rgba(255,255,255,0.02)"]}
+                style={styles.ruleGrad}
+              >
+                <View style={[styles.ruleIconWrap, isExpanded && styles.ruleIconWrapExpanded]}>
+                  <Ionicons name={rule.icon} size={22} color={Colors.gold} />
+                </View>
+                <View style={styles.ruleText}>
+                  <View style={styles.ruleTitleRow}>
+                    <Text style={styles.ruleTitle}>{rule.title}</Text>
+                    <Ionicons
+                      name={isExpanded ? "chevron-up" : "chevron-down"}
+                      size={14}
+                      color={Colors.gold + "99"}
+                    />
+                  </View>
+                  <Text style={styles.ruleDesc}>{rule.desc}</Text>
+                  {isExpanded && (
+                    <View style={styles.ruleDetailBox}>
+                      <View style={styles.ruleDetailDivider} />
+                      <Text style={styles.ruleDetail}>{rule.detail}</Text>
+                    </View>
+                  )}
+                </View>
+              </LinearGradient>
+            </Pressable>
+          );
+        })}
 
         <View style={styles.footerNote}>
           <Text style={styles.footerNoteText}>OCHO LOCOS</Text>
@@ -118,6 +191,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(212,175,55,0.12)",
   },
+  ruleCardExpanded: {
+    borderColor: "rgba(212,175,55,0.35)",
+  },
   ruleGrad: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -135,21 +211,46 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexShrink: 0,
   },
+  ruleIconWrapExpanded: {
+    backgroundColor: "rgba(212,175,55,0.22)",
+    borderColor: "rgba(212,175,55,0.5)",
+  },
   ruleText: {
     flex: 1,
     gap: 3,
+  },
+  ruleTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   ruleTitle: {
     fontFamily: "Nunito_800ExtraBold",
     fontSize: 14,
     color: Colors.gold,
     letterSpacing: 0.5,
+    flex: 1,
   },
   ruleDesc: {
     fontFamily: "Nunito_400Regular",
     fontSize: 13,
     color: Colors.textMuted,
     lineHeight: 19,
+  },
+  ruleDetailBox: {
+    marginTop: 8,
+  },
+  ruleDetailDivider: {
+    height: 1,
+    backgroundColor: "rgba(212,175,55,0.2)",
+    marginBottom: 8,
+  },
+  ruleDetail: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 12,
+    color: Colors.text,
+    lineHeight: 18,
+    opacity: 0.85,
   },
   footerNote: {
     marginTop: 12,

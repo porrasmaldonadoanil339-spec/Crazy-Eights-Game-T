@@ -1809,6 +1809,8 @@ export default function GameScreen() {
   const msgStyle = useAnimatedStyle(() => ({ opacity: msgOpacity.value }));
 
   const [adviceCardId, setAdviceCardId] = useState<string | null>(null);
+  const [practiceSpecialHint, setPracticeSpecialHint] = useState<{ text: string; color: string } | null>(null);
+  const practiceSpecialHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Practice Advice Logic — must be before early return to respect Rules of Hooks
   useEffect(() => {
@@ -1874,6 +1876,21 @@ export default function GameScreen() {
       setShowInactivityBar(false);
       const needsSuitPick = card.rank === "8";
       const willHaveLastCard = gameState.playerHand.length === 2;
+
+      if (session?.mode === "practice") {
+        const specialHints: Record<string, { text: string; color: string }> = {
+          "8":     { text: "¡El 8 es comodín! Elige el palo que prefieras", color: "#D4AF37" },
+          "2":     { text: "¡El 2 obliga al rival a robar 2 cartas!", color: "#E74C3C" },
+          "7":     { text: "¡El 7 bloquea el turno del rival!", color: "#F39C12" },
+          "Joker": { text: "¡El Joker obliga al rival a robar 5 cartas!", color: "#9B59B6" },
+        };
+        const hint = specialHints[card.rank];
+        if (hint) {
+          if (practiceSpecialHintTimer.current) clearTimeout(practiceSpecialHintTimer.current);
+          setPracticeSpecialHint(hint);
+          practiceSpecialHintTimer.current = setTimeout(() => setPracticeSpecialHint(null), 2800);
+        }
+      }
       
       if (needsSuitPick) {
         await playSound("card_wild").catch(() => {});
@@ -1982,6 +1999,14 @@ export default function GameScreen() {
             <Ionicons name="bulb" size={16} color="#1a0a00" />
             <Text style={styles.practiceHintText}>{T("practiceHintPlay")}</Text>
           </LinearGradient>
+        </Animated.View>
+      )}
+
+      {/* Practice Special Card Hint Tooltip */}
+      {practiceSpecialHint && (
+        <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.practiceSpecialHint, { borderColor: practiceSpecialHint.color + "55" }]}>
+          <Ionicons name="information-circle" size={16} color={practiceSpecialHint.color} />
+          <Text style={[styles.practiceSpecialHintText, { color: practiceSpecialHint.color }]}>{practiceSpecialHint.text}</Text>
         </Animated.View>
       )}
 
@@ -2936,6 +2961,29 @@ const styles = StyleSheet.create({
     color: "#1a0a00",
     fontFamily: "Nunito_800ExtraBold",
     fontSize: 12,
+  },
+  practiceSpecialHint: {
+    position: "absolute",
+    top: 140,
+    alignSelf: "center",
+    zIndex: 1200,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(4,16,8,0.92)",
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  practiceSpecialHintText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 13,
   },
   pingIndicator: { flexDirection: "row", alignItems: "center", gap: 2 },
   pingText: { fontFamily: "Nunito_700Bold", fontSize: 9 },

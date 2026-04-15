@@ -112,6 +112,48 @@ export async function scheduleAllNotifications(settings: NotificationSettings): 
   } catch {}
 }
 
+export async function scheduleChestReadyNotification(chestId: string, chestLabel: string): Promise<void> {
+  if (Platform.OS === "web") return;
+  try {
+    const granted = await requestNotificationPermissions();
+    if (!granted) return;
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "OCHO LOCOS",
+        body: `¡Tu ${chestLabel} está listo para abrir!`,
+        sound: true,
+        data: { type: "chest_ready", chestId },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 3 * 60 * 60,
+        repeats: false,
+      },
+    });
+  } catch {}
+}
+
+export async function scheduleReEngagementNotification(delaySecs: number = 86400): Promise<void> {
+  if (Platform.OS === "web") return;
+  try {
+    const granted = await requestNotificationPermissions();
+    if (!granted) return;
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "OCHO LOCOS",
+        body: "¡Llevas un día sin jugar! Hay recompensas esperándote.",
+        sound: true,
+        data: { type: "re_engagement" },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: delaySecs,
+        repeats: false,
+      },
+    });
+  } catch {}
+}
+
 export function getNotificationIcon(): string {
   return "notifications";
 }

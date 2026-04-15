@@ -603,6 +603,200 @@ function SplashOAuthModal({ provider, onDone, onCancel }: {
   );
 }
 
+function DailyRewardGate({ splashDone }: { splashDone: boolean }) {
+  const { canClaimDailyReward, claimDailyReward, todaysDailyReward, profile } = useProfile();
+  const [visible, setVisible] = useState(false);
+  const shown = useRef(false);
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const nativeDriver = Platform.OS !== "web";
+
+  useEffect(() => {
+    if (splashDone && canClaimDailyReward && !shown.current) {
+      shown.current = true;
+      const timer = setTimeout(() => {
+        setVisible(true);
+        Animated.parallel([
+          Animated.spring(scaleAnim, { toValue: 1, friction: 6, tension: 50, useNativeDriver: nativeDriver }),
+          Animated.timing(opacityAnim, { toValue: 1, duration: 300, useNativeDriver: nativeDriver }),
+        ]).start();
+      }, 900);
+      return () => clearTimeout(timer);
+    }
+  }, [splashDone, canClaimDailyReward]);
+
+  const handleClaim = () => {
+    claimDailyReward();
+    playSound("achievement").catch(() => {});
+    Animated.parallel([
+      Animated.timing(scaleAnim, { toValue: 1.05, duration: 120, useNativeDriver: nativeDriver }),
+      Animated.timing(opacityAnim, { toValue: 0, duration: 400, useNativeDriver: nativeDriver }),
+    ]).start(() => setVisible(false));
+  };
+
+  const handleClose = () => {
+    Animated.timing(opacityAnim, { toValue: 0, duration: 250, useNativeDriver: nativeDriver }).start(() => setVisible(false));
+  };
+
+  if (!visible) return null;
+
+  const reward = todaysDailyReward;
+
+  return (
+    <View style={drStyles.overlay}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
+      <Animated.View style={[drStyles.card, { opacity: opacityAnim, transform: [{ scale: scaleAnim }] }]}>
+        <LinearGradient colors={["#0a1a0e", "#061510", "#041008"]} style={[StyleSheet.absoluteFill, { borderRadius: 24 }]} />
+        <View style={drStyles.borderGlow} />
+        <View style={drStyles.iconWrap}>
+          <Ionicons name={reward.icon as any} size={42} color={reward.iconColor} />
+        </View>
+        <Text style={drStyles.subtitle}>RECOMPENSA DIARIA</Text>
+        <Text style={drStyles.title}>¡Día {((profile.dailyRewardIndex % 7) || 7)}!</Text>
+        <View style={drStyles.rewardRow}>
+          {reward.coins > 0 && (
+            <View style={drStyles.rewardChip}>
+              <Ionicons name="cash" size={16} color="#D4AF37" />
+              <Text style={drStyles.rewardChipText}>+{reward.coins}</Text>
+            </View>
+          )}
+          {reward.xp > 0 && (
+            <View style={[drStyles.rewardChip, { borderColor: "#4FC3F744" }]}>
+              <Ionicons name="star" size={16} color="#4FC3F7" />
+              <Text style={[drStyles.rewardChipText, { color: "#4FC3F7" }]}>+{reward.xp} XP</Text>
+            </View>
+          )}
+          {reward.chestType && (
+            <View style={[drStyles.rewardChip, { borderColor: "#9B59B644" }]}>
+              <Ionicons name="cube" size={16} color="#9B59B6" />
+              <Text style={[drStyles.rewardChipText, { color: "#9B59B6" }]}>{reward.label}</Text>
+            </View>
+          )}
+        </View>
+        <Pressable
+          onPress={handleClaim}
+          style={({ pressed }) => [drStyles.claimBtn, pressed && { opacity: 0.85 }]}
+        >
+          <LinearGradient colors={["#F5D76E", "#D4AF37", "#A07800"]} style={drStyles.claimBtnGrad}>
+            <Ionicons name="gift" size={18} color="#1a0a00" />
+            <Text style={drStyles.claimBtnText}>¡RECLAMAR!</Text>
+          </LinearGradient>
+        </Pressable>
+        <Pressable onPress={handleClose} style={drStyles.skipBtn}>
+          <Text style={drStyles.skipText}>Después</Text>
+        </Pressable>
+      </Animated.View>
+    </View>
+  );
+}
+
+const drStyles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9000,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  card: {
+    width: "100%",
+    maxWidth: 340,
+    borderRadius: 24,
+    padding: 28,
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: "rgba(212,175,55,0.35)",
+    overflow: "hidden",
+    position: "relative",
+  },
+  borderGlow: {
+    position: "absolute",
+    top: -1,
+    left: -1,
+    right: -1,
+    height: 3,
+    backgroundColor: "#D4AF37",
+    opacity: 0.6,
+    borderRadius: 2,
+  },
+  iconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(212,175,55,0.12)",
+    borderWidth: 1.5,
+    borderColor: "rgba(212,175,55,0.3)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 11,
+    color: "rgba(212,175,55,0.7)",
+    letterSpacing: 3,
+  },
+  title: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 28,
+    color: "#D4AF37",
+    letterSpacing: 1,
+  },
+  rewardRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginVertical: 4,
+  },
+  rewardChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(212,175,55,0.1)",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.35)",
+  },
+  rewardChipText: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 14,
+    color: "#D4AF37",
+  },
+  claimBtn: {
+    width: "100%",
+    borderRadius: 14,
+    overflow: "hidden",
+    marginTop: 4,
+  },
+  claimBtnGrad: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+  },
+  claimBtnText: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 16,
+    color: "#1a0a00",
+    letterSpacing: 1,
+  },
+  skipBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+  },
+  skipText: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 13,
+    color: "rgba(255,255,255,0.35)",
+  },
+});
+
 function RootLayoutNav() {
   return (
     <>
@@ -740,6 +934,7 @@ export default function RootLayout() {
                   <GameProvider>
                     <StatusBar style="light" />
                     <RootLayoutNav />
+                    <DailyRewardGate splashDone={!showSplash} />
                     {showSplash && (
                       <SplashWithAuth onComplete={handleSplashComplete} />
                     )}

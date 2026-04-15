@@ -19,7 +19,6 @@ import { canPlay } from "@/lib/gameEngine";
 
 const { width: SW } = Dimensions.get("window");
 
-// Tutorial demo cards
 const DEMO_HAND: Card[] = [
   { id: "demo-1", suit: "hearts", rank: "7" },
   { id: "demo-2", suit: "spades", rank: "A" },
@@ -58,6 +57,8 @@ interface Step {
   body: string;
   highlight?: string;
   interactive?: "play_card" | "pick_wild" | "done";
+  centerCard?: Card;
+  centerBadge?: { label: string; color: string };
 }
 
 const STEPS: Step[] = [
@@ -85,11 +86,40 @@ const STEPS: Step[] = [
     interactive: "play_card",
   },
   {
-    title: "Los Ochos Locos",
-    subtitle: "¡El comodín!",
+    title: "El Ocho Loco",
+    subtitle: "El comodín WILD",
     icon: "star",
     iconColor: Colors.gold,
-    body: "El 8 es especial — puedes jugarlo en cualquier momento. Después, eliges el palo que quieras continuar. ¡Úsalo estratégicamente!",
+    body: "El 8 es el comodín — puedes jugarlo en cualquier momento sin importar palo o número. Tras jugarlo, eliges el palo que continuará.",
+    centerCard: { id: "c8", suit: "spades", rank: "8" },
+    centerBadge: { label: "WILD", color: Colors.gold },
+  },
+  {
+    title: "El Dos — +2 Cartas",
+    subtitle: "Carta de castigo",
+    icon: "flash",
+    iconColor: "#E74C3C",
+    body: "Al jugar un 2, tu rival debe robar 2 cartas y pierde su turno. ¡Úsalo cuando el rival esté a punto de ganar para frenarlo!",
+    centerCard: { id: "c2", suit: "hearts", rank: "2" },
+    centerBadge: { label: "+2", color: "#E74C3C" },
+  },
+  {
+    title: "El Siete — Bloqueo",
+    subtitle: "Salta el turno rival",
+    icon: "ban",
+    iconColor: "#F39C12",
+    body: "Al jugar un 7, el rival pierde su próximo turno y tú vuelves a jugar. Perfecto para evitar que el rival gane en el momento clave.",
+    centerCard: { id: "c7", suit: "clubs", rank: "7" },
+    centerBadge: { label: "SKIP", color: "#F39C12" },
+  },
+  {
+    title: "El Joker — +5 Cartas",
+    subtitle: "La carta más temida",
+    icon: "skull",
+    iconColor: "#9B59B6",
+    body: "El Joker obliga al rival a robar 5 cartas y perder su turno. Es la carta más poderosa. ¡Guárdala para el momento decisivo!",
+    centerCard: { id: "cj", suit: "hearts", rank: "Joker" },
+    centerBadge: { label: "+5", color: "#9B59B6" },
   },
   {
     title: "Robar Cartas",
@@ -128,6 +158,19 @@ function ProgressDots({ total, current }: { total: number; current: number }) {
       {Array.from({ length: total }).map((_, i) => (
         <View key={i} style={[styles.dot, i === current && styles.dotActive, i < current && styles.dotPast]} />
       ))}
+    </View>
+  );
+}
+
+function SpecialCardPanel({ card, badge }: { card: Card; badge: { label: string; color: string } }) {
+  return (
+    <View style={styles.specialCardPanel}>
+      <View style={styles.specialCardWrap}>
+        <PlayingCard card={card} size="lg" />
+        <View style={[styles.specialBadge, { backgroundColor: badge.color + "22", borderColor: badge.color + "66" }]}>
+          <Text style={[styles.specialBadgeText, { color: badge.color }]}>{badge.label}</Text>
+        </View>
+      </View>
     </View>
   );
 }
@@ -174,7 +217,6 @@ function InteractivePlayDemo({ onSuccess }: { onSuccess: () => void }) {
           const playable = canPlay(card, DEMO_STATE);
           const isSelected = selected === card.id;
           const isPlayed = played === card.id;
-          const isWrong = wrong === card.id;
           return (
             <View
               key={card.id}
@@ -283,6 +325,10 @@ export default function TutorialScreen() {
         <View style={styles.divider} />
         <Text style={styles.stepBody}>{current.body}</Text>
 
+        {current.centerCard && current.centerBadge && (
+          <SpecialCardPanel card={current.centerCard} badge={current.centerBadge} />
+        )}
+
         {current.highlight && !interactiveDone && (
           <View style={styles.highlightBox}>
             <Ionicons name="hand-right" size={16} color={Colors.gold} />
@@ -352,6 +398,19 @@ const styles = StyleSheet.create({
   stepBody: {
     fontFamily: "Nunito_400Regular", fontSize: 14, color: Colors.text,
     textAlign: "center", lineHeight: 22,
+  },
+  specialCardPanel: {
+    alignItems: "center", marginTop: 4,
+  },
+  specialCardWrap: {
+    alignItems: "center", gap: 8,
+  },
+  specialBadge: {
+    paddingHorizontal: 18, paddingVertical: 6,
+    borderRadius: 20, borderWidth: 1.5,
+  },
+  specialBadgeText: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 16, letterSpacing: 2,
   },
   highlightBox: {
     flexDirection: "row", alignItems: "center", gap: 8,
