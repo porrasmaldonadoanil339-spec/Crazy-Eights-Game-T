@@ -21,12 +21,13 @@ export interface GameState {
   consecutiveDraws: number;
   difficulty: string;
   turnId: number;
-  // Special card state
+  // Special card state — pendingDrawType is the rank that started the stack
+  // ("A" | "2" | "3" | "Joker"). Each rank stacks ONLY with itself or Joker.
   pendingDraw: number;
-  pendingDrawType: "two" | "seven" | null;
+  pendingDrawType: "A" | "2" | "3" | "Joker" | "two" | "seven" | null;
   pendingDrawSuit: Suit | null;
-  jActive: boolean;
-  jSuit: Suit | null;
+  jActive: boolean;   // legacy — kept for backwards compatibility, always false in new rules
+  jSuit: Suit | null; // legacy
   direction: 1 | -1;
   lastPlayedCard: Card | null;
 }
@@ -102,26 +103,23 @@ export function getTopCard(state: GameState): Card {
 }
 
 export function canPlay(card: Card, state: GameState): boolean {
-  // J active: must play card of same suit OR any face card (J/Q/K) OR wild
-  if (state.jActive && state.jSuit) {
-    return card.suit === state.jSuit ||
-      card.rank === "J" || card.rank === "Q" || card.rank === "K" ||
-      card.rank === "8" || card.rank === "Joker";
-  }
-  // Pending draw: can only play counter cards
+  // Joker is playable AT ANY TIME (per definitive rules).
+  if (card.rank === "Joker") return true;
+
+  // Pending draw active: must counter with the SAME rank (only A/2/3 can stack
+  // with itself; Joker stack accepts only Joker — already handled above).
   if (state.pendingDraw > 0) {
-    if (state.pendingDrawType === "two") {
-      return card.rank === "2" ||
-        (card.rank === "A" && card.suit === state.pendingDrawSuit) ||
-        card.rank === "Joker";
-    }
-    if (state.pendingDrawType === "seven") {
-      return card.rank === "7" || card.rank === "Joker";
-    }
+    if (state.pendingDrawType === "A") return card.rank === "A";
+    if (state.pendingDrawType === "2") return card.rank === "2";
+    if (state.pendingDrawType === "3") return card.rank === "3";
+    if (state.pendingDrawType === "Joker") return false; // only Joker, handled above
     return false;
   }
-  // Normal rules
-  if (card.rank === "8" || card.rank === "Joker") return true;
+
+  // 8 is wild: always playable when no pending stack
+  if (card.rank === "8") return true;
+
+  // Normal: must match SUIT or RANK with top card
   return card.suit === state.currentSuit || card.rank === getTopCard(state).rank;
 }
 
@@ -141,11 +139,19 @@ export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameS
   ns.lastPlayedCard = card;
   ns.consecutiveDraws = 0;
 
-  // Clear J state when playing any card
+  // Legacy J flags — always cleared in new rules
   ns.jActive = false;
   ns.jSuit = null;
 
+  // ───────────────────────────────────────────────────────────────────────
+  // DEFINITIVE CARD RULES (per spec doc)
+  //   A=+1 acumulable · 2=+2 acumulable · 3=+3 acumulable · 7=normal
+  //   8=wild (cambia palo) · 10=normal · J=skip · Q=reverse · K=turno extra
+  //   Joker=+4 jugable en cualquier momento
+  // ───────────────────────────────────────────────────────────────────────
+
   if (card.rank === "8") {
+    // 8 — wild: choose suit
     if (chosenSuit) {
       ns.currentSuit = chosenSuit;
       ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
@@ -157,44 +163,55 @@ export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameS
       return ns;
     }
   } else if (card.rank === "Joker") {
-    ns.pendingDraw += 5;
-    ns.pendingDrawType = "seven";
+    // Joker — +4 anytime, switches stack to "Joker" type (only Joker can defend)
+    ns.pendingDraw += 4;
+    ns.pendingDrawType = "Joker";
+    ns.pendingDrawSuit = null;
     ns.currentPlayer = "ai";
     ns.message = gm("jokerCpuDraw", { n: String(ns.pendingDraw) });
-  } else if (card.rank === "2") {
-    ns.pendingDraw += 2;
-    ns.pendingDrawType = "two";
+  } else if (card.rank === "A") {
+    // A — +1 acumulable
+    ns.pendingDraw += 1;
+    ns.pendingDrawType = "A";
     ns.pendingDrawSuit = card.suit;
     ns.currentSuit = card.suit;
     ns.currentPlayer = "ai";
     ns.message = gm("play2youDraw", { n: String(ns.pendingDraw) });
-  } else if (card.rank === "A" && state.pendingDraw > 0 && state.pendingDrawType === "two") {
-    ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
-    ns.currentSuit = card.suit;
-    ns.currentPlayer = "ai";
-    ns.message = gm("playerAceCancel");
-  } else if (card.rank === "3") {
-    ns.currentSuit = card.suit;
-    ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
-    ns.message = gm("player3skip");
-  } else if (card.rank === "7") {
-    ns.pendingDraw += 7;
-    ns.pendingDrawType = "seven";
+  } else if (card.rank === "2") {
+    // 2 — +2 acumulable
+    ns.pendingDraw += 2;
+    ns.pendingDrawType = "2";
+    ns.pendingDrawSuit = card.suit;
     ns.currentSuit = card.suit;
     ns.currentPlayer = "ai";
     ns.message = gm("play2youDraw", { n: String(ns.pendingDraw) });
-  } else if (card.rank === "10") {
+  } else if (card.rank === "3") {
+    // 3 — +3 acumulable
+    ns.pendingDraw += 3;
+    ns.pendingDrawType = "3";
+    ns.pendingDrawSuit = card.suit;
+    ns.currentSuit = card.suit;
+    ns.currentPlayer = "ai";
+    ns.message = gm("play2youDraw", { n: String(ns.pendingDraw) });
+  } else if (card.rank === "J") {
+    // J — rival pierde turno (en 1v1: jugador continúa)
+    ns.currentSuit = card.suit;
+    ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
+    ns.message = gm("player3skip");
+    // currentPlayer stays "player"
+  } else if (card.rank === "Q") {
+    // Q — cambia el sentido (en 1v1 el jugador continúa)
     ns.direction = (ns.direction === 1 ? -1 : 1) as 1 | -1;
     ns.currentSuit = card.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
     ns.message = gm("player10reverse");
-  } else if (card.rank === "J") {
-    ns.jActive = true;
-    ns.jSuit = card.suit;
+  } else if (card.rank === "K") {
+    // K — turno adicional (jugador juega de nuevo)
     ns.currentSuit = card.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
-    ns.message = gm("jackRule", { s: suitName(card.suit) });
+    ns.message = gm("player3skip");
   } else {
+    // 4, 5, 6, 7, 9, 10 — cartas normales
     ns.currentSuit = card.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
     ns.currentPlayer = "ai";
@@ -264,37 +281,8 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
   let ns = deepClone(state);
   ns.turnId = (ns.turnId ?? 0) + 1;
 
-
-  // Handle J active for AI — same suit OR face card (J/Q/K) OR wild
-  if (ns.jActive && ns.jSuit) {
-    const jPlayable = ns.aiHand.filter(c =>
-      c.suit === ns.jSuit || c.rank === "J" || c.rank === "Q" || c.rank === "K" ||
-      c.rank === "8" || c.rank === "Joker"
-    );
-    if (jPlayable.length > 0) {
-      const pick = aiChooseCard(jPlayable, ns, difficulty);
-      ns.aiHand = ns.aiHand.filter(c => c.id !== pick.id);
-      ns.discardPile.push(pick);
-      ns.lastPlayedCard = pick;
-      ns.jActive = false; ns.jSuit = null;
-      ns.currentSuit = pick.suit;
-      if (pick.rank === "8" || pick.rank === "Joker") {
-        const s = aiChooseSuit(ns.aiHand, difficulty);
-        ns.currentSuit = s;
-        ns.message = gm("cpuPlayed", { r: pick.rank, s: suitName(s) });
-      } else {
-        ns.message = gm("cpuPlayedOf", { r: pick.rank, s: suitName(pick.suit) });
-      }
-    } else {
-      if (ns.drawPile.length === 0) ns = reshuffleDiscard(ns);
-      if (ns.drawPile.length > 0) ns.aiHand.push(ns.drawPile.pop()!);
-      ns.jActive = false; ns.jSuit = null;
-      ns.message = gm("cpuJ1Draw");
-    }
-    if (ns.aiHand.length === 0) { ns.phase = "ai_wins"; ns.message = gm("cpuWins"); return ns; }
-    ns.currentPlayer = "player";
-    return ns;
-  }
+  // Legacy J flags — clear (no longer used in new rules)
+  ns.jActive = false; ns.jSuit = null;
 
   const playable = getPlayableCards(ns.aiHand, ns);
 
@@ -331,6 +319,9 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
   ns.consecutiveDraws = 0;
   ns.jActive = false; ns.jSuit = null;
 
+  // ───────────────────────────────────────────────────────────────────────
+  // AI plays — DEFINITIVE RULES (mirror of player)
+  // ───────────────────────────────────────────────────────────────────────
   if (chosen.rank === "8") {
     const suit = aiChooseSuit(ns.aiHand, difficulty);
     ns.currentSuit = suit;
@@ -338,63 +329,51 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
     ns.message = gm("cpuCrazy8", { s: suitName(suit) });
     ns.currentPlayer = "player";
   } else if (chosen.rank === "Joker") {
-    ns.pendingDraw += 5;
-    ns.pendingDrawType = "seven";
+    ns.pendingDraw += 4;
+    ns.pendingDrawType = "Joker";
+    ns.pendingDrawSuit = null;
     ns.message = gm("cpuJkrDraw", { n: String(ns.pendingDraw) });
     ns.currentPlayer = "player";
-  } else if (chosen.rank === "2") {
-    ns.pendingDraw += 2;
-    ns.pendingDrawType = "two";
+  } else if (chosen.rank === "A") {
+    ns.pendingDraw += 1;
+    ns.pendingDrawType = "A";
     ns.pendingDrawSuit = chosen.suit;
     ns.currentSuit = chosen.suit;
     ns.message = gm("cpuPlay2", { n: String(ns.pendingDraw) });
     ns.currentPlayer = "player";
-  } else if (chosen.rank === "A" && state.pendingDraw > 0 && state.pendingDrawType === "two") {
-    ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
+  } else if (chosen.rank === "2") {
+    ns.pendingDraw += 2;
+    ns.pendingDrawType = "2";
+    ns.pendingDrawSuit = chosen.suit;
     ns.currentSuit = chosen.suit;
-    ns.message = gm("cpuAce");
+    ns.message = gm("cpuPlay2", { n: String(ns.pendingDraw) });
     ns.currentPlayer = "player";
   } else if (chosen.rank === "3") {
+    ns.pendingDraw += 3;
+    ns.pendingDrawType = "3";
+    ns.pendingDrawSuit = chosen.suit;
+    ns.currentSuit = chosen.suit;
+    ns.message = gm("cpuPlay2", { n: String(ns.pendingDraw) });
+    ns.currentPlayer = "player";
+  } else if (chosen.rank === "J") {
+    // J — player pierde turno → AI plays again
     ns.currentSuit = chosen.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
     ns.message = gm("cpuPlay3");
-    // AI goes again
-  } else if (chosen.rank === "7") {
-    ns.pendingDraw += 7;
-    ns.pendingDrawType = "seven";
-    ns.currentSuit = chosen.suit;
-    ns.message = gm("cpuPlay7", { n: String(ns.pendingDraw) });
-    ns.currentPlayer = "player";
-  } else if (chosen.rank === "10") {
+    // currentPlayer stays "ai"
+  } else if (chosen.rank === "Q") {
     ns.direction = (ns.direction === 1 ? -1 : 1) as 1 | -1;
     ns.currentSuit = chosen.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
     ns.message = gm("cpuPlay10");
-    // AI goes again (stays "ai")
-  } else if (chosen.rank === "J") {
-    ns.jActive = true;
-    ns.jSuit = chosen.suit;
+    // currentPlayer stays "ai" (1v1 reverse = extra turn)
+  } else if (chosen.rank === "K") {
     ns.currentSuit = chosen.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
-    const jFollow = ns.aiHand.filter(c =>
-      c.suit === ns.jSuit || c.rank === "J" || c.rank === "Q" || c.rank === "K" ||
-      c.rank === "8" || c.rank === "Joker"
-    );
-    if (jFollow.length > 0) {
-      const follow = aiChooseCard(jFollow, ns, difficulty);
-      ns.aiHand = ns.aiHand.filter(c => c.id !== follow.id);
-      ns.discardPile.push(follow);
-      ns.jActive = false; ns.jSuit = null;
-      ns.currentSuit = follow.rank === "8" ? aiChooseSuit(ns.aiHand, difficulty) : follow.suit;
-      ns.message = gm("cpuJackFollow", { r: follow.rank, s: suitName(follow.suit) });
-    } else {
-      if (ns.drawPile.length === 0) ns = reshuffleDiscard(ns);
-      if (ns.drawPile.length > 0) ns.aiHand.push(ns.drawPile.pop()!);
-      ns.jActive = false; ns.jSuit = null;
-      ns.message = gm("cpuJackDraw");
-    }
-    ns.currentPlayer = "player";
+    ns.message = gm("cpuPlay3");
+    // currentPlayer stays "ai" (extra turn)
   } else {
+    // 4, 5, 6, 7, 9, 10 — cartas normales
     ns.currentSuit = chosen.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
     ns.message = gm("cpuPlayedOf", { r: chosen.rank, s: suitName(chosen.suit) });
@@ -415,19 +394,33 @@ function aiChooseCard(playable: Card[], state: GameState, difficulty: string): C
     return playable[Math.floor(Math.random() * playable.length)];
   }
 
-  // Priority: counter cards when pendingDraw > 0
+  // Priority 1: defend pending draw stack (same rank or Joker)
   if (state.pendingDraw > 0) {
+    const stackRank = state.pendingDrawType;
     const counters = playable.filter(c =>
-      (state.pendingDrawType === "two" && (c.rank === "2" || c.rank === "Joker")) ||
-      (state.pendingDrawType === "seven" && (c.rank === "7" || c.rank === "Joker"))
+      c.rank === "Joker" ||
+      (stackRank === "A" && c.rank === "A") ||
+      (stackRank === "2" && c.rank === "2") ||
+      (stackRank === "3" && c.rank === "3")
     );
+    // Prefer non-Joker defense (save Joker for later)
+    const nonJokerCounters = counters.filter(c => c.rank !== "Joker");
+    if (nonJokerCounters.length > 0) return nonJokerCounters[0];
     if (counters.length > 0) return counters[0];
   }
 
-  // Special cards priority (hard/intermediate)
+  // Priority 2: aggressive specials when difficulty is high
+  // K = extra turn (always good), J = skip rival, A/2/3 = punish, Q = reverse
   if (difficulty === "hard" || difficulty === "expert") {
-    const specials = playable.filter(c => ["2","3","7","10"].includes(c.rank));
-    if (specials.length > 0 && Math.random() > 0.35) return specials[0];
+    const aggressives = playable.filter(c => ["K","J","Q","A","2","3"].includes(c.rank));
+    if (aggressives.length > 0 && Math.random() > 0.3) {
+      // Prefer K (extra turn) > A/2/3 (punish) > J (skip) > Q (reverse)
+      const k = aggressives.find(c => c.rank === "K");
+      if (k) return k;
+      const punish = aggressives.find(c => c.rank === "3" || c.rank === "2" || c.rank === "A");
+      if (punish) return punish;
+      return aggressives[0];
+    }
   }
 
   const eights = playable.filter(c => c.rank === "8" || c.rank === "Joker");

@@ -263,7 +263,7 @@ const timerStyles = StyleSheet.create({
 });
 
 // ─── Pending draw indicator ────────────────────────────────────────────────────
-function PendingDrawBanner({ count, type }: { count: number; type: "two" | "seven" | null }) {
+function PendingDrawBanner({ count, type }: { count: number; type: "A" | "2" | "3" | "Joker" | "two" | "seven" | null }) {
   const T = useT();
   const blink = useSharedValue(1);
   useEffect(() => {
@@ -272,9 +272,11 @@ function PendingDrawBanner({ count, type }: { count: number; type: "two" | "seve
     );
   }, []);
   const s = useAnimatedStyle(() => ({ opacity: blink.value }));
-  const msg = type === "two"
-    ? T("drawNCards2").replace("{n}", String(count))
-    : T("drawNCards7").replace("{n}", String(count));
+  // New rule labels: A/2/3 stack with same rank; Joker stack accepts only Joker
+  const stackLabel = type === "Joker" ? "Joker" : type === "A" ? "A" : type === "2" ? "2" : type === "3" ? "3" : "";
+  const msg = stackLabel
+    ? `+${count} (${stackLabel})`
+    : T("drawNCards2").replace("{n}", String(count));
   return (
     <Animated.View style={[pendStyles.wrap, s]}>
       <Ionicons name="alert-circle" size={14} color="#E74C3C" />
@@ -2253,7 +2255,7 @@ export default function GameScreen() {
               {selectedCard.rank === "8"
                 ? T("crazy8Hint")
                 : selectedCard.rank === "Joker"
-                  ? T("jokerAddStackHint").replace("{n}", String(gameState.pendingDraw + 5))
+                  ? T("jokerAddStackHint").replace("{n}", String(gameState.pendingDraw + 4))
                   : T("tapToPlay")}
             </Text>
           </View>

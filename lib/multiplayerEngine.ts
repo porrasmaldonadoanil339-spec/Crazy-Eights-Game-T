@@ -17,10 +17,10 @@ export interface MultiGameState {
   direction: 1 | -1;
   turnId: number;
   pendingDraw: number;
-  pendingDrawType: "two" | "seven" | null;
+  pendingDrawType: "A" | "2" | "3" | "Joker" | "two" | "seven" | null;
   pendingDrawSuit: Suit | null;
-  jActive: boolean;
-  jSuit: Suit | null;
+  jActive: boolean;   // legacy
+  jSuit: Suit | null; // legacy
   lastSkipped?: number;
 }
 
@@ -69,22 +69,16 @@ export function multiGetTopCard(state: MultiGameState): Card {
 }
 
 export function multiCanPlay(card: Card, state: MultiGameState): boolean {
-  if (state.jActive && state.jSuit) {
-    const isFaceCard = card.rank === "J" || card.rank === "Q" || card.rank === "K";
-    return card.suit === state.jSuit || isFaceCard || card.rank === "8" || card.rank === "Joker";
-  }
+  // Joker — playable AT ANY TIME (definitive rules)
+  if (card.rank === "Joker") return true;
   if (state.pendingDraw > 0) {
-    if (state.pendingDrawType === "two") {
-      return card.rank === "2" ||
-        (card.rank === "A" && card.suit === state.pendingDrawSuit) ||
-        card.rank === "Joker";
-    }
-    if (state.pendingDrawType === "seven") {
-      return card.rank === "7" || card.rank === "Joker";
-    }
+    if (state.pendingDrawType === "A") return card.rank === "A";
+    if (state.pendingDrawType === "2") return card.rank === "2";
+    if (state.pendingDrawType === "3") return card.rank === "3";
+    if (state.pendingDrawType === "Joker") return false;
     return false;
   }
-  if (card.rank === "8" || card.rank === "Joker") return true;
+  if (card.rank === "8") return true;
   return card.suit === state.currentSuit || card.rank === multiGetTopCard(state).rank;
 }
 
@@ -167,28 +161,19 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
   }
 
   if (card.rank === "Joker") {
-    if (ns.pendingDraw > 0) {
-      ns.pendingDraw += 5;
-      ns.currentPlayerIndex = next;
-      ns.phase = "pass_device";
-      ns.message = gm("mpJkrDraw", { p: ns.playerNames[next], n: String(ns.pendingDraw) });
-    } else {
-      if (chosenSuit) {
-        ns.currentSuit = chosenSuit;
-        ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
-        ns.currentPlayerIndex = next;
-        ns.phase = "pass_device";
-        ns.message = gm("mpJkrSuit", { s: suitName(chosenSuit) });
-      } else {
-        ns.phase = "choosing_suit";
-      }
-    }
+    // Joker — +4 anytime, sets stack to "Joker" type
+    ns.pendingDraw += 4;
+    ns.pendingDrawType = "Joker";
+    ns.pendingDrawSuit = null;
+    ns.currentPlayerIndex = next;
+    ns.phase = "pass_device";
+    ns.message = gm("mpJkrDraw", { p: ns.playerNames[next], n: String(ns.pendingDraw) });
     return ns;
   }
 
-  if (card.rank === "2") {
-    ns.pendingDraw += 2;
-    ns.pendingDrawType = "two";
+  if (card.rank === "A") {
+    ns.pendingDraw += 1;
+    ns.pendingDrawType = "A";
     ns.pendingDrawSuit = card.suit;
     ns.currentSuit = card.suit;
     ns.currentPlayerIndex = next;
@@ -197,16 +182,30 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     return ns;
   }
 
-  if (card.rank === "A" && state.pendingDraw > 0 && state.pendingDrawType === "two") {
-    ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
+  if (card.rank === "2") {
+    ns.pendingDraw += 2;
+    ns.pendingDrawType = "2";
+    ns.pendingDrawSuit = card.suit;
     ns.currentSuit = card.suit;
     ns.currentPlayerIndex = next;
     ns.phase = "pass_device";
-    ns.message = gm("mpAceCancel");
+    ns.message = gm("mpPlus2Draw", { p: ns.playerNames[next], n: String(ns.pendingDraw) });
     return ns;
   }
 
   if (card.rank === "3") {
+    ns.pendingDraw += 3;
+    ns.pendingDrawType = "3";
+    ns.pendingDrawSuit = card.suit;
+    ns.currentSuit = card.suit;
+    ns.currentPlayerIndex = next;
+    ns.phase = "pass_device";
+    ns.message = gm("mpPlus2Draw", { p: ns.playerNames[next], n: String(ns.pendingDraw) });
+    return ns;
+  }
+
+  if (card.rank === "J") {
+    // J — el siguiente pierde el turno (skip)
     const skipped = next;
     const skipNext = nextPlayerIndex({ ...ns, currentPlayerIndex: next });
     ns.currentSuit = card.suit;
@@ -224,17 +223,8 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     return ns;
   }
 
-  if (card.rank === "7") {
-    ns.pendingDraw += 2;
-    ns.pendingDrawType = "seven";
-    ns.currentSuit = card.suit;
-    ns.currentPlayerIndex = next;
-    ns.phase = "pass_device";
-    ns.message = gm("mpPlus2Draw", { p: ns.playerNames[next], n: String(ns.pendingDraw) });
-    return ns;
-  }
-
-  if (card.rank === "10") {
+  if (card.rank === "Q") {
+    // Q — cambia el sentido del juego
     ns.direction = (ns.direction === 1 ? -1 : 1) as 1 | -1;
     ns.currentSuit = card.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
@@ -251,16 +241,17 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
     return ns;
   }
 
-  if (card.rank === "J") {
-    ns.jActive = true;
-    ns.jSuit = card.suit;
+  if (card.rank === "K") {
+    // K — turno adicional (mismo jugador juega de nuevo)
     ns.currentSuit = card.suit;
     ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
+    ns.currentPlayerIndex = pidx;
     ns.phase = "playing";
-    ns.message = gm("jackRule", { s: suitName(card.suit) });
+    ns.message = gm("mp3SkipYou", { p: ns.playerNames[next] });
     return ns;
   }
 
+  // 7, 10 + 4/5/6/9 — cartas normales
   ns.currentSuit = card.suit;
   ns.pendingDraw = 0; ns.pendingDrawType = null; ns.pendingDrawSuit = null;
   ns.currentPlayerIndex = next;
@@ -338,16 +329,20 @@ export function cpuPlayMulti(state: MultiGameState): MultiGameState {
   }
 
   if (ns.pendingDraw > 0) {
+    const stackRank = ns.pendingDrawType;
     const counters = playable.filter(c =>
-      (ns.pendingDrawType === "two" && (c.rank === "2" || c.rank === "Joker" || c.rank === "A")) ||
-      (ns.pendingDrawType === "seven" && (c.rank === "7" || c.rank === "Joker"))
+      c.rank === "Joker" ||
+      (stackRank === "A" && c.rank === "A") ||
+      (stackRank === "2" && c.rank === "2") ||
+      (stackRank === "3" && c.rank === "3")
     );
     if (counters.length > 0) {
-      return multiPlayCard(ns, counters[0], undefined);
+      const nonJoker = counters.filter(c => c.rank !== "Joker");
+      return multiPlayCard(ns, nonJoker[0] ?? counters[0], undefined);
     }
   }
 
-  const specials = playable.filter(c => ["2", "3", "7", "10"].includes(c.rank));
+  const specials = playable.filter(c => ["A", "2", "3", "J", "Q", "K"].includes(c.rank));
   const wilds = playable.filter(c => c.rank === "8" || c.rank === "Joker");
   const normal = playable.filter(c => !["8", "Joker"].includes(c.rank));
 
