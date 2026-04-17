@@ -14,7 +14,6 @@ import { Colors, LightColors } from "@/constants/colors";
 import { useProfile, GameRecord } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { STORE_ITEMS, AVATARS, AVATAR_FRAMES } from "@/lib/storeItems";
-import { ACHIEVEMENTS, RARITY_COLORS, type Achievement } from "@/lib/achievements";
 import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS } from "@/lib/battlePass";
 import { getLocalizedRankInfo, RANK_COLORS, RANK_ICONS, RANKS, DIVISIONS } from "@/lib/ranked";
 import { playSound } from "@/lib/sounds";
@@ -359,7 +358,6 @@ export default function ProfileScreen() {
   const [showTitlePicker, setShowTitlePicker] = useState(false);
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
-  const [selectedBadge, setSelectedBadge] = useState<Achievement | null>(null);
 
   const T = useT();
   const lang = (profile.language ?? "es") as Lang;
@@ -379,15 +377,6 @@ export default function ProfileScreen() {
 
   const winRate = profile.stats.totalGames > 0
     ? Math.round((profile.stats.totalWins / profile.stats.totalGames) * 100) : 0;
-
-  // Pick up to 6 most prestigious unlocked achievements: legendary > epic > rare > common
-  const RAR_RANK: Record<string, number> = { legendary: 4, epic: 3, rare: 2, common: 1 };
-  const unlockedBadges: Achievement[] = (profile.achievementProgress ?? [])
-    .filter((p) => p.unlocked)
-    .map((p) => ACHIEVEMENTS.find((a) => a.id === p.id))
-    .filter((a): a is Achievement => !!a && !a.hidden)
-    .sort((a, b) => (RAR_RANK[b.rarity] ?? 0) - (RAR_RANK[a.rarity] ?? 0))
-    .slice(0, 6);
 
   const handleTakePhoto = async () => {
     if (Platform.OS === "web") {
@@ -578,32 +567,6 @@ export default function ProfileScreen() {
             </View>
           </View>
         </LinearGradient>
-
-        {/* ──── Insignias / Badges (max 6 unlocked) ──── */}
-        {unlockedBadges.length > 0 && (
-          <View style={[styles.badgesSection, { backgroundColor: surfaceColor + "cc", borderColor: themeGold + "33" }]}>
-            <View style={styles.badgesHeader}>
-              <Ionicons name="ribbon" size={14} color={themeGold} />
-              <Text style={[styles.badgesTitle, { color: themeGold }]}>{lang === "en" ? "BADGES" : lang === "pt" ? "INSÍGNIAS" : "INSIGNIAS"}</Text>
-              <Text style={[styles.badgesCount, { color: textMuted }]}>{unlockedBadges.length}/6</Text>
-            </View>
-            <View style={styles.badgesGrid}>
-              {unlockedBadges.map((badge) => {
-                const rarityColor = RARITY_COLORS[badge.rarity as keyof typeof RARITY_COLORS] ?? themeGold;
-                return (
-                  <Pressable
-                    key={badge.id}
-                    onPress={() => { playSound("button_press"); setSelectedBadge(badge); }}
-                    style={({ pressed }) => [styles.badgeChip, { borderColor: rarityColor + "88", backgroundColor: rarityColor + "1A" }, pressed && { transform: [{ scale: 0.92 }] }]}
-                  >
-                    <LinearGradient colors={[rarityColor + "33", rarityColor + "0A"]} style={StyleSheet.absoluteFill} />
-                    <Ionicons name={badge.icon as any} size={22} color={badge.iconColor ?? rarityColor} />
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        )}
 
         {/* Coins + card back */}
         <View style={styles.resourceRow}>
@@ -847,49 +810,6 @@ export default function ProfileScreen() {
           </View>
         </Pressable>
       </Modal>
-
-      {/* ──── Badge Detail Popup ──── */}
-      <Modal visible={!!selectedBadge} transparent animationType="fade" onRequestClose={() => setSelectedBadge(null)}>
-        <Pressable style={styles.badgeModalOverlay} onPress={() => setSelectedBadge(null)}>
-          {selectedBadge && (() => {
-            const rc = RARITY_COLORS[selectedBadge.rarity as keyof typeof RARITY_COLORS] ?? Colors.gold;
-            const rarityLabel = lang === "en"
-              ? selectedBadge.rarity.toUpperCase()
-              : selectedBadge.rarity === "legendary" ? "LEGENDARIO"
-              : selectedBadge.rarity === "epic" ? "ÉPICO"
-              : selectedBadge.rarity === "rare" ? "RARO"
-              : "COMÚN";
-            return (
-              <Pressable onPress={(e) => e.stopPropagation()} style={[styles.badgePopup, { borderColor: rc + "AA", shadowColor: rc }]}>
-                <LinearGradient colors={[rc + "30", "#0a1208", "#050a04"]} style={StyleSheet.absoluteFill} />
-                {/* Glow ring around icon */}
-                <View style={[styles.badgePopupIconWrap, { borderColor: rc, backgroundColor: rc + "22", shadowColor: rc }]}>
-                  <Ionicons name={selectedBadge.icon as any} size={48} color={selectedBadge.iconColor ?? rc} />
-                </View>
-                <View style={[styles.rarityChip, { backgroundColor: rc + "33", borderColor: rc + "88" }]}>
-                  <Ionicons name="diamond" size={9} color={rc} />
-                  <Text style={[styles.rarityChipText, { color: rc }]}>{rarityLabel}</Text>
-                </View>
-                <Text style={styles.badgePopupTitle}>{selectedBadge.title}</Text>
-                <Text style={styles.badgePopupDesc}>{selectedBadge.description}</Text>
-                <View style={styles.badgePopupRewards}>
-                  <View style={styles.badgeRewardItem}>
-                    <Ionicons name="cash" size={14} color={Colors.gold} />
-                    <Text style={styles.badgeRewardText}>+{selectedBadge.coinsReward}</Text>
-                  </View>
-                  <View style={styles.badgeRewardItem}>
-                    <Ionicons name="star" size={14} color="#4FC3F7" />
-                    <Text style={styles.badgeRewardText}>+{selectedBadge.xpReward} XP</Text>
-                  </View>
-                </View>
-                <Pressable onPress={() => setSelectedBadge(null)} style={[styles.badgeCloseBtn, { borderColor: rc + "66" }]}>
-                  <Text style={[styles.badgeCloseText, { color: rc }]}>{lang === "en" ? "CLOSE" : "CERRAR"}</Text>
-                </Pressable>
-              </Pressable>
-            );
-          })()}
-        </Pressable>
-      </Modal>
     </View>
   );
 }
@@ -946,45 +866,6 @@ const styles = StyleSheet.create({
   xpBarBig: { height: 6, backgroundColor: Colors.border, borderRadius: 3 },
   xpFill: { height: "100%", backgroundColor: Colors.gold, borderRadius: 3 },
   xpNums: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim },
-  // Badges section
-  badgesSection: {
-    borderRadius: 14, padding: 12, marginBottom: 12,
-    borderWidth: 1,
-  },
-  badgesHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10 },
-  badgesTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, letterSpacing: 1.5 },
-  badgesCount: { marginLeft: "auto", fontFamily: "Nunito_700Bold", fontSize: 11 },
-  badgesGrid: { flexDirection: "row", gap: 8, justifyContent: "space-between" },
-  badgeChip: {
-    flex: 1, aspectRatio: 1, maxWidth: 52,
-    borderRadius: 12, borderWidth: 1.5,
-    alignItems: "center", justifyContent: "center",
-    overflow: "hidden",
-  },
-  // Badge popup
-  badgeModalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.78)", alignItems: "center", justifyContent: "center", padding: 28 },
-  badgePopup: {
-    width: "100%", maxWidth: 320, borderRadius: 22, padding: 24,
-    borderWidth: 2, alignItems: "center", overflow: "hidden",
-    shadowOpacity: 0.6, shadowRadius: 22, elevation: 14,
-  },
-  badgePopupIconWrap: {
-    width: 96, height: 96, borderRadius: 48,
-    borderWidth: 3, alignItems: "center", justifyContent: "center",
-    shadowOpacity: 0.7, shadowRadius: 16, elevation: 12, marginBottom: 12,
-  },
-  rarityChip: {
-    flexDirection: "row", alignItems: "center", gap: 5,
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, borderWidth: 1, marginBottom: 10,
-  },
-  rarityChipText: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, letterSpacing: 1.2 },
-  badgePopupTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 19, color: "#E8DCC8", textAlign: "center", marginBottom: 6 },
-  badgePopupDesc: { fontFamily: "Nunito_400Regular", fontSize: 13, color: "#B0C4A0", textAlign: "center", lineHeight: 18, marginBottom: 14 },
-  badgePopupRewards: { flexDirection: "row", gap: 16, marginBottom: 16 },
-  badgeRewardItem: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.06)" },
-  badgeRewardText: { fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#E8DCC8" },
-  badgeCloseBtn: { paddingHorizontal: 24, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5 },
-  badgeCloseText: { fontFamily: "Nunito_800ExtraBold", fontSize: 12, letterSpacing: 1.5 },
   resourceRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
   resourceCard: {
     flex: 1, backgroundColor: Colors.surface, borderRadius: 14,

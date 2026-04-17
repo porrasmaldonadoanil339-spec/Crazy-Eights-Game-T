@@ -258,7 +258,7 @@ export function MatchmakingScreen({
             <Text style={[styles.youBadgeText, styles.rivalBadgeText]}>RIVAL</Text>
           </View>
           <Text style={styles.cardName} numberOfLines={1}>
-            {phase === "found" ? (cpuProfile?.name ?? "CPU") : "???"}
+            {phase === "found" ? (cpuProfile?.name ?? "Rival") : "???"}
           </Text>
         </Animated.View>
       </View>

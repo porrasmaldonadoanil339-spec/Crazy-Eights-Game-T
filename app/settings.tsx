@@ -272,7 +272,7 @@ export default function SettingsScreen() {
             right={<Switch value={profile.vibrationEnabled ?? true} onValueChange={toggleVibration} {...sw(profile.vibrationEnabled ?? true, "#9B59B6")} />}
           />
           <SettingRow
-            label={T("muteEmotes" as any) || "Silenciar Emotes CPU"} sub={T("muteEmotesDesc" as any) || "Ocultar mensajes del rival"}
+            label={T("muteEmotes" as any) || "Silenciar Emotes del Rival"} sub={T("muteEmotesDesc" as any) || "Ocultar mensajes del rival"}
             icon="chatbubble-ellipses" iconColor="#E67E22" iconBg="#2a1a0a"
             isDark={isDark} last
             right={<Switch value={profile.muteEmotes ?? false} onValueChange={toggleMuteEmotes} {...sw(profile.muteEmotes ?? false, "#E67E22")} />}

@@ -321,7 +321,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Modo ideal para nuevos jugadores. La IA juega despacio, hay pistas visuales que te muestran la mejor jugada y no hay timer. No importa si pierdes: cada partida de Práctica te hace mejor jugador.",
         teams: [
           { label: "Tú", members: ["Tú"], color: "#1A8FC1" },
-          { label: "Rival", members: ["CPU Fácil"], color: "#7F8C8D" },
+          { label: "Rival", members: ["Rival Fácil"], color: "#7F8C8D" },
         ],
         rules: [
           { icon: "school", color: "#1A8FC1", text: "IA en nivel más fácil (Easy)" },
@@ -331,7 +331,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Tú", isPlayer: true },
-          { label: "CPU Fácil" },
+          { label: "Rival Fácil" },
         ],
         objective: "Practicar las reglas sin presión. Aprende a dominar las cartas especiales.",
         rewardNote: "Recompensa reducida, pero sin riesgo de perder.",
@@ -342,7 +342,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Ideal mode for new players. The AI plays slowly, visual hints show you the best play, and there's no timer. It doesn't matter if you lose — each Practice game makes you a better player.",
         teams: [
           { label: "You", members: ["You"], color: "#1A8FC1" },
-          { label: "Rival", members: ["Easy CPU"], color: "#7F8C8D" },
+          { label: "Rival", members: ["Easy Opponent"], color: "#7F8C8D" },
         ],
         rules: [
           { icon: "school", color: "#1A8FC1", text: "AI at lowest difficulty (Easy)" },
@@ -352,7 +352,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "You", isPlayer: true },
-          { label: "Easy CPU" },
+          { label: "Easy Opponent" },
         ],
         objective: "Practice the rules without pressure. Learn to master the special cards.",
         rewardNote: "Reduced reward, but zero risk.",
@@ -363,7 +363,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
           "Modo ideal para novos jogadores. A IA joga devagar, dicas visuais mostram a melhor jogada e não há timer. Não importa se perder — cada partida de Prática te torna um jogador melhor.",
         teams: [
           { label: "Você", members: ["Você"], color: "#1A8FC1" },
-          { label: "Rival", members: ["CPU Fácil"], color: "#7F8C8D" },
+          { label: "Rival", members: ["Rival Fácil"], color: "#7F8C8D" },
         ],
         rules: [
           { icon: "school", color: "#1A8FC1", text: "IA no nível mais fácil (Fácil)" },
@@ -373,7 +373,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Você", isPlayer: true },
-          { label: "CPU Fácil" },
+          { label: "Rival Fácil" },
         ],
         objective: "Praticar as regras sem pressão. Aprenda a dominar as cartas especiais.",
         rewardNote: "Recompensa reduzida, mas sem risco de perder.",
@@ -417,7 +417,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "You", isPlayer: true },
-          { label: "CPU Rival" },
+          { label: "Rival" },
         ],
         objective: "Win stars to climb ranks and reach Grand Master.",
         rewardNote: "Special season rewards at the end of every season.",
@@ -438,7 +438,7 @@ function getModeContent(id: GameModeId, lang: Lang): ModeContent {
         ],
         turns: [
           { label: "Você", isPlayer: true },
-          { label: "CPU Rival" },
+          { label: "Rival" },
         ],
         objective: "Ganhar estrelas para subir de rank e chegar ao Gran Maestro.",
         rewardNote: "Recompensas especiais de temporada no final de cada season.",

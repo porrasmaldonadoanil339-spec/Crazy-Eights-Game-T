@@ -932,15 +932,20 @@ export default function PlayScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>{T("gameModes")}</Text>
         </View>
 
-        <Animated.View style={[{ marginBottom: 12 }, quickPlayAnimStyle]}>
+        <Animated.View style={[{ marginBottom: 14 }, quickPlayAnimStyle]}>
           <Pressable
             onPress={() => { startGame("classic", "normal"); router.push("/game"); }}
-            style={({ pressed }) => [styles.quickPlayBtn, pressed && { opacity: 0.85 }]}
+            style={({ pressed }) => [styles.quickPlayBtn, pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }]}
           >
-            <LinearGradient colors={["#D4AF37", "#A07800", "#D4AF37"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.quickPlayGrad}>
-              <Ionicons name="flash" size={22} color="#000" />
-              <Text style={styles.quickPlayLabel}>JUGAR RÁPIDO</Text>
-              <Ionicons name="chevron-forward" size={18} color="#00000066" />
+            <LinearGradient colors={["#F4CC4F", "#D4AF37", "#A07800"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.quickPlayGrad}>
+              <View style={styles.quickPlayIconWrap}>
+                <Ionicons name="play" size={26} color="#000" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.quickPlayLabel}>JUGAR</Text>
+                <Text style={styles.quickPlaySubtitle}>{lang === "en" ? "Classic Mode" : lang === "pt" ? "Modo Clássico" : "Modo Clásico"}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={26} color="#000000AA" />
             </LinearGradient>
           </Pressable>
         </Animated.View>
@@ -989,26 +994,8 @@ export default function PlayScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>{T("multiplayer")}</Text>
         </View>
         <View style={styles.multiRow}>
-          {/* Local */}
-          <Pressable
-            style={({ pressed }) => [styles.multiCard, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
-            onPress={() => { playButton().catch(() => {}); setShowMultiModal(true); }}
-          >
-            <LinearGradient colors={["#0a2216", "#0d2e1c"]} style={styles.multiCardGrad}>
-              <View style={[styles.multiCardIcon, { borderColor: "#2ECC7155" }]}>
-                <Ionicons name="phone-portrait" size={22} color="#2ECC71" />
-              </View>
-              <Text style={[styles.multiCardTitle, { color: "#2ECC71" }]}>{T("multiLocal")}</Text>
-              <Text style={styles.multiCardDesc}>{T("multiLocalDesc")}</Text>
-              <View style={[styles.multiCardBadge, { backgroundColor: "#2ECC7122", borderColor: "#2ECC7144" }]}>
-                <Ionicons name="people" size={10} color="#2ECC71" />
-                <Text style={[styles.multiCardBadgeText, { color: "#2ECC71" }]}>2 – 6 {T("players")}</Text>
-              </View>
-            </LinearGradient>
-          </Pressable>
-
-          {/* Online — highlighted with pulsing glow */}
-          <Animated.View style={[styles.multiCard, { borderWidth: 1.5, borderRadius: 14, overflow: "hidden" }, onlineGlowStyle]}>
+          {/* Online — highlighted with pulsing glow (Modo Local eliminado) */}
+          <Animated.View style={[{ flex: 1, borderWidth: 1.5, borderRadius: 14, overflow: "hidden" }, onlineGlowStyle]}>
             <Pressable
               style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
               onPress={() => { playButton().catch(() => {}); setShowOnlineModal(true); }}
@@ -1466,14 +1453,22 @@ const styles = StyleSheet.create({
 
   // Quick play button
   quickPlayBtn: {
-    borderRadius: 18, overflow: "hidden",
-    elevation: 6, shadowColor: "#D4AF37", shadowOpacity: 0.5, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
+    borderRadius: 22, overflow: "hidden",
+    elevation: 10, shadowColor: "#D4AF37", shadowOpacity: 0.7, shadowRadius: 18, shadowOffset: { width: 0, height: 6 },
+    borderWidth: 2, borderColor: "#FFE082",
   },
   quickPlayGrad: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    paddingVertical: 16, paddingHorizontal: 24, gap: 10,
+    flexDirection: "row", alignItems: "center",
+    paddingVertical: 22, paddingHorizontal: 22, gap: 14,
   },
-  quickPlayLabel: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: "#000", letterSpacing: 2.5 },
+  quickPlayIconWrap: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: "#FFFFFF55",
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1.5, borderColor: "#FFFFFF88",
+  },
+  quickPlayLabel: { fontFamily: "Nunito_800ExtraBold", fontSize: 26, color: "#000", letterSpacing: 3, lineHeight: 30 },
+  quickPlaySubtitle: { fontFamily: "Nunito_700Bold", fontSize: 12, color: "#00000099", letterSpacing: 1.2, marginTop: 1 },
 
   // Mode grid
   modesGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },

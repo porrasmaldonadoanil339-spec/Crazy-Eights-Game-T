@@ -32,7 +32,7 @@ export default function RulesScreen() {
       icon: "shuffle" as const,
       title: T("ruleGoalT" as any),
       desc: T("ruleGoalD" as any),
-      detail: "Cada jugador empieza con cartas en mano. El turno pasa en orden. Cuando solo te quede una carta, debes decir '¡OCHO LOCOS!' antes de jugarla o recibirás penalización.",
+      detail: "Cada jugador empieza con cartas en mano. El turno pasa en orden. Para jugar una carta debe coincidir en NÚMERO o PALO con la carta superior. Cuando solo te quede una carta, debes decir '¡OCHO LOCOS!' antes de jugarla o recibirás penalización.",
     },
     {
       icon: "layers" as const,
@@ -44,13 +44,13 @@ export default function RulesScreen() {
       icon: "play-circle" as const,
       title: T("rulePlayT" as any),
       desc: T("rulePlayD" as any),
-      detail: "Debes jugar una carta que coincida en PALO (♠♥♦♣) o en NÚMERO con la carta superior de la pila. Los 8 son comodines y pueden jugarse en cualquier momento.",
+      detail: "Debes jugar una carta que coincida en PALO (♠♥♦♣) o en NÚMERO con la carta superior de la pila. Los 8 son comodines (cambian de palo). El Joker puede jugarse en cualquier momento.",
     },
     {
       icon: "star" as const,
       title: T("ruleEightsT" as any),
       desc: T("ruleEightsD" as any),
-      detail: "Al jugar un 8, elige el palo que deseas continuar. El rival debe jugar del palo que elegiste. Los Jokers obligan al rival a robar 5 cartas. Los 7 obligan al rival a robar 7 cartas (encadenables con otro 7 o Joker). Los 2 obligan a robar 2 cartas. Los 3 saltan el turno rival. Los 10 invierten el sentido.",
+      detail: "Cartas especiales (reglas definitivas):\n\n• A (As): el rival roba 1 carta — ACUMULABLE\n• 2: el rival roba 2 cartas — ACUMULABLE\n• 3: el rival roba 3 cartas — ACUMULABLE\n• 7: carta normal\n• 8: cambia el palo (eliges con tiempo límite)\n• 10: carta normal\n• J: el rival pierde el turno\n• Q: cambia el sentido del juego\n• K: turno adicional para ti\n• Joker: el rival roba 4 cartas y se puede jugar en cualquier momento",
     },
     {
       icon: "add-circle" as const,
@@ -68,7 +68,7 @@ export default function RulesScreen() {
       icon: "trophy" as const,
       title: T("ruleWinT" as any),
       desc: T("ruleWinD" as any),
-      detail: "El primer jugador que se quede sin cartas gana la ronda. En modo Torneo, se juega al mejor de 3 rondas. En modo Clasificatoria, los puntos acumulan hacia el ranking.",
+      detail: "El primer jugador que se quede sin cartas gana la ronda. En modo Torneo, se juega al mejor de 3 rondas contra el mismo oponente — gana quien primero llegue a 2 victorias. En modo Clasificatoria, los puntos acumulan hacia el ranking (1–3 fácil, 4–6 medio, 7–9 difícil, 10–12 pro).",
     },
   ], [T]);
 

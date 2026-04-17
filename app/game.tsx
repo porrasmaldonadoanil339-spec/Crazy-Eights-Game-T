@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions, Image, Alert,
+  View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions, Image, Alert, BackHandler,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -1298,6 +1298,24 @@ export default function GameScreen() {
   const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  // Hardware back button (Android) → show "¿Deseas salir?" confirmation modal
+  useEffect(() => {
+    if (Platform.OS === "web" || Platform.OS === "ios") return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      const phase = gameStateRef.current?.phase;
+      const isOver = phase === "player_wins" || phase === "ai_wins" || phase === "draw";
+      if (isOver) { router.back(); return true; }
+      if (showExitConfirm) {
+        // Confirmation already open — close it instead of popping the screen
+        setShowExitConfirm(false);
+        return true;
+      }
+      setShowExitConfirm(true);
+      return true;
+    });
+    return () => sub.remove();
+  }, [showExitConfirm]);
   const [showChestReward, setShowChestReward] = useState(false);
   const [pendingChestType, setPendingChestType] = useState<ChestType | null>(null);
   const [pendingChestId, setPendingChestId] = useState<string | null>(null);
