@@ -305,8 +305,8 @@ function EquipBadge({ isEquipped, onEquip, T }: { isEquipped: boolean; onEquip: 
   );
 }
 
-function EffectCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
-  item: StoreItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void; onInfo: () => void;
+function EffectCard({ item, owned, isEquipped, isDailyHot, onPress, onEquip, onInfo }: {
+  item: StoreItem; owned: boolean; isEquipped: boolean; isDailyHot?: boolean; onPress: () => void; onEquip: () => void; onInfo: () => void;
 }) {
   const T = useT();
   const theme = useTheme();
@@ -356,6 +356,14 @@ function EffectCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
             )}
           </View>
         </View>
+        {isDailyHot && !owned && !item.isDefault && (
+          <View style={styles.dailyBadge} pointerEvents="none">
+            <LinearGradient colors={["#FF6B6B", "#C13E3E"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyBadgeGrad}>
+              <Ionicons name="flame" size={9} color="#fff" />
+              <Text style={styles.dailyBadgeText}>HOY</Text>
+            </LinearGradient>
+          </View>
+        )}
       </LinearGradient>
     </Pressable>
   );
@@ -506,8 +514,8 @@ function StoreItemCard({ item, owned, isEquipped, isDailyHot, onPress, onEquip, 
   );
 }
 
-function EmoteCard({ item, owned, isEquipped, equippedCount, onPress, onToggle, onInfo }: {
-  item: StoreItem; owned: boolean; isEquipped: boolean; equippedCount: number; onPress: () => void; onToggle: () => void; onInfo: () => void;
+function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress, onToggle, onInfo }: {
+  item: StoreItem; owned: boolean; isEquipped: boolean; equippedCount: number; isDailyHot?: boolean; onPress: () => void; onToggle: () => void; onInfo: () => void;
 }) {
   const T = useT();
   const theme = useTheme();
@@ -571,6 +579,14 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, onPress, onToggle, 
             )}
           </View>
         </View>
+        {isDailyHot && !owned && !item.isDefault && (
+          <View style={styles.dailyBadge} pointerEvents="none">
+            <LinearGradient colors={["#FF6B6B", "#C13E3E"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyBadgeGrad}>
+              <Ionicons name="flame" size={9} color="#fff" />
+              <Text style={styles.dailyBadgeText}>HOY</Text>
+            </LinearGradient>
+          </View>
+        )}
       </LinearGradient>
     </Pressable>
   );
@@ -687,8 +703,18 @@ export default function StoreScreen() {
   const ownedCount = items.filter(i => profile.ownedItems.includes(i.id) || i.isDefault).length;
   const equippedId = getEquippedId(category);
 
-  // Daily themed featured cards: 3 large cards (Ofertas/Cofres/Packs) rotating per day
-  const dayOfYear = useMemo(() => Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000), []);
+  // Now tick — refreshes every 60s so countdown AND daily seed roll over without remount
+  const [nowTick, setNowTick] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Day-of-year derived from nowTick so the rotation flips at local midnight
+  const dayOfYear = useMemo(() => {
+    const d = new Date(nowTick);
+    return Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
+  }, [nowTick]);
 
   // Daily "HOY" rotation: deterministic per (date, category). 6-8 items get the badge.
   const dailyHotIds = useMemo(() => {
@@ -707,12 +733,6 @@ export default function StoreScreen() {
     return hot;
   }, [dayOfYear, category]);
 
-  // Hours/minutes until midnight local for "HOY" countdown
-  const [nowTick, setNowTick] = useState(Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNowTick(Date.now()), 60000);
-    return () => clearInterval(t);
-  }, []);
   const msToMidnight = useMemo(() => {
     const d = new Date(nowTick);
     const next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0);
@@ -846,7 +866,7 @@ export default function StoreScreen() {
           </View>
         </View>
 
-        {!isEmotes && (
+        {(
           <View style={styles.dailyStripWrap}>
             <LinearGradient colors={["#FF6B6B22", "#C13E3E11"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyStripGrad}>
               <Ionicons name="flame" size={14} color="#FF6B6B" />
@@ -867,6 +887,7 @@ export default function StoreScreen() {
                 item={item}
                 owned={owned}
                 isEquipped={equippedId === item.id}
+                isDailyHot={dailyHotIds.has(item.id)}
                 onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
                 onEquip={() => equipItem(item)}
                 onInfo={() => { setInfoItem(item); playSound("tab").catch(() => {}); }}
@@ -884,6 +905,7 @@ export default function StoreScreen() {
                 owned={owned}
                 isEquipped={isEquipped}
                 equippedCount={equippedEmotes.length}
+                isDailyHot={dailyHotIds.has(item.id)}
                 onPress={() => { if (!item.isDefault && !owned) setConfirmItem(item); }}
                 onToggle={() => { if (owned) toggleEmote(item); }}
                 onInfo={() => { setInfoItem(item); playSound("tab").catch(() => {}); }}

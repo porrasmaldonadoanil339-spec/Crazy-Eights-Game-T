@@ -1,5 +1,5 @@
 import { CoinIcon } from "@/components/CoinIcon";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
 } from "react-native";
@@ -11,7 +11,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
-import { BATTLE_PASS_TIERS, getXpProgress, getBPRewardLabel, getFreeReward } from "@/lib/battlePass";
+import { BATTLE_PASS_TIERS, getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward } from "@/lib/battlePass";
+import { getCurrentSeason } from "@/lib/seasons";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";
 import RewardPopup from "@/components/RewardPopup";
@@ -69,10 +70,13 @@ export default function AchievementsScreen() {
     }
   };
 
+  const seasonNumber = getCurrentSeason().number;
+  const seasonTiers = useMemo(() => getBattlePassTiers(seasonNumber), [seasonNumber]);
+
   const handleClaimBP = async (tier: number) => {
     await playSound("achievement");
     claimBattlePassTier(tier);
-    const bp = BATTLE_PASS_TIERS.find((t) => t.tier === tier);
+    const bp = seasonTiers.find((t) => t.tier === tier);
     const free = getFreeReward(tier);
     const isCoins = bp?.rewardType === "coins" && typeof bp.rewardValue === "number";
     const totalCoins = free.coins + (isCoins ? (bp!.rewardValue as number) : 0);
@@ -229,7 +233,7 @@ export default function AchievementsScreen() {
               </View>
             </View>
 
-            {BATTLE_PASS_TIERS.map((tier) => {
+            {seasonTiers.map((tier) => {
               const reached = profile.totalXp >= tier.xpRequired;
               const claimed = profile.claimedBattlePassTiers.includes(tier.tier);
               const canClaim = reached && !claimed;

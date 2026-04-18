@@ -139,6 +139,40 @@ export function getCurrentBattlePassTier(totalXp: number): number {
   return tier;
 }
 
+// ─── SEASONAL ROTATION ──────────────────────────────────────────────────────
+// Rotate the cosmetic rewards (item/avatar/frame/title) each season so the
+// premium track feels fresh while the XP curve and chest milestones stay
+// stable. Coin and chest tiers are NEVER rotated.
+function rotatedTier(tier: BattlePassTier, seasonNumber: number): BattlePassTier {
+  if (
+    tier.rewardType !== "item" &&
+    tier.rewardType !== "avatar" &&
+    tier.rewardType !== "frame" &&
+    tier.rewardType !== "title"
+  ) {
+    return tier;
+  }
+  const pool = BATTLE_PASS_TIERS.filter((t) => t.rewardType === tier.rewardType);
+  if (pool.length <= 1) return tier;
+  const idxInPool = pool.findIndex((t) => t.tier === tier.tier);
+  if (idxInPool < 0) return tier;
+  const offset = ((seasonNumber - 1) % pool.length + pool.length) % pool.length;
+  const replacement = pool[(idxInPool + offset) % pool.length];
+  if (replacement.tier === tier.tier) return tier;
+  return {
+    ...tier,
+    rewardValue: replacement.rewardValue,
+    rewardLabel: replacement.rewardLabel,
+    icon: replacement.icon,
+    iconColor: replacement.iconColor,
+  };
+}
+
+export function getBattlePassTiers(seasonNumber: number): BattlePassTier[] {
+  if (!seasonNumber || seasonNumber <= 1) return BATTLE_PASS_TIERS;
+  return BATTLE_PASS_TIERS.map((t) => rotatedTier(t, seasonNumber));
+}
+
 // ─── FREE TRACK ─────────────────────────────────────────────────────────────
 // Per spec: free pass should NOT be only coins — must include backs, items,
 // emotes and chests (which contain that variety) at meaningful intervals.
