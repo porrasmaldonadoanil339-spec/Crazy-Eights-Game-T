@@ -5,12 +5,40 @@ import { Ionicons } from "@expo/vector-icons";
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing } from "react-native-reanimated";
 import { CoinIcon } from "@/components/CoinIcon";
 
-const ALL_EVENTS = [
-  { id: "speed", name: "Velocidad Extrema", desc: "Todas las cartas tienen temporizador de 5s", icon: "flash", color: "#F39C12", durationDays: 2 },
-  { id: "random", name: "Cartas Aleatorias", desc: "Las cartas especiales cambian aleatoriamente", icon: "shuffle", color: "#9B59B6", durationDays: 2 },
-  { id: "double", name: "Doble Efecto", desc: "Las cartas especiales tienen efecto doble", icon: "copy", color: "#E74C3C", durationDays: 2 },
-  { id: "survival", name: "Supervivencia", desc: "Comienza con 12 cartas. ¡Vacía tu mano!", icon: "shield", color: "#27AE60", durationDays: 2 },
+export type EventDifficulty = "easy" | "medium" | "hard";
+
+export interface OchoEvent {
+  id: string;
+  name: string;
+  desc: string;
+  icon: string;
+  color: string;
+  durationDays: number;
+  difficulty: EventDifficulty;
+  chestType: "common" | "rare" | "epic" | "legendary";
+}
+
+const ALL_EVENTS: OchoEvent[] = [
+  { id: "speed",    name: "Velocidad Extrema",  desc: "Todas las cartas tienen temporizador de 5s",        icon: "flash",   color: "#F39C12", durationDays: 2, difficulty: "hard",   chestType: "epic" },
+  { id: "random",   name: "Cartas Aleatorias",  desc: "Las cartas especiales cambian aleatoriamente",      icon: "shuffle", color: "#9B59B6", durationDays: 2, difficulty: "medium", chestType: "rare" },
+  { id: "double",   name: "Doble Efecto",       desc: "Las cartas especiales tienen efecto doble",         icon: "copy",    color: "#E74C3C", durationDays: 2, difficulty: "medium", chestType: "rare" },
+  { id: "survival", name: "Supervivencia",      desc: "Comienza con 12 cartas. ¡Vacía tu mano!",           icon: "shield",  color: "#27AE60", durationDays: 2, difficulty: "easy",   chestType: "common" },
 ];
+
+const DIFF_META: Record<EventDifficulty, { label: string; color: string }> = {
+  easy:   { label: "FÁCIL",   color: "#2ecc71" },
+  medium: { label: "MEDIA",   color: "#f1c40f" },
+  hard:   { label: "DIFÍCIL", color: "#e74c3c" },
+};
+
+const CHEST_LABEL: Record<OchoEvent["chestType"], string> = {
+  common: "Común", rare: "Raro", epic: "Épico", legendary: "Legendario",
+};
+
+export function getActiveEvent(level: number): OchoEvent | null {
+  const status = getEventStatus(level);
+  return status.status === "live" ? status.event : null;
+}
 
 function getEventStatus(level: number) {
   if (level < 5) {
@@ -150,8 +178,15 @@ export default function EventsCard({ level }: EventsCardProps) {
             </View>
             <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center", gap: 2 }}>
               <Ionicons name="cube" size={14} color={event.color} />
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>Cofre al ganar</Text>
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: event.color }}>{CHEST_LABEL[event.chestType]}</Text>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 9, color: "#888" }}>cofre al ganar</Text>
             </View>
+          </View>
+        )}
+        {status === "live" && (
+          <View style={{ flexDirection: "row", marginTop: 8, alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: DIFF_META[event.difficulty].color + "22", borderWidth: 1, borderColor: DIFF_META[event.difficulty].color + "55", gap: 4, alignItems: "center" }}>
+            <Ionicons name="flame" size={10} color={DIFF_META[event.difficulty].color} />
+            <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: DIFF_META[event.difficulty].color, letterSpacing: 1 }}>{DIFF_META[event.difficulty].label}</Text>
           </View>
         )}
       </LinearGradient>

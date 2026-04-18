@@ -1,5 +1,5 @@
 import { CoinIcon } from "@/components/CoinIcon";
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
   Platform, Modal, FlatList,
@@ -361,8 +361,8 @@ function EffectCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
   );
 }
 
-function StoreItemCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
-  item: StoreItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void; onInfo: () => void;
+function StoreItemCard({ item, owned, isEquipped, isDailyHot, onPress, onEquip, onInfo }: {
+  item: StoreItem; owned: boolean; isEquipped: boolean; isDailyHot?: boolean; onPress: () => void; onEquip: () => void; onInfo: () => void;
 }) {
   const T = useT();
   const theme = useTheme();
@@ -492,6 +492,14 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
               </View>
             </View>
           </>
+        )}
+        {isDailyHot && !owned && (
+          <View style={styles.dailyBadge} pointerEvents="none">
+            <LinearGradient colors={["#FF6B6B", "#C13E3E"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyBadgeGrad}>
+              <Ionicons name="flame" size={9} color="#fff" />
+              <Text style={styles.dailyBadgeText}>HOY</Text>
+            </LinearGradient>
+          </View>
         )}
       </LinearGradient>
     </Pressable>
@@ -682,6 +690,37 @@ export default function StoreScreen() {
   // Daily themed featured cards: 3 large cards (Ofertas/Cofres/Packs) rotating per day
   const dayOfYear = useMemo(() => Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000), []);
 
+  // Daily "HOY" rotation: deterministic per (date, category). 6-8 items get the badge.
+  const dailyHotIds = useMemo(() => {
+    const hot = new Set<string>();
+    const buyable = STORE_ITEMS.filter(i => i.category === category && !i.isDefault);
+    if (buyable.length === 0) return hot;
+    const targetCount = Math.min(8, Math.max(6, Math.ceil(buyable.length * 0.4)));
+    const seed = dayOfYear * 9301 + 49297;
+    let h = seed;
+    const indices = new Set<number>();
+    while (indices.size < Math.min(targetCount, buyable.length)) {
+      h = (h * 9301 + 49297) % 233280;
+      indices.add(h % buyable.length);
+    }
+    indices.forEach(i => hot.add(buyable[i].id));
+    return hot;
+  }, [dayOfYear, category]);
+
+  // Hours/minutes until midnight local for "HOY" countdown
+  const [nowTick, setNowTick] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 60000);
+    return () => clearInterval(t);
+  }, []);
+  const msToMidnight = useMemo(() => {
+    const d = new Date(nowTick);
+    const next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0);
+    return next.getTime() - d.getTime();
+  }, [nowTick]);
+  const hoursLeft = Math.floor(msToMidnight / 3600000);
+  const minutesLeft = Math.floor((msToMidnight % 3600000) / 60000);
+
   const dailyOffer = useMemo(() => {
     const allBuyable = STORE_ITEMS
       .filter(i => !i.isDefault && (i.rarity === "epic" || i.rarity === "legendary"))
@@ -807,6 +846,17 @@ export default function StoreScreen() {
           </View>
         </View>
 
+        {!isEmotes && (
+          <View style={styles.dailyStripWrap}>
+            <LinearGradient colors={["#FF6B6B22", "#C13E3E11"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyStripGrad}>
+              <Ionicons name="flame" size={14} color="#FF6B6B" />
+              <Text style={styles.dailyStripTitle}>{(T("dailyRotation") as string) || "ROTACIÓN DIARIA"}</Text>
+              <View style={{ flex: 1 }} />
+              <Ionicons name="time-outline" size={12} color="#FF6B6B" />
+              <Text style={styles.dailyStripTimer}>{hoursLeft}h {minutesLeft}m</Text>
+            </LinearGradient>
+          </View>
+        )}
         <View style={(isEffects || isEmotes) ? styles.listContent : styles.grid}>
         {isEffects ? (
           items.map((item) => {
@@ -849,6 +899,7 @@ export default function StoreScreen() {
                 item={item}
                 owned={owned}
                 isEquipped={equippedId === item.id}
+                isDailyHot={dailyHotIds.has(item.id)}
                 onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
                 onEquip={() => equipItem(item)}
                 onInfo={() => { setInfoItem(item); playSound("tab").catch(() => {}); }}
@@ -939,6 +990,13 @@ const styles = StyleSheet.create({
   catCountActive: { backgroundColor: Colors.gold + "33" },
   catCountText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: Colors.textDim },
   grid: { paddingHorizontal: 16, flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  dailyStripWrap: { paddingHorizontal: 16, marginBottom: 8 },
+  dailyStripGrad: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: "#FF6B6B55" },
+  dailyStripTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#FF6B6B", letterSpacing: 1.5 },
+  dailyStripTimer: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#FF6B6B", fontVariant: ["tabular-nums" as any] },
+  dailyBadge: { position: "absolute", top: 6, left: 6, zIndex: 10 },
+  dailyBadgeGrad: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: "#fff5" },
+  dailyBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, color: "#fff", letterSpacing: 0.8 },
   listContent: { paddingHorizontal: 16, gap: 10 },
   itemCard: {
     width: "47.5%", borderRadius: 16, overflow: "hidden",

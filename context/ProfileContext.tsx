@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ACHIEVEMENTS, Achievement, AchievementId } from "@/lib/achievements";
 import { STORE_ITEMS, StoreItem } from "@/lib/storeItems";
 import { BATTLE_PASS_TIERS, getCurrentBattlePassTier, getPlayerLevel, getXpProgress, getFreeReward } from "@/lib/battlePass";
+import { getCurrentSeason } from "@/lib/seasons";
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { RankedProfile, addStars, getRankUpRewards, getRankUpBonusCoins } from "@/lib/ranked";
 import { Chest, ChestReward, ChestType, createChest, openChest as openChestReward } from "@/lib/chestSystem";
@@ -102,6 +103,7 @@ export interface PlayerProfile {
   ownedItems: string[];
   achievementProgress: AchievementProgress[];
   claimedBattlePassTiers: number[];
+  battlePassSeasonNumber: number;
   stats: PlayerStats;
   // Daily rewards
   lastDailyRewardDate: string;
@@ -188,6 +190,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
     claimedReward: false,
   })),
   claimedBattlePassTiers: [1],
+  battlePassSeasonNumber: 1,
   stats: DEFAULT_STATS,
   lastDailyRewardDate: "",
   dailyRewardIndex: 0,
@@ -318,7 +321,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
               return existing ?? { id: a.id, progress: 0, unlocked: false, claimedReward: false };
             }),
             ownedItems: saved.ownedItems ?? DEFAULT_PROFILE.ownedItems,
-            claimedBattlePassTiers: saved.claimedBattlePassTiers ?? [1],
+            claimedBattlePassTiers: (() => {
+              const savedSeason = saved.battlePassSeasonNumber ?? 1;
+              const currentSeason = getCurrentSeason().number;
+              if (savedSeason !== currentSeason) return [1];
+              return saved.claimedBattlePassTiers ?? [1];
+            })(),
+            battlePassSeasonNumber: getCurrentSeason().number,
             lastDailyRewardDate: saved.lastDailyRewardDate ?? "",
             dailyRewardIndex: saved.dailyRewardIndex ?? 0,
             musicEnabled: saved.musicEnabled ?? true,

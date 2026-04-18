@@ -1762,12 +1762,24 @@ export default function GameScreen() {
       if (won) {
         const newTotalWins = profile.stats.totalWins + 1;
         let chestType: ChestType | null = null;
-        if (newTotalWins % 25 === 0) chestType = "legendary";
-        else if (newTotalWins % 15 === 0) chestType = "epic";
-        else if (newTotalWins % 7 === 0) chestType = "rare";
-        else if (newTotalWins % 3 === 0) chestType = "common";
+        let milestoneChest: ChestType | null = null;
+        if (newTotalWins % 25 === 0) milestoneChest = "legendary";
+        else if (newTotalWins % 15 === 0) milestoneChest = "epic";
+        else if (newTotalWins % 7 === 0) milestoneChest = "rare";
+        else if (newTotalWins % 3 === 0) milestoneChest = "common";
+        // Guaranteed event chest on win during a live event — keep the BETTER of the two
+        const { getActiveEvent } = require("@/components/EventsCard") as typeof import("@/components/EventsCard");
+        const activeEvent = getActiveEvent(level);
+        const RANK: Record<ChestType, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
+        if (activeEvent && milestoneChest) {
+          chestType = RANK[activeEvent.chestType] >= RANK[milestoneChest] ? activeEvent.chestType : milestoneChest;
+        } else if (activeEvent) {
+          chestType = activeEvent.chestType;
+        } else {
+          chestType = milestoneChest;
+        }
         if (chestType) {
-          addChestToInventory(chestType, "win");
+          addChestToInventory(chestType, activeEvent && chestType === activeEvent.chestType ? "mission" : "win");
           setPendingChestType(chestType);
           setShowChestReward(true);
         }
