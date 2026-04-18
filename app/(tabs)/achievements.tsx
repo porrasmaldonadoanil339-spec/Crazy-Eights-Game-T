@@ -49,7 +49,8 @@ export default function AchievementsScreen() {
   const handleClaimBP = async (tier: number) => {
     await playSound("achievement");
     claimBattlePassTier(tier);
-    showToast(`${T("battlePass")} ${T("level")} ${tier} ✓`);
+    // Per CORRECCION_OCHO_LOCOS: confirmation must read "¡RECOMPENSA OBTENIDA!"
+    showToast(`¡RECOMPENSA OBTENIDA! · ${T("level")} ${tier}`);
   };
 
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
@@ -194,36 +195,69 @@ export default function AchievementsScreen() {
               const reached = profile.totalXp >= tier.xpRequired;
               const claimed = profile.claimedBattlePassTiers.includes(tier.tier);
               const canClaim = reached && !claimed;
+              // Free reward = always coins, scaled with tier (per doc: free track = monedas + cofres comunes)
+              const freeCoins = 25 + tier.tier * 5;
+              const isPremiumTrack = ["item","avatar","frame","effect","chest","title"].includes(tier.rewardType) || (tier.rewardType === "coins" && Number(tier.rewardValue) >= 200);
+              const premiumLabel = getBPRewardLabel(tier, lang);
               return (
                 <View
                   key={tier.tier}
                   style={[
-                    styles.bpTier,
+                    styles.bpBlock,
                     { backgroundColor: themeColors.surface, borderColor: themeColors.border },
-                    reached && !claimed && { borderColor: themeGold + "66", backgroundColor: themeGold + "0a" },
+                    reached && !claimed && { borderColor: themeGold + "88" },
                     claimed && styles.bpTierClaimed,
                   ]}
                 >
-                  <View style={[styles.bpTierNum, { backgroundColor: reached ? themeGold + "33" : themeColors.card }]}>
-                    <Text style={[styles.bpTierNumText, { color: reached ? themeGold : themeColors.textDim }]}>{tier.tier}</Text>
+                  {/* Header: NIVEL X */}
+                  <View style={[styles.bpBlockHeader, { borderBottomColor: themeColors.border }]}>
+                    <View style={[styles.bpTierNum, { backgroundColor: reached ? themeGold + "33" : themeColors.card }]}>
+                      <Text style={[styles.bpTierNumText, { color: reached ? themeGold : themeColors.textDim }]}>{tier.tier}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.bpBlockTitle, { color: reached ? themeGold : themeColors.textDim }]}>NIVEL {tier.tier}</Text>
+                      <Text style={[styles.bpTierXp, { color: themeColors.textDim }]}>{tier.xpRequired} {xpRequiredLabel}</Text>
+                    </View>
+                    {claimed && <Ionicons name="checkmark-circle" size={20} color={Colors.success} />}
+                    {!reached && !claimed && <Ionicons name="lock-closed" size={16} color={themeColors.textDim} />}
                   </View>
-                  <View style={[styles.bpIconWrap, { backgroundColor: tier.iconColor + "22" }]}>
-                    <Ionicons name={tier.icon as any} size={20} color={reached ? tier.iconColor : themeColors.textDim} />
+
+                  {/* PREMIUM track */}
+                  <View style={styles.bpTrackRow}>
+                    <View style={[styles.bpTrackTag, { backgroundColor: themeGold + "22", borderColor: themeGold + "55" }]}>
+                      <Ionicons name="diamond" size={11} color={themeGold} />
+                      <Text style={[styles.bpTrackTagText, { color: themeGold }]}>PREMIUM</Text>
+                    </View>
+                    <View style={[styles.bpIconWrap, { backgroundColor: tier.iconColor + "22", width: 34, height: 34, borderRadius: 17 }]}>
+                      <Ionicons name={tier.icon as any} size={18} color={reached ? tier.iconColor : themeColors.textDim} />
+                    </View>
+                    <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{premiumLabel}</Text>
+                    {!isPremiumTrack && null}
+                    <Ionicons name="lock-closed" size={14} color={themeColors.textDim} />
                   </View>
-                  <View style={styles.bpTierContent}>
-                    <Text style={[styles.bpTierLabel, { color: reached ? themeColors.text : themeColors.textDim }]}>{getBPRewardLabel(tier, lang)}</Text>
-                    <Text style={[styles.bpTierXp, { color: themeColors.textDim }]}>{tier.xpRequired} {xpRequiredLabel}</Text>
+
+                  {/* Divider */}
+                  <View style={[styles.bpTrackDivider, { backgroundColor: themeColors.border }]} />
+
+                  {/* FREE track */}
+                  <View style={styles.bpTrackRow}>
+                    <View style={[styles.bpTrackTag, { backgroundColor: "#2ecc7122", borderColor: "#2ecc7155" }]}>
+                      <Ionicons name="gift" size={11} color="#2ecc71" />
+                      <Text style={[styles.bpTrackTagText, { color: "#2ecc71" }]}>FREE</Text>
+                    </View>
+                    <View style={[styles.bpIconWrap, { backgroundColor: "#F1C40F22", width: 34, height: 34, borderRadius: 17 }]}>
+                      <Ionicons name="cash" size={18} color={reached ? "#F1C40F" : themeColors.textDim} />
+                    </View>
+                    <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{freeCoins} 🪙</Text>
+                    {canClaim && (
+                      <Pressable
+                        onPress={() => handleClaimBP(tier.tier)}
+                        style={({ pressed }) => [styles.bpClaimBtn, { backgroundColor: themeGold }, pressed && { opacity: 0.85 }]}
+                      >
+                        <Text style={styles.bpClaimText}>{claimLabel}</Text>
+                      </Pressable>
+                    )}
                   </View>
-                  {canClaim && (
-                    <Pressable
-                      onPress={() => handleClaimBP(tier.tier)}
-                      style={({ pressed }) => [styles.bpClaimBtn, { backgroundColor: themeGold }, pressed && { opacity: 0.85 }]}
-                    >
-                      <Text style={styles.bpClaimText}>{claimLabel}</Text>
-                    </Pressable>
-                  )}
-                  {claimed && <Ionicons name="checkmark-circle" size={22} color={Colors.success} />}
-                  {!reached && !claimed && <Ionicons name="lock-closed" size={18} color={themeColors.textDim} />}
                 </View>
               );
             })}
@@ -309,6 +343,30 @@ const styles = StyleSheet.create({
   bpTierXp: { fontFamily: "Nunito_400Regular", fontSize: 11 },
   bpClaimBtn: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   bpClaimText: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#1a0a00" },
+  // ── Vertical block layout (per CORRECCION_OCHO_LOCOS doc) ──────────────
+  bpBlock: {
+    borderRadius: 14, padding: 12, marginBottom: 10,
+    borderWidth: 1, gap: 8,
+  },
+  bpBlockHeader: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    paddingBottom: 8, borderBottomWidth: 1,
+  },
+  bpBlockTitle: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 13, letterSpacing: 1.5,
+  },
+  bpTrackRow: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    paddingVertical: 4,
+  },
+  bpTrackTag: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1,
+    minWidth: 70,
+  },
+  bpTrackTagText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 0.5 },
+  bpTrackLabel: { flex: 1, fontFamily: "Nunito_700Bold", fontSize: 12 },
+  bpTrackDivider: { height: 1, marginVertical: 2, opacity: 0.5 },
   toast: {
     position: "absolute", bottom: 90, alignSelf: "center",
     borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,

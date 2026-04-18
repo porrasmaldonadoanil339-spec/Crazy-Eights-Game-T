@@ -943,7 +943,9 @@ export default function PlayScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.quickPlayLabel}>JUGAR</Text>
-                <Text style={styles.quickPlaySubtitle}>{lang === "en" ? "Classic Mode" : lang === "pt" ? "Modo Clássico" : "Modo Clásico"}</Text>
+                <Text style={styles.quickPlaySubtitle}>
+                  {(lang === "en" ? "Classic Mode" : lang === "pt" ? "Modo Clássico" : "Modo Clásico") + "  •  +10 🪙"}
+                </Text>
               </View>
               <Ionicons name="chevron-forward" size={26} color="#000000AA" />
             </LinearGradient>
