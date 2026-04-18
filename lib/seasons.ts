@@ -1,3 +1,5 @@
+import { getSeasonTheme } from "./battlePass";
+
 export interface Season {
   id: string;
   name: string;
@@ -33,7 +35,7 @@ export function getCurrentSeason(): Season & { daysRemaining: number } {
 
   return {
     id: `season_${seasonNumber}`,
-    name: seasonNumber === 1 ? "Hierro y Fuego" : `Temporada ${seasonNumber}`,
+    name: `${getSeasonTheme(seasonNumber).themeName} · T${seasonNumber}`,
     number: seasonNumber,
     startDate: seasonStart.toISOString(),
     endDate: seasonEnd.toISOString(),

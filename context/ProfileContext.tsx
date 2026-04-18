@@ -595,7 +595,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (bpTier.rewardType === "coins" && typeof bpTier.rewardValue === "number") {
         next = { ...next, coins: next.coins + bpTier.rewardValue };
       }
-      if (["item", "avatar", "title"].includes(bpTier.rewardType)) {
+      if (["item", "avatar", "title", "frame", "effect"].includes(bpTier.rewardType)) {
         const itemId = bpTier.rewardValue as string;
         if (!next.ownedItems.includes(itemId)) {
           next = { ...next, ownedItems: [...next.ownedItems, itemId] };

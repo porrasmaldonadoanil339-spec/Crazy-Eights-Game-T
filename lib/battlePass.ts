@@ -8,7 +8,88 @@ export interface BattlePassTier {
   rewardLabel: string;
   icon: string;
   iconColor: string;
+  isExclusive?: boolean;
+  exclusiveLabel?: { es: string; en: string; pt: string };
 }
+
+// ─── SEASONAL EXCLUSIVES ────────────────────────────────────────────────────
+// Themed pools of exclusive cosmetics that ONLY appear during a given season's
+// battle pass. These IDs are intentionally NOT registered in `storeItems` so
+// they cannot be purchased — they are battle-pass-only "limited edition"
+// rewards that rotate with the season number.
+export interface SeasonExclusive {
+  rewardType: "item" | "avatar" | "frame" | "title";
+  rewardValue: string;
+  rewardLabel: string; // base ES label
+  enLabel: string;
+  ptLabel: string;
+  icon: string;
+  iconColor: string;
+}
+
+export interface SeasonTheme {
+  themeName: string;
+  exclusives: SeasonExclusive[]; // at least 2 per season, slotted at tiers 27 & 35
+}
+
+export const SEASON_THEMES: SeasonTheme[] = [
+  {
+    themeName: "Hierro y Fuego",
+    exclusives: [
+      { rewardType: "avatar", rewardValue: "exclusive_s1_phoenix_lord",  rewardLabel: "Avatar: Señor Fénix",        enLabel: "Avatar: Phoenix Lord",        ptLabel: "Avatar: Senhor Fênix",       icon: "flame",    iconColor: "#FF4500" },
+      { rewardType: "frame",  rewardValue: "exclusive_s1_ember_frame",   rewardLabel: "Marco: Brasa Eterna",        enLabel: "Frame: Eternal Ember",        ptLabel: "Moldura: Brasa Eterna",      icon: "ellipse",  iconColor: "#FF6B00" },
+      { rewardType: "title",  rewardValue: "exclusive_s1_iron_burned",   rewardLabel: "Título: Forjado en Fuego",   enLabel: "Title: Forged in Fire",       ptLabel: "Título: Forjado no Fogo",    icon: "ribbon",   iconColor: "#C0392B" },
+    ],
+  },
+  {
+    themeName: "Tormenta Eterna",
+    exclusives: [
+      { rewardType: "avatar", rewardValue: "exclusive_s2_storm_caller",  rewardLabel: "Avatar: Invocador de Tormentas", enLabel: "Avatar: Storm Caller",     ptLabel: "Avatar: Invocador de Tempestades", icon: "thunderstorm", iconColor: "#4A90E2" },
+      { rewardType: "frame",  rewardValue: "exclusive_s2_lightning_frame", rewardLabel: "Marco: Relámpago",         enLabel: "Frame: Lightning",            ptLabel: "Moldura: Relâmpago",         icon: "flash",    iconColor: "#FFD700" },
+      { rewardType: "title",  rewardValue: "exclusive_s2_thunderlord",   rewardLabel: "Título: Señor del Trueno",   enLabel: "Title: Thunder Lord",         ptLabel: "Título: Senhor do Trovão",   icon: "ribbon",   iconColor: "#4A90E2" },
+    ],
+  },
+  {
+    themeName: "Reino Sombrío",
+    exclusives: [
+      { rewardType: "avatar", rewardValue: "exclusive_s3_shadow_walker", rewardLabel: "Avatar: Caminante Sombrío",  enLabel: "Avatar: Shadow Walker",       ptLabel: "Avatar: Andarilho Sombrio",  icon: "moon",     iconColor: "#6A0DAD" },
+      { rewardType: "item",   rewardValue: "exclusive_s3_void_back",     rewardLabel: "Dorso: Vacío Profundo",      enLabel: "Back: Deep Void",             ptLabel: "Dorso: Vazio Profundo",      icon: "card",     iconColor: "#1a0020" },
+      { rewardType: "title",  rewardValue: "exclusive_s3_nightbringer",  rewardLabel: "Título: Portador de Noche",  enLabel: "Title: Nightbringer",         ptLabel: "Título: Portador da Noite",  icon: "ribbon",   iconColor: "#6A0DAD" },
+    ],
+  },
+  {
+    themeName: "Cielos Cósmicos",
+    exclusives: [
+      { rewardType: "avatar", rewardValue: "exclusive_s4_starborn",      rewardLabel: "Avatar: Nacido de Estrellas",enLabel: "Avatar: Starborn",            ptLabel: "Avatar: Nascido das Estrelas",icon: "sparkles", iconColor: "#A855F7" },
+      { rewardType: "frame",  rewardValue: "exclusive_s4_nebula_frame",  rewardLabel: "Marco: Nebulosa",            enLabel: "Frame: Nebula",               ptLabel: "Moldura: Nebulosa",          icon: "ellipse",  iconColor: "#A855F7" },
+      { rewardType: "item",   rewardValue: "exclusive_s4_constellation_back", rewardLabel: "Dorso: Constelación", enLabel: "Back: Constellation",         ptLabel: "Dorso: Constelação",         icon: "card",     iconColor: "#001a40" },
+    ],
+  },
+  {
+    themeName: "Bosque Encantado",
+    exclusives: [
+      { rewardType: "avatar", rewardValue: "exclusive_s5_druid",         rewardLabel: "Avatar: Druida Ancestral",   enLabel: "Avatar: Ancient Druid",       ptLabel: "Avatar: Druida Ancestral",   icon: "leaf",     iconColor: "#27AE60" },
+      { rewardType: "frame",  rewardValue: "exclusive_s5_vine_frame",    rewardLabel: "Marco: Enredadera",          enLabel: "Frame: Vine",                 ptLabel: "Moldura: Trepadeira",        icon: "ellipse",  iconColor: "#27AE60" },
+      { rewardType: "title",  rewardValue: "exclusive_s5_woodlands",     rewardLabel: "Título: Guardián del Bosque",enLabel: "Title: Forest Guardian",      ptLabel: "Título: Guardião da Floresta",icon: "ribbon",  iconColor: "#27AE60" },
+    ],
+  },
+  {
+    themeName: "Era de Hielo",
+    exclusives: [
+      { rewardType: "avatar", rewardValue: "exclusive_s6_frost_giant",   rewardLabel: "Avatar: Gigante de Hielo",   enLabel: "Avatar: Frost Giant",         ptLabel: "Avatar: Gigante de Gelo",    icon: "snow",     iconColor: "#7FDBFF" },
+      { rewardType: "item",   rewardValue: "exclusive_s6_glacier_back",  rewardLabel: "Dorso: Glaciar Eterno",      enLabel: "Back: Eternal Glacier",       ptLabel: "Dorso: Geleira Eterna",      icon: "card",     iconColor: "#B8DDEF" },
+      { rewardType: "title",  rewardValue: "exclusive_s6_iceborn",       rewardLabel: "Título: Hijo del Hielo",     enLabel: "Title: Iceborn",              ptLabel: "Título: Filho do Gelo",      icon: "ribbon",   iconColor: "#7FDBFF" },
+    ],
+  },
+];
+
+export function getSeasonTheme(seasonNumber: number): SeasonTheme {
+  const idx = ((seasonNumber - 1) % SEASON_THEMES.length + SEASON_THEMES.length) % SEASON_THEMES.length;
+  return SEASON_THEMES[idx];
+}
+
+// Tier slots in the epic block (21-40) where exclusives are injected.
+const EXCLUSIVE_SLOTS = [27, 35];
 
 export const BATTLE_PASS_TIERS: BattlePassTier[] = [
   // ─── Tiers 1-20: Common & Rare rewards ──────────────────────────────────────
@@ -67,6 +148,9 @@ export const BATTLE_PASS_TIERS: BattlePassTier[] = [
 ];
 
 export function getBPRewardLabel(tier: BattlePassTier, lang: "es" | "en" | "pt"): string {
+  if (tier.isExclusive && tier.exclusiveLabel) {
+    return tier.exclusiveLabel[lang] ?? tier.exclusiveLabel.es;
+  }
   if (lang === "es") return tier.rewardLabel;
 
   if (tier.rewardType === "coins") {
@@ -169,8 +253,33 @@ function rotatedTier(tier: BattlePassTier, seasonNumber: number): BattlePassTier
 }
 
 export function getBattlePassTiers(seasonNumber: number): BattlePassTier[] {
-  if (!seasonNumber || seasonNumber <= 1) return BATTLE_PASS_TIERS;
-  return BATTLE_PASS_TIERS.map((t) => rotatedTier(t, seasonNumber));
+  const theme = getSeasonTheme(seasonNumber);
+  const rotated = seasonNumber > 1
+    ? BATTLE_PASS_TIERS.map((t) => rotatedTier(t, seasonNumber))
+    : BATTLE_PASS_TIERS.slice();
+
+  return rotated.map((t) => {
+    const slotIdx = EXCLUSIVE_SLOTS.indexOf(t.tier);
+    if (slotIdx < 0) return t;
+    const exclusive = theme.exclusives[slotIdx % theme.exclusives.length];
+    if (!exclusive) return t;
+    return {
+      ...t,
+      rewardType: exclusive.rewardType,
+      rewardValue: exclusive.rewardValue,
+      rewardLabel: exclusive.rewardLabel,
+      icon: exclusive.icon,
+      iconColor: exclusive.iconColor,
+      isExclusive: true,
+      exclusiveLabel: { es: exclusive.rewardLabel, en: exclusive.enLabel, pt: exclusive.ptLabel },
+    };
+  });
+}
+
+export function getSeasonExclusiveIds(seasonNumber: number): string[] {
+  return getBattlePassTiers(seasonNumber)
+    .filter((t) => t.isExclusive)
+    .map((t) => String(t.rewardValue));
 }
 
 // ─── FREE TRACK ─────────────────────────────────────────────────────────────

@@ -70,7 +70,8 @@ export default function AchievementsScreen() {
     }
   };
 
-  const seasonNumber = getCurrentSeason().number;
+  const currentSeason = getCurrentSeason();
+  const seasonNumber = currentSeason.number;
   const seasonTiers = useMemo(() => getBattlePassTiers(seasonNumber), [seasonNumber]);
 
   const handleClaimBP = async (tier: number) => {
@@ -223,6 +224,11 @@ export default function AchievementsScreen() {
           </>
         ) : activeTab === "battlepass" ? (
           <>
+            <View style={styles.bpSeasonHeader}>
+              <Ionicons name="sparkles" size={14} color={themeGold} />
+              <Text style={[styles.bpSeasonText, { color: themeGold }]} numberOfLines={1}>{currentSeason.name.toUpperCase()}</Text>
+              <Ionicons name="sparkles" size={14} color={themeGold} />
+            </View>
             <View style={styles.bpHeader}>
               <View style={[styles.bpLevelBig, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
                 <Text style={[styles.bpLevelNum, { color: themeGold }]}>{levelLabel} {xpProgress.level}</Text>
@@ -277,7 +283,15 @@ export default function AchievementsScreen() {
                         <Ionicons name={tier.icon as any} size={18} color={reached ? tier.iconColor : themeColors.textDim} />
                       )}
                     </View>
-                    <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{premiumLabel}</Text>
+                    <View style={styles.bpTrackLabelCol}>
+                      <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{premiumLabel}</Text>
+                      {tier.isExclusive && (
+                        <View style={[styles.bpExclusiveBadge, { backgroundColor: tier.iconColor + "22", borderColor: tier.iconColor + "88" }]}>
+                          <Ionicons name="sparkles" size={9} color={tier.iconColor} />
+                          <Text style={[styles.bpExclusiveText, { color: tier.iconColor }]} numberOfLines={1}>{T("limitedEdition")}</Text>
+                        </View>
+                      )}
+                    </View>
                     {!isPremiumTrack && null}
                     <Ionicons name="lock-closed" size={14} color={themeColors.textDim} />
                   </View>
@@ -427,7 +441,20 @@ const styles = StyleSheet.create({
     minWidth: 70,
   },
   bpTrackTagText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 0.5 },
-  bpTrackLabel: { flex: 1, fontFamily: "Nunito_700Bold", fontSize: 12 },
+  bpTrackLabel: { fontFamily: "Nunito_700Bold", fontSize: 12 },
+  bpTrackLabelCol: { flex: 1, gap: 3 },
+  bpExclusiveBadge: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    alignSelf: "flex-start",
+    paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 5, borderWidth: 1,
+  },
+  bpExclusiveText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, letterSpacing: 0.5 },
+  bpSeasonHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+    marginBottom: 10,
+  },
+  bpSeasonText: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, letterSpacing: 1.5 },
   bpTrackDivider: { height: 1, marginVertical: 2, opacity: 0.5 },
   toast: {
     position: "absolute", bottom: 90, alignSelf: "center",
