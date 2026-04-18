@@ -603,4 +603,28 @@ router.post("/dev-seed", (req, res) => {
   });
 });
 
+// ─── POST /api/auth/dev-reset ─────────────────────────────────────────────────
+// Dev-only: wipes the caller's cloud profile entry so the next launch falls
+// back to DEFAULT_PROFILE. Mirror of the dev-seed endpoint guard.
+router.post("/dev-reset", (req, res) => {
+  const isDev = process.env.NODE_ENV !== "production";
+  const explicitlyEnabled = process.env.DEV_SEED_ENABLED === "1" || process.env.DEV_SEED_ENABLED === "true";
+  if (!isDev && !explicitlyEnabled) {
+    return res.status(403).json({ error: "dev-reset disabled in production (set DEV_SEED_ENABLED=1 to override)" });
+  }
+
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: "Unauthorized" });
+  const token = auth.replace("Bearer ", "");
+  const payload = verifyToken(token);
+  if (!payload) return res.status(401).json({ error: "Invalid token" });
+
+  const profiles = loadProfiles();
+  const next = profiles.filter(p => p.userId !== payload.userId);
+  const removed = profiles.length - next.length;
+  saveProfiles(next);
+
+  return res.json({ ok: true, removed });
+});
+
 export default router;

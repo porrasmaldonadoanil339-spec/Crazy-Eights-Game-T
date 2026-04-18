@@ -7,6 +7,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { reloadAppAsync } from "expo";
+import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack } from "@/lib/audioManager";
@@ -518,6 +521,55 @@ export default function SettingsScreen() {
             right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
         </View>
+
+        {/* ──── 🛠 DEV (debug-only) ──── */}
+        {__DEV__ && (
+          <View style={[styles.section, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <SectionHeader icon="info" label="DEV" isDark={isDark} />
+            <SettingRow
+              label="Reset cloud profile"
+              sub="Wipes server profile + local cache, then reloads the app"
+              icon="refresh-circle" iconColor="#E74C3C" iconBg="#3a1a1a"
+              isDark={isDark} last
+              onPress={() => {
+                Alert.alert(
+                  "Reset cloud profile?",
+                  "This will delete your server profile entry and clear local data so the next launch starts from defaults.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Reset",
+                      style: "destructive",
+                      onPress: async () => {
+                        try {
+                          const raw = await AsyncStorage.getItem("ocho_auth_v1");
+                          const token = raw ? (JSON.parse(raw) as { token?: string }).token : undefined;
+                          if (token) {
+                            const url = new URL("/api/auth/dev-reset", getApiUrl()).toString();
+                            const resp = await fetch(url, {
+                              method: "POST",
+                              headers: { Authorization: `Bearer ${token}` },
+                            });
+                            if (!resp.ok) {
+                              const j = await resp.json().catch(() => ({}));
+                              Alert.alert("Reset failed", (j as any)?.error || `HTTP ${resp.status}`);
+                              return;
+                            }
+                          }
+                          await AsyncStorage.removeItem("ocho_profile_v3");
+                          await reloadAppAsync();
+                        } catch (e: any) {
+                          Alert.alert("Reset failed", e?.message ?? String(e));
+                        }
+                      },
+                    },
+                  ],
+                );
+              }}
+              right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
+            />
+          </View>
+        )}
 
         {/* Footer */}
         <View style={styles.footerCard}>
