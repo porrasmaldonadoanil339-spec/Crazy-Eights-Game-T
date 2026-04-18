@@ -28,7 +28,7 @@ type Tab = "achievements" | "battlepass";
 export default function AchievementsScreen() {
   const insets = useSafeAreaInsets();
   const { profile, claimAchievementReward, claimBattlePassTier, xpProgress, battlePassTier } = useProfile();
-  const [activeTab, setActiveTab] = useState<Tab>("achievements");
+  const [activeTab, setActiveTab] = useState<Tab>("battlepass");
   const [toast, setToast] = useState<string | null>(null);
   const [rewardPopup, setRewardPopup] = useState<{
     visible: boolean;
@@ -124,19 +124,6 @@ export default function AchievementsScreen() {
 
       <View style={styles.tabRow}>
         <Pressable
-          onPress={() => setActiveTab("achievements")}
-          style={[
-            styles.tabBtn,
-            { backgroundColor: themeColors.surface, borderColor: themeColors.border },
-            activeTab === "achievements" && { borderColor: themeGold, backgroundColor: themeGold + "22" },
-          ]}
-        >
-          <Ionicons name="medal" size={16} color={activeTab === "achievements" ? themeGold : themeColors.textMuted} />
-          <Text style={[styles.tabLabel, { color: activeTab === "achievements" ? themeGold : themeColors.textMuted }]}>
-            {T("achievements")} {claimableCount > 0 && `(${claimableCount})`}
-          </Text>
-        </Pressable>
-        <Pressable
           onPress={() => setActiveTab("battlepass")}
           style={[
             styles.tabBtn,
@@ -147,6 +134,19 @@ export default function AchievementsScreen() {
           <Ionicons name="star" size={16} color={activeTab === "battlepass" ? themeGold : themeColors.textMuted} />
           <Text style={[styles.tabLabel, { color: activeTab === "battlepass" ? themeGold : themeColors.textMuted }]}>
             {T("battlePass")}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setActiveTab("achievements")}
+          style={[
+            styles.tabBtn,
+            { backgroundColor: themeColors.surface, borderColor: themeColors.border },
+            activeTab === "achievements" && { borderColor: themeGold, backgroundColor: themeGold + "22" },
+          ]}
+        >
+          <Ionicons name="medal" size={16} color={activeTab === "achievements" ? themeGold : themeColors.textMuted} />
+          <Text style={[styles.tabLabel, { color: activeTab === "achievements" ? themeGold : themeColors.textMuted }]}>
+            {T("achievements")} {claimableCount > 0 && `(${claimableCount})`}
           </Text>
         </Pressable>
       </View>

@@ -61,7 +61,7 @@ export function shuffleDeck(deck: Card[]): Card[] {
   return arr;
 }
 
-export function initGame(cardsPerPlayer: number = 7, difficulty: string = "normal"): GameState {
+export function initGame(cardsPerPlayer: number = 8, difficulty: string = "normal"): GameState {
   const deck = createDeck();
   const playerHand = deck.splice(0, cardsPerPlayer);
   const aiHand = deck.splice(0, cardsPerPlayer);
