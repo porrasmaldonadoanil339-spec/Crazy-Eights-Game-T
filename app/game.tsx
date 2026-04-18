@@ -1,3 +1,4 @@
+import { CoinIcon } from "@/components/CoinIcon";
 import React, { useEffect, useRef, useState } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions, Image, Alert, BackHandler,
@@ -1106,7 +1107,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
               <View style={styles.rewardRow}>
                 {coinsEarned > 0 && (
                   <View style={[styles.rewardChip, { backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "55" }]}>
-                    <Ionicons name="cash" size={16} color={Colors.gold} />
+                    <CoinIcon size={16} color={Colors.gold} />
                     <Text style={[styles.rewardChipVal, { color: Colors.gold }]}>+{coinsEarned}</Text>
                     <Text style={styles.rewardChipSub}>{T("coins")}</Text>
                   </View>

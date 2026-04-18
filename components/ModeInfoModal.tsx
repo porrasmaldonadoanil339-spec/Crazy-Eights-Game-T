@@ -1,3 +1,4 @@
+import { CoinIcon } from "@/components/CoinIcon";
 import React, { useEffect } from "react";
 import {
   View, Text, StyleSheet, Modal, Pressable, ScrollView, Platform,
@@ -632,12 +633,12 @@ export function ModeInfoModal({
               {/* Rewards */}
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Ionicons name="cash" size={13} color={Colors.gold} />
+                  <CoinIcon size={13} color={Colors.gold} />
                   <Text style={styles.sectionLabel}>{rewardsLabel}</Text>
                 </View>
                 <View style={styles.rewardsRow}>
                   <View style={styles.rewardChip}>
-                    <Ionicons name="cash" size={16} color={Colors.gold} />
+                    <CoinIcon size={16} color={Colors.gold} />
                     <Text style={styles.rewardNum}>+{coins}</Text>
                   </View>
                   <View style={styles.rewardChip}>

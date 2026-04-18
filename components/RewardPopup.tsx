@@ -1,3 +1,4 @@
+import { CoinIcon } from "@/components/CoinIcon";
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Pressable, Dimensions } from "react-native";
 import Animated, {
@@ -198,7 +199,11 @@ export default function RewardPopup({
               colors={[accent, accent + "AA"]}
               style={styles.iconCircle}
             >
-              <Ionicons name={(itemIcon ?? "trophy") as any} size={56} color="#1a0a00" />
+              {itemIcon === "cash" ? (
+                <CoinIcon size={56} color="#1a0a00" />
+              ) : (
+                <Ionicons name={(itemIcon ?? "trophy") as any} size={56} color="#1a0a00" />
+              )}
             </LinearGradient>
           </View>
 
@@ -211,7 +216,7 @@ export default function RewardPopup({
             <View style={styles.chips}>
               {coins !== undefined && coins > 0 && (
                 <View style={[styles.chip, { backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "88" }]}>
-                  <Ionicons name="cash" size={20} color={Colors.gold} />
+                  <CoinIcon size={20} color={Colors.gold} />
                   <Text style={[styles.chipVal, { color: Colors.gold }]}>+{coins}</Text>
                 </View>
               )}

@@ -1,3 +1,4 @@
+import { CoinIcon } from "@/components/CoinIcon";
 import React, { useState } from "react";
 import { router } from "expo-router";
 import {
@@ -263,7 +264,7 @@ function FramePickerModal({
                   <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{item.name}</Text>
                   {!owned && (
                     <View style={styles.priceBadge}>
-                      <Ionicons name="cash" size={9} color={Colors.gold} />
+                      <CoinIcon size={9} color={Colors.gold} />
                       <Text style={styles.priceText}>{item.price}</Text>
                     </View>
                   )}
@@ -571,7 +572,7 @@ export default function ProfileScreen() {
         {/* Coins + card back */}
         <View style={styles.resourceRow}>
           <View style={[styles.resourceCard, { backgroundColor: surfaceColor, borderColor: isDark ? Colors.border : "#aacfa0" }]}>
-            <Ionicons name="cash" size={20} color={themeGold} />
+            <CoinIcon size={20} color={themeGold} />
             <Text style={[styles.resourceVal, { color: themeGold }]}>{profile.coins}</Text>
             <Text style={[styles.resourceLbl, { color: textMuted }]}>{T("coins")}</Text>
           </View>
@@ -638,7 +639,10 @@ export default function ProfileScreen() {
                     </View>
                     <View style={{ alignItems: "flex-end", gap: 2 }}>
                       {game.coinsEarned > 0 && (
-                        <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.gold }}>+{game.coinsEarned} <Ionicons name="cash" size={10} color={Colors.gold} /></Text>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                          <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.gold }}>+{game.coinsEarned}</Text>
+                          <CoinIcon size={10} color={Colors.gold} />
+                        </View>
                       )}
                       <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: textMuted }}>{dateStr} {timeStr}</Text>
                     </View>
@@ -802,7 +806,7 @@ export default function ProfileScreen() {
                       <Ionicons name={item.preview as any} size={20} color={owned ? item.previewColor : Colors.textDim} />
                     </View>
                     <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{item.name}</Text>
-                    {!owned && <View style={styles.priceBadge}><Ionicons name="cash" size={9} color={Colors.gold} /><Text style={styles.priceText}>{item.price}</Text></View>}
+                    {!owned && <View style={styles.priceBadge}><CoinIcon size={9} color={Colors.gold} /><Text style={styles.priceText}>{item.price}</Text></View>}
                   </Pressable>
                 );
               })}

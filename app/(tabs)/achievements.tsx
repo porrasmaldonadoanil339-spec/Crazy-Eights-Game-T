@@ -1,3 +1,4 @@
+import { CoinIcon } from "@/components/CoinIcon";
 import React, { useState } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform,
@@ -174,7 +175,11 @@ export default function AchievementsScreen() {
                   ]}
                 >
                   <View style={[styles.achIconWrap, { backgroundColor: unlocked ? ach.iconColor + "33" : themeColors.card }]}>
-                    <Ionicons name={ach.icon as any} size={22} color={unlocked ? ach.iconColor : themeColors.textDim} />
+                    {ach.icon === "cash" ? (
+                      <CoinIcon size={22} color={unlocked ? ach.iconColor : themeColors.textDim} />
+                    ) : (
+                      <Ionicons name={ach.icon as any} size={22} color={unlocked ? ach.iconColor : themeColors.textDim} />
+                    )}
                   </View>
                   <View style={styles.achContent}>
                     <View style={styles.achTitleRow}>
@@ -188,7 +193,7 @@ export default function AchievementsScreen() {
                       </View>
                     )}
                     <View style={styles.achRewardRow}>
-                      <Ionicons name="cash" size={11} color={themeGold} />
+                      <CoinIcon size={11} color={themeGold} />
                       <Text style={[styles.achRewardText, { color: themeColors.textMuted }]}>{ach.coinsReward}</Text>
                       <Text style={[styles.achSep, { color: themeColors.textDim }]}>·</Text>
                       <Text style={[styles.achRewardText, { color: themeColors.textMuted }]}>{ach.xpReward} XP</Text>
@@ -262,7 +267,11 @@ export default function AchievementsScreen() {
                       <Text style={[styles.bpTrackTagText, { color: themeGold }]}>PREMIUM</Text>
                     </View>
                     <View style={[styles.bpIconWrap, { backgroundColor: tier.iconColor + "22", width: 34, height: 34, borderRadius: 17 }]}>
-                      <Ionicons name={tier.icon as any} size={18} color={reached ? tier.iconColor : themeColors.textDim} />
+                      {tier.icon === "cash" ? (
+                        <CoinIcon size={18} color={reached ? tier.iconColor : themeColors.textDim} />
+                      ) : (
+                        <Ionicons name={tier.icon as any} size={18} color={reached ? tier.iconColor : themeColors.textDim} />
+                      )}
                     </View>
                     <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{premiumLabel}</Text>
                     {!isPremiumTrack && null}
@@ -279,7 +288,7 @@ export default function AchievementsScreen() {
                       <Text style={[styles.bpTrackTagText, { color: "#2ecc71" }]}>FREE</Text>
                     </View>
                     <View style={[styles.bpIconWrap, { backgroundColor: "#F1C40F22", width: 34, height: 34, borderRadius: 17 }]}>
-                      <Ionicons name="cash" size={18} color={reached ? "#F1C40F" : themeColors.textDim} />
+                      <CoinIcon size={18} color={reached ? "#F1C40F" : themeColors.textDim} />
                     </View>
                     <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{freeCoins} 🪙</Text>
                     {canClaim && (

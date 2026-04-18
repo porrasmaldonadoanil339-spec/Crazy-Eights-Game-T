@@ -1,3 +1,4 @@
+import { CoinIcon } from "@/components/CoinIcon";
 import React, { useState, useRef, useMemo } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
@@ -202,7 +203,7 @@ function ConfirmModal({
           <Text style={[styles.confirmName, { color: theme.text }]}>{localized.name}</Text>
           <Text style={[styles.confirmDesc, { color: theme.textMuted }]}>{localized.description}</Text>
           <View style={styles.priceRow}>
-            <Ionicons name="cash" size={18} color={theme.gold} />
+            <CoinIcon size={18} color={theme.gold} />
             <Text style={[styles.priceText, { color: theme.gold }]}>{item.price} {T("coins")}</Text>
           </View>
           <View style={styles.confirmBtns}>
@@ -349,7 +350,7 @@ function EffectCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
               <Text style={styles.freeText}>{T("free")}</Text>
             ) : (
               <View style={styles.priceRowSm}>
-                <Ionicons name="cash" size={12} color={Colors.gold} />
+                <CoinIcon size={12} color={Colors.gold} />
                 <Text style={styles.priceSmText}>{item.price}</Text>
               </View>
             )}
@@ -477,7 +478,7 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
             <Text style={styles.freeText}>{T("free")}</Text>
           ) : (
             <View style={styles.priceRowSm}>
-              <Ionicons name="cash" size={12} color={Colors.gold} />
+              <CoinIcon size={12} color={Colors.gold} />
               <Text style={styles.priceSmText}>{item.price}</Text>
             </View>
           )}
@@ -556,7 +557,7 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, onPress, onToggle, 
               <Text style={styles.freeText}>{T("free")}</Text>
             ) : (
               <View style={styles.priceRowSm}>
-                <Ionicons name="cash" size={12} color={Colors.gold} />
+                <CoinIcon size={12} color={Colors.gold} />
                 <Text style={styles.priceSmText}>{item.price}</Text>
               </View>
             )}
@@ -719,7 +720,7 @@ export default function StoreScreen() {
           }
         </View>
         <View style={styles.coinsBig}>
-          <Ionicons name="cash" size={18} color={themeGold} />
+          <CoinIcon size={18} color={themeGold} />
           <Text style={[styles.coinsNum, { color: themeGold }]}>{profile.coins}</Text>
         </View>
       </View>
@@ -798,7 +799,7 @@ export default function StoreScreen() {
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.themedFeatGrad}
               >
-                <Ionicons name="cash" size={28} color="#FFF8E1" />
+                <CoinIcon size={28} color="#FFF8E1" />
                 <Text style={styles.themedFeatLabel}>{(T("packs") as string) || "PACKS"}</Text>
                 <Text style={styles.themedFeatSub}>+1000</Text>
               </LinearGradient>
@@ -890,7 +891,7 @@ export default function StoreScreen() {
             ].map((p) => (
               <View key={p.coins} style={styles.packRow}>
                 <View style={styles.packRowLeft}>
-                  <Ionicons name="cash" size={22} color="#FFD700" />
+                  <CoinIcon size={22} color="#FFD700" />
                   <Text style={styles.packRowAmount}>+{p.coins}</Text>
                 </View>
                 <Text style={styles.packRowPrice}>{p.price}</Text>

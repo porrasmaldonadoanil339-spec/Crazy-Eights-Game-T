@@ -1,3 +1,4 @@
+import { CoinIcon } from "@/components/CoinIcon";
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
@@ -412,7 +413,7 @@ function RewardDisplay({ reward, config, chestType }: {
       <View style={styles.rewardRow}>
         <View style={styles.rewardItem}>
           <View style={[styles.rewardBadge, { backgroundColor: "#D4AF37" + "22", borderColor: "#D4AF37" }]}>
-            <Ionicons name="cash" size={28} color="#D4AF37" />
+            <CoinIcon size={28} color="#D4AF37" />
           </View>
           <Text style={styles.rewardValue}>+{reward.coins}</Text>
           <Text style={styles.rewardLabel}>Monedas</Text>

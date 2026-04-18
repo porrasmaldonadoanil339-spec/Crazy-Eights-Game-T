@@ -1,3 +1,4 @@
+import { CoinIcon } from "@/components/CoinIcon";
 import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView,
@@ -325,7 +326,7 @@ function DailyRewardModal({ visible, reward, onClaim }: {
             <Text style={styles.dailyTitle}>{T("dailyReward")}</Text>
             {isChestDay ? (
               <Animated.View style={[styles.dailyIconWrap, { borderColor: chestColor + "99", backgroundColor: chestColor + "18" }, chestStyle]}>
-                <Ionicons name={reward.icon as any} size={52} color={chestColor} />
+                {reward.icon === "cash" ? <CoinIcon size={52} color={chestColor} /> : <Ionicons name={reward.icon as any} size={52} color={chestColor} />}
                 <View style={{ position: "absolute", bottom: -6, right: -6, backgroundColor: chestColor, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 }}>
                   <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: "#000" }}>
                     {reward.chestType === "legendary" ? "LEGENDARIO" : reward.chestType === "epic" ? "EPICO" : reward.chestType === "rare" ? "RARO" : "COMUN"}
@@ -334,7 +335,7 @@ function DailyRewardModal({ visible, reward, onClaim }: {
               </Animated.View>
             ) : (
               <View style={[styles.dailyIconWrap, { borderColor: reward.iconColor + "88" }]}>
-                <Ionicons name={reward.icon as any} size={42} color={reward.iconColor} />
+                {reward.icon === "cash" ? <CoinIcon size={42} color={reward.iconColor} /> : <Ionicons name={reward.icon as any} size={42} color={reward.iconColor} />}
               </View>
             )}
             <Text style={[styles.dailyLabel, isChestDay && { color: chestColor, fontSize: 17 }]}>{reward.label}</Text>
@@ -346,7 +347,7 @@ function DailyRewardModal({ visible, reward, onClaim }: {
             <View style={styles.dailyChips}>
               {reward.coins > 0 && (
                 <View style={styles.dailyChip}>
-                  <Ionicons name="cash" size={14} color={Colors.gold} />
+                  <CoinIcon size={14} color={Colors.gold} />
                   <Text style={styles.dailyChipText}>+{reward.coins}</Text>
                 </View>
               )}
@@ -713,7 +714,7 @@ export default function PlayScreen() {
             </View>
           </View>
           <Animated.View style={[styles.coinsBadge, coinBadgeAnimStyle, coinFlash && { backgroundColor: "rgba(255,215,0,0.22)", borderColor: "#FFD700" }]}>
-            <Ionicons name="cash" size={13} color={coinFlash ? "#FFD700" : theme.gold} />
+            <CoinIcon size={13} color={coinFlash ? "#FFD700" : theme.gold} />
             <Text style={[styles.coinsNum, { color: coinFlash ? "#FFD700" : theme.gold }]}>{shownCoins}</Text>
           </Animated.View>
           {canClaimDailyReward && (
@@ -919,7 +920,7 @@ export default function PlayScreen() {
                   ]}>
                     <View style={styles.challengeHeader}>
                       <View style={[styles.challengeIcon, { backgroundColor: item.completed ? theme.gold + "20" : "rgba(255,255,255,0.05)" }]}>
-                        <Ionicons name={item.icon as any} size={20} color={item.completed ? theme.gold : theme.textMuted} />
+                        {item.icon === "cash" ? <CoinIcon size={20} color={item.completed ? theme.gold : theme.textMuted} /> : <Ionicons name={item.icon as any} size={20} color={item.completed ? theme.gold : theme.textMuted} />}
                       </View>
                       <View style={{ flex: 1, marginLeft: 10 }}>
                         <Text style={[styles.challengeTitle, { color: theme.text }]} numberOfLines={1}>{title}</Text>
@@ -930,7 +931,10 @@ export default function PlayScreen() {
                     <View style={styles.challengeProgressWrap}>
                       <View style={styles.challengeProgressInfo}>
                         <Text style={[styles.challengeProgressText, { color: theme.textMuted }]}>{item.progress}/{item.target}</Text>
-                        <Text style={[styles.challengeRewardText, { color: theme.gold }]}>+{item.coinReward} <Ionicons name="cash" size={10} /></Text>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                          <Text style={[styles.challengeRewardText, { color: theme.gold }]}>+{item.coinReward}</Text>
+                          <CoinIcon size={10} color={theme.gold} />
+                        </View>
                       </View>
                       <View style={[styles.challengeProgressBar, { backgroundColor: "rgba(255,255,255,0.1)" }]}>
                         <View style={[styles.challengeProgressFill, { width: `${progressPct * 100}%`, backgroundColor: item.completed ? theme.gold : "#4A90E2" }]} />
@@ -1017,7 +1021,7 @@ export default function PlayScreen() {
                   <Text style={[styles.modeDesc, { color: theme.textMuted }]} numberOfLines={2}>{getModeDesc(mode.id, lang) || mode.description}</Text>
                   <View style={styles.modeFooter}>
                     <View style={styles.modeReward}>
-                      <Ionicons name="cash" size={11} color={Colors.gold} />
+                      <CoinIcon size={11} color={Colors.gold} />
                       <Text style={[styles.modeRewardText, { color: theme.gold }]}>{mode.coinsReward}</Text>
                     </View>
                     {mode.hasDifficulty && (
@@ -1065,7 +1069,7 @@ export default function PlayScreen() {
 
         {/* Earn Coins / Watch Ads section */}
         <View style={styles.sectionHeader}>
-          <Ionicons name="cash" size={14} color={theme.textMuted} />
+          <CoinIcon size={14} color={theme.textMuted} />
           <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>{T("earnCoins")}</Text>
         </View>
         <Pressable
@@ -1396,7 +1400,7 @@ export default function PlayScreen() {
                   {T("adComplete")}
                 </Text>
                 <View style={styles.adRewardRow}>
-                  <Ionicons name="cash" size={20} color={Colors.gold} />
+                  <CoinIcon size={20} color={Colors.gold} />
                   <Text style={[styles.adRewardText, { color: theme.gold }]}>+15 {T("coins")}</Text>
                 </View>
                 <Pressable onPress={handleClaimAd} style={styles.adClaimBtn}>
