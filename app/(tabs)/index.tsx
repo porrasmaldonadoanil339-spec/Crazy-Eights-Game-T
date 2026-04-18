@@ -21,6 +21,7 @@ import { playButton, syncSettings } from "@/lib/audioManager";
 import { playSound } from "@/lib/sounds";
 import { useUIState } from "@/context/UIStateContext";
 import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName, diffDesc as getDiffDesc } from "@/lib/achTranslations";
+import BouncePressable from "@/components/BouncePressable";
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
@@ -792,7 +793,7 @@ export default function PlayScreen() {
                 <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: evStatus === "locked" ? "#666" : "#fff", marginBottom: 2 }}>
                   {evStatus === "locked" ? "Eventos Especiales" : evName}
                 </Text>
-                <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: evStatus === "locked" ? "#555" : "#aaa" }} numberOfLines={1}>
+                <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: evStatus === "locked" ? "#555" : "#aaa" }}>
                   {evStatus === "locked" ? "Desbloquea eventos al llegar a nivel 5" : evDesc}
                 </Text>
               </View>
@@ -972,9 +973,9 @@ export default function PlayScreen() {
         </View>
 
         <Animated.View style={[{ marginBottom: 14 }, quickPlayAnimStyle]}>
-          <Pressable
+          <BouncePressable
             onPress={() => { startGame("classic", "normal"); router.push("/game"); }}
-            style={({ pressed }) => [styles.quickPlayBtn, pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }]}
+            style={styles.quickPlayBtn}
           >
             <LinearGradient colors={["#F4CC4F", "#D4AF37", "#A07800"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.quickPlayGrad}>
               <View style={styles.quickPlayIconWrap}>
@@ -988,7 +989,7 @@ export default function PlayScreen() {
               </View>
               <Ionicons name="chevron-forward" size={26} color="#000000AA" />
             </LinearGradient>
-          </Pressable>
+          </BouncePressable>
         </Animated.View>
 
         <View style={styles.modesGrid}>

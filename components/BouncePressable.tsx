@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, PressableProps, ViewStyle, StyleProp } from "react-native";
+import { Pressable, PressableProps } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,7 +7,6 @@ import Animated, {
 } from "react-native-reanimated";
 
 interface BouncePressableProps extends PressableProps {
-  style?: StyleProp<ViewStyle>;
   scaleTo?: number;
   children?: React.ReactNode;
 }
@@ -42,7 +41,7 @@ export default function BouncePressable({
           scale.value = withSpring(1, { damping: 10, stiffness: 260, mass: 0.4 });
           onPressOut?.(e);
         }}
-        style={style as any}
+        style={style}
       >
         {children}
       </Pressable>
