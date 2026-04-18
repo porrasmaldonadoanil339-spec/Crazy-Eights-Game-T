@@ -1255,7 +1255,7 @@ export default function GameScreen() {
     runAiTurn, selectedCard, setSelectedCard, dealAnimationDone, setDealAnimationDone,
     startNextTournamentRound, startGame, getGameResult, forceGameOver, forceAiDraw, forcePlayerWin,
   } = useGame();
-  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins, addChestToInventory, openChestFromInventory, chestInventory } = useProfile();
+  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
   const T = useT();
   const gameStateRef = useRef(gameState);
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
@@ -1779,9 +1779,17 @@ export default function GameScreen() {
           chestType = milestoneChest;
         }
         if (chestType) {
-          addChestToInventory(chestType, activeEvent && chestType === activeEvent.chestType ? "mission" : "win");
-          setPendingChestType(chestType);
-          setShowChestReward(true);
+          const added = addChestToInventory(chestType, activeEvent && chestType === activeEvent.chestType ? "mission" : "win");
+          if (added) {
+            setPendingChestType(chestType);
+            setShowChestReward(true);
+          } else {
+            Alert.alert(
+              "Inventario lleno",
+              `Ganaste un cofre, pero tu inventario está lleno (${chestInventoryLimit}/${chestInventoryLimit}). Abre algunos cofres en tu perfil para liberar espacio.`,
+              [{ text: "Entendido" }]
+            );
+          }
         }
         // Win streak milestone chests (shown only if no win-count chest already triggered)
         if (!chestType && session.mode !== "practice") {
@@ -1792,9 +1800,17 @@ export default function GameScreen() {
           else if (newStreak === 5) streakChest = "rare";
           else if (newStreak === 3) streakChest = "common";
           if (streakChest) {
-            addChestToInventory(streakChest, "streak");
-            setPendingChestType(streakChest);
-            setShowChestReward(true);
+            const added = addChestToInventory(streakChest, "streak");
+            if (added) {
+              setPendingChestType(streakChest);
+              setShowChestReward(true);
+            } else {
+              Alert.alert(
+                "Inventario lleno",
+                `Ganaste un cofre por racha, pero tu inventario está lleno (${chestInventoryLimit}/${chestInventoryLimit}). Abre algunos cofres en tu perfil para liberar espacio.`,
+                [{ text: "Entendido" }]
+              );
+            }
           }
         }
       }

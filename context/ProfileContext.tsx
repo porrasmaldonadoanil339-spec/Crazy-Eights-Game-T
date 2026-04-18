@@ -270,13 +270,16 @@ interface ProfileContextValue {
   linkAccount: (provider: "google" | "facebook", email: string) => void;
   unlinkAccount: (provider: "google" | "facebook") => void;
   markTutorialSeen: () => void;
-  addChestToInventory: (type: ChestType, source: Chest["source"]) => void;
+  addChestToInventory: (type: ChestType, source: Chest["source"]) => boolean;
+  isChestInventoryFull: boolean;
+  chestInventoryLimit: number;
   openChestFromInventory: (chestId: string) => ChestReward | null;
   chestInventory: Chest[];
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
 const STORAGE_KEY = "ocho_profile_v3";
+const CHEST_INVENTORY_LIMIT = 10;
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<PlayerProfile>(() => ({
@@ -788,12 +791,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     update((p) => ({ ...p, tutorialSeen: true }));
   }, [update]);
 
-  const addChestToInventory = useCallback((type: ChestType, source: Chest["source"]) => {
+  const addChestToInventory = useCallback((type: ChestType, source: Chest["source"]): boolean => {
+    let added = false;
     update((p) => {
       const inventory = p.chestInventory ?? [];
-      if (inventory.length >= 10) return p;
+      if (inventory.length >= CHEST_INVENTORY_LIMIT) return p;
+      added = true;
       return { ...p, chestInventory: [...inventory, createChest(type, source)] };
     });
+    return added;
   }, [update]);
 
   const openChestFromInventory = useCallback((chestId: string): ChestReward | null => {
@@ -858,6 +864,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         unlinkAccount,
         markTutorialSeen,
         addChestToInventory,
+        isChestInventoryFull: (profile.chestInventory ?? []).length >= CHEST_INVENTORY_LIMIT,
+        chestInventoryLimit: CHEST_INVENTORY_LIMIT,
         openChestFromInventory,
         chestInventory: profile.chestInventory ?? [],
       }}

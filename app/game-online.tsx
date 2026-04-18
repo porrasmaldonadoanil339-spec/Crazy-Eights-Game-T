@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image, ActivityIndicator,
+  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image, ActivityIndicator, Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -656,7 +656,7 @@ export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
   const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string; skipLobby?: string; names?: string }>();
-  const { profile, level: playerLevel, addXp, updateRanked, recordGameResult, addChestToInventory, openChestFromInventory, chestInventory } = useProfile();
+  const { profile, level: playerLevel, addXp, updateRanked, recordGameResult, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
   const T = useT();
 
   const isOnline = !!params.code;
@@ -894,8 +894,16 @@ export default function OnlineGameScreen() {
       else if (newTotalWins % 7 === 0) chestType = "rare";
       else if (newTotalWins % 3 === 0) chestType = "common";
       if (chestType) {
-        addChestToInventory(chestType, "win");
-        setPendingChestType(chestType);
+        const added = addChestToInventory(chestType, "win");
+        if (added) {
+          setPendingChestType(chestType);
+        } else {
+          Alert.alert(
+            "Inventario lleno",
+            `Ganaste un cofre, pero tu inventario está lleno (${chestInventoryLimit}/${chestInventoryLimit}). Abre algunos cofres en tu perfil para liberar espacio.`,
+            [{ text: "Entendido" }]
+          );
+        }
       }
     }
   }, [gameState?.phase, gameState?.winnerIndex]);
