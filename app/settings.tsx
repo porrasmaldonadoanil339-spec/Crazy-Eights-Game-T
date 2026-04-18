@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, Switch, Platform, ScrollView,
-  Modal, Pressable, Vibration, Linking, Alert, TextInput,
+  Modal, Pressable, Vibration, Linking, Alert, TextInput, Animated,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -174,6 +174,25 @@ export default function SettingsScreen() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportPlayerName, setReportPlayerName] = useState("");
   const [reportReason, setReportReason] = useState<string | null>(null);
+  const [showResetToast, setShowResetToast] = useState(false);
+  const resetToastOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!showResetToast) return;
+    Animated.timing(resetToastOpacity, {
+      toValue: 1, duration: 180, useNativeDriver: true,
+    }).start();
+    const t = setTimeout(() => {
+      Animated.timing(resetToastOpacity, {
+        toValue: 0, duration: 180, useNativeDriver: true,
+      }).start(() => {
+        reloadAppAsync().catch((err) => {
+          Alert.alert("Reload failed", err?.message ?? String(err));
+        });
+      });
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [showResetToast, resetToastOpacity]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const isDark = profile.darkMode !== false;
@@ -557,7 +576,7 @@ export default function SettingsScreen() {
                             }
                           }
                           await AsyncStorage.removeItem("ocho_profile_v3");
-                          await reloadAppAsync();
+                          setShowResetToast(true);
                         } catch (e: any) {
                           Alert.alert("Reset failed", e?.message ?? String(e));
                         }
@@ -702,6 +721,19 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
+
+      {showResetToast && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.resetToast,
+            { bottom: insets.bottom + 32, opacity: resetToastOpacity },
+          ]}
+        >
+          <Ionicons name="checkmark-circle" size={20} color="#fff" />
+          <Text style={styles.resetToastText}>Cuenta reseteada ✓</Text>
+        </Animated.View>
+      )}
     </LinearGradient>
   );
 }
@@ -783,4 +815,13 @@ const styles = StyleSheet.create({
   reportSubmitBtn: { borderRadius: 14, overflow: "hidden", marginTop: 18 },
   reportSubmitGrad: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14 },
   reportSubmitText: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#fff" },
+  resetToast: {
+    position: "absolute", alignSelf: "center",
+    flexDirection: "row", alignItems: "center", gap: 8,
+    paddingHorizontal: 16, paddingVertical: 12,
+    borderRadius: 14, backgroundColor: "#27AE60",
+    shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  resetToastText: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#fff" },
 });
