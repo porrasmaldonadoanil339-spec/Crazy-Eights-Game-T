@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
-import { BATTLE_PASS_TIERS, getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward } from "@/lib/battlePass";
+import { getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward } from "@/lib/battlePass";
 import { getCurrentSeason } from "@/lib/seasons";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";

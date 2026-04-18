@@ -27,7 +27,7 @@ const ALL_EVENTS: OchoEvent[] = [
 
 const DIFF_META: Record<EventDifficulty, { label: string; color: string }> = {
   easy:   { label: "FÁCIL",   color: "#2ecc71" },
-  medium: { label: "MEDIA",   color: "#f1c40f" },
+  medium: { label: "MEDIO",   color: "#f1c40f" },
   hard:   { label: "DIFÍCIL", color: "#e74c3c" },
 };
 
