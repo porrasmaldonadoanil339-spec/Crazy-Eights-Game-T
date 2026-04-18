@@ -16,7 +16,7 @@ export interface SeasonReward {
 }
 
 const BASE_DATE = new Date("2026-03-01T00:00:00Z");
-const SEASON_DURATION_DAYS = 30;
+const SEASON_DURATION_DAYS = 28;
 
 export function getCurrentSeason(): Season & { daysRemaining: number } {
   const now = new Date();

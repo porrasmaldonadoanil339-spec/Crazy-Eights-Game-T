@@ -401,7 +401,7 @@ function PokerTitle() {
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
-  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory, battlePassTier } = useProfile();
   const { setTabBarVisible, splashReady } = useUIState();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
@@ -717,6 +717,10 @@ export default function PlayScreen() {
             <CoinIcon size={13} color={coinFlash ? "#FFD700" : theme.gold} />
             <Text style={[styles.coinsNum, { color: coinFlash ? "#FFD700" : theme.gold }]}>{shownCoins}</Text>
           </Animated.View>
+          <View style={[styles.coinsBadge, { backgroundColor: "rgba(52,152,219,0.18)", borderColor: "#3498DB55" }]}>
+            <Ionicons name="diamond" size={12} color="#3498DB" />
+            <Text style={[styles.coinsNum, { color: "#3498DB" }]}>{profile.fichas ?? 0}</Text>
+          </View>
           {canClaimDailyReward && (
             <View style={styles.dailyDot}>
               <View style={styles.dailyDotInner} />
@@ -970,6 +974,24 @@ export default function PlayScreen() {
           <Text style={[styles.dividerSuit, { color: theme.gold }]}>♦</Text>
           <View style={[styles.dividerLine, { backgroundColor: theme.gold + "40" }]} />
         </View>
+
+        <BouncePressable
+          onPress={() => router.push("/(tabs)/achievements")}
+          style={styles.bpShortcut}
+        >
+          <LinearGradient
+            colors={["#7B2FBE", "#A855F7", "#7B2FBE"]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={styles.bpShortcutGrad}
+          >
+            <Ionicons name="sparkles" size={20} color="#FFD700" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bpShortcutTitle}>{T("battlePassShortcut")}</Text>
+              <Text style={styles.bpShortcutSub}>Nivel BP {Math.min(90, battlePassTier)}/90</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#FFD700" />
+          </LinearGradient>
+        </BouncePressable>
 
         <View style={styles.sectionHeader}>
           <Ionicons name="game-controller" size={14} color={theme.textMuted} />
@@ -1472,6 +1494,14 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(212,175,55,0.3)",
   },
   dailyBannerText: { fontFamily: "Nunito_700Bold", fontSize: 13, color: Colors.gold, flex: 1 },
+
+  bpShortcut: { borderRadius: 14, marginBottom: 12, overflow: "hidden" },
+  bpShortcutGrad: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    paddingHorizontal: 14, paddingVertical: 12,
+  },
+  bpShortcutTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#fff", letterSpacing: 1 },
+  bpShortcutSub: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#FFD700AA" },
 
   // Poker title
   titleWrap: { alignItems: "center", paddingVertical: 10, gap: 4 },

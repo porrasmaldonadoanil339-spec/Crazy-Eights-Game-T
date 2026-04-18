@@ -1,8 +1,13 @@
 import { CoinIcon } from "@/components/CoinIcon";
 import React, { useState, useMemo } from "react";
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList,
 } from "react-native";
+import {
+  MAX_PLAYER_PATH_LEVEL,
+  getPlayerPathProgress,
+  getPlayerPathLevelData,
+} from "@/lib/playerPath";
 import { useT } from "@/hooks/useT";
 import { useTheme } from "@/hooks/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -25,12 +30,12 @@ const RARITY_COLORS_MAP: Record<string, string> = {
   legendary: "#D4AF37",
 };
 
-type Tab = "achievements" | "battlepass";
+type Tab = "playerpath" | "battlepass" | "achievements";
 
 export default function AchievementsScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, claimAchievementReward, claimBattlePassTier, xpProgress, battlePassTier } = useProfile();
-  const [activeTab, setActiveTab] = useState<Tab>("battlepass");
+  const { profile, claimAchievementReward, claimBattlePassTier, claimPlayerPathLevel, xpProgress, battlePassTier } = useProfile();
+  const [activeTab, setActiveTab] = useState<Tab>("playerpath");
   const [toast, setToast] = useState<string | null>(null);
   const [rewardPopup, setRewardPopup] = useState<{
     visible: boolean;
@@ -130,6 +135,19 @@ export default function AchievementsScreen() {
 
       <View style={styles.tabRow}>
         <Pressable
+          onPress={() => setActiveTab("playerpath")}
+          style={[
+            styles.tabBtn,
+            { backgroundColor: themeColors.surface, borderColor: themeColors.border },
+            activeTab === "playerpath" && { borderColor: themeGold, backgroundColor: themeGold + "22" },
+          ]}
+        >
+          <Ionicons name="trail-sign" size={16} color={activeTab === "playerpath" ? themeGold : themeColors.textMuted} />
+          <Text style={[styles.tabLabel, { color: activeTab === "playerpath" ? themeGold : themeColors.textMuted }]}>
+            {T("tabAchievements")}
+          </Text>
+        </Pressable>
+        <Pressable
           onPress={() => setActiveTab("battlepass")}
           style={[
             styles.tabBtn,
@@ -157,6 +175,18 @@ export default function AchievementsScreen() {
         </Pressable>
       </View>
 
+      {activeTab === "playerpath" && (
+        <PlayerPathView
+          profile={profile}
+          themeColors={themeColors}
+          themeGold={themeGold}
+          claimPlayerPathLevel={claimPlayerPathLevel}
+          T={T}
+          claimLabel={claimLabel}
+          setRewardPopup={setRewardPopup}
+        />
+      )}
+      {activeTab !== "playerpath" && (
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {activeTab === "achievements" ? (
           <>
@@ -329,6 +359,7 @@ export default function AchievementsScreen() {
         ) : null}
         <View style={{ height: 100 }} />
       </ScrollView>
+      )}
 
       {toast && (
         <View style={[styles.toast, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
@@ -464,4 +495,140 @@ const styles = StyleSheet.create({
     shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 8,
   },
   toastText: { fontFamily: "Nunito_700Bold", fontSize: 13 },
+  ppHeader: { paddingHorizontal: 16, paddingBottom: 10, gap: 6 },
+  ppLevelLine: { fontFamily: "Nunito_800ExtraBold", fontSize: 16 },
+  ppXpBar: { height: 8, borderRadius: 4 },
+  ppXpFill: { height: "100%", borderRadius: 4 },
+  ppRow: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12,
+    borderWidth: 1, marginBottom: 6, marginHorizontal: 16,
+  },
+  ppLevelBadge: {
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: "center", justifyContent: "center",
+  },
+  ppLevelNum: { fontFamily: "Nunito_800ExtraBold", fontSize: 13 },
+  ppRewardIconWrap: {
+    width: 34, height: 34, borderRadius: 17,
+    alignItems: "center", justifyContent: "center",
+  },
+  ppRewardLabel: { fontFamily: "Nunito_700Bold", fontSize: 12 },
+  ppXpReq: { fontFamily: "Nunito_400Regular", fontSize: 10 },
 });
+
+function PlayerPathView({
+  profile, themeColors, themeGold, claimPlayerPathLevel, T, claimLabel, setRewardPopup,
+}: {
+  profile: any;
+  themeColors: any;
+  themeGold: string;
+  claimPlayerPathLevel: (level: number) => boolean;
+  T: (k: any) => string;
+  claimLabel: string;
+  setRewardPopup: (s: any) => void;
+}) {
+  const progress = getPlayerPathProgress(profile.totalXp);
+  const claimedSet = useMemo(
+    () => new Set(profile.claimedPlayerPathLevels ?? []),
+    [profile.claimedPlayerPathLevels]
+  );
+  const pct = progress.needed > 0 ? progress.current / progress.needed : 1;
+
+  const data = useMemo(() => {
+    const arr: number[] = [];
+    for (let i = 1; i <= MAX_PLAYER_PATH_LEVEL; i++) arr.push(i);
+    return arr;
+  }, []);
+
+  // Initial scroll near current level
+  const initialIndex = Math.max(0, Math.min(MAX_PLAYER_PATH_LEVEL - 1, progress.level - 2));
+
+  const handleClaim = (lvl: number) => {
+    const ok = claimPlayerPathLevel(lvl);
+    if (!ok) return;
+    const data = getPlayerPathLevelData(lvl);
+    const r = data.reward;
+    setRewardPopup({
+      visible: true,
+      title: "¡RECOMPENSA OBTENIDA!",
+      subtitle: `Nivel ${lvl}`,
+      coins: r.type === "coins" ? r.amount : 0,
+      itemName: r.type === "fichas" ? `${r.amount} Fichas` : r.type === "chest" ? `Cofre ${r.chestType}` : undefined,
+      itemIcon: data.icon,
+      accent: data.iconColor,
+    });
+  };
+
+  return (
+    <FlatList
+      data={data}
+      keyExtractor={(n) => `pp-${n}`}
+      initialScrollIndex={initialIndex}
+      getItemLayout={(_, idx) => ({ length: 64, offset: 64 * idx, index: idx })}
+      onScrollToIndexFailed={() => {}}
+      windowSize={10}
+      removeClippedSubviews
+      ListHeaderComponent={
+        <View style={styles.ppHeader}>
+          <Text style={[styles.ppLevelLine, { color: themeGold }]}>
+            {T("level")} {progress.level} / {MAX_PLAYER_PATH_LEVEL}
+          </Text>
+          <View style={[styles.ppXpBar, { backgroundColor: themeColors.border }]}>
+            <View style={[styles.ppXpFill, { width: `${Math.min(100, pct * 100)}%`, backgroundColor: themeGold }]} />
+          </View>
+          <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 11, color: themeColors.textMuted }}>
+            {progress.current} / {progress.needed} XP
+          </Text>
+        </View>
+      }
+      ListFooterComponent={<View style={{ height: 100 }} />}
+      renderItem={({ item: lvl }) => {
+        const data = getPlayerPathLevelData(lvl);
+        const reached = lvl <= progress.level;
+        const claimed = claimedSet.has(lvl);
+        const canClaim = reached && !claimed;
+        const r = data.reward;
+        const label =
+          r.type === "coins" ? `${r.amount} ${T("coins")}` :
+          r.type === "fichas" ? `${r.amount} Fichas` :
+          r.type === "chest" ? `Cofre ${r.chestType}` :
+          "Ítem";
+        return (
+          <View style={[
+            styles.ppRow,
+            { backgroundColor: themeColors.surface, borderColor: claimed ? themeColors.border : reached ? themeGold + "55" : themeColors.border },
+            claimed && { opacity: 0.6 },
+          ]}>
+            <View style={[styles.ppLevelBadge, { backgroundColor: reached ? themeGold + "33" : themeColors.card }]}>
+              <Text style={[styles.ppLevelNum, { color: reached ? themeGold : themeColors.textDim }]}>{lvl}</Text>
+            </View>
+            <View style={[styles.ppRewardIconWrap, { backgroundColor: data.iconColor + "22" }]}>
+              {data.icon === "cash" ? (
+                <CoinIcon size={18} color={reached ? data.iconColor : themeColors.textDim} />
+              ) : (
+                <Ionicons name={data.icon as any} size={18} color={reached ? data.iconColor : themeColors.textDim} />
+              )}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.ppRewardLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>
+                {label}
+              </Text>
+              <Text style={[styles.ppXpReq, { color: themeColors.textDim }]}>{data.xpRequired} XP</Text>
+            </View>
+            {claimed && <Ionicons name="checkmark-circle" size={20} color={Colors.success} />}
+            {!reached && !claimed && <Ionicons name="lock-closed" size={14} color={themeColors.textDim} />}
+            {canClaim && (
+              <BouncePressable
+                onPress={() => handleClaim(lvl)}
+                style={[styles.bpClaimBtn, { backgroundColor: themeGold }]}
+              >
+                <Text style={[styles.bpClaimText]}>{claimLabel}</Text>
+              </BouncePressable>
+            )}
+          </View>
+        );
+      }}
+    />
+  );
+}

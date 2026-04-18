@@ -52,6 +52,26 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
+        name="store"
+        options={{
+          title: T("tabStore"),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="bag" size={size} color={color} />
+          ),
+        }}
+        listeners={{ tabPress }}
+      />
+      <Tabs.Screen
+        name="collection"
+        options={{
+          title: T("tabCollection"),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="albums" size={size} color={color} />
+          ),
+        }}
+        listeners={{ tabPress }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: T("tabPlay"),
@@ -66,17 +86,7 @@ export default function TabLayout() {
         options={{
           title: T("tabAchievements"),
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="star" size={size} color={color} />
-          ),
-        }}
-        listeners={{ tabPress }}
-      />
-      <Tabs.Screen
-        name="store"
-        options={{
-          title: T("tabStore"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bag" size={size} color={color} />
+            <Ionicons name="trail-sign" size={size} color={color} />
           ),
         }}
         listeners={{ tabPress }}

@@ -2,7 +2,7 @@ import { CoinIcon } from "@/components/CoinIcon";
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
-  Platform, Modal, FlatList,
+  Platform, Modal, FlatList, Animated, Easing,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -817,6 +817,8 @@ export default function StoreScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottomPad + 90 }}
       >
+        <ChestShop themeColors={theme} themeGold={themeGold} showToast={showToast} T={T} />
+        <AnimatedEmotesShowcase themeColors={theme} themeGold={themeGold} />
         <View style={styles.featuredSection}>
           <View style={styles.featuredHeader}>
             <Ionicons name="star" size={14} color={Colors.gold} />
@@ -1382,4 +1384,116 @@ const styles = StyleSheet.create({
     marginTop: 12, width: "100%", padding: 14, borderRadius: 16, alignItems: "center",
     borderWidth: 1,
   },
+  chestShopWrap: { paddingHorizontal: 14, paddingTop: 8, paddingBottom: 4, gap: 8 },
+  chestShopHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+  chestShopTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, letterSpacing: 1.2 },
+  chestRow: { flexDirection: "row", gap: 8 },
+  chestCard: {
+    flex: 1, padding: 10, borderRadius: 12, borderWidth: 1,
+    alignItems: "center", gap: 6, minHeight: 110,
+  },
+  chestName: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, letterSpacing: 0.5 },
+  chestPriceRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  chestPriceText: { fontFamily: "Nunito_800ExtraBold", fontSize: 12 },
 });
+
+function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any; themeGold: string; showToast: (s: string) => void; T: (k: any) => string }) {
+  const { profile, buyChestWithFichas } = useProfile();
+  const PRICES: Record<"common" | "rare" | "epic" | "legendary", number> = {
+    common: 25, rare: 80, epic: 200, legendary: 500,
+  };
+  const COLORS: Record<string, string> = {
+    common: "#A0724A", rare: "#1A6FC4", epic: "#7B2FBE", legendary: "#D4AF37",
+  };
+  const NAMES: Record<string, string> = {
+    common: "Común", rare: "Raro", epic: "Épico", legendary: "Legendario",
+  };
+  const handleBuy = async (type: "common" | "rare" | "epic" | "legendary") => {
+    await playSound("purchase");
+    const balance = profile.fichas ?? 0;
+    if (balance < PRICES[type]) { showToast(`Fichas insuficientes`); return; }
+    if ((profile.chestInventory ?? []).length >= 10) { showToast(`Inventario lleno`); return; }
+    const ok = buyChestWithFichas(type);
+    if (ok) showToast(`¡Cofre ${NAMES[type]} comprado!`);
+    else showToast(`No se pudo comprar`);
+  };
+  return (
+    <View style={styles.chestShopWrap}>
+      <View style={styles.chestShopHeader}>
+        <Ionicons name="cube" size={14} color={themeGold} />
+        <Text style={[styles.chestShopTitle, { color: themeGold }]}>COFRES (FICHAS)</Text>
+        <View style={{ flex: 1 }} />
+        <Ionicons name="diamond" size={12} color="#3498DB" />
+        <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#3498DB" }}>{profile.fichas ?? 0}</Text>
+      </View>
+      <View style={styles.chestRow}>
+        {(["common", "rare", "epic", "legendary"] as const).map((t) => (
+          <BouncePressable
+            key={t}
+            onPress={() => handleBuy(t)}
+            style={[styles.chestCard, { backgroundColor: themeColors.surface, borderColor: COLORS[t] + "88" }]}
+          >
+            <Ionicons name={t === "legendary" ? "star" : t === "epic" ? "diamond" : "cube"} size={28} color={COLORS[t]} />
+            <Text style={[styles.chestName, { color: COLORS[t] }]}>{NAMES[t]}</Text>
+            <View style={styles.chestPriceRow}>
+              <Ionicons name="diamond" size={11} color="#3498DB" />
+              <Text style={[styles.chestPriceText, { color: "#3498DB" }]}>{PRICES[t]}</Text>
+            </View>
+          </BouncePressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function AnimatedEmoteIcon({ icon, color, delay }: { icon: any; color: string; delay: number }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const rot = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.parallel([
+          Animated.timing(scale, { toValue: 1.25, duration: 450, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot, { toValue: 1, duration: 450, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(scale, { toValue: 1, duration: 450, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot, { toValue: 0, duration: 450, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+        ]),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [delay, scale, rot]);
+  const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-12deg", "12deg"] });
+  return (
+    <Animated.View style={{ transform: [{ scale }, { rotate }] }}>
+      <Ionicons name={icon} size={36} color={color} />
+    </Animated.View>
+  );
+}
+
+function AnimatedEmotesShowcase({ themeColors, themeGold }: { themeColors: any; themeGold: string }) {
+  const EMOTES_ANIM = [
+    { icon: "sparkles", color: "#D4AF37", label: "Ocho!", delay: 0 },
+    { icon: "trophy",   color: "#9B59B6", label: "Bravo!", delay: 300 },
+    { icon: "happy",    color: "#F1C40F", label: "Jaja",   delay: 600 },
+  ];
+  return (
+    <View style={[styles.chestShopWrap, { borderColor: themeGold + "55" }]}>
+      <View style={styles.chestShopHeader}>
+        <Ionicons name="happy" size={14} color={themeGold} />
+        <Text style={[styles.chestShopTitle, { color: themeGold }]}>EMOTES ANIMADOS</Text>
+      </View>
+      <View style={styles.chestRow}>
+        {EMOTES_ANIM.map((e) => (
+          <View key={e.label} style={[styles.chestCard, { backgroundColor: themeColors.surface, borderColor: e.color + "88" }]}>
+            <AnimatedEmoteIcon icon={e.icon} color={e.color} delay={e.delay} />
+            <Text style={[styles.chestName, { color: e.color }]}>{e.label}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}

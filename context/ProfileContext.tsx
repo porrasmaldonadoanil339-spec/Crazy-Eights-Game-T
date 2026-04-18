@@ -15,6 +15,7 @@ import { getCurrentSeason } from "@/lib/seasons";
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { RankedProfile, addStars, getRankUpRewards, getRankUpBonusCoins } from "@/lib/ranked";
 import { Chest, ChestReward, ChestType, createChest, openChest as openChestReward } from "@/lib/chestSystem";
+import { getPlayerPathLevel, getPlayerPathReward, MAX_PLAYER_PATH_LEVEL } from "@/lib/playerPath";
 
 export interface GameRecord {
   id: string;
@@ -99,10 +100,12 @@ export interface PlayerProfile {
   selectedEffect: string;
   bio: string;
   coins: number;
+  fichas: number;
   totalXp: number;
   ownedItems: string[];
   achievementProgress: AchievementProgress[];
   claimedBattlePassTiers: number[];
+  claimedPlayerPathLevels: number[];
   battlePassSeasonNumber: number;
   stats: PlayerStats;
   // Daily rewards
@@ -181,6 +184,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   selectedEffect: "none",
   bio: "",
   coins: 50,
+  fichas: 25,
   totalXp: 0,
   ownedItems: ["back_default", "avatar_knight", "title_novice", "frame_gold"],
   achievementProgress: ACHIEVEMENTS.map((a) => ({
@@ -190,6 +194,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
     claimedReward: false,
   })),
   claimedBattlePassTiers: [1],
+  claimedPlayerPathLevels: [],
   battlePassSeasonNumber: 1,
   stats: DEFAULT_STATS,
   lastDailyRewardDate: "",
@@ -236,6 +241,10 @@ interface ProfileContextValue {
   updateCountry: (country: string) => void;
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
+  addFichas: (amount: number) => void;
+  spendFichas: (amount: number) => boolean;
+  buyChestWithFichas: (chestType: ChestType) => boolean;
+  claimPlayerPathLevel: (level: number) => boolean;
   addXp: (amount: number) => void;
   buyItem: (item: StoreItem) => boolean;
   recordGameResult: (params: {
@@ -341,6 +350,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
               return existing ?? { id: a.id, progress: 0, unlocked: false, claimedReward: false };
             }),
             ownedItems: saved.ownedItems ?? DEFAULT_PROFILE.ownedItems,
+            fichas: saved.fichas ?? DEFAULT_PROFILE.fichas,
+            claimedPlayerPathLevels: saved.claimedPlayerPathLevels ?? [],
             claimedBattlePassTiers: (() => {
               const savedSeason = saved.battlePassSeasonNumber ?? 1;
               const currentSeason = getCurrentSeason().number;
@@ -508,6 +519,68 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         return { ...p, coins: p.coins - amount };
       }
       return p;
+    });
+    return success;
+  }, [update]);
+
+  const addFichas = useCallback((amount: number) => {
+    update((p) => ({ ...p, fichas: (p.fichas ?? 0) + amount }));
+  }, [update]);
+
+  const spendFichas = useCallback((amount: number): boolean => {
+    let success = false;
+    update((p) => {
+      const balance = p.fichas ?? 0;
+      if (balance >= amount) {
+        success = true;
+        return { ...p, fichas: balance - amount };
+      }
+      return p;
+    });
+    return success;
+  }, [update]);
+
+  const CHEST_FICHA_PRICES: Record<ChestType, number> = {
+    common: 25, rare: 80, epic: 200, legendary: 500,
+  };
+
+  const claimPlayerPathLevel = useCallback((level: number): boolean => {
+    let success = false;
+    update((p) => {
+      const claimed = p.claimedPlayerPathLevels ?? [];
+      if (claimed.includes(level)) return p;
+      const reached = getPlayerPathLevel(p.totalXp);
+      if (level > reached || level < 1 || level > MAX_PLAYER_PATH_LEVEL) return p;
+      const reward = getPlayerPathReward(level);
+      success = true;
+      let next: PlayerProfile = { ...p, claimedPlayerPathLevels: [...claimed, level] };
+      if (reward.type === "coins") next = { ...next, coins: next.coins + reward.amount };
+      else if (reward.type === "fichas") next = { ...next, fichas: (next.fichas ?? 0) + reward.amount };
+      else if (reward.type === "chest") {
+        const inv = next.chestInventory ?? [];
+        if (inv.length < CHEST_INVENTORY_LIMIT) {
+          next = { ...next, chestInventory: [...inv, createChest(reward.chestType, "achievement")] };
+        }
+      }
+      return next;
+    });
+    return success;
+  }, [update]);
+
+  const buyChestWithFichas = useCallback((chestType: ChestType): boolean => {
+    let success = false;
+    update((p) => {
+      const price = CHEST_FICHA_PRICES[chestType];
+      const balance = p.fichas ?? 0;
+      const inv = p.chestInventory ?? [];
+      if (balance < price) return p;
+      if (inv.length >= CHEST_INVENTORY_LIMIT) return p;
+      success = true;
+      return {
+        ...p,
+        fichas: balance - price,
+        chestInventory: [...inv, createChest(chestType, "purchase")],
+      };
     });
     return success;
   }, [update]);
@@ -840,6 +913,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         updateCountry,
         addCoins,
         spendCoins,
+        addFichas,
+        spendFichas,
+        buyChestWithFichas,
+        claimPlayerPathLevel,
         addXp,
         buyItem,
         recordGameResult,

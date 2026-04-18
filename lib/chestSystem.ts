@@ -6,7 +6,7 @@ export interface Chest {
   id: string;
   type: ChestType;
   obtainedAt: number;
-  source: "win" | "rank_up" | "mission" | "streak" | "achievement" | "daily";
+  source: "win" | "rank_up" | "mission" | "streak" | "achievement" | "daily" | "purchase";
 }
 
 export interface ChestReward {
