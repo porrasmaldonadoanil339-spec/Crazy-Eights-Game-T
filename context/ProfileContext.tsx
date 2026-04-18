@@ -10,7 +10,7 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ACHIEVEMENTS, Achievement, AchievementId } from "@/lib/achievements";
 import { STORE_ITEMS, StoreItem } from "@/lib/storeItems";
-import { BATTLE_PASS_TIERS, getCurrentBattlePassTier, getPlayerLevel, getXpProgress } from "@/lib/battlePass";
+import { BATTLE_PASS_TIERS, getCurrentBattlePassTier, getPlayerLevel, getXpProgress, getFreeReward } from "@/lib/battlePass";
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { RankedProfile, addStars, getRankUpRewards, getRankUpBonusCoins } from "@/lib/ranked";
 import { Chest, ChestReward, ChestType, createChest, openChest as openChestReward } from "@/lib/chestSystem";
@@ -551,13 +551,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (p.claimedBattlePassTiers.includes(tier)) return p;
       const bpTier = BATTLE_PASS_TIERS.find((t) => t.tier === tier);
       if (!bpTier) return p;
-      // FREE-track coins: every tier grants 25 + tier×5 coins to all players
-      const freeCoins = 25 + tier * 5;
+      // FREE-track reward: varies by tier (coins, or chest at milestones)
+      const free = getFreeReward(tier);
       let next = {
         ...p,
         claimedBattlePassTiers: [...p.claimedBattlePassTiers, tier],
-        coins: p.coins + freeCoins,
+        coins: p.coins + free.coins,
       };
+      if (free.type === "chest" && free.chestType) {
+        const inv = next.chestInventory ?? [];
+        if (inv.length < 10) {
+          next = { ...next, chestInventory: [...inv, createChest(free.chestType, "mission")] };
+        }
+      }
       // Premium-track reward
       if (bpTier.rewardType === "coins" && typeof bpTier.rewardValue === "number") {
         next = { ...next, coins: next.coins + bpTier.rewardValue };

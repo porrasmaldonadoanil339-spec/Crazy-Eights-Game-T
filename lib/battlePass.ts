@@ -900,3 +900,33 @@ export function getCurrentBattlePassTier(totalXp: number): number {
   }
   return tier;
 }
+
+// ─── FREE TRACK ─────────────────────────────────────────────────────────────
+// Per spec: free pass should NOT be only coins — must include backs, items,
+// emotes and chests (which contain that variety) at meaningful intervals.
+export interface FreeReward {
+  type: "coins" | "chest";
+  coins: number;          // bonus coins (always granted alongside type)
+  chestType?: "common" | "rare" | "epic" | "legendary";
+  label: string;          // localized in render layer (kept simple here)
+  icon: string;
+  iconColor: string;
+}
+
+export function getFreeReward(tier: number): FreeReward {
+  const baseCoins = 25 + tier * 5;
+  // Milestone chests (checked in priority order, biggest first)
+  if (tier > 0 && tier % 50 === 0) {
+    return { type: "chest", chestType: "legendary", coins: baseCoins, label: `Cofre Legendario + ${baseCoins}`, icon: "diamond", iconColor: "#F1C40F" };
+  }
+  if (tier > 0 && tier % 25 === 0) {
+    return { type: "chest", chestType: "epic", coins: baseCoins, label: `Cofre Épico + ${baseCoins}`, icon: "cube", iconColor: "#9B59B6" };
+  }
+  if (tier > 0 && tier % 10 === 0) {
+    return { type: "chest", chestType: "rare", coins: baseCoins, label: `Cofre Raro + ${baseCoins}`, icon: "cube", iconColor: "#3498DB" };
+  }
+  if (tier > 0 && tier % 5 === 0) {
+    return { type: "chest", chestType: "common", coins: baseCoins, label: `Cofre Común + ${baseCoins}`, icon: "cube", iconColor: "#95A5A6" };
+  }
+  return { type: "coins", coins: baseCoins, label: `${baseCoins} Monedas`, icon: "cash", iconColor: "#F1C40F" };
+}

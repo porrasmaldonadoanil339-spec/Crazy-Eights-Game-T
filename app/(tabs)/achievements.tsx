@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
-import { BATTLE_PASS_TIERS, getXpProgress, getBPRewardLabel } from "@/lib/battlePass";
+import { BATTLE_PASS_TIERS, getXpProgress, getBPRewardLabel, getFreeReward } from "@/lib/battlePass";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";
 import RewardPopup from "@/components/RewardPopup";
@@ -73,9 +73,9 @@ export default function AchievementsScreen() {
     await playSound("achievement");
     claimBattlePassTier(tier);
     const bp = BATTLE_PASS_TIERS.find((t) => t.tier === tier);
-    const freeCoins = 25 + tier * 5;
+    const free = getFreeReward(tier);
     const isCoins = bp?.rewardType === "coins" && typeof bp.rewardValue === "number";
-    const totalCoins = freeCoins + (isCoins ? (bp!.rewardValue as number) : 0);
+    const totalCoins = free.coins + (isCoins ? (bp!.rewardValue as number) : 0);
     setRewardPopup({
       visible: true,
       title: "¡RECOMPENSA OBTENIDA!",
@@ -233,8 +233,8 @@ export default function AchievementsScreen() {
               const reached = profile.totalXp >= tier.xpRequired;
               const claimed = profile.claimedBattlePassTiers.includes(tier.tier);
               const canClaim = reached && !claimed;
-              // Free reward = always coins, scaled with tier (per doc: free track = monedas + cofres comunes)
-              const freeCoins = 25 + tier.tier * 5;
+              // Free reward = varies by tier (coins, plus chests at milestones every 5/10/25/50)
+              const freeReward = getFreeReward(tier.tier);
               const isPremiumTrack = ["item","avatar","frame","effect","chest","title"].includes(tier.rewardType) || (tier.rewardType === "coins" && Number(tier.rewardValue) >= 200);
               const premiumLabel = getBPRewardLabel(tier, lang);
               return (
@@ -287,10 +287,14 @@ export default function AchievementsScreen() {
                       <Ionicons name="gift" size={11} color="#2ecc71" />
                       <Text style={[styles.bpTrackTagText, { color: "#2ecc71" }]}>FREE</Text>
                     </View>
-                    <View style={[styles.bpIconWrap, { backgroundColor: "#F1C40F22", width: 34, height: 34, borderRadius: 17 }]}>
-                      <CoinIcon size={18} color={reached ? "#F1C40F" : themeColors.textDim} />
+                    <View style={[styles.bpIconWrap, { backgroundColor: freeReward.iconColor + "22", width: 34, height: 34, borderRadius: 17 }]}>
+                      {freeReward.icon === "cash" ? (
+                        <CoinIcon size={18} color={reached ? freeReward.iconColor : themeColors.textDim} />
+                      ) : (
+                        <Ionicons name={freeReward.icon as any} size={18} color={reached ? freeReward.iconColor : themeColors.textDim} />
+                      )}
                     </View>
-                    <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{freeCoins} 🪙</Text>
+                    <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{freeReward.label}</Text>
                     {canClaim && (
                       <BouncePressable
                         onPress={() => handleClaimBP(tier.tier)}

@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing } from "react-native-reanimated";
+import { CoinIcon } from "@/components/CoinIcon";
 
 const ALL_EVENTS = [
   { id: "speed", name: "Velocidad Extrema", desc: "Todas las cartas tienen temporizador de 5s", icon: "flash", color: "#F39C12", durationDays: 2 },
@@ -133,17 +134,23 @@ export default function EventsCard({ level }: EventsCardProps) {
         </View>
         {status === "live" && (
           <View style={{ flexDirection: "row", marginTop: 10, gap: 8 }}>
-            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
-              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+2</Text>
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>pts por victoria</Text>
+            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center", gap: 2 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <CoinIcon size={13} color={event.color} />
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+50</Text>
+              </View>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>por victoria</Text>
             </View>
-            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
-              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+1</Text>
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>pts por derrota</Text>
+            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center", gap: 2 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <CoinIcon size={13} color={event.color} />
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+10</Text>
+              </View>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>por derrota</Text>
             </View>
-            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
-              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>Cofre</Text>
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>a 10 puntos</Text>
+            <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center", gap: 2 }}>
+              <Ionicons name="cube" size={14} color={event.color} />
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>Cofre al ganar</Text>
             </View>
           </View>
         )}
