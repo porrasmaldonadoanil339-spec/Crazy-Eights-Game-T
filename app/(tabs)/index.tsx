@@ -411,6 +411,45 @@ export default function PlayScreen() {
   const [multiPlayerCount, setMultiPlayerCount] = useState(2);
   const [onlinePlayerCount, setOnlinePlayerCount] = useState(2);
   const [multiPlayerNames, setMultiPlayerNames] = useState(["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4", "Jugador 5", "Jugador 6"]);
+
+  // Animated coin counter (header)
+  const prevCoinsRef = useRef<number>(profile.coins);
+  const coinScale = useSharedValue(1);
+  const [shownCoins, setShownCoins] = useState(profile.coins);
+  const [coinFlash, setCoinFlash] = useState(false);
+
+  useEffect(() => {
+    const prev = prevCoinsRef.current;
+    if (profile.coins !== prev) {
+      if (profile.coins > prev) {
+        coinScale.value = withSequence(
+          withSpring(1.22, { damping: 6, stiffness: 220, mass: 0.4 }),
+          withSpring(1, { damping: 9, stiffness: 200, mass: 0.4 }),
+        );
+        setCoinFlash(true);
+        setTimeout(() => setCoinFlash(false), 720);
+        const start = Date.now();
+        const dur = 600;
+        const from = prev;
+        const to = profile.coins;
+        const tick = () => {
+          const t = Math.min(1, (Date.now() - start) / dur);
+          const eased = 1 - Math.pow(1 - t, 3);
+          setShownCoins(Math.round(from + (to - from) * eased));
+          if (t < 1) requestAnimationFrame(tick);
+          else setShownCoins(to);
+        };
+        requestAnimationFrame(tick);
+      } else {
+        setShownCoins(profile.coins);
+      }
+      prevCoinsRef.current = profile.coins;
+    }
+  }, [profile.coins]);
+
+  const coinBadgeAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: coinScale.value }],
+  }));
   const [showAdModal, setShowAdModal] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
   const [adComplete, setAdComplete] = useState(false);
@@ -672,10 +711,10 @@ export default function PlayScreen() {
               </View>
             </View>
           </View>
-          <View style={styles.coinsBadge}>
-            <Ionicons name="cash" size={13} color={theme.gold} />
-            <Text style={[styles.coinsNum, { color: theme.gold }]}>{profile.coins}</Text>
-          </View>
+          <Animated.View style={[styles.coinsBadge, coinBadgeAnimStyle, coinFlash && { backgroundColor: "rgba(255,215,0,0.22)", borderColor: "#FFD700" }]}>
+            <Ionicons name="cash" size={13} color={coinFlash ? "#FFD700" : theme.gold} />
+            <Text style={[styles.coinsNum, { color: coinFlash ? "#FFD700" : theme.gold }]}>{shownCoins}</Text>
+          </Animated.View>
           {canClaimDailyReward && (
             <View style={styles.dailyDot}>
               <View style={styles.dailyDotInner} />

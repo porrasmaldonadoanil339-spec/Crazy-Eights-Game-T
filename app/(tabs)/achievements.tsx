@@ -13,6 +13,8 @@ import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
 import { BATTLE_PASS_TIERS, getXpProgress, getBPRewardLabel } from "@/lib/battlePass";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";
+import RewardPopup from "@/components/RewardPopup";
+import BouncePressable from "@/components/BouncePressable";
 
 const RARITY_COLORS_MAP: Record<string, string> = {
   common: "#95A5A6",
@@ -28,6 +30,16 @@ export default function AchievementsScreen() {
   const { profile, claimAchievementReward, claimBattlePassTier, xpProgress, battlePassTier } = useProfile();
   const [activeTab, setActiveTab] = useState<Tab>("achievements");
   const [toast, setToast] = useState<string | null>(null);
+  const [rewardPopup, setRewardPopup] = useState<{
+    visible: boolean;
+    title?: string;
+    subtitle?: string;
+    coins?: number;
+    xp?: number;
+    itemName?: string;
+    itemIcon?: string;
+    accent?: string;
+  }>({ visible: false });
   const T = useT();
   const theme = useTheme();
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
@@ -43,14 +55,35 @@ export default function AchievementsScreen() {
     await playSound("achievement");
     claimAchievementReward(id);
     const a = ACHIEVEMENTS.find((ac) => ac.id === id);
-    showToast(`+${a?.coinsReward} ${T("coins")} · +${a?.xpReward} XP`);
+    if (a) {
+      setRewardPopup({
+        visible: true,
+        title: "¡RECOMPENSA OBTENIDA!",
+        subtitle: achTitle(a.id, lang),
+        coins: a.coinsReward,
+        xp: a.xpReward,
+        itemIcon: a.icon,
+        accent: RARITY_COLORS_MAP[a.rarity] || Colors.gold,
+      });
+    }
   };
 
   const handleClaimBP = async (tier: number) => {
     await playSound("achievement");
     claimBattlePassTier(tier);
-    // Per CORRECCION_OCHO_LOCOS: confirmation must read "¡RECOMPENSA OBTENIDA!"
-    showToast(`¡RECOMPENSA OBTENIDA! · ${T("level")} ${tier}`);
+    const bp = BATTLE_PASS_TIERS.find((t) => t.tier === tier);
+    const freeCoins = 25 + tier * 5;
+    const isCoins = bp?.rewardType === "coins" && typeof bp.rewardValue === "number";
+    const totalCoins = freeCoins + (isCoins ? (bp!.rewardValue as number) : 0);
+    setRewardPopup({
+      visible: true,
+      title: "¡RECOMPENSA OBTENIDA!",
+      subtitle: `${T("level")} ${tier}`,
+      coins: totalCoins,
+      itemName: bp ? getBPRewardLabel(bp, lang) : undefined,
+      itemIcon: bp?.rewardType === "chest" ? "cube" : bp?.rewardType === "coins" ? "cash" : "trophy",
+      accent: Colors.gold,
+    });
   };
 
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
@@ -165,12 +198,12 @@ export default function AchievementsScreen() {
                     </View>
                   </View>
                   {unlocked && !claimed && (
-                    <Pressable
+                    <BouncePressable
                       onPress={() => handleClaimAchievement(ach.id)}
-                      style={({ pressed }) => [styles.claimBtn, { backgroundColor: themeGold }, pressed && { opacity: 0.85 }]}
+                      style={[styles.claimBtn, { backgroundColor: themeGold }]}
                     >
                       <Text style={styles.claimText}>{claimLabel}</Text>
-                    </Pressable>
+                    </BouncePressable>
                   )}
                   {claimed && (
                     <Ionicons name="checkmark-circle" size={22} color={Colors.success} />
@@ -250,12 +283,12 @@ export default function AchievementsScreen() {
                     </View>
                     <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{freeCoins} 🪙</Text>
                     {canClaim && (
-                      <Pressable
+                      <BouncePressable
                         onPress={() => handleClaimBP(tier.tier)}
-                        style={({ pressed }) => [styles.bpClaimBtn, { backgroundColor: themeGold }, pressed && { opacity: 0.85 }]}
+                        style={[styles.bpClaimBtn, { backgroundColor: themeGold }]}
                       >
                         <Text style={styles.bpClaimText}>{claimLabel}</Text>
-                      </Pressable>
+                      </BouncePressable>
                     )}
                   </View>
                 </View>
@@ -272,6 +305,18 @@ export default function AchievementsScreen() {
           <Text style={[styles.toastText, { color: themeColors.text }]}>{toast}</Text>
         </View>
       )}
+
+      <RewardPopup
+        visible={rewardPopup.visible}
+        title={rewardPopup.title}
+        subtitle={rewardPopup.subtitle}
+        coins={rewardPopup.coins}
+        xp={rewardPopup.xp}
+        itemName={rewardPopup.itemName}
+        itemIcon={rewardPopup.itemIcon}
+        accent={rewardPopup.accent}
+        onClose={() => setRewardPopup({ visible: false })}
+      />
     </View>
   );
 }
