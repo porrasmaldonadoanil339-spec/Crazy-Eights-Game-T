@@ -551,7 +551,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (p.claimedBattlePassTiers.includes(tier)) return p;
       const bpTier = BATTLE_PASS_TIERS.find((t) => t.tier === tier);
       if (!bpTier) return p;
-      let next = { ...p, claimedBattlePassTiers: [...p.claimedBattlePassTiers, tier] };
+      // FREE-track coins: every tier grants 25 + tier×5 coins to all players
+      const freeCoins = 25 + tier * 5;
+      let next = {
+        ...p,
+        claimedBattlePassTiers: [...p.claimedBattlePassTiers, tier],
+        coins: p.coins + freeCoins,
+      };
+      // Premium-track reward
       if (bpTier.rewardType === "coins" && typeof bpTier.rewardValue === "number") {
         next = { ...next, coins: next.coins + bpTier.rewardValue };
       }

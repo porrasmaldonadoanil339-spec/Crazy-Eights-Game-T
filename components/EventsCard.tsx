@@ -121,7 +121,7 @@ export default function EventsCard({ level }: EventsCardProps) {
             <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: isLocked ? (status === "level_locked" ? "#666" : "#9B815C") : "#fff", marginBottom: 2 }}>
               {status === "level_locked" ? "Eventos Especiales" : status === "locked_cycle" ? `Próximo: ${display.name}` : display.name}
             </Text>
-            <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: isLocked ? (status === "level_locked" ? "#555" : "#7A6549") : "#aaa" }} numberOfLines={1}>
+            <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: isLocked ? (status === "level_locked" ? "#555" : "#7A6549") : "#aaa", lineHeight: 16 }}>
               {status === "level_locked" ? "Desbloquea eventos al llegar a nivel 5" : status === "locked_cycle" ? "El evento se reactivará pronto" : display.desc}
             </Text>
           </View>

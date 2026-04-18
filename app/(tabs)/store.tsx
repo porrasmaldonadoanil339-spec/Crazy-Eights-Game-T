@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
   Platform, Modal, FlatList,
@@ -480,6 +480,13 @@ function StoreItemCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
             </View>
           )}
         </View>
+        {!owned && !item.isDefault && (
+          <View style={styles.lockBadge} pointerEvents="none">
+            <View style={[styles.lockBadgeInner, { backgroundColor: rarityColor + "DD", borderColor: rarityColor }]}>
+              <Ionicons name="lock-closed" size={11} color="#fff" />
+            </View>
+          </View>
+        )}
       </LinearGradient>
     </Pressable>
   );
@@ -666,6 +673,33 @@ export default function StoreScreen() {
   const ownedCount = items.filter(i => profile.ownedItems.includes(i.id) || i.isDefault).length;
   const equippedId = getEquippedId(category);
 
+  // Daily Featured items: deterministic rotation based on day of year
+  const featuredItems = useMemo(() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const allBuyable = STORE_ITEMS
+      .filter(i => !i.isDefault && (i.rarity === "epic" || i.rarity === "legendary"))
+      .map(applyPriceMultiplier)
+      .map((i) => localizeItem(i, lang));
+    const out: StoreItem[] = [];
+    const seen = new Set<string>();
+    for (let i = 0; i < 5 && allBuyable.length > 0; i++) {
+      const idx = (dayOfYear * 7 + i * 13) % allBuyable.length;
+      const pick = allBuyable[idx];
+      if (pick && !seen.has(pick.id)) {
+        seen.add(pick.id);
+        out.push(pick);
+      }
+    }
+    return out;
+  }, [lang]);
+
+  const handleFeaturedPress = (item: StoreItem) => {
+    const owned = profile.ownedItems.includes(item.id) || !!item.isDefault;
+    if (owned) return;
+    setCategory(item.category);
+    setConfirmItem(item);
+  };
+
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
       <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
@@ -715,11 +749,59 @@ export default function StoreScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          (isEffects || isEmotes) ? styles.listContent : styles.grid,
-          { paddingBottom: bottomPad + 90 }
-        ]}
+        contentContainerStyle={{ paddingBottom: bottomPad + 90 }}
       >
+        {featuredItems.length > 0 && (
+          <View style={styles.featuredSection}>
+            <View style={styles.featuredHeader}>
+              <Ionicons name="star" size={14} color={Colors.gold} />
+              <Text style={styles.featuredTitle}>{(T("featured") as string) || "DESTACADOS"}</Text>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.featuredScroll}
+            >
+              {featuredItems.map((it: StoreItem) => {
+                const rarity = it.rarity === "legendary" ? "#FFD700" : it.rarity === "epic" ? "#A855F7" : it.rarity === "rare" ? "#4A9AE8" : "#9aa0a6";
+                const owned = profile.ownedItems.includes(it.id);
+                return (
+                  <Pressable
+                    key={"feat-" + it.id}
+                    style={[styles.featuredCard, { borderColor: rarity }]}
+                    onPress={() => handleFeaturedPress(it)}
+                  >
+                    <LinearGradient
+                      colors={[rarity + "33", "rgba(0,0,0,0.5)"]}
+                      style={styles.featuredGrad}
+                    >
+                      <View style={[styles.featuredIcon, { backgroundColor: rarity + "33", borderColor: rarity }]}>
+                        <Ionicons name={(it.preview as any) ?? "gift"} size={24} color={it.previewColor ?? rarity} />
+                      </View>
+                      <Text style={styles.featuredName} numberOfLines={2}>{it.name}</Text>
+                      {owned ? (
+                        <View style={[styles.featuredPrice, { backgroundColor: "rgba(0,0,0,0.6)" }]}>
+                          <Ionicons name="checkmark" size={11} color="#4CAF50" />
+                          <Text style={[styles.featuredPriceText, { color: "#4CAF50" }]}>OK</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.featuredPrice}>
+                          <Ionicons name="cash" size={11} color={Colors.gold} />
+                          <Text style={styles.featuredPriceText}>{it.price}</Text>
+                        </View>
+                      )}
+                      <View style={styles.featuredHotBadge}>
+                        <Text style={styles.featuredHotText}>HOT</Text>
+                      </View>
+                    </LinearGradient>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
+        <View style={(isEffects || isEmotes) ? styles.listContent : styles.grid}>
         {isEffects ? (
           items.map((item) => {
             const owned = profile.ownedItems.includes(item.id) || !!item.isDefault;
@@ -768,6 +850,7 @@ export default function StoreScreen() {
             );
           })
         )}
+        </View>
       </ScrollView>
 
       {toast && (
@@ -968,6 +1051,85 @@ const styles = StyleSheet.create({
   buyBtn: { flex: 1, borderRadius: 14, overflow: "hidden" },
   buyBtnGrad: { padding: 13, alignItems: "center", flexDirection: "row", gap: 6, justifyContent: "center" },
   buyBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#1a0a00" },
+  lockBadge: {
+    position: "absolute",
+    top: 8, left: 8,
+    zIndex: 5,
+  },
+  lockBadgeInner: {
+    width: 22, height: 22, borderRadius: 11,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1.5,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5, shadowRadius: 3, elevation: 4,
+  },
+  featuredSection: {
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  featuredHeader: {
+    flexDirection: "row", alignItems: "center",
+    gap: 6, marginBottom: 8,
+  },
+  featuredTitle: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 13,
+    color: Colors.gold,
+    letterSpacing: 1.5,
+  },
+  featuredScroll: {
+    paddingRight: 16,
+    gap: 10,
+  },
+  featuredCard: {
+    width: 130,
+    borderRadius: 14,
+    borderWidth: 2,
+    overflow: "hidden",
+    backgroundColor: Colors.surface,
+  },
+  featuredGrad: {
+    padding: 10,
+    minHeight: 130,
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 6,
+  },
+  featuredIcon: {
+    width: 50, height: 50, borderRadius: 25,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1.5,
+  },
+  featuredName: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 11,
+    color: "#fff",
+    textAlign: "center",
+  },
+  featuredPrice: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 8,
+  },
+  featuredPriceText: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 12,
+    color: Colors.gold,
+  },
+  featuredHotBadge: {
+    position: "absolute",
+    top: 6, right: 6,
+    paddingHorizontal: 5, paddingVertical: 2,
+    borderRadius: 5,
+    backgroundColor: "#FF4757",
+  },
+  featuredHotText: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 8,
+    color: "#fff",
+    letterSpacing: 0.5,
+  },
   toast: {
     position: "absolute", bottom: 90, alignSelf: "center",
     backgroundColor: Colors.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,

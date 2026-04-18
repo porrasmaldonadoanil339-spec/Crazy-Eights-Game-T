@@ -257,11 +257,33 @@ export function PlayingCard({
   const glowOp = useSharedValue(0);
   const floatY = useSharedValue(0);
   const glowPulse = useSharedValue(0.5);
+  const wiggle = useSharedValue(0);
+  const ringPulse = useSharedValue(0.5);
 
   useEffect(() => {
     ty.value = withSpring(isSelected ? -16 : 0, { damping: 13 });
     sc.value = withSpring(isSelected ? 1.07 : 1, { damping: 13 });
     glowOp.value = withTiming(isSelected ? 1 : 0, { duration: 180 });
+    if (isSelected) {
+      wiggle.value = withSequence(
+        withTiming(-3.5, { duration: 70 }),
+        withTiming(3.5, { duration: 80 }),
+        withTiming(-2, { duration: 70 }),
+        withTiming(0, { duration: 70 }),
+      );
+      ringPulse.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 600 }),
+          withTiming(0.45, { duration: 600 }),
+        ),
+        -1,
+        false,
+      );
+    } else {
+      cancelAnimation(ringPulse);
+      ringPulse.value = withTiming(0.5, { duration: 200 });
+      wiggle.value = withTiming(0, { duration: 100 });
+    }
   }, [isSelected]);
 
   useEffect(() => {
@@ -294,11 +316,16 @@ export function PlayingCard({
     transform: [
       { translateY: ty.value + (isPlayable && !isSelected ? floatY.value : 0) },
       { scale: sc.value },
+      { rotate: `${wiggle.value}deg` },
     ],
   }));
 
   const glowStyle = useAnimatedStyle(() => ({
-    opacity: isPlayable && !isSelected ? glowPulse.value * 0.85 : glowOp.value,
+    opacity: isPlayable && !isSelected
+      ? glowPulse.value * 0.85
+      : isSelected
+        ? glowOp.value * (0.55 + ringPulse.value * 0.45)
+        : 0,
   }));
 
   const accentGlow = backAccent ?? Colors.gold;

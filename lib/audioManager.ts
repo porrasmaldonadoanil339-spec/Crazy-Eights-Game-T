@@ -61,19 +61,53 @@ export async function preloadSounds() {
   }
 }
 
-// ─── Core: serialized music transition ───────────────────────────────────────
+// ─── Core: serialized music transition with crossfade ────────────────────────
+const FADE_MS = 380;
+const FADE_STEPS = 10;
+
+async function fadeOutCurrent() {
+  const player = bgPlayer;
+  if (!player) return;
+  const startVol = player.volume;
+  const stepDur = FADE_MS / FADE_STEPS;
+  for (let i = 1; i <= FADE_STEPS; i++) {
+    const v = startVol * (1 - i / FADE_STEPS);
+    await safe(async () => { player.volume = Math.max(0, v); });
+    await new Promise<void>((r) => setTimeout(r, stepDur));
+  }
+}
+
+async function fadeInCurrent() {
+  const player = bgPlayer;
+  if (!player) return;
+  const targetVol = musicVolume;
+  const stepDur = FADE_MS / FADE_STEPS;
+  await safe(async () => { player.volume = 0; });
+  for (let i = 1; i <= FADE_STEPS; i++) {
+    const v = targetVol * (i / FADE_STEPS);
+    await safe(async () => { player.volume = Math.min(targetVol, v); });
+    await new Promise<void>((r) => setTimeout(r, stepDur));
+  }
+}
+
 async function applyMusicTransition(track: "menu" | "game") {
   if (currentTrack === track && bgPlayer) return;
   if (!isMusicEnabled) return;
 
+  // Fade out the existing track first (if any)
+  if (bgPlayer) {
+    await fadeOutCurrent();
+  }
   await _stopMusicInternal();
   await safe(async () => {
     bgPlayer = createAudioPlayer(track === "menu" ? SOUNDS.menuMusic : SOUNDS.gameMusic);
-    bgPlayer.volume = musicVolume;
+    bgPlayer.volume = 0;
     bgPlayer.loop = true;
     bgPlayer.play();
     currentTrack = track;
   });
+  // Fade into the new track
+  await fadeInCurrent();
 }
 
 async function requestMusicTrack(track: "menu" | "game") {

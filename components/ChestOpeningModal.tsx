@@ -296,23 +296,49 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
             <Animated.View style={chestStyle}>
               <View style={[styles.chestBody, { borderColor: config.borderColor }]}>
                 <LinearGradient
-                  colors={[config.color + "CC", config.color + "66"]}
+                  colors={[config.color + "DD", config.color + "88", config.color + "55"]}
+                  start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
                   style={styles.chestBodyGrad}
                 >
+                  {/* Wood plank lines on body */}
+                  <View style={[styles.plankLine, { top: 52, backgroundColor: "rgba(0,0,0,0.28)" }]} />
+                  <View style={[styles.plankLine, { top: 78, backgroundColor: "rgba(0,0,0,0.22)" }]} />
+                  <View style={[styles.plankLine, { top: 96, backgroundColor: "rgba(0,0,0,0.18)" }]} />
+                  {/* Vertical metal bands */}
+                  <View style={[styles.metalBand, { left: 18, backgroundColor: config.glowColor + "55" }]} />
+                  <View style={[styles.metalBand, { right: 18, backgroundColor: config.glowColor + "55" }]} />
+
                   <Animated.View style={[styles.chestLidArea, lidStyle]}>
                     <LinearGradient
-                      colors={[config.glowColor + "BB", config.color + "88"]}
+                      colors={[config.glowColor + "DD", config.color + "BB", config.color + "88"]}
+                      start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
                       style={styles.chestLid}
-                    />
+                    >
+                      {/* Lid wood detail */}
+                      <View style={[styles.lidEdge, { backgroundColor: "rgba(0,0,0,0.25)" }]} />
+                      {/* Hinges */}
+                      <View style={[styles.hinge, { left: 12, backgroundColor: config.glowColor }]} />
+                      <View style={[styles.hinge, { right: 12, backgroundColor: config.glowColor }]} />
+                    </LinearGradient>
                   </Animated.View>
 
-                  <View style={styles.chestLock}>
-                    <Ionicons name={chestIcon as any} size={32} color={config.glowColor} />
+                  {/* Lock plate with gem */}
+                  <View style={[styles.chestLock, { backgroundColor: "rgba(0,0,0,0.45)", borderColor: config.glowColor + "AA" }]}>
+                    <LinearGradient
+                      colors={[config.glowColor, config.glowColor + "CC", config.color]}
+                      style={styles.lockGem}
+                    >
+                      <View style={styles.lockGemHighlight} />
+                    </LinearGradient>
+                    <View style={[styles.lockKeyhole, { backgroundColor: "rgba(0,0,0,0.55)" }]} />
                   </View>
 
                   <View style={styles.chestStripe}>
-                    <View style={[styles.stripeLine, { backgroundColor: config.glowColor + "88" }]} />
+                    <View style={[styles.stripeLine, { backgroundColor: config.glowColor + "AA" }]} />
                   </View>
+                  {/* Bottom corner studs */}
+                  <View style={[styles.stud, { bottom: 8, left: 8, backgroundColor: config.glowColor + "BB" }]} />
+                  <View style={[styles.stud, { bottom: 8, right: 8, backgroundColor: config.glowColor + "BB" }]} />
                 </LinearGradient>
               </View>
             </Animated.View>
@@ -512,16 +538,77 @@ const styles = StyleSheet.create({
     flex: 1,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
+    overflow: "hidden",
+  },
+  lidEdge: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+  },
+  hinge: {
+    position: "absolute",
+    top: 4,
+    width: 8,
+    height: 6,
+    borderRadius: 2,
+  },
+  plankLine: {
+    position: "absolute",
+    left: 4,
+    right: 4,
+    height: 1.5,
+    borderRadius: 1,
+  },
+  metalBand: {
+    position: "absolute",
+    top: 42,
+    bottom: 4,
+    width: 4,
+    borderRadius: 2,
+  },
+  stud: {
+    position: "absolute",
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   chestLock: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "rgba(0,0,0,0.3)",
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.2)",
+    overflow: "hidden",
+  },
+  lockGem: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  lockGemHighlight: {
+    position: "absolute",
+    top: 4,
+    left: 6,
+    width: 6,
+    height: 4,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.55)",
+  },
+  lockKeyhole: {
+    position: "absolute",
+    bottom: 6,
+    width: 5,
+    height: 7,
+    borderRadius: 1,
   },
   chestStripe: {
     position: "absolute",
