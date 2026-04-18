@@ -1015,7 +1015,7 @@ const styles = StyleSheet.create({
   dailyStripWrap: { paddingHorizontal: 16, marginBottom: 8 },
   dailyStripGrad: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: "#FF6B6B55" },
   dailyStripTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#FF6B6B", letterSpacing: 1.5 },
-  dailyStripTimer: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#FF6B6B", fontVariant: ["tabular-nums" as any] },
+  dailyStripTimer: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#FF6B6B", fontVariant: ["tabular-nums"] },
   dailyBadge: { position: "absolute", top: 6, left: 6, zIndex: 10 },
   dailyBadgeGrad: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: "#fff5" },
   dailyBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, color: "#fff", letterSpacing: 0.8 },

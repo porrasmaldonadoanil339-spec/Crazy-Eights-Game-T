@@ -10,7 +10,7 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ACHIEVEMENTS, Achievement, AchievementId } from "@/lib/achievements";
 import { STORE_ITEMS, StoreItem } from "@/lib/storeItems";
-import { BATTLE_PASS_TIERS, getCurrentBattlePassTier, getPlayerLevel, getXpProgress, getFreeReward } from "@/lib/battlePass";
+import { BATTLE_PASS_TIERS, getBattlePassTiers, getCurrentBattlePassTier, getPlayerLevel, getXpProgress, getFreeReward } from "@/lib/battlePass";
 import { getCurrentSeason } from "@/lib/seasons";
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { RankedProfile, addStars, getRankUpRewards, getRankUpBonusCoins } from "@/lib/ranked";
@@ -558,7 +558,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const claimBattlePassTier = useCallback((tier: number) => {
     update((p) => {
       if (p.claimedBattlePassTiers.includes(tier)) return p;
-      const bpTier = BATTLE_PASS_TIERS.find((t) => t.tier === tier);
+      const seasonTiers = getBattlePassTiers(getCurrentSeason().number);
+      const bpTier = seasonTiers.find((t) => t.tier === tier);
       if (!bpTier) return p;
       // FREE-track reward: varies by tier (coins, or chest at milestones)
       const free = getFreeReward(tier);
