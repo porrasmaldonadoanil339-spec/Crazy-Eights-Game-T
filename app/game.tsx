@@ -38,6 +38,7 @@ import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } fro
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
 import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
+import { getActiveEvent } from "@/components/EventsCard";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
@@ -1768,7 +1769,6 @@ export default function GameScreen() {
         else if (newTotalWins % 7 === 0) milestoneChest = "rare";
         else if (newTotalWins % 3 === 0) milestoneChest = "common";
         // Guaranteed event chest on win during a live event — keep the BETTER of the two
-        const { getActiveEvent } = require("@/components/EventsCard") as typeof import("@/components/EventsCard");
         const activeEvent = getActiveEvent(level);
         const RANK: Record<ChestType, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
         if (activeEvent && milestoneChest) {

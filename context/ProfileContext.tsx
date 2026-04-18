@@ -279,8 +279,25 @@ const ProfileContext = createContext<ProfileContextValue | null>(null);
 const STORAGE_KEY = "ocho_profile_v3";
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<PlayerProfile>(DEFAULT_PROFILE);
+  const [profile, setProfile] = useState<PlayerProfile>(() => ({
+    ...DEFAULT_PROFILE,
+    battlePassSeasonNumber: getCurrentSeason().number,
+  }));
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Runtime season-rollover guard: if the season changes while the app is
+  // open (long-running session), wipe claimed BP tiers so the new season
+  // starts fresh without needing a restart.
+  useEffect(() => {
+    const t = setInterval(() => {
+      const current = getCurrentSeason().number;
+      setProfile((p) => {
+        if (p.battlePassSeasonNumber === current) return p;
+        return { ...p, battlePassSeasonNumber: current, claimedBattlePassTiers: [1] };
+      });
+    }, 60_000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     (async () => {
