@@ -504,4 +504,103 @@ router.post("/profile", (req, res) => {
   return res.json({ ok: true });
 });
 
+// ─── POST /api/auth/dev-seed ──────────────────────────────────────────────────
+// Dev-only endpoint that mutates the authenticated user's cloud profile so QA
+// can exercise the RECLAMAR (claim) and COMPRAR (buy) flows in seconds.
+//
+// Guard: only enabled when NODE_ENV !== "production", unless DEV_SEED_ENABLED=1
+// is explicitly set in the environment.
+//
+// Usage:
+//   curl -X POST $API/api/auth/dev-seed \
+//        -H "Authorization: Bearer <token>"
+//
+// What it seeds (mutates the existing cloud profile blob):
+//   - coins: bumped to at least 50_000 (affordable for any store item)
+//   - totalXp: bumped to at least 25_000 (unlocks battle-pass tiers)
+//   - achievementProgress: every entry marked unlocked + claimedReward=false
+//   - ownedItems: appended with a few non-default items so equip/buy flows
+//     have realistic state
+//
+// Requires the user to have opened the app at least once (so a cloud profile
+// blob exists). Returns 409 with guidance otherwise.
+router.post("/dev-seed", (req, res) => {
+  const isDev = process.env.NODE_ENV !== "production";
+  const explicitlyEnabled = process.env.DEV_SEED_ENABLED === "1" || process.env.DEV_SEED_ENABLED === "true";
+  if (!isDev && !explicitlyEnabled) {
+    return res.status(403).json({ error: "dev-seed disabled in production (set DEV_SEED_ENABLED=1 to override)" });
+  }
+
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: "Unauthorized" });
+  const token = auth.replace("Bearer ", "");
+  const payload = verifyToken(token);
+  if (!payload) return res.status(401).json({ error: "Invalid token" });
+
+  const profiles = loadProfiles();
+  const idx = profiles.findIndex(p => p.userId === payload.userId);
+  if (idx < 0) {
+    return res.status(409).json({
+      error: "No cloud profile found for this user. Open the app once while logged in so the profile syncs, then retry.",
+    });
+  }
+
+  interface SeedAchievementProgress {
+    id?: string;
+    progress?: number;
+    unlocked?: boolean;
+    claimedReward?: boolean;
+  }
+  interface SeedProfileData {
+    coins?: number;
+    totalXp?: number;
+    ownedItems?: string[];
+    achievementProgress?: SeedAchievementProgress[];
+    [key: string]: unknown;
+  }
+
+  const data = profiles[idx].data as SeedProfileData;
+
+  const currentCoins = typeof data.coins === "number" ? data.coins : 0;
+  data.coins = Math.max(currentCoins, 50_000);
+
+  const currentXp = typeof data.totalXp === "number" ? data.totalXp : 0;
+  data.totalXp = Math.max(currentXp, 25_000);
+
+  const ach: SeedAchievementProgress[] = Array.isArray(data.achievementProgress) ? data.achievementProgress : [];
+  if (ach.length === 0) {
+    return res.status(409).json({
+      error: "Cloud profile has no achievementProgress entries. Open the app once while logged in so it initializes, then retry.",
+    });
+  }
+  const seededAchievements: SeedAchievementProgress[] = ach.map((a) => ({
+    ...a,
+    progress: typeof a.progress === "number" ? Math.max(a.progress, 1) : 1,
+    unlocked: true,
+    claimedReward: false,
+  }));
+  data.achievementProgress = seededAchievements;
+
+  const seedItems = ["back_crimson", "back_emerald", "back_copper"];
+  const owned: string[] = Array.isArray(data.ownedItems) ? data.ownedItems : [];
+  data.ownedItems = Array.from(new Set([...owned, ...seedItems]));
+
+  profiles[idx] = { ...profiles[idx], data: data as Record<string, unknown>, updatedAt: new Date().toISOString() };
+  saveProfiles(profiles);
+
+  const claimableCount = seededAchievements.filter((a) => a.unlocked && !a.claimedReward).length;
+
+  return res.json({
+    ok: true,
+    seeded: {
+      userId: payload.userId,
+      username: payload.username,
+      coins: data.coins,
+      totalXp: data.totalXp,
+      claimableAchievements: claimableCount,
+      ownedItems: data.ownedItems.length,
+    },
+  });
+});
+
 export default router;
