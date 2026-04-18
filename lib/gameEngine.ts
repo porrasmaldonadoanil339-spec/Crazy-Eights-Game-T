@@ -30,6 +30,7 @@ export interface GameState {
   jSuit: Suit | null; // legacy
   direction: 1 | -1;
   lastPlayedCard: Card | null;
+  eventId?: string | null;
 }
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
@@ -61,7 +62,7 @@ export function shuffleDeck(deck: Card[]): Card[] {
   return arr;
 }
 
-export function initGame(cardsPerPlayer: number = 8, difficulty: string = "normal"): GameState {
+export function initGame(cardsPerPlayer: number = 8, difficulty: string = "normal", eventId?: string | null): GameState {
   const deck = createDeck();
   const playerHand = deck.splice(0, cardsPerPlayer);
   const aiHand = deck.splice(0, cardsPerPlayer);
@@ -95,7 +96,12 @@ export function initGame(cardsPerPlayer: number = 8, difficulty: string = "norma
     jSuit: null,
     direction: 1,
     lastPlayedCard: null,
+    eventId: eventId ?? null,
   };
+}
+
+function eventDrawMultiplier(state: GameState): number {
+  return state.eventId === "double" ? 2 : 1;
 }
 
 export function getTopCard(state: GameState): Card {
@@ -164,14 +170,14 @@ export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameS
     }
   } else if (card.rank === "Joker") {
     // Joker — +4 anytime, switches stack to "Joker" type (only Joker can defend)
-    ns.pendingDraw += 4;
+    ns.pendingDraw += 4 * eventDrawMultiplier(ns);
     ns.pendingDrawType = "Joker";
     ns.pendingDrawSuit = null;
     ns.currentPlayer = "ai";
     ns.message = gm("jokerCpuDraw", { n: String(ns.pendingDraw) });
   } else if (card.rank === "A") {
     // A — +1 acumulable
-    ns.pendingDraw += 1;
+    ns.pendingDraw += 1 * eventDrawMultiplier(ns);
     ns.pendingDrawType = "A";
     ns.pendingDrawSuit = card.suit;
     ns.currentSuit = card.suit;
@@ -179,7 +185,7 @@ export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameS
     ns.message = gm("play2youDraw", { n: String(ns.pendingDraw) });
   } else if (card.rank === "2") {
     // 2 — +2 acumulable
-    ns.pendingDraw += 2;
+    ns.pendingDraw += 2 * eventDrawMultiplier(ns);
     ns.pendingDrawType = "2";
     ns.pendingDrawSuit = card.suit;
     ns.currentSuit = card.suit;
@@ -187,7 +193,7 @@ export function playCard(state: GameState, card: Card, chosenSuit?: Suit): GameS
     ns.message = gm("play2youDraw", { n: String(ns.pendingDraw) });
   } else if (card.rank === "3") {
     // 3 — +3 acumulable
-    ns.pendingDraw += 3;
+    ns.pendingDraw += 3 * eventDrawMultiplier(ns);
     ns.pendingDrawType = "3";
     ns.pendingDrawSuit = card.suit;
     ns.currentSuit = card.suit;
@@ -329,27 +335,27 @@ export function aiTurn(state: GameState, difficulty: string = "normal", mode: st
     ns.message = gm("cpuCrazy8", { s: suitName(suit) });
     ns.currentPlayer = "player";
   } else if (chosen.rank === "Joker") {
-    ns.pendingDraw += 4;
+    ns.pendingDraw += 4 * eventDrawMultiplier(ns);
     ns.pendingDrawType = "Joker";
     ns.pendingDrawSuit = null;
     ns.message = gm("cpuJkrDraw", { n: String(ns.pendingDraw) });
     ns.currentPlayer = "player";
   } else if (chosen.rank === "A") {
-    ns.pendingDraw += 1;
+    ns.pendingDraw += 1 * eventDrawMultiplier(ns);
     ns.pendingDrawType = "A";
     ns.pendingDrawSuit = chosen.suit;
     ns.currentSuit = chosen.suit;
     ns.message = gm("cpuPlay2", { n: String(ns.pendingDraw) });
     ns.currentPlayer = "player";
   } else if (chosen.rank === "2") {
-    ns.pendingDraw += 2;
+    ns.pendingDraw += 2 * eventDrawMultiplier(ns);
     ns.pendingDrawType = "2";
     ns.pendingDrawSuit = chosen.suit;
     ns.currentSuit = chosen.suit;
     ns.message = gm("cpuPlay2", { n: String(ns.pendingDraw) });
     ns.currentPlayer = "player";
   } else if (chosen.rank === "3") {
-    ns.pendingDraw += 3;
+    ns.pendingDraw += 3 * eventDrawMultiplier(ns);
     ns.pendingDrawType = "3";
     ns.pendingDrawSuit = chosen.suit;
     ns.currentSuit = chosen.suit;

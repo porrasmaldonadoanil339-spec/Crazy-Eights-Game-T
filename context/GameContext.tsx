@@ -22,6 +22,7 @@ import { getModeById, getDifficultyById } from "@/lib/gameModes";
 import { getRandomCpuProfile, CpuProfile } from "@/lib/cpuProfiles";
 
 import { generateChallengeRules, ActiveChallengeRules } from "@/lib/challengeRules";
+import { getEventConfig, type EventId } from "@/lib/eventModes";
 
 const _biyisBase = process.env.EXPO_PUBLIC_DOMAIN
   ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
@@ -48,12 +49,13 @@ export interface GameSession {
   maxHandSizeReached: number;
   cpuProfile: CpuProfile | null;
   challengeRules?: import("@/lib/challengeRules").ActiveChallengeRules;
+  eventId?: EventId | null;
 }
 
 interface GameContextValue {
   gameState: GameState | null;
   session: GameSession | null;
-  startGame: (mode: GameModeId, difficulty: Difficulty, overrideCpuProfile?: any) => void;
+  startGame: (mode: GameModeId, difficulty: Difficulty, overrideCpuProfile?: any, eventId?: EventId | null) => void;
   handlePlayCard: (card: Card, chosenSuit?: Suit) => void;
   handleDraw: () => void;
   handleChooseSuit: (suit: Suit) => void;
@@ -67,6 +69,7 @@ interface GameContextValue {
   forceGameOver: () => void;
   forceAiDraw: () => void;
   forcePlayerWin: () => void;
+  setCurrentSuit: (suit: Suit, message?: string) => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -80,7 +83,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [dealAnimationDone, setDealAnimationDone] = useState(false);
 
-  const startGame = useCallback((mode: GameModeId, difficulty: Difficulty, overrideCpuProfile?: any) => {
+  const startGame = useCallback((mode: GameModeId, difficulty: Difficulty, overrideCpuProfile?: any, eventId?: EventId | null) => {
     const modeConfig = getModeById(mode);
     const isExpert = difficulty === "expert";
     const cpuProfile = mode === "practice"
@@ -96,7 +99,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const newState = initGame(cardsPerPlayer, difficulty);
+    const eventConfig = getEventConfig(eventId);
+    if (eventConfig) {
+      cardsPerPlayer = eventConfig.cardsPerPlayer;
+    }
+
+    const newState = initGame(cardsPerPlayer, difficulty, eventId ?? null);
     setSelectedCard(null);
     setDealAnimationDone(false);
     setGameState(newState);
@@ -112,6 +120,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       maxHandSizeReached: cardsPerPlayer,
       cpuProfile,
       challengeRules,
+      eventId: eventId ?? null,
     });
   }, [playerLevel]);
 
@@ -211,6 +220,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setGameState(prev => prev ? { ...prev, phase: "player_wins", message: "rival_abandoned" } : prev);
   }, []);
 
+  const setCurrentSuit = useCallback((suit: Suit, message?: string) => {
+    setGameState(prev => {
+      if (!prev) return prev;
+      if (prev.pendingDraw > 0) return prev;
+      if (prev.phase !== "playing") return prev;
+      return { ...prev, currentSuit: suit, message: message ?? prev.message };
+    });
+  }, []);
+
   return (
     <GameContext.Provider
       value={{
@@ -230,6 +248,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         forceGameOver,
         forceAiDraw,
         forcePlayerWin,
+        setCurrentSuit,
       }}
     >
       {children}

@@ -756,8 +756,9 @@ export default function PlayScreen() {
           onPress={() => {
             if (evStatus !== "live") return;
             playSound("mode_select").catch(() => {});
-            const evGameMode: GameModeId = EV_IDX === 0 ? "lightning" : "classic";
-            startGame(evGameMode, "normal");
+            const EV_IDS = ["speed", "random", "double", "survival"] as const;
+            const evId = EV_IDS[EV_IDX];
+            startGame("classic", "normal", undefined, evId);
             router.push("/game");
           }}
           style={({ pressed }) => ({

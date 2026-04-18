@@ -12,6 +12,7 @@ export interface Challenge {
   target: number;
   type: "wins" | "cards_played" | "specials" | "streak" | "play_mode";
   modeFilter?: string;
+  eventFilter?: string;
   progress: number;
   completed: boolean;
   claimed: boolean;
@@ -158,6 +159,11 @@ export const CHALLENGES_POOL: Omit<Challenge, "progress" | "completed" | "claime
   { id: "c28", title: "Rey del Lightning", titleEn: "Lightning King", titlePt: "Rei do Lightning", description: "Gana 5 partidas en modo Relámpago", descriptionEn: "Win 5 matches in Lightning mode", descriptionPt: "Vença 5 partidas no modo Relâmpago", icon: "flash-outline", target: 5, type: "wins", modeFilter: "lightning", coinReward: 300, xpReward: 600 },
   { id: "c29", title: "Maestro de Clásico", titleEn: "Classic Grandmaster", titlePt: "Grão-Mestre Clássico", description: "Gana 5 partidas en modo Clásico", descriptionEn: "Win 5 matches in Classic mode", descriptionPt: "Vença 5 partidas no modo Clássico", icon: "trophy-outline", target: 5, type: "wins", modeFilter: "classic", coinReward: 300, xpReward: 600 },
   { id: "c30", title: "Imbatible", titleEn: "Unbeatable", titlePt: "Imbatível", description: "Gana 5 partidas seguidas", descriptionEn: "Win 5 matches in a row", descriptionPt: "Vença 5 partidas seguidas", icon: "diamond", target: 5, type: "streak", coinReward: 1000, xpReward: 2000 },
+  // ── Event-specific weekly challenges ─────────────────────────────────────
+  { id: "ev_speed_win", title: "Reflejos Veloces", titleEn: "Quick Reflexes", titlePt: "Reflexos Rápidos", description: "Gana 1 evento Velocidad Extrema", descriptionEn: "Win 1 Extreme Speed event", descriptionPt: "Vença 1 evento Velocidade Extrema", icon: "flash", target: 1, type: "wins", eventFilter: "speed", coinReward: 250, xpReward: 500 },
+  { id: "ev_random_win", title: "Caos Domado", titleEn: "Tamed Chaos", titlePt: "Caos Domado", description: "Gana 1 evento Cartas Aleatorias", descriptionEn: "Win 1 Random Cards event", descriptionPt: "Vença 1 evento Cartas Aleatórias", icon: "shuffle", target: 1, type: "wins", eventFilter: "random", coinReward: 250, xpReward: 500 },
+  { id: "ev_double_win", title: "Doble o Nada", titleEn: "Double or Nothing", titlePt: "Dobro ou Nada", description: "Gana 1 evento Doble Efecto", descriptionEn: "Win 1 Double Effect event", descriptionPt: "Vença 1 evento Efeito Duplo", icon: "copy", target: 1, type: "wins", eventFilter: "double", coinReward: 250, xpReward: 500 },
+  { id: "ev_survival_win", title: "Superviviente", titleEn: "Survivor", titlePt: "Sobrevivente", description: "Gana 1 evento Supervivencia", descriptionEn: "Win 1 Survival event", descriptionPt: "Vença 1 evento Sobrevivência", icon: "shield", target: 1, type: "wins", eventFilter: "survival", coinReward: 250, xpReward: 500 },
 ];
 
 const STORAGE_KEY = "ocho_challenges_v1";
@@ -216,7 +222,8 @@ export async function updateChallengeProgress(
   type: Challenge["type"],
   value: number,
   modeFilter?: string,
-  isWin: boolean = false
+  isWin: boolean = false,
+  eventId?: string | null,
 ): Promise<Challenge[]> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -230,7 +237,9 @@ export async function updateChallengeProgress(
       
       let match = false;
       if (c.type === type) {
-        if (!c.modeFilter || c.modeFilter === modeFilter) {
+        const modeOk = !c.modeFilter || c.modeFilter === modeFilter;
+        const eventOk = c.eventFilter ? c.eventFilter === eventId : true;
+        if (modeOk && eventOk) {
           match = true;
         }
       }

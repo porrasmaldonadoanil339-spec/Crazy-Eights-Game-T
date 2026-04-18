@@ -33,6 +33,8 @@ export interface PlayerStats {
   totalLosses: number;
   winsByMode: Partial<Record<GameModeId, number>>;
   gamesByMode: Partial<Record<GameModeId, number>>;
+  winsByEvent?: Partial<Record<string, number>>;
+  gamesByEvent?: Partial<Record<string, number>>;
   winsByDifficulty: Partial<Record<Difficulty, number>>;
   totalEightsPlayed: number;
   totalCardsDrawn: number;
@@ -154,6 +156,8 @@ const DEFAULT_STATS: PlayerStats = {
   totalLosses: 0,
   winsByMode: {},
   gamesByMode: {},
+  winsByEvent: {},
+  gamesByEvent: {},
   winsByDifficulty: {},
   totalEightsPlayed: 0,
   totalCardsDrawn: 0,
@@ -258,6 +262,7 @@ interface ProfileContextValue {
     isPerfect: boolean;
     isComeback: boolean;
     gameDurationMs?: number;
+    eventId?: string | null;
   }) => void;
   updateAchievementProgress: (id: AchievementId, amount: number) => void;
   claimBattlePassTier: (tier: number) => void;
@@ -750,6 +755,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     isComeback: boolean;
     gameDurationMs?: number;
     opponentName?: string;
+    eventId?: string | null;
   }) => {
     update((p) => {
       const today = new Date().toDateString();
@@ -775,6 +781,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           ...p.stats.gamesByMode,
           [params.mode]: (p.stats.gamesByMode[params.mode] ?? 0) + 1,
         },
+        winsByEvent: params.eventId ? {
+          ...(p.stats.winsByEvent ?? {}),
+          [params.eventId]: ((p.stats.winsByEvent ?? {})[params.eventId] ?? 0) + (params.won ? 1 : 0),
+        } : (p.stats.winsByEvent ?? {}),
+        gamesByEvent: params.eventId ? {
+          ...(p.stats.gamesByEvent ?? {}),
+          [params.eventId]: ((p.stats.gamesByEvent ?? {})[params.eventId] ?? 0) + 1,
+        } : (p.stats.gamesByEvent ?? {}),
         winsByDifficulty: {
           ...p.stats.winsByDifficulty,
           [params.difficulty]: (p.stats.winsByDifficulty[params.difficulty] ?? 0) + (params.won ? 1 : 0),

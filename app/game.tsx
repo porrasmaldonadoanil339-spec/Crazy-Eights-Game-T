@@ -39,6 +39,7 @@ import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmoteP
 import ChestOpeningModal from "@/components/ChestOpeningModal";
 import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
 import { getActiveEvent } from "@/components/EventsCard";
+import { getEventConfig, pickRandomSuit, type EventId } from "@/lib/eventModes";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
@@ -1254,6 +1255,7 @@ export default function GameScreen() {
     gameState, session, handlePlayCard, handleDraw, handleChooseSuit,
     runAiTurn, selectedCard, setSelectedCard, dealAnimationDone, setDealAnimationDone,
     startNextTournamentRound, startGame, getGameResult, forceGameOver, forceAiDraw, forcePlayerWin,
+    setCurrentSuit,
   } = useGame();
   const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
   const T = useT();
@@ -1295,6 +1297,10 @@ export default function GameScreen() {
   const [showLastCardBanner, setShowLastCardBanner] = useState(false);
   const [activeChallenges, setActiveChallenges] = useState<Challenge[]>([]);
   const [showLightningBanner, setShowLightningBanner] = useState(false);
+  const [showEventBanner, setShowEventBanner] = useState(false);
+  const [eventShuffleFlash, setEventShuffleFlash] = useState(false);
+  const lastShuffleTurnRef = useRef<number>(-1);
+  const eventConfig = getEventConfig(session?.eventId as EventId | undefined);
   const [activeChallengeRules, setActiveChallengeRules] = useState<ActiveChallengeRules | null>(null);
   const [showChallengeRulesModal, setShowChallengeRulesModal] = useState(false);
   const [challengeRuleViolation, setChallengeRuleViolation] = useState<string | null>(null);
@@ -1343,6 +1349,33 @@ export default function GameScreen() {
       return () => clearTimeout(t);
     }
   }, [dealAnimationDone, session?.mode]);
+
+  // Event mode intro banner
+  useEffect(() => {
+    if (session?.eventId && dealAnimationDone) {
+      setShowEventBanner(true);
+      const t = setTimeout(() => setShowEventBanner(false), 3200);
+      return () => clearTimeout(t);
+    }
+  }, [dealAnimationDone, session?.eventId]);
+
+  // "Cartas Aleatorias" event — shuffle current suit at random every N player turns
+  useEffect(() => {
+    if (!eventConfig?.randomSuitShuffle) return;
+    if (!gameState || !dealAnimationDone) return;
+    if (gameState.phase !== "playing") return;
+    if (gameState.currentPlayer !== "player") return;
+    if (gameState.pendingDraw > 0) return;
+    const turnId = gameState.turnId ?? 0;
+    if (turnId === lastShuffleTurnRef.current) return;
+    const everyN = eventConfig.randomShuffleEvery ?? 4;
+    if (turnId === 0 || turnId % everyN !== 0) return;
+    lastShuffleTurnRef.current = turnId;
+    const newSuit = pickRandomSuit(gameState.currentSuit);
+    setCurrentSuit(newSuit, "🔀 ¡Palo cambiado al azar!");
+    setEventShuffleFlash(true);
+    setTimeout(() => setEventShuffleFlash(false), 1400);
+  }, [gameState?.turnId, gameState?.currentPlayer, gameState?.phase, dealAnimationDone, eventConfig?.randomSuitShuffle, eventConfig?.randomShuffleEvery]);
 
   // Challenge mode — read rules from session (set during startGame so startingCards applies)
   useEffect(() => {
@@ -1751,14 +1784,14 @@ export default function GameScreen() {
       setTournamentScores(newScores);
       setTournamentRound((r) => r + 1);
       setLastTournamentRoundWon(won);
-      recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
+      recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration, eventId: session.eventId ?? null });
       scheduleReEngagementNotification(86400, { notificationsEnabled: profile.notificationsEnabled ?? true, reminderNotifications: profile.reminderNotifications ?? true }).catch(() => {});
       setTimeout(() => {
         setShowEpicResult(null);
         setShowTournamentModal(true);
       }, 1500);
     } else {
-      recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration });
+      recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration, eventId: session.eventId ?? null });
       scheduleReEngagementNotification(86400, { notificationsEnabled: profile.notificationsEnabled ?? true, reminderNotifications: profile.reminderNotifications ?? true }).catch(() => {});
       if (won) {
         const newTotalWins = profile.stats.totalWins + 1;
@@ -1846,16 +1879,27 @@ export default function GameScreen() {
       if (session.mode === "lightning" && duration < 120000) updateAchievementProgress("speed_demon", 1);
       if (duration > 600000) updateAchievementProgress("marathon_man", 1);
 
-      // Update Daily Challenges
-      updateChallengeProgress("wins", won ? 1 : 0, session.mode);
-      updateChallengeProgress("play_mode", 1, session.mode);
-      updateChallengeProgress("cards_played", session.cardsPlayedThisGame ?? 0, session.mode);
-      updateChallengeProgress("specials", session.eightsPlayedThisGame, session.mode);
+      // Update Daily Challenges (event-aware)
+      const _evId = session.eventId ?? null;
+      updateChallengeProgress("wins", won ? 1 : 0, session.mode, false, _evId);
+      updateChallengeProgress("play_mode", 1, session.mode, false, _evId);
+      updateChallengeProgress("cards_played", session.cardsPlayedThisGame ?? 0, session.mode, false, _evId);
+      updateChallengeProgress("specials", session.eightsPlayedThisGame, session.mode, false, _evId);
+
+      // Event-specific achievement progress
+      if (session.eventId) {
+        updateAchievementProgress("event_any_win", 1);
+        if (session.eventId === "speed")    updateAchievementProgress("event_speed_win", 1);
+        if (session.eventId === "random")   updateAchievementProgress("event_random_win", 1);
+        if (session.eventId === "double")   updateAchievementProgress("event_double_win", 1);
+        if (session.eventId === "survival") updateAchievementProgress("event_survival_win", 1);
+      }
     } else {
       // Even if lost, progress "play_mode" and "cards_played"
-      updateChallengeProgress("play_mode", 1, session.mode);
-      updateChallengeProgress("cards_played", session.cardsPlayedThisGame ?? 0, session.mode);
-      updateChallengeProgress("specials", session.eightsPlayedThisGame, session.mode);
+      const _evId = session.eventId ?? null;
+      updateChallengeProgress("play_mode", 1, session.mode, false, _evId);
+      updateChallengeProgress("cards_played", session.cardsPlayedThisGame ?? 0, session.mode, false, _evId);
+      updateChallengeProgress("specials", session.eightsPlayedThisGame, session.mode, false, _evId);
     }
     if (session.eightsPlayedThisGame > 0) {
       updateAchievementProgress("eight_wizard", 1);
@@ -1867,8 +1911,12 @@ export default function GameScreen() {
   }, [gameState?.phase]);
 
   // ─── Inactivity auto-draw timer ──────────────────────────────────────────
-  const INACTIVITY_TIMEOUT = session?.mode === "lightning" ? 8 : session?.mode === "practice" ? 40 : 30;
-  const INACTIVITY_SHOW_DELAY = session?.mode === "lightning" ? 999 : 20;
+  const INACTIVITY_TIMEOUT = eventConfig?.turnSeconds
+    ? eventConfig.turnSeconds
+    : session?.mode === "lightning" ? 8 : session?.mode === "practice" ? 40 : 30;
+  const INACTIVITY_SHOW_DELAY = eventConfig?.turnSeconds
+    ? 0
+    : session?.mode === "lightning" ? 999 : 20;
   useEffect(() => {
     const isActive =
       gameState?.currentPlayer === "player" &&
@@ -2086,6 +2134,24 @@ export default function GameScreen() {
         </LinearGradient>
       </Animated.View>
 
+      {/* Event intro banner */}
+      {showEventBanner && eventConfig && (
+        <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.lastCardBanner, { pointerEvents: "none" }]}>
+          <LinearGradient colors={[eventConfig.color, "#000"]} style={styles.lastCardBannerInner}>
+            <Text style={styles.lastCardBannerText} numberOfLines={1}>EVENTO · {eventConfig.name.toUpperCase()}</Text>
+            <Text style={[styles.lastCardBannerText, { fontSize: 10, marginTop: 2, opacity: 0.9 }]} numberOfLines={2}>{eventConfig.desc}</Text>
+          </LinearGradient>
+        </Animated.View>
+      )}
+
+      {/* Random suit shuffle flash */}
+      {eventShuffleFlash && (
+        <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.challengeViolationBanner, { pointerEvents: "none", borderColor: "#9B59B6" }]}>
+          <Ionicons name="shuffle" size={20} color="#9B59B6" />
+          <Text style={[styles.challengeViolationText, { color: "#fff" }]}>¡Palo cambiado al azar!</Text>
+        </Animated.View>
+      )}
+
       {/* Challenge HUD */}
       {session?.mode === "challenge" && (
         <View style={styles.challengeHud}>
@@ -2165,6 +2231,12 @@ export default function GameScreen() {
             <View style={[styles.modePill, { borderColor: "#00AA6644", backgroundColor: "#00AA6618" }]}>
               <Ionicons name="shield-checkmark" size={10} color="#00AA66" />
               <Text style={[styles.modeLabel, { color: "#00AA66" }]}>{T("practiceNoRanking")}</Text>
+            </View>
+          )}
+          {eventConfig && (
+            <View style={[styles.modePill, { borderColor: eventConfig.color + "66", backgroundColor: eventConfig.color + "18" }]}>
+              <Ionicons name={eventConfig.icon as any} size={11} color={eventConfig.color} />
+              <Text style={[styles.modeLabel, { color: eventConfig.color }]} numberOfLines={1}>EVENTO · {eventConfig.shortName.toUpperCase()}</Text>
             </View>
           )}
         </View>
