@@ -993,8 +993,8 @@ export default function PlayScreen() {
         </Animated.View>
 
         <View style={styles.modesGrid}>
-          {(() => { const _gridModes = GAME_MODES.filter(m => m.id !== "classic"); return _gridModes.map((mode, idx) => {
-            const isLastAlone = idx === _gridModes.length - 1 && _gridModes.length % 2 !== 0;
+          {GAME_MODES.filter(m => m.id !== "classic").map((mode, idx, arr) => {
+            const isLastAlone = idx === arr.length - 1 && arr.length % 2 !== 0;
             return (
               <Pressable
                 key={mode.id}
@@ -1027,7 +1027,7 @@ export default function PlayScreen() {
                 </LinearGradient>
               </Pressable>
             );
-          }); })()}
+          })}
         </View>
 
         {/* Multiplayer section */}
