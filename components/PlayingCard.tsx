@@ -14,6 +14,7 @@ import { Colors } from "@/constants/colors";
 import type { Card, Suit } from "@/lib/gameEngine";
 import { suitSymbol, suitColor } from "@/lib/gameEngine";
 import { useT } from "@/hooks/useT";
+import type { TranslationKey } from "@/lib/i18n";
 
 interface PlayingCardProps {
   card: Card;
@@ -29,7 +30,8 @@ interface PlayingCardProps {
   showEffectBadge?: boolean;
 }
 
-type EffectInfo = { icon: string; labelKey?: string; bg: string; border: string };
+type EffectLabelKey = "effectLabelSkip" | "effectLabelReverse" | "effectLabelExtra" | "effectLabelColor";
+type EffectInfo = { icon: string; labelKey?: EffectLabelKey; bg: string; border: string };
 
 function getEffectInfo(rank: Card["rank"]): EffectInfo | null {
   switch (rank) {
@@ -44,6 +46,15 @@ function getEffectInfo(rank: Card["rank"]): EffectInfo | null {
     default: return null;
   }
 }
+
+// Compile-time check that every label key is a valid TranslationKey.
+const _labelKeyCheck: Record<EffectLabelKey, TranslationKey> = {
+  effectLabelSkip: "effectLabelSkip",
+  effectLabelReverse: "effectLabelReverse",
+  effectLabelExtra: "effectLabelExtra",
+  effectLabelColor: "effectLabelColor",
+};
+void _labelKeyCheck;
 
 // Two variants:
 //   - "mini"  → icon-only, small circle. Used in miniature contexts (size="sm").
@@ -67,7 +78,7 @@ function EffectBadge({ rank, variant }: { rank: Card["rank"]; variant: "mini" | 
     );
   }
 
-  const label = info.labelKey ? tr(info.labelKey as any) : null;
+  const label = info.labelKey ? tr(info.labelKey) : null;
   return (
     <View style={[badgeStyles.fullWrap, {
       backgroundColor: info.bg, borderColor: info.border,

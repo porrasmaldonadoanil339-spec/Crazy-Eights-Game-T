@@ -1730,11 +1730,18 @@ export default function GameScreen() {
     if (!gameState || !dealAnimationDone) return;
     const topCard = gameState.discardPile[gameState.discardPile.length - 1];
     if (!topCard) return;
-    if (topCard.id === prevTopCardIdRef.current) return;
-    const isFirstSet = prevTopCardIdRef.current === undefined;
-    prevTopCardIdRef.current = topCard.id;
-    if (isFirstSet) return; // initial discard, not a played card
     const r = topCard.rank;
+    // For 8s, we need the suit selection to finalize before showing the
+    // banner — when an 8 is played it lands on top first and `currentSuit`
+    // only updates after the choosing_suit phase resolves. Encoding the
+    // suit into the signature for 8s makes the banner re-evaluate after
+    // the choice is committed without re-firing for other ranks.
+    if (r === "8" && gameState.phase === "choosing_suit") return;
+    const sig = r === "8" ? `${topCard.id}:${gameState.currentSuit}` : topCard.id;
+    if (sig === prevTopCardIdRef.current) return;
+    const isFirstSet = prevTopCardIdRef.current === undefined;
+    prevTopCardIdRef.current = sig;
+    if (isFirstSet) return; // initial discard, not a played card
     let label = "";
     let color = "#FFFFFF";
     if (r === "Joker") {
