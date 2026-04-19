@@ -113,6 +113,13 @@ export interface PlayerProfile {
   // Daily rewards
   lastDailyRewardDate: string;
   dailyRewardIndex: number;
+  // Daily shop
+  lastDailyShopFreeDate: string;
+  purchasedDailyShopIds: string[];
+  lastDailyShopDate: string;
+  // Fichas mode
+  fichasModePlaysToday: number;
+  lastFichasModeDate: string;
   // Watch ads
   adsWatchedToday: number;
   lastAdsDate: string;
@@ -203,6 +210,11 @@ const DEFAULT_PROFILE: PlayerProfile = {
   stats: DEFAULT_STATS,
   lastDailyRewardDate: "",
   dailyRewardIndex: 0,
+  lastDailyShopFreeDate: "",
+  purchasedDailyShopIds: [],
+  lastDailyShopDate: "",
+  fichasModePlaysToday: 0,
+  lastFichasModeDate: "",
   adsWatchedToday: 0,
   lastAdsDate: "",
   equippedEmotes: ["emote_gg", "emote_ocho", "emote_bravo", "emote_lol", "emote_no", "emote_si", "emote_jaja", "emote_bien"],
@@ -248,6 +260,10 @@ interface ProfileContextValue {
   addFichas: (amount: number) => void;
   spendFichas: (amount: number) => boolean;
   buyChestWithFichas: (chestType: ChestType) => boolean;
+  buyDailyShopItem: (itemId: string, price: number, currency: "coins" | "fichas") => boolean;
+  claimDailyShopFree: (itemId: string) => boolean;
+  recordFichasModePlay: () => void;
+  fichasModePlaysRemaining: () => number;
   claimPlayerPathLevel: (level: number) => boolean;
   addXp: (amount: number) => void;
   buyItem: (item: StoreItem) => boolean;
@@ -365,6 +381,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             })(),
             battlePassSeasonNumber: getCurrentSeason().number,
             lastDailyRewardDate: saved.lastDailyRewardDate ?? "",
+            lastDailyShopFreeDate: saved.lastDailyShopFreeDate ?? "",
+            purchasedDailyShopIds: saved.purchasedDailyShopIds ?? [],
+            lastDailyShopDate: saved.lastDailyShopDate ?? "",
+            fichasModePlaysToday: saved.fichasModePlaysToday ?? 0,
+            lastFichasModeDate: saved.lastFichasModeDate ?? "",
             dailyRewardIndex: saved.dailyRewardIndex ?? 0,
             musicEnabled: saved.musicEnabled ?? true,
             sfxEnabled: saved.sfxEnabled ?? true,
@@ -547,6 +568,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const CHEST_FICHA_PRICES: Record<ChestType, number> = {
     common: 25, rare: 80, epic: 200, legendary: 500,
+    magic: 150, giant: 350, event: 280, supreme: 800, fichas: 100,
   };
 
   const claimPlayerPathLevel = useCallback((level: number): boolean => {
@@ -589,6 +611,75 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     });
     return success;
   }, [update]);
+
+  const todayKey = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  };
+
+  const buyDailyShopItem = useCallback((itemId: string, price: number, currency: "coins" | "fichas"): boolean => {
+    let success = false;
+    update((p) => {
+      const today = todayKey();
+      const purchased = p.lastDailyShopDate === today ? (p.purchasedDailyShopIds ?? []) : [];
+      if (purchased.includes(itemId)) return p;
+      if ((p.ownedItems ?? []).includes(itemId)) return p;
+      if (currency === "coins") {
+        if (p.coins < price) return p;
+        success = true;
+        return {
+          ...p,
+          coins: p.coins - price,
+          ownedItems: [...(p.ownedItems ?? []), itemId],
+          lastDailyShopDate: today,
+          purchasedDailyShopIds: [...purchased, itemId],
+        };
+      }
+      const balance = p.fichas ?? 0;
+      if (balance < price) return p;
+      success = true;
+      return {
+        ...p,
+        fichas: balance - price,
+        ownedItems: [...(p.ownedItems ?? []), itemId],
+        lastDailyShopDate: today,
+        purchasedDailyShopIds: [...purchased, itemId],
+      };
+    });
+    return success;
+  }, [update]);
+
+  const claimDailyShopFree = useCallback((itemId: string): boolean => {
+    let success = false;
+    update((p) => {
+      const today = todayKey();
+      if (p.lastDailyShopFreeDate === today) return p;
+      success = true;
+      const owned = p.ownedItems ?? [];
+      return {
+        ...p,
+        lastDailyShopFreeDate: today,
+        ownedItems: owned.includes(itemId) ? owned : [...owned, itemId],
+      };
+    });
+    return success;
+  }, [update]);
+
+  const recordFichasModePlay = useCallback(() => {
+    update((p) => {
+      const today = todayKey();
+      if (p.lastFichasModeDate !== today) {
+        return { ...p, fichasModePlaysToday: 1, lastFichasModeDate: today };
+      }
+      return { ...p, fichasModePlaysToday: (p.fichasModePlaysToday ?? 0) + 1 };
+    });
+  }, [update]);
+
+  const fichasModePlaysRemaining = useCallback((): number => {
+    const today = todayKey();
+    if (profile.lastFichasModeDate !== today) return 3;
+    return Math.max(0, 3 - (profile.fichasModePlaysToday ?? 0));
+  }, [profile.lastFichasModeDate, profile.fichasModePlaysToday]);
 
   const addXp = useCallback((amount: number) => {
     update((p) => ({ ...p, totalXp: p.totalXp + amount }));
@@ -930,6 +1021,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         addFichas,
         spendFichas,
         buyChestWithFichas,
+        buyDailyShopItem,
+        claimDailyShopFree,
+        recordFichasModePlay,
+        fichasModePlaysRemaining,
         claimPlayerPathLevel,
         addXp,
         buyItem,

@@ -15,6 +15,7 @@ import { playSound } from "@/lib/sounds";
 import { useT } from "@/hooks/useT";
 import { router } from "expo-router";
 import BouncePressable from "@/components/BouncePressable";
+import { getDailyShopItems, getDailyFreeItem, getDailyDateKey, DailyShopItem } from "@/lib/dailyShop";
 
 const RARITY_COLORS_MAP: Record<string, string> = {
   common: "#95A5A6",
@@ -542,8 +543,18 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
           <Ionicons name="help-circle-outline" size={18} color={theme.textMuted} />
         </Pressable>
         <View style={[styles.effectIconWrap, { backgroundColor: item.previewColor + "33", borderColor: item.previewColor + "44", width: 44, height: 44 }]}>
-          <Ionicons name={item.preview as any} size={22} color={item.previewColor} />
+          {item.animated ? (
+            <AnimatedEmoteIcon icon={item.preview as any} color={item.previewColor} delay={0} />
+          ) : (
+            <Ionicons name={item.preview as any} size={22} color={item.previewColor} />
+          )}
         </View>
+        {item.animated && (
+          <View style={styles.animatedBadge} pointerEvents="none">
+            <Ionicons name="sparkles" size={8} color="#fff" />
+            <Text style={styles.animatedBadgeText}>ANIM</Text>
+          </View>
+        )}
         <View style={{ flex: 1 }}>
           <View style={styles.effectTopRow}>
             <Text style={[styles.effectName, { color: theme.text }]}>{localized.name}</Text>
@@ -594,23 +605,16 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
 
 export default function StoreScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, buyItem, updateCardBack, updateCardDesign, updateTableDesign, updateAvatar, updateTitle, updateFrame, updateEffect, updateEquippedEmotes } = useProfile();
-  const [category, setCategory] = useState<StoreItemCategory>("card_back");
-  const [confirmItem, setConfirmItem] = useState<StoreItem | null>(null);
+  const { profile, buyDailyShopItem, claimDailyShopFree, updateCardBack, updateCardDesign, updateTableDesign, updateAvatar, updateTitle, updateFrame, updateEffect, updateEquippedEmotes } = useProfile();
+  const [confirmItem, setConfirmItem] = useState<DailyShopItem | null>(null);
   const [infoItem, setInfoItem] = useState<StoreItem | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const catScrollRef = useRef<ScrollView>(null);
 
   const T = useT();
   const theme = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
-  const items = sortItemsByRarityAndPrice(
-    STORE_ITEMS.filter((i) => i.category === category).map(applyPriceMultiplier)
-  ).map((i) => localizeItem(i, lang));
-  const isEffects = category === "effect";
-  const isEmotes = category === "emote";
 
   const isDark = profile.darkMode !== false;
   const themeColors = isDark ? Colors : LightColors;
@@ -621,21 +625,33 @@ export default function StoreScreen() {
 
   const equippedEmotes: string[] = profile.equippedEmotes ?? ["emote_gg", "emote_ocho", "emote_bravo", "emote_lol", "emote_no", "emote_si", "emote_jaja", "emote_bien"];
 
-  const CATEGORY_LABELS: Record<StoreItemCategory, string> = {
-    card_back: T("categoryCardBacks"),
-    card_design: T("categoryCardDesigns"),
-    table_design: T("categoryTableDesigns"),
-    avatar: T("categoryAvatars"),
-    frame: T("categoryFrames"),
-    title: T("categoryTitles"),
-    effect: T("categoryEffects"),
-    emote: T("categoryEmotes"),
-  };
-
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
   };
+
+  // Daily rotation
+  const [nowTick, setNowTick] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 60000);
+    return () => clearInterval(t);
+  }, []);
+  const dateKey = useMemo(() => getDailyDateKey(new Date(nowTick)), [nowTick]);
+  const dailyItems = useMemo(() => getDailyShopItems(dateKey).map(i => ({ ...i, ...localizeItem(i, lang) })), [dateKey, lang]);
+  const freeItem = useMemo(() => {
+    const f = getDailyFreeItem(dateKey);
+    return { ...f, ...localizeItem(f, lang) };
+  }, [dateKey, lang]);
+  const today = dateKey;
+  const purchasedToday = profile.lastDailyShopDate === today ? (profile.purchasedDailyShopIds ?? []) : [];
+  const freeClaimed = profile.lastDailyShopFreeDate === today;
+  const msToMidnight = useMemo(() => {
+    const d = new Date(nowTick);
+    const next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0);
+    return next.getTime() - d.getTime();
+  }, [nowTick]);
+  const hoursLeft = Math.floor(msToMidnight / 3600000);
+  const minutesLeft = Math.floor((msToMidnight % 3600000) / 60000);
 
   function getEquippedId(cat: StoreItemCategory): string {
     if (cat === "card_back") return profile.cardBackId ?? "back_default";
@@ -680,90 +696,37 @@ export default function StoreScreen() {
 
   const handlePurchase = async () => {
     if (!confirmItem) return;
+    const item = confirmItem;
     setConfirmItem(null);
-    if (profile.coins < confirmItem.price) {
+    const balance = item.payCurrency === "fichas" ? (profile.fichas ?? 0) : profile.coins;
+    if (balance < item.finalPrice) {
       await playSound("error");
-      showToast(T("insufficientCoins"));
+      showToast(item.payCurrency === "fichas" ? "Fichas insuficientes" : T("insufficientCoins"));
       return;
     }
-    const success = buyItem(confirmItem);
+    const success = buyDailyShopItem(item.id, item.finalPrice, item.payCurrency);
     if (success) {
       await playSound("purchase");
-      if (confirmItem.category === "card_back") updateCardBack(confirmItem.id);
-      if (confirmItem.category === "card_design") updateCardDesign(confirmItem.id);
-      if (confirmItem.category === "table_design") updateTableDesign(confirmItem.id);
-      if (confirmItem.category === "avatar") updateAvatar(confirmItem.id);
-      if (confirmItem.category === "title") updateTitle(confirmItem.id);
-      if (confirmItem.category === "frame") updateFrame(confirmItem.id);
-      if (confirmItem.category === "effect") updateEffect(confirmItem.id);
-      showToast(`${confirmItem.name} ${T("obtainedItem")}!`);
+      if (item.category === "card_back") updateCardBack(item.id);
+      if (item.category === "card_design") updateCardDesign(item.id);
+      if (item.category === "table_design") updateTableDesign(item.id);
+      if (item.category === "avatar") updateAvatar(item.id);
+      if (item.category === "title") updateTitle(item.id);
+      if (item.category === "frame") updateFrame(item.id);
+      if (item.category === "effect") updateEffect(item.id);
+      showToast(`${item.name} ${T("obtainedItem")}!`);
+    } else {
+      showToast(T("insufficientCoins"));
     }
   };
 
-  const ownedCount = items.filter(i => profile.ownedItems.includes(i.id) || i.isDefault).length;
-  const equippedId = getEquippedId(category);
-
-  // Now tick — refreshes every 60s so countdown AND daily seed roll over without remount
-  const [nowTick, setNowTick] = useState(Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNowTick(Date.now()), 60000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Day-of-year derived from nowTick so the rotation flips at local midnight
-  const dayOfYear = useMemo(() => {
-    const d = new Date(nowTick);
-    return Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
-  }, [nowTick]);
-
-  // Daily "HOY" rotation: deterministic per (date, category). 6-8 items get the badge.
-  const dailyHotIds = useMemo(() => {
-    const hot = new Set<string>();
-    const buyable = STORE_ITEMS.filter(i => i.category === category && !i.isDefault);
-    if (buyable.length === 0) return hot;
-    const targetCount = Math.min(8, Math.max(6, Math.ceil(buyable.length * 0.4)));
-    const seed = dayOfYear * 9301 + 49297;
-    let h = seed;
-    const indices = new Set<number>();
-    while (indices.size < Math.min(targetCount, buyable.length)) {
-      h = (h * 9301 + 49297) % 233280;
-      indices.add(h % buyable.length);
+  const handleClaimFree = async () => {
+    if (freeClaimed) return;
+    const ok = claimDailyShopFree(freeItem.id);
+    if (ok) {
+      await playSound("purchase");
+      showToast(`¡${freeItem.name}!`);
     }
-    indices.forEach(i => hot.add(buyable[i].id));
-    return hot;
-  }, [dayOfYear, category]);
-
-  const msToMidnight = useMemo(() => {
-    const d = new Date(nowTick);
-    const next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0);
-    return next.getTime() - d.getTime();
-  }, [nowTick]);
-  const hoursLeft = Math.floor(msToMidnight / 3600000);
-  const minutesLeft = Math.floor((msToMidnight % 3600000) / 60000);
-
-  const dailyOffer = useMemo(() => {
-    const allBuyable = STORE_ITEMS
-      .filter(i => !i.isDefault && (i.rarity === "epic" || i.rarity === "legendary"))
-      .map(applyPriceMultiplier)
-      .map((i) => localizeItem(i, lang));
-    if (allBuyable.length === 0) return null;
-    const idx = (dayOfYear * 7) % allBuyable.length;
-    return allBuyable[idx];
-  }, [lang, dayOfYear]);
-
-  const [showPacksModal, setShowPacksModal] = useState(false);
-
-  const handleOpenOffer = () => {
-    if (!dailyOffer) return;
-    // 30% off for the daily offer
-    const discounted: StoreItem = { ...dailyOffer, price: Math.max(1, Math.floor(dailyOffer.price * 0.7)) };
-    setConfirmItem(discounted);
-  };
-  const handleOpenChests = () => {
-    router.push("/profile?tab=chests");
-  };
-  const handleOpenPacks = () => {
-    setShowPacksModal(true);
   };
 
   return (
@@ -773,45 +736,19 @@ export default function StoreScreen() {
       <View style={styles.header}>
         <View>
           <Text style={[styles.screenTitle, { color: themeGold }]}>{T("store")}</Text>
-          {isEmotes
-            ? <Text style={styles.screenSub}>{equippedEmotes.length}/8 {T("emotesEquipped")}</Text>
-            : <Text style={styles.screenSub}>{ownedCount}/{items.length} {T("inCategory")}</Text>
-          }
+          <Text style={styles.screenSub}>{T("dailyRotation") as string ?? "Rotación diaria"} · {hoursLeft}h {minutesLeft}m</Text>
         </View>
-        <View style={styles.coinsBig}>
-          <CoinIcon size={18} color={themeGold} />
-          <Text style={[styles.coinsNum, { color: themeGold }]}>{profile.coins}</Text>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={styles.coinsBig}>
+            <CoinIcon size={16} color={themeGold} />
+            <Text style={[styles.coinsNum, { color: themeGold }]}>{profile.coins}</Text>
+          </View>
+          <View style={[styles.coinsBig, { backgroundColor: "#3498DB22", borderColor: "#3498DB55" }]}>
+            <Ionicons name="diamond" size={14} color="#3498DB" />
+            <Text style={[styles.coinsNum, { color: "#3498DB" }]}>{profile.fichas ?? 0}</Text>
+          </View>
         </View>
       </View>
-
-      <ScrollView
-        ref={catScrollRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={[styles.catScrollView, { flexShrink: 0 }]}
-        contentContainerStyle={styles.catRow}
-      >
-        {CATEGORIES.map((cat) => {
-          const isActive = category === cat.id;
-          return (
-            <Pressable
-              key={cat.id}
-              onPress={() => { setCategory(cat.id); playSound("tab").catch(() => {}); }}
-              style={[
-                styles.catBtn,
-                { backgroundColor: theme.surface, borderColor: isActive ? themeGold : theme.border },
-                isActive && { backgroundColor: themeGold + "22" },
-              ]}
-            >
-              <Ionicons name={cat.icon as any} size={15} color={isActive ? themeGold : theme.textMuted} />
-              <Text style={[styles.catLabel, { color: isActive ? themeGold : theme.textMuted }]}>{CATEGORY_LABELS[cat.id]}</Text>
-              <View style={[styles.catCount, isActive && { backgroundColor: themeGold + "33" }]}>
-                <Text style={[styles.catCountText, { color: isActive ? themeGold : theme.textDim }]}>{cat.count}</Text>
-              </View>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -819,118 +756,55 @@ export default function StoreScreen() {
       >
         <ChestShop themeColors={theme} themeGold={themeGold} showToast={showToast} T={T} />
         <AnimatedEmotesShowcase themeColors={theme} themeGold={themeGold} />
-        <View style={styles.featuredSection}>
-          <View style={styles.featuredHeader}>
-            <Ionicons name="star" size={14} color={Colors.gold} />
-            <Text style={styles.featuredTitle}>{(T("featured") as string) || "DESTACADOS"}</Text>
-          </View>
-          <View style={styles.themedFeatRow}>
-            <BouncePressable style={styles.themedFeatCard} onPress={handleOpenOffer}>
-              <LinearGradient
-                colors={["#FF6B6B", "#C13E3E"]}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={styles.themedFeatGrad}
-              >
-                <View style={styles.themedFeatBadge}>
-                  <Text style={styles.themedFeatBadgeText}>-30%</Text>
-                </View>
-                <Ionicons name="pricetag" size={28} color="#FFF8E1" />
-                <Text style={styles.themedFeatLabel}>{(T("offers") as string) || "OFERTAS"}</Text>
-                {dailyOffer && (
-                  <Text style={styles.themedFeatSub} numberOfLines={1}>{dailyOffer.name}</Text>
-                )}
-              </LinearGradient>
-            </BouncePressable>
 
-            <BouncePressable style={styles.themedFeatCard} onPress={handleOpenChests}>
-              <LinearGradient
-                colors={["#A855F7", "#5B2A9E"]}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={styles.themedFeatGrad}
-              >
-                <Ionicons name="cube" size={28} color="#FFF8E1" />
-                <Text style={styles.themedFeatLabel}>{(T("chests") as string) || "COFRES"}</Text>
-                <Text style={styles.themedFeatSub}>{profile.chestInventory?.length ?? 0}/10</Text>
+        <View style={styles.dailyFreeWrap}>
+          <LinearGradient colors={["#2ECC7144", "#1A8F4A22"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyFreeGrad}>
+            <View style={styles.dailyFreeIcon}>
+              <Ionicons name="gift" size={28} color="#2ECC71" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.dailyFreeTitle}>REGALO DIARIO</Text>
+              <Text style={[styles.dailyFreeName, { color: theme.text }]} numberOfLines={1}>{freeItem.name}</Text>
+              <Text style={[styles.dailyFreeDesc, { color: theme.textMuted }]} numberOfLines={1}>{freeItem.description}</Text>
+            </View>
+            <BouncePressable
+              style={[styles.dailyFreeBtn, freeClaimed && { opacity: 0.5 }]}
+              onPress={freeClaimed ? () => {} : handleClaimFree}
+            >
+              <LinearGradient colors={freeClaimed ? ["#666", "#444"] : ["#2ECC71", "#1A8F4A"]} style={styles.dailyFreeBtnGrad}>
+                <Ionicons name={freeClaimed ? "checkmark" : "gift"} size={16} color="#fff" />
+                <Text style={styles.dailyFreeBtnText}>{freeClaimed ? "OK" : "GRATIS"}</Text>
               </LinearGradient>
             </BouncePressable>
-
-            <BouncePressable style={styles.themedFeatCard} onPress={handleOpenPacks}>
-              <LinearGradient
-                colors={["#D4AF37", "#7A5C00"]}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={styles.themedFeatGrad}
-              >
-                <CoinIcon size={28} color="#FFF8E1" />
-                <Text style={styles.themedFeatLabel}>{(T("packs") as string) || "PACKS"}</Text>
-                <Text style={styles.themedFeatSub}>+1000</Text>
-              </LinearGradient>
-            </BouncePressable>
-          </View>
+          </LinearGradient>
         </View>
 
-        {(
-          <View style={styles.dailyStripWrap}>
-            <LinearGradient colors={["#FF6B6B22", "#C13E3E11"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyStripGrad}>
-              <Ionicons name="flame" size={14} color="#FF6B6B" />
-              <Text style={styles.dailyStripTitle}>{(T("dailyRotation") as string) || "ROTACIÓN DIARIA"}</Text>
-              <View style={{ flex: 1 }} />
-              <Ionicons name="time-outline" size={12} color="#FF6B6B" />
-              <Text style={styles.dailyStripTimer}>{hoursLeft}h {minutesLeft}m</Text>
-            </LinearGradient>
-          </View>
-        )}
-        <View style={(isEffects || isEmotes) ? styles.listContent : styles.grid}>
-        {isEffects ? (
-          items.map((item) => {
-            const owned = profile.ownedItems.includes(item.id) || !!item.isDefault;
+        <View style={styles.dailyStripWrap}>
+          <LinearGradient colors={["#FF6B6B22", "#C13E3E11"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyStripGrad}>
+            <Ionicons name="flame" size={14} color="#FF6B6B" />
+            <Text style={styles.dailyStripTitle}>OFERTAS DEL DÍA</Text>
+            <View style={{ flex: 1 }} />
+            <Ionicons name="time-outline" size={12} color="#FF6B6B" />
+            <Text style={styles.dailyStripTimer}>{hoursLeft}h {minutesLeft}m</Text>
+          </LinearGradient>
+        </View>
+
+        <View style={styles.grid}>
+          {dailyItems.map((item) => {
+            const owned = profile.ownedItems.includes(item.id) || purchasedToday.includes(item.id);
+            const equippedId = getEquippedId(item.category);
             return (
-              <EffectCard
+              <DailyShopCard
                 key={item.id}
                 item={item}
                 owned={owned}
                 isEquipped={equippedId === item.id}
-                isDailyHot={dailyHotIds.has(item.id)}
-                onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
+                onPress={() => { if (!owned) setConfirmItem(item); }}
                 onEquip={() => equipItem(item)}
                 onInfo={() => { setInfoItem(item); playSound("tab").catch(() => {}); }}
               />
             );
-          })
-        ) : isEmotes ? (
-          items.map((item) => {
-            const owned = profile.ownedItems.includes(item.id) || !!item.isDefault;
-            const isEquipped = equippedEmotes.includes(item.id);
-            return (
-              <EmoteCard
-                key={item.id}
-                item={item}
-                owned={owned}
-                isEquipped={isEquipped}
-                equippedCount={equippedEmotes.length}
-                isDailyHot={dailyHotIds.has(item.id)}
-                onPress={() => { if (!item.isDefault && !owned) setConfirmItem(item); }}
-                onToggle={() => { if (owned) toggleEmote(item); }}
-                onInfo={() => { setInfoItem(item); playSound("tab").catch(() => {}); }}
-              />
-            );
-          })
-        ) : (
-          items.map((item) => {
-            const owned = profile.ownedItems.includes(item.id) || !!item.isDefault;
-            return (
-              <StoreItemCard
-                key={item.id}
-                item={item}
-                owned={owned}
-                isEquipped={equippedId === item.id}
-                isDailyHot={dailyHotIds.has(item.id)}
-                onPress={() => { if (!item.isDefault) setConfirmItem(item); }}
-                onEquip={() => equipItem(item)}
-                onInfo={() => { setInfoItem(item); playSound("tab").catch(() => {}); }}
-              />
-            );
-          })
-        )}
+          })}
         </View>
       </ScrollView>
 
@@ -941,7 +815,7 @@ export default function StoreScreen() {
         </View>
       )}
 
-      <ConfirmModal
+      <DailyConfirmModal
         item={confirmItem}
         visible={!!confirmItem}
         onConfirm={handlePurchase}
@@ -953,32 +827,104 @@ export default function StoreScreen() {
         visible={!!infoItem}
         onClose={() => setInfoItem(null)}
       />
-
-      <Modal visible={showPacksModal} transparent animationType="fade" onRequestClose={() => setShowPacksModal(false)}>
-        <Pressable style={styles.packModal} onPress={() => setShowPacksModal(false)}>
-          <Pressable style={styles.packCard} onPress={(e) => e.stopPropagation()}>
-            <Text style={styles.packTitle}>{(T("packs") as string) || "PACKS"}</Text>
-            {[
-              { coins: 500, price: "$0.99" },
-              { coins: 1500, price: "$2.99" },
-              { coins: 5000, price: "$7.99" },
-              { coins: 12000, price: "$14.99" },
-            ].map((p) => (
-              <View key={p.coins} style={styles.packRow}>
-                <View style={styles.packRowLeft}>
-                  <CoinIcon size={22} color="#FFD700" />
-                  <Text style={styles.packRowAmount}>+{p.coins}</Text>
-                </View>
-                <Text style={styles.packRowPrice}>{p.price}</Text>
-              </View>
-            ))}
-            <Pressable style={styles.packCloseBtn} onPress={() => setShowPacksModal(false)}>
-              <Text style={styles.packCloseText}>{T("close") as string}</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
+  );
+}
+
+function DailyConfirmModal({
+  item, visible, onConfirm, onCancel,
+}: { item: DailyShopItem | null; visible: boolean; onConfirm: () => void; onCancel: () => void }) {
+  const T = useT();
+  const theme = useTheme();
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const rarityLabel = useRarityLabel();
+  if (!item) return null;
+  const localized = localizeItem(item, lang);
+  const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
+  const isFichas = item.payCurrency === "fichas";
+  const modalGrad = theme.isDark ? ["#0a1a0c","#061209"] as const : ["#e0f0d8","#cce4c4"] as const;
+  return (
+    <Modal transparent animationType="fade" visible={visible} onRequestClose={onCancel}>
+      <View style={[styles.modalBg, { backgroundColor: theme.overlay }]}>
+        <View style={[styles.confirmModal, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <LinearGradient colors={modalGrad} style={StyleSheet.absoluteFill} />
+          <View style={[styles.confirmIconWrap, { backgroundColor: item.previewColor + "33", borderColor: rarityColor + "66", borderWidth: 1.5 }]}>
+            <Ionicons name={item.preview as any} size={32} color={item.previewColor} />
+          </View>
+          <View style={[styles.rarityBadge, { backgroundColor: rarityColor + "22" }]}>
+            <Text style={[styles.rarityBadgeText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
+          </View>
+          <Text style={[styles.confirmName, { color: theme.text }]}>{localized.name}</Text>
+          <Text style={[styles.confirmDesc, { color: theme.textMuted }]}>{localized.description}</Text>
+          <View style={styles.priceRow}>
+            {isFichas
+              ? <Ionicons name="diamond" size={18} color="#3498DB" />
+              : <CoinIcon size={18} color={theme.gold} />}
+            <Text style={[styles.priceText, { color: isFichas ? "#3498DB" : theme.gold }]}>{item.finalPrice} {isFichas ? "Fichas" : T("coins")}</Text>
+          </View>
+          <View style={styles.confirmBtns}>
+            <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={[styles.cancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
+            </Pressable>
+            <BouncePressable onPress={onConfirm} style={styles.buyBtn}>
+              <LinearGradient colors={isFichas ? ["#7FD0FF", "#3498DB"] : [theme.goldLight, theme.gold]} style={styles.buyBtnGrad}>
+                <Ionicons name="bag-check" size={16} color="#1a0a00" />
+                <Text style={styles.buyBtnText}>{T("buy")}</Text>
+              </LinearGradient>
+            </BouncePressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function DailyShopCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
+  item: DailyShopItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void; onInfo: () => void;
+}) {
+  const T = useT();
+  const theme = useTheme();
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const localized = localizeItem(item, lang);
+  const rarityLabel = useRarityLabel();
+  const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
+  const isFichas = item.payCurrency === "fichas";
+  return (
+    <Pressable
+      onPress={owned ? undefined : onPress}
+      style={({ pressed }) => [
+        styles.itemCard,
+        { borderColor: isEquipped ? Colors.gold + "88" : rarityColor + "55", backgroundColor: theme.surface },
+        isEquipped && styles.itemCardEquipped,
+        pressed && !owned && styles.itemCardPressed,
+      ]}
+    >
+      <LinearGradient colors={[rarityColor + "18", "transparent"]} style={styles.itemGrad}>
+        <Pressable onPress={(e) => { e.stopPropagation(); onInfo(); }} style={styles.infoBtn}>
+          <Ionicons name="help-circle-outline" size={16} color={theme.textMuted} />
+        </Pressable>
+        <View style={[styles.rarityBadgeSmall]}>
+          <Text style={[styles.rarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
+        </View>
+        <View style={[styles.iconPreview, { backgroundColor: item.previewColor + "33" }]}>
+          <Ionicons name={item.preview as any} size={28} color={item.previewColor} />
+        </View>
+        <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={1}>{localized.name}</Text>
+        <Text style={[styles.itemDesc, { color: theme.textMuted }]} numberOfLines={2}>{localized.description}</Text>
+        <View style={styles.itemFooter}>
+          {owned ? (
+            <EquipBadge isEquipped={isEquipped} onEquip={onEquip} T={T} />
+          ) : (
+            <View style={styles.priceRowSm}>
+              {isFichas ? <Ionicons name="diamond" size={12} color="#3498DB" /> : <CoinIcon size={12} color={Colors.gold} />}
+              <Text style={[styles.priceSmText, { color: isFichas ? "#3498DB" : Colors.gold }]}>{item.finalPrice}</Text>
+            </View>
+          )}
+        </View>
+      </LinearGradient>
+    </Pressable>
   );
 }
 
@@ -1014,11 +960,22 @@ const styles = StyleSheet.create({
   catCountActive: { backgroundColor: Colors.gold + "33" },
   catCountText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: Colors.textDim },
   grid: { paddingHorizontal: 16, flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  dailyFreeWrap: { paddingHorizontal: 16, marginBottom: 10, marginTop: 4 },
+  dailyFreeGrad: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: "#2ECC7166" },
+  dailyFreeIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#2ECC7122", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#2ECC7155" },
+  dailyFreeTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: "#2ECC71", letterSpacing: 1.5, marginBottom: 2 },
+  dailyFreeName: { fontFamily: "Nunito_800ExtraBold", fontSize: 14 },
+  dailyFreeDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, marginTop: 2 },
+  dailyFreeBtn: { borderRadius: 10, overflow: "hidden" },
+  dailyFreeBtnGrad: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 8 },
+  dailyFreeBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#fff", letterSpacing: 1 },
   dailyStripWrap: { paddingHorizontal: 16, marginBottom: 8 },
   dailyStripGrad: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: "#FF6B6B55" },
   dailyStripTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#FF6B6B", letterSpacing: 1.5 },
   dailyStripTimer: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#FF6B6B", fontVariant: ["tabular-nums"] },
   dailyBadge: { position: "absolute", top: 6, left: 6, zIndex: 10 },
+  animatedBadge: { position: "absolute", top: 6, right: 36, zIndex: 10, flexDirection: "row", alignItems: "center", gap: 2, backgroundColor: "#9B59B6", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 5, borderWidth: 1, borderColor: "#fff5" },
+  animatedBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: "#fff", letterSpacing: 0.6 },
   dailyBadgeGrad: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: "#fff5" },
   dailyBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, color: "#fff", letterSpacing: 0.8 },
   listContent: { paddingHorizontal: 16, gap: 10 },

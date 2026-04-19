@@ -14,6 +14,7 @@ export interface StoreItem {
   backColors?: string[];
   backAccent?: string;
   backPattern?: "diamonds" | "stars" | "circles" | "crosses" | "waves" | "hexagons";
+  animated?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -209,16 +210,16 @@ export const AVATARS: StoreItem[] = [
   { id: "avatar_templar",   category: "avatar", name: "Templario",       description: "Cruzado del juego limpio y duro.",                price: 170, preview: "shield-checkmark", previewColor: "#F5F5F5", rarity: "epic" },
   { id: "avatar_harbinger", category: "avatar", name: "Heraldo",         description: "Portador de la derrota ajena.",                   price: 175, preview: "warning",        previewColor: "#FF8C00", rarity: "epic" },
   // LEGENDARY (10)
-  { id: "avatar_phoenix",   category: "avatar", name: "Fénix",           description: "Renace más fuerte con cada derrota.",            price: 280, preview: "sunny",          previewColor: "#D4AF37", rarity: "legendary" },
-  { id: "avatar_reaper",    category: "avatar", name: "Segador",         description: "La muerte misma en la mesa.",                    price: 300, preview: "moon",           previewColor: "#1a0020", rarity: "legendary" },
-  { id: "avatar_king",      category: "avatar", name: "El Rey",          description: "Por encima de todos. Sin discusión.",            price: 350, preview: "diamond",        previewColor: "#D4AF37", rarity: "legendary" },
-  { id: "avatar_god_cards", category: "avatar", name: "Dios de las Cartas", description: "Trasciende el juego. Es el juego.",          price: 400, preview: "star",           previewColor: "#D4AF37", rarity: "legendary" },
-  { id: "avatar_celestial", category: "avatar", name: "Celestial",       description: "De otro plano de existencia.",                   price: 380, preview: "planet",         previewColor: "#4FC3F7", rarity: "legendary" },
-  { id: "avatar_chaos",     category: "avatar", name: "El Caos",         description: "Impredecible. Imposible de parar.",              price: 420, preview: "infinite",       previewColor: "#A855F7", rarity: "legendary" },
-  { id: "avatar_emperor",   category: "avatar", name: "Emperador",       description: "Gobernante supremo del azar.",                    price: 450, preview: "diamond",        previewColor: "#DAA520", rarity: "legendary" },
-  { id: "avatar_demigod",   category: "avatar", name: "Semidiós",        description: "Casi un mito, totalmente letal.",                 price: 390, preview: "flash",          previewColor: "#F0E68C", rarity: "legendary" },
-  { id: "avatar_entity",    category: "avatar", name: "La Entidad",      description: "Nadie sabe de dónde vino.",                       price: 500, preview: "help-circle",    previewColor: "#000000", rarity: "legendary" },
-  { id: "avatar_titan_god", category: "avatar", name: "Titán Divino",    description: "La fuerza de un dios en la mesa.",                price: 480, preview: "barbell",        previewColor: "#C0C0C0", rarity: "legendary" },
+  { id: "avatar_phoenix",   category: "avatar", name: "Fénix",           description: "Renace más fuerte con cada derrota.",            price: 280, preview: "sunny",          previewColor: "#D4AF37", rarity: "legendary", animated: true },
+  { id: "avatar_reaper",    category: "avatar", name: "Segador",         description: "La muerte misma en la mesa.",                    price: 300, preview: "moon",           previewColor: "#1a0020", rarity: "legendary", animated: true },
+  { id: "avatar_king",      category: "avatar", name: "El Rey",          description: "Por encima de todos. Sin discusión.",            price: 350, preview: "diamond",        previewColor: "#D4AF37", rarity: "legendary", animated: true },
+  { id: "avatar_god_cards", category: "avatar", name: "Dios de las Cartas", description: "Trasciende el juego. Es el juego.",          price: 400, preview: "star",           previewColor: "#D4AF37", rarity: "legendary", animated: true },
+  { id: "avatar_celestial", category: "avatar", name: "Celestial",       description: "De otro plano de existencia.",                   price: 380, preview: "planet",         previewColor: "#4FC3F7", rarity: "legendary", animated: true },
+  { id: "avatar_chaos",     category: "avatar", name: "El Caos",         description: "Impredecible. Imposible de parar.",              price: 420, preview: "infinite",       previewColor: "#A855F7", rarity: "legendary", animated: true },
+  { id: "avatar_emperor",   category: "avatar", name: "Emperador",       description: "Gobernante supremo del azar.",                    price: 450, preview: "diamond",        previewColor: "#DAA520", rarity: "legendary", animated: true },
+  { id: "avatar_demigod",   category: "avatar", name: "Semidiós",        description: "Casi un mito, totalmente letal.",                 price: 390, preview: "flash",          previewColor: "#F0E68C", rarity: "legendary", animated: true },
+  { id: "avatar_entity",    category: "avatar", name: "La Entidad",      description: "Nadie sabe de dónde vino.",                       price: 500, preview: "help-circle",    previewColor: "#000000", rarity: "legendary", animated: true },
+  { id: "avatar_titan_god", category: "avatar", name: "Titán Divino",    description: "La fuerza de un dios en la mesa.",                price: 480, preview: "barbell",        previewColor: "#C0C0C0", rarity: "legendary", animated: true },
   // ── Extra 20 (total 90) ──────────────────────────────────────────────────
   // COMMON +5
   { id: "avatar_fisherman", category: "avatar", name: "Pescador",        description: "Paciencia para pescar la carta perfecta.",        price: 25,  preview: "water",          previewColor: "#4169E1", rarity: "common" },
@@ -241,11 +242,11 @@ export const AVATARS: StoreItem[] = [
   { id: "avatar_titan2",    category: "avatar", name: "Colosus",         description: "Montaña de músculo y astucia.",                   price: 160, preview: "barbell",        previewColor: "#808080", rarity: "epic" },
   { id: "avatar_trickster2",category: "avatar", name: "Ilusionista",     description: "Hace aparecer victorias de la nada.",             price: 165, preview: "help-circle",    previewColor: "#FF69B4", rarity: "epic" },
   // LEGENDARY +3
-  { id: "avatar_odin",      category: "avatar", name: "Odín",            description: "El padre de todos los guerreros de cartas.",      price: 500, preview: "people",         previewColor: "#4682B4", rarity: "legendary" },
-  { id: "avatar_thoth",     category: "avatar", name: "Thoth",           description: "Dios del conocimiento y del destino.",            price: 470, preview: "book",           previewColor: "#DAA520", rarity: "legendary" },
-  { id: "avatar_ares",      category: "avatar", name: "Ares",            description: "El dios de la guerra en la mesa.",                price: 490, preview: "flash",          previewColor: "#CC0000", rarity: "legendary" },
+  { id: "avatar_odin",      category: "avatar", name: "Odín",            description: "El padre de todos los guerreros de cartas.",      price: 500, preview: "people",         previewColor: "#4682B4", rarity: "legendary", animated: true },
+  { id: "avatar_thoth",     category: "avatar", name: "Thoth",           description: "Dios del conocimiento y del destino.",            price: 470, preview: "book",           previewColor: "#DAA520", rarity: "legendary", animated: true },
+  { id: "avatar_ares",      category: "avatar", name: "Ares",            description: "El dios de la guerra en la mesa.",                price: 490, preview: "flash",          previewColor: "#CC0000", rarity: "legendary", animated: true },
   // DEVELOPER (system — not purchasable)
-  { id: "avatar_developer", category: "avatar", name: "Desarrollador",   description: "El creador del juego.",                           price: 999, preview: "code-slash",     previewColor: "#D4AF37", rarity: "legendary" },
+  { id: "avatar_developer", category: "avatar", name: "Desarrollador",   description: "El creador del juego.",                           price: 999, preview: "code-slash",     previewColor: "#D4AF37", rarity: "legendary", animated: true },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -421,16 +422,16 @@ export const TITLES: StoreItem[] = [
   { id: "title_spectral_t",  category: "title", name: "Soberano Espectral",  description: "Una victoria que trasciende la realidad.",     price: 225, preview: "cloud",        previewColor: "#F8F8FF", rarity: "epic" },
   { id: "title_storm_t",     category: "title", name: "Señor de la Tormenta", description: "Arrasando con la competencia.",               price: 210, preview: "flash",        previewColor: "#4682B4", rarity: "epic" },
   // LEGENDARY (10)
-  { id: "title_legend",      category: "title", name: "Leyenda Viviente",    description: "Los demás te temen.",                         price: 300, preview: "trophy",       previewColor: "#FFD700", rarity: "legendary" },
-  { id: "title_immortal",    category: "title", name: "Inmortal",            description: "No hay quien lo derrote.",                    price: 350, preview: "infinite",     previewColor: "#FF6B6B", rarity: "legendary" },
-  { id: "title_god",         category: "title", name: "El Dios",             description: "Trasciende el juego mismo.",                  price: 500, preview: "diamond",      previewColor: "#D4AF37", rarity: "legendary" },
-  { id: "title_absolute",    category: "title", name: "El Absoluto",         description: "No hay comparación. Es único.",               price: 450, preview: "star",         previewColor: "#FFFFFF", rarity: "legendary" },
-  { id: "title_eternal",     category: "title", name: "Eterno",              description: "Jugará para siempre. Y siempre ganará.",      price: 480, preview: "infinite",     previewColor: "#A855F7", rarity: "legendary" },
-  { id: "title_alpha",       category: "title", name: "El Alfa",             description: "El primero. El último. El único.",            price: 550, preview: "flash",        previewColor: "#FF4400", rarity: "legendary" },
-  { id: "title_omega",       category: "title", name: "El Omega",            description: "El fin de todo desafío.",                      price: 550, preview: "close-circle", previewColor: "#0000FF", rarity: "legendary" },
-  { id: "title_creator",     category: "title", name: "El Creador",          description: "Quien dicta las reglas del destino.",          price: 600, preview: "construct",    previewColor: "#FFD700", rarity: "legendary" },
-  { id: "title_void_walker", category: "title", name: "Caminante del Vacío", description: "Nada puede detener su avance.",               price: 520, preview: "moon",         previewColor: "#4B0082", rarity: "legendary" },
-  { id: "title_zenith_t",    category: "title", name: "Cénit del Juego",     description: "La perfección hecha jugador.",                price: 700, preview: "ribbon",       previewColor: "#FFFFFF", rarity: "legendary" },
+  { id: "title_legend",      category: "title", name: "Leyenda Viviente",    description: "Los demás te temen.",                         price: 300, preview: "trophy",       previewColor: "#FFD700", rarity: "legendary", animated: true },
+  { id: "title_immortal",    category: "title", name: "Inmortal",            description: "No hay quien lo derrote.",                    price: 350, preview: "infinite",     previewColor: "#FF6B6B", rarity: "legendary", animated: true },
+  { id: "title_god",         category: "title", name: "El Dios",             description: "Trasciende el juego mismo.",                  price: 500, preview: "diamond",      previewColor: "#D4AF37", rarity: "legendary", animated: true },
+  { id: "title_absolute",    category: "title", name: "El Absoluto",         description: "No hay comparación. Es único.",               price: 450, preview: "star",         previewColor: "#FFFFFF", rarity: "legendary", animated: true },
+  { id: "title_eternal",     category: "title", name: "Eterno",              description: "Jugará para siempre. Y siempre ganará.",      price: 480, preview: "infinite",     previewColor: "#A855F7", rarity: "legendary", animated: true },
+  { id: "title_alpha",       category: "title", name: "El Alfa",             description: "El primero. El último. El único.",            price: 550, preview: "flash",        previewColor: "#FF4400", rarity: "legendary", animated: true },
+  { id: "title_omega",       category: "title", name: "El Omega",            description: "El fin de todo desafío.",                      price: 550, preview: "close-circle", previewColor: "#0000FF", rarity: "legendary", animated: true },
+  { id: "title_creator",     category: "title", name: "El Creador",          description: "Quien dicta las reglas del destino.",          price: 600, preview: "construct",    previewColor: "#FFD700", rarity: "legendary", animated: true },
+  { id: "title_void_walker", category: "title", name: "Caminante del Vacío", description: "Nada puede detener su avance.",               price: 520, preview: "moon",         previewColor: "#4B0082", rarity: "legendary", animated: true },
+  { id: "title_zenith_t",    category: "title", name: "Cénit del Juego",     description: "La perfección hecha jugador.",                price: 700, preview: "ribbon",       previewColor: "#FFFFFF", rarity: "legendary", animated: true },
   // ── Extra 20 (total 90) ──────────────────────────────────────────────────
   // COMMON +5
   { id: "title_scout",       category: "title", name: "Explorador",          description: "Siempre buscando la siguiente victoria.",      price: 15,  preview: "compass",      previewColor: "#8B6914", rarity: "common" },
@@ -453,10 +454,10 @@ export const TITLES: StoreItem[] = [
   { id: "title_noble_e",     category: "title", name: "El Noble",            description: "Elegante hasta en la derrota.",              price: 165, preview: "ribbon",       previewColor: "#4682B4", rarity: "epic" },
   { id: "title_vanguard_e",  category: "title", name: "Vanguardia",          description: "Siempre el primero en la línea.",            price: 170, preview: "flag",         previewColor: "#E74C3C", rarity: "epic" },
   // LEGENDARY +3
-  { id: "title_joker_l",     category: "title", name: "El Joker",            description: "Impredecible, letal y siempre sonriendo.",    price: 500, preview: "happy",        previewColor: "#FF00FF", rarity: "legendary" },
-  { id: "title_trickster_l", category: "title", name: "El Embustero",        description: "La mejor mentira es la victoria.",            price: 480, preview: "help-circle",  previewColor: "#FF8C00", rarity: "legendary" },
-  { id: "title_rogue_l",     category: "title", name: "El Pícaro",           description: "Rápido, astuto, imposible de atrapar.",       price: 520, preview: "eye-off",      previewColor: "#1C1C1C", rarity: "legendary" },
-  { id: "title_observer2",   category: "title", name: "El Observador",       description: "Todo lo ve, nada se le escapa.",              price: 460, preview: "eye",          previewColor: "#4A4A8A", rarity: "legendary" },
+  { id: "title_joker_l",     category: "title", name: "El Joker",            description: "Impredecible, letal y siempre sonriendo.",    price: 500, preview: "happy",        previewColor: "#FF00FF", rarity: "legendary", animated: true },
+  { id: "title_trickster_l", category: "title", name: "El Embustero",        description: "La mejor mentira es la victoria.",            price: 480, preview: "help-circle",  previewColor: "#FF8C00", rarity: "legendary", animated: true },
+  { id: "title_rogue_l",     category: "title", name: "El Pícaro",           description: "Rápido, astuto, imposible de atrapar.",       price: 520, preview: "eye-off",      previewColor: "#1C1C1C", rarity: "legendary", animated: true },
+  { id: "title_observer2",   category: "title", name: "El Observador",       description: "Todo lo ve, nada se le escapa.",              price: 460, preview: "eye",          previewColor: "#4A4A8A", rarity: "legendary", animated: true },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -527,16 +528,16 @@ export const EFFECTS: StoreItem[] = [
   { id: "effect_implosion", category: "effect", name: "Implosión",      description: "Colapso de energía interna.",                     price: 240, preview: "expand",          previewColor: "#4B0082", rarity: "epic" },
   { id: "effect_explosion", category: "effect", name: "Explosión",      description: "Caos total al jugar.",                            price: 250, preview: "flash",           previewColor: "#FF4500", rarity: "epic" },
   // LEGENDARY (10)
-  { id: "effect_galaxy",   category: "effect", name: "Galaxia",        description: "Partículas del cosmos brillan al jugar.",         price: 200, preview: "planet",          previewColor: "#A855F7", rarity: "legendary" },
-  { id: "effect_rainbow",  category: "effect", name: "Arcoíris",       description: "Colores explosivos en cada carta jugada.",        price: 250, preview: "color-palette",   previewColor: "#FF6B6B", rarity: "legendary" },
-  { id: "effect_singularity", category: "effect", name: "Singularidad", description: "Donde las leyes del juego no existen.",           price: 400, preview: "radio-button-on", previewColor: "#000000", rarity: "legendary" },
-  { id: "effect_genesis",  category: "effect", name: "Génesis",        description: "La creación de un nuevo universo.",               price: 450, preview: "sunny",           previewColor: "#FFD700", rarity: "legendary" },
-  { id: "effect_apocalypse", category: "effect", name: "Apocalipsis",   description: "El fin de toda esperanza para tu rival.",         price: 500, preview: "skull",           previewColor: "#8B0000", rarity: "legendary" },
-  { id: "effect_eternity_e", category: "effect", name: "Eternidad",     description: "Tiempo congelado en victoria.",                   price: 480, preview: "infinite",        previewColor: "#FFFFFF", rarity: "legendary" },
-  { id: "effect_chaos_e",   category: "effect", name: "Caos Absoluto",  description: "Desorden total y divino.",                        price: 550, preview: "help-circle",     previewColor: "#FF00FF", rarity: "legendary" },
-  { id: "effect_divine_e_v", category: "effect", name: "Juicio Divino", description: "Luz de justicia sobre la mesa.",                  price: 600, preview: "flash",           previewColor: "#FFEEAA", rarity: "legendary" },
-  { id: "effect_nebula_l",  category: "effect", name: "Nebulosa Primordial", description: "El origen de todas las jugadas.",              price: 420, preview: "cloud",           previewColor: "#483D8B", rarity: "legendary" },
-  { id: "effect_black_hole_e", category: "effect", name: "Agujero Negro", description: "Succión infinita de suerte.",                   price: 700, preview: "moon",            previewColor: "#1A1A1A", rarity: "legendary" },
+  { id: "effect_galaxy",   category: "effect", name: "Galaxia",        description: "Partículas del cosmos brillan al jugar.",         price: 200, preview: "planet",          previewColor: "#A855F7", rarity: "legendary", animated: true },
+  { id: "effect_rainbow",  category: "effect", name: "Arcoíris",       description: "Colores explosivos en cada carta jugada.",        price: 250, preview: "color-palette",   previewColor: "#FF6B6B", rarity: "legendary", animated: true },
+  { id: "effect_singularity", category: "effect", name: "Singularidad", description: "Donde las leyes del juego no existen.",           price: 400, preview: "radio-button-on", previewColor: "#000000", rarity: "legendary", animated: true },
+  { id: "effect_genesis",  category: "effect", name: "Génesis",        description: "La creación de un nuevo universo.",               price: 450, preview: "sunny",           previewColor: "#FFD700", rarity: "legendary", animated: true },
+  { id: "effect_apocalypse", category: "effect", name: "Apocalipsis",   description: "El fin de toda esperanza para tu rival.",         price: 500, preview: "skull",           previewColor: "#8B0000", rarity: "legendary", animated: true },
+  { id: "effect_eternity_e", category: "effect", name: "Eternidad",     description: "Tiempo congelado en victoria.",                   price: 480, preview: "infinite",        previewColor: "#FFFFFF", rarity: "legendary", animated: true },
+  { id: "effect_chaos_e",   category: "effect", name: "Caos Absoluto",  description: "Desorden total y divino.",                        price: 550, preview: "help-circle",     previewColor: "#FF00FF", rarity: "legendary", animated: true },
+  { id: "effect_divine_e_v", category: "effect", name: "Juicio Divino", description: "Luz de justicia sobre la mesa.",                  price: 600, preview: "flash",           previewColor: "#FFEEAA", rarity: "legendary", animated: true },
+  { id: "effect_nebula_l",  category: "effect", name: "Nebulosa Primordial", description: "El origen de todas las jugadas.",              price: 420, preview: "cloud",           previewColor: "#483D8B", rarity: "legendary", animated: true },
+  { id: "effect_black_hole_e", category: "effect", name: "Agujero Negro", description: "Succión infinita de suerte.",                   price: 700, preview: "moon",            previewColor: "#1A1A1A", rarity: "legendary", animated: true },
 ];
 
 // ─── EMOTES — 70 total ─────────────────────────────────────────────────────────
@@ -601,11 +602,11 @@ export const EMOTES: StoreItem[] = [
   { id: "emote_espectacular",category: "emote", name: "Espectacular", description: "Fue espectacular.",  price: 160, preview: "sparkles",        previewColor: "#00D4FF", rarity: "epic" },
   { id: "emote_indetenible",category: "emote", name: "Indetenible", description: "Nada me detiene.",      price: 150, preview: "flash",           previewColor: "#A855F7", rarity: "epic" },
   // Legendary (5)
-  { id: "emote_eldios",   category: "emote", name: "El Dios",     description: "El dios del Ocho Locos.", price: 350, preview: "sparkles",        previewColor: "#D4AF37", rarity: "legendary" },
-  { id: "emote_locogod",  category: "emote", name: "El Locos",    description: "Solo un verdadero loco gana así.", price: 350, preview: "flame", previewColor: "#FF6B00", rarity: "legendary" },
-  { id: "emote_ocholocos",category: "emote", name: "Ocho Locos!", description: "El grito legendario.",    price: 400, preview: "trophy",          previewColor: "#D4AF37", rarity: "legendary" },
-  { id: "emote_legendario",category: "emote", name: "Legendario", description: "Un jugador de leyenda.",  price: 350, preview: "ribbon",          previewColor: "#9B59B6", rarity: "legendary" },
-  { id: "emote_elfin",    category: "emote", name: "El Fin",      description: "El juego terminó. Yo gané.", price: 400, preview: "infinite",    previewColor: "#2C3E50", rarity: "legendary" },
+  { id: "emote_eldios",   category: "emote", name: "El Dios",     description: "El dios del Ocho Locos.", price: 350, preview: "sparkles",        previewColor: "#D4AF37", rarity: "legendary", animated: true },
+  { id: "emote_locogod",  category: "emote", name: "El Locos",    description: "Solo un verdadero loco gana así.", price: 350, preview: "flame", previewColor: "#FF6B00", rarity: "legendary", animated: true },
+  { id: "emote_ocholocos",category: "emote", name: "Ocho Locos!", description: "El grito legendario.",    price: 400, preview: "trophy",          previewColor: "#D4AF37", rarity: "legendary", animated: true },
+  { id: "emote_legendario",category: "emote", name: "Legendario", description: "Un jugador de leyenda.",  price: 350, preview: "ribbon",          previewColor: "#9B59B6", rarity: "legendary", animated: true },
+  { id: "emote_elfin",    category: "emote", name: "El Fin",      description: "El juego terminó. Yo gané.", price: 400, preview: "infinite",    previewColor: "#2C3E50", rarity: "legendary", animated: true },
 ];
 
 export const TABLE_DESIGNS: StoreItem[] = [

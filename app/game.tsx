@@ -1565,7 +1565,7 @@ export default function GameScreen() {
             Alert.alert(
               "Sin conexión",
               "Se perdió la conexión a internet. Volviendo al menú principal.",
-              [{ text: "OK", onPress: () => router.replace("/(tabs)/") }],
+              [{ text: "OK", onPress: () => router.replace("/" as any) }],
               { cancelable: false }
             );
           }, 15000);
@@ -1803,7 +1803,7 @@ export default function GameScreen() {
         else if (newTotalWins % 3 === 0) milestoneChest = "common";
         // Guaranteed event chest on win during a live event — keep the BETTER of the two
         const activeEvent = getActiveEvent(level);
-        const RANK: Record<ChestType, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
+        const RANK: Record<ChestType, number> = { common: 0, rare: 1, magic: 2, epic: 3, event: 4, giant: 5, fichas: 6, legendary: 7, supreme: 8 };
         if (activeEvent && milestoneChest) {
           chestType = RANK[activeEvent.chestType] >= RANK[milestoneChest] ? activeEvent.chestType : milestoneChest;
         } else if (activeEvent) {

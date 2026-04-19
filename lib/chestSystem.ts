@@ -1,6 +1,6 @@
 import { STORE_ITEMS, StoreItem } from "@/lib/storeItems";
 
-export type ChestType = "common" | "rare" | "epic" | "legendary";
+export type ChestType = "common" | "rare" | "epic" | "legendary" | "magic" | "giant" | "event" | "supreme" | "fichas";
 
 export interface Chest {
   id: string;
@@ -12,6 +12,7 @@ export interface Chest {
 export interface ChestReward {
   coins: number;
   xp: number;
+  fichas?: number;
   item?: StoreItem;
 }
 
@@ -23,6 +24,7 @@ export interface ChestConfig {
   borderColor: string;
   coinsRange: [number, number];
   xpRange: [number, number];
+  fichasRange?: [number, number];
   itemChance: number;
   itemRarities: string[];
   winsRequired: number;
@@ -73,9 +75,75 @@ export const CHEST_CONFIG: Record<ChestType, ChestConfig> = {
     borderColor: "#D4AF37",
     coinsRange: [100, 200],
     xpRange: [200, 400],
+    fichasRange: [3, 8],
     itemChance: 0.80,
     itemRarities: ["rare", "epic", "legendary"],
     winsRequired: 25,
+  },
+  magic: {
+    name: "Cofre Mágico",
+    color: "#FF4FB7",
+    glowColor: "#FF8AD8",
+    bgColors: ["#2A0820", "#4A1040", "#2A0820"],
+    borderColor: "#FF4FB7",
+    coinsRange: [80, 160],
+    xpRange: [180, 320],
+    fichasRange: [2, 6],
+    itemChance: 0.65,
+    itemRarities: ["rare", "epic"],
+    winsRequired: 12,
+  },
+  giant: {
+    name: "Cofre Gigante",
+    color: "#2ECC71",
+    glowColor: "#7FF1A8",
+    bgColors: ["#082A18", "#0F4A28", "#082A18"],
+    borderColor: "#2ECC71",
+    coinsRange: [220, 380],
+    xpRange: [320, 520],
+    fichasRange: [5, 10],
+    itemChance: 0.85,
+    itemRarities: ["rare", "epic", "legendary"],
+    winsRequired: 30,
+  },
+  event: {
+    name: "Cofre de Evento",
+    color: "#E74C3C",
+    glowColor: "#FF8A73",
+    bgColors: ["#2A0808", "#4A1212", "#2A0808"],
+    borderColor: "#E74C3C",
+    coinsRange: [120, 240],
+    xpRange: [220, 420],
+    fichasRange: [4, 9],
+    itemChance: 0.75,
+    itemRarities: ["epic", "legendary"],
+    winsRequired: 20,
+  },
+  supreme: {
+    name: "Cofre Supremo",
+    color: "#FFFFFF",
+    glowColor: "#FFD700",
+    bgColors: ["#1A1A2A", "#2A2A4A", "#1A1A2A"],
+    borderColor: "#FFFFFF",
+    coinsRange: [400, 700],
+    xpRange: [600, 1000],
+    fichasRange: [10, 20],
+    itemChance: 1.0,
+    itemRarities: ["epic", "legendary"],
+    winsRequired: 50,
+  },
+  fichas: {
+    name: "Cofre de Fichas",
+    color: "#3498DB",
+    glowColor: "#7FD0FF",
+    bgColors: ["#08203A", "#0F3A5C", "#08203A"],
+    borderColor: "#3498DB",
+    coinsRange: [20, 50],
+    xpRange: [40, 80],
+    fichasRange: [15, 35],
+    itemChance: 0.10,
+    itemRarities: ["common", "rare"],
+    winsRequired: 18,
   },
 };
 
@@ -118,7 +186,12 @@ export function openChest(chest: Chest, ownedItems: string[]): ChestReward {
     }
   }
 
-  return { coins, xp, item };
+  let fichas: number | undefined;
+  if (config.fichasRange) {
+    fichas = rand(config.fichasRange[0], config.fichasRange[1]);
+  }
+
+  return { coins, xp, fichas, item };
 }
 
 export function getChestTypeForStreak(winStreak: number): ChestType | null {

@@ -260,12 +260,30 @@ export default function AchievementsScreen() {
               <Ionicons name="sparkles" size={14} color={themeGold} />
             </View>
             <View style={styles.bpHeader}>
-              <View style={[styles.bpLevelBig, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
-                <Text style={[styles.bpLevelNum, { color: themeGold }]}>{levelLabel} {xpProgress.level}</Text>
-                <View style={[styles.bpXpBar, { backgroundColor: themeColors.border }]}>
-                  <View style={[styles.bpXpFill, { width: `${xpPct * 100}%`, backgroundColor: themeGold }]} />
+              <View style={[styles.bpLevelBig, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "row", alignItems: "center", gap: 14 }]}>
+                <View style={[styles.bpCircleLevel, { borderColor: themeGold }]}>
+                  <Text style={[styles.bpCircleLevelNum, { color: themeGold }]}>{battlePassTier}</Text>
+                  <Text style={[styles.bpCircleLevelMax, { color: themeColors.textMuted }]}>/ {seasonTiers.length}</Text>
                 </View>
-                <Text style={[styles.bpXpText, { color: themeColors.textMuted }]}>{xpProgress.current} / {xpProgress.needed} XP</Text>
+                <View style={{ flex: 1, gap: 6 }}>
+                  <Text style={[styles.bpLevelNum, { color: themeGold }]}>{levelLabel} {xpProgress.level}</Text>
+                  <View style={[styles.bpXpBar, { backgroundColor: themeColors.border }]}>
+                    <View style={[styles.bpXpFill, { width: `${xpPct * 100}%`, backgroundColor: themeGold }]} />
+                  </View>
+                  <Text style={[styles.bpXpText, { color: themeColors.textMuted }]}>{xpProgress.current} / {xpProgress.needed} XP</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.bpColumnsHeader}>
+              <View style={[styles.bpColTag, { backgroundColor: "#2ecc7122", borderColor: "#2ecc7155" }]}>
+                <Ionicons name="gift" size={11} color="#2ecc71" />
+                <Text style={[styles.bpTrackTagText, { color: "#2ecc71" }]}>FREE</Text>
+              </View>
+              <View style={{ width: 36 }} />
+              <View style={[styles.bpColTag, { backgroundColor: themeGold + "22", borderColor: themeGold + "55" }]}>
+                <Ionicons name="diamond" size={11} color={themeGold} />
+                <Text style={[styles.bpTrackTagText, { color: themeGold }]}>PREMIUM</Text>
               </View>
             </View>
 
@@ -282,76 +300,63 @@ export default function AchievementsScreen() {
                   key={tier.tier}
                   style={[
                     styles.bpBlock,
-                    { backgroundColor: themeColors.surface, borderColor: themeColors.border },
+                    { backgroundColor: themeColors.surface, borderColor: themeColors.border, paddingVertical: 10 },
                     reached && !claimed && { borderColor: themeGold + "88" },
                     claimed && styles.bpTierClaimed,
                   ]}
                 >
-                  {/* Header: NIVEL X */}
-                  <View style={[styles.bpBlockHeader, { borderBottomColor: themeColors.border }]}>
-                    <View style={[styles.bpTierNum, { backgroundColor: reached ? themeGold + "33" : themeColors.card }]}>
-                      <Text style={[styles.bpTierNumText, { color: reached ? themeGold : themeColors.textDim }]}>{tier.tier}</Text>
+                  <View style={styles.bpVerticalRow}>
+                    {/* FREE column */}
+                    <View style={styles.bpVCol}>
+                      <View style={[styles.bpIconWrap, { backgroundColor: freeReward.iconColor + "22", width: 44, height: 44, borderRadius: 22 }]}>
+                        {freeReward.icon === "cash" ? (
+                          <CoinIcon size={22} color={reached ? freeReward.iconColor : themeColors.textDim} />
+                        ) : (
+                          <Ionicons name={freeReward.icon as any} size={22} color={reached ? freeReward.iconColor : themeColors.textDim} />
+                        )}
+                      </View>
+                      <Text style={[styles.bpVColLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={2}>{freeReward.label}</Text>
+                      {canClaim ? (
+                        <BouncePressable
+                          onPress={() => handleClaimBP(tier.tier)}
+                          style={[styles.bpClaimBtn, { backgroundColor: themeGold, marginTop: 4 }]}
+                        >
+                          <Text style={styles.bpClaimText}>{claimLabel}</Text>
+                        </BouncePressable>
+                      ) : claimed ? (
+                        <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+                      ) : null}
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.bpBlockTitle, { color: reached ? themeGold : themeColors.textDim }]}>NIVEL {tier.tier}</Text>
-                      <Text style={[styles.bpTierXp, { color: themeColors.textDim }]}>{tier.xpRequired} {xpRequiredLabel}</Text>
-                    </View>
-                    {claimed && <Ionicons name="checkmark-circle" size={20} color={Colors.success} />}
-                    {!reached && !claimed && <Ionicons name="lock-closed" size={16} color={themeColors.textDim} />}
-                  </View>
 
-                  {/* PREMIUM track */}
-                  <View style={styles.bpTrackRow}>
-                    <View style={[styles.bpTrackTag, { backgroundColor: themeGold + "22", borderColor: themeGold + "55" }]}>
-                      <Ionicons name="diamond" size={11} color={themeGold} />
-                      <Text style={[styles.bpTrackTagText, { color: themeGold }]}>PREMIUM</Text>
+                    {/* Center divider with tier number */}
+                    <View style={styles.bpVDividerCol}>
+                      <View style={[styles.bpVDivider, { backgroundColor: themeColors.border }]} />
+                      <View style={[styles.bpTierNum, { backgroundColor: reached ? themeGold + "33" : themeColors.card, borderWidth: 2, borderColor: reached ? themeGold : themeColors.border }]}>
+                        <Text style={[styles.bpTierNumText, { color: reached ? themeGold : themeColors.textDim }]}>{tier.tier}</Text>
+                      </View>
+                      <View style={[styles.bpVDivider, { backgroundColor: themeColors.border }]} />
                     </View>
-                    <View style={[styles.bpIconWrap, { backgroundColor: tier.iconColor + "22", width: 34, height: 34, borderRadius: 17 }]}>
-                      {tier.icon === "cash" ? (
-                        <CoinIcon size={18} color={reached ? tier.iconColor : themeColors.textDim} />
-                      ) : (
-                        <Ionicons name={tier.icon as any} size={18} color={reached ? tier.iconColor : themeColors.textDim} />
-                      )}
-                    </View>
-                    <View style={styles.bpTrackLabelCol}>
-                      <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{premiumLabel}</Text>
+
+                    {/* PREMIUM column */}
+                    <View style={styles.bpVCol}>
+                      <View style={[styles.bpIconWrap, { backgroundColor: tier.iconColor + "22", width: 44, height: 44, borderRadius: 22, opacity: isPremiumTrack ? 1 : 0.4 }]}>
+                        {tier.icon === "cash" ? (
+                          <CoinIcon size={22} color={reached ? tier.iconColor : themeColors.textDim} />
+                        ) : (
+                          <Ionicons name={tier.icon as any} size={22} color={reached ? tier.iconColor : themeColors.textDim} />
+                        )}
+                      </View>
+                      <Text style={[styles.bpVColLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={2}>{premiumLabel}</Text>
                       {tier.isExclusive && (
                         <View style={[styles.bpExclusiveBadge, { backgroundColor: tier.iconColor + "22", borderColor: tier.iconColor + "88" }]}>
                           <Ionicons name="sparkles" size={9} color={tier.iconColor} />
-                          <Text style={[styles.bpExclusiveText, { color: tier.iconColor }]} numberOfLines={1}>{T("limitedEdition")}</Text>
+                          <Text style={[styles.bpExclusiveText, { color: tier.iconColor }]} numberOfLines={1}>{T("limitedEdition") as string}</Text>
                         </View>
                       )}
+                      <Ionicons name="lock-closed" size={14} color={themeColors.textDim} style={{ marginTop: 2 }} />
                     </View>
-                    {!isPremiumTrack && null}
-                    <Ionicons name="lock-closed" size={14} color={themeColors.textDim} />
                   </View>
-
-                  {/* Divider */}
-                  <View style={[styles.bpTrackDivider, { backgroundColor: themeColors.border }]} />
-
-                  {/* FREE track */}
-                  <View style={styles.bpTrackRow}>
-                    <View style={[styles.bpTrackTag, { backgroundColor: "#2ecc7122", borderColor: "#2ecc7155" }]}>
-                      <Ionicons name="gift" size={11} color="#2ecc71" />
-                      <Text style={[styles.bpTrackTagText, { color: "#2ecc71" }]}>FREE</Text>
-                    </View>
-                    <View style={[styles.bpIconWrap, { backgroundColor: freeReward.iconColor + "22", width: 34, height: 34, borderRadius: 17 }]}>
-                      {freeReward.icon === "cash" ? (
-                        <CoinIcon size={18} color={reached ? freeReward.iconColor : themeColors.textDim} />
-                      ) : (
-                        <Ionicons name={freeReward.icon as any} size={18} color={reached ? freeReward.iconColor : themeColors.textDim} />
-                      )}
-                    </View>
-                    <Text style={[styles.bpTrackLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={1}>{freeReward.label}</Text>
-                    {canClaim && (
-                      <BouncePressable
-                        onPress={() => handleClaimBP(tier.tier)}
-                        style={[styles.bpClaimBtn, { backgroundColor: themeGold }]}
-                      >
-                        <Text style={styles.bpClaimText}>{claimLabel}</Text>
-                      </BouncePressable>
-                    )}
-                  </View>
+                  <Text style={[styles.bpTierXp, { color: themeColors.textDim, textAlign: "center", marginTop: 4 }]}>{tier.xpRequired} {xpRequiredLabel}</Text>
                 </View>
               );
             })}
@@ -487,6 +492,25 @@ const styles = StyleSheet.create({
   },
   bpSeasonText: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, letterSpacing: 1.5 },
   bpTrackDivider: { height: 1, marginVertical: 2, opacity: 0.5 },
+  bpCircleLevel: {
+    width: 72, height: 72, borderRadius: 36, borderWidth: 3,
+    alignItems: "center", justifyContent: "center",
+  },
+  bpCircleLevelNum: { fontFamily: "Nunito_800ExtraBold", fontSize: 24, lineHeight: 26 },
+  bpCircleLevelMax: { fontFamily: "Nunito_700Bold", fontSize: 11, marginTop: -2 },
+  bpColumnsHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    marginBottom: 8, paddingHorizontal: 10,
+  },
+  bpColTag: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1,
+  },
+  bpVerticalRow: { flexDirection: "row", alignItems: "stretch", gap: 6 },
+  bpVCol: { flex: 1, alignItems: "center", gap: 6, paddingHorizontal: 4 },
+  bpVColLabel: { fontFamily: "Nunito_700Bold", fontSize: 11, textAlign: "center" },
+  bpVDividerCol: { width: 36, alignItems: "center", justifyContent: "center", gap: 4 },
+  bpVDivider: { width: 1, flex: 1, opacity: 0.6 },
   toast: {
     position: "absolute", bottom: 90, alignSelf: "center",
     borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,

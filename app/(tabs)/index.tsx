@@ -401,7 +401,7 @@ function PokerTitle() {
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
-  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory, battlePassTier } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory, battlePassTier, recordFichasModePlay, fichasModePlaysRemaining } = useProfile();
   const { setTabBarVisible, splashReady } = useUIState();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
@@ -999,62 +999,81 @@ export default function PlayScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>{T("gameModes")}</Text>
         </View>
 
-        <Animated.View style={[{ marginBottom: 14 }, quickPlayAnimStyle]}>
-          <BouncePressable
-            onPress={() => { startGame("classic", "normal"); router.push("/game"); }}
-            style={styles.quickPlayBtn}
-          >
-            <LinearGradient colors={["#F4CC4F", "#D4AF37", "#A07800"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.quickPlayGrad}>
-              <View style={styles.quickPlayIconWrap}>
-                <Ionicons name="play" size={26} color="#000" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.quickPlayLabel}>JUGAR</Text>
-                <Text style={styles.quickPlaySubtitle}>
-                  {(lang === "en" ? "Classic Mode" : lang === "pt" ? "Modo Clássico" : "Modo Clásico") + "  •  +10 🪙"}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={26} color="#000000AA" />
-            </LinearGradient>
-          </BouncePressable>
-        </Animated.View>
-
         <View style={styles.modesGrid}>
-          {GAME_MODES.filter(m => m.id !== "classic").map((mode, idx, arr) => {
-            const isLastAlone = idx === arr.length - 1 && arr.length % 2 !== 0;
-            return (
-              <Pressable
-                key={mode.id}
-                onPress={() => handleModePress(mode.id)}
-                style={({ pressed }) => [styles.modeCard, isLastAlone && styles.modeCardFull, pressed && styles.modeCardPressed]}
-              >
-                <LinearGradient
-                  colors={[mode.color + "28", mode.color + "08", "transparent"]}
-                  style={[styles.modeGrad, { borderColor: mode.color + "50", backgroundColor: theme.surface }]}
+          {(() => {
+            const fichasRemaining = fichasModePlaysRemaining();
+            const fichasMode = {
+              id: "fichas_challenge" as any,
+              name: lang === "en" ? "Gem Challenge" : lang === "pt" ? "Desafio de Fichas" : "Reto de Fichas",
+              description: lang === "en" ? "Win Gems! 3 plays per day." : lang === "pt" ? "Ganhe Fichas! 3 partidas por dia." : "¡Gana Fichas! 3 partidas al día.",
+              icon: "diamond",
+              color: "#3498DB",
+              coinsReward: 0,
+              hasDifficulty: false,
+              isNew: true,
+              isFichas: true,
+              fichasRemaining,
+            };
+            const allModes: any[] = [...GAME_MODES, fichasMode];
+            return allModes.map((mode, idx, arr) => {
+              const isLastAlone = idx === arr.length - 1 && arr.length % 2 !== 0;
+              const disabled = mode.isFichas && fichasRemaining <= 0;
+              const onPress = () => {
+                if (mode.isFichas) {
+                  if (disabled) return;
+                  recordFichasModePlay();
+                  startGame("classic" as any, "normal");
+                  router.push("/game");
+                } else if (mode.id === "classic") {
+                  playSound("mode_select").catch(() => {});
+                  startGame("classic", "normal");
+                  router.push("/game");
+                } else {
+                  handleModePress(mode.id);
+                }
+              };
+              return (
+                <Pressable
+                  key={mode.id}
+                  onPress={onPress}
+                  disabled={disabled}
+                  style={({ pressed }) => [styles.modeCard, isLastAlone && styles.modeCardFull, pressed && styles.modeCardPressed, disabled && { opacity: 0.45 }]}
                 >
-                  {mode.isNew && (
-                    <LinearGradient colors={[Colors.red, "#a01a15"]} style={styles.newBadge}>
-                      <Text style={styles.newBadgeText}>{T("newBadge")}</Text>
-                    </LinearGradient>
-                  )}
-                  <View style={[styles.modeIconWrap, { backgroundColor: mode.color + "25" }]}>
-                    <Ionicons name={mode.icon as any} size={24} color={mode.color} />
-                  </View>
-                  <Text style={[styles.modeName, { color: mode.color }]}>{getModeName(mode.id, lang) || mode.name}</Text>
-                  <Text style={[styles.modeDesc, { color: theme.textMuted }]} numberOfLines={2}>{getModeDesc(mode.id, lang) || mode.description}</Text>
-                  <View style={styles.modeFooter}>
-                    <View style={styles.modeReward}>
-                      <CoinIcon size={11} color={Colors.gold} />
-                      <Text style={[styles.modeRewardText, { color: theme.gold }]}>{mode.coinsReward}</Text>
-                    </View>
-                    {mode.hasDifficulty && (
-                      <Ionicons name="chevron-forward" size={12} color={mode.color + "88"} />
+                  <LinearGradient
+                    colors={[mode.color + "28", mode.color + "08", "transparent"]}
+                    style={[styles.modeGrad, { borderColor: mode.color + "50", backgroundColor: theme.surface }]}
+                  >
+                    {mode.isNew && (
+                      <LinearGradient colors={[Colors.red, "#a01a15"]} style={styles.newBadge}>
+                        <Text style={styles.newBadgeText}>{T("newBadge") as string}</Text>
+                      </LinearGradient>
                     )}
-                  </View>
-                </LinearGradient>
-              </Pressable>
-            );
-          })}
+                    <View style={[styles.modeIconWrap, { backgroundColor: mode.color + "25" }]}>
+                      <Ionicons name={mode.icon as any} size={24} color={mode.color} />
+                    </View>
+                    <Text style={[styles.modeName, { color: mode.color }]}>{mode.isFichas ? mode.name : (getModeName(mode.id, lang) || mode.name)}</Text>
+                    <Text style={[styles.modeDesc, { color: theme.textMuted }]} numberOfLines={2}>{mode.isFichas ? mode.description : (getModeDesc(mode.id, lang) || mode.description)}</Text>
+                    <View style={styles.modeFooter}>
+                      {mode.isFichas ? (
+                        <View style={styles.modeReward}>
+                          <Ionicons name="diamond" size={11} color="#3498DB" />
+                          <Text style={[styles.modeRewardText, { color: "#3498DB" }]}>{fichasRemaining}/3</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.modeReward}>
+                          <CoinIcon size={11} color={Colors.gold} />
+                          <Text style={[styles.modeRewardText, { color: theme.gold }]}>{mode.coinsReward}</Text>
+                        </View>
+                      )}
+                      {mode.hasDifficulty && (
+                        <Ionicons name="chevron-forward" size={12} color={mode.color + "88"} />
+                      )}
+                    </View>
+                  </LinearGradient>
+                </Pressable>
+              );
+            });
+          })()}
         </View>
 
         {/* Multiplayer section */}

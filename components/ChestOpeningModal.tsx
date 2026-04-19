@@ -50,11 +50,16 @@ const PARTICLE_COLORS = [
 
 const NUM_PARTICLES = 18;
 
-const RARITY_CONFIG = {
+const RARITY_CONFIG: Record<ChestType, { shakeAmp: number; scalePeak: number; flashDur: number; flashOut: number; particleDist: number; scaleDown: number; flashColor: string; glowPulses: number; lidAngle: number; }> = {
   common:    { shakeAmp: 7,  scalePeak: 1.25, flashDur: 80,  flashOut: 350, particleDist: 100, scaleDown: 0.75, flashColor: "#FFFFFF", glowPulses: 3, lidAngle: -28 },
   rare:      { shakeAmp: 11, scalePeak: 1.40, flashDur: 100, flashOut: 420, particleDist: 130, scaleDown: 0.72, flashColor: "#88CCFF", glowPulses: 4, lidAngle: -35 },
+  magic:     { shakeAmp: 13, scalePeak: 1.50, flashDur: 120, flashOut: 460, particleDist: 145, scaleDown: 0.70, flashColor: "#B388FF", glowPulses: 5, lidAngle: -38 },
   epic:      { shakeAmp: 15, scalePeak: 1.60, flashDur: 130, flashOut: 500, particleDist: 160, scaleDown: 0.68, flashColor: "#CC88FF", glowPulses: 5, lidAngle: -42 },
+  event:     { shakeAmp: 16, scalePeak: 1.65, flashDur: 140, flashOut: 520, particleDist: 170, scaleDown: 0.67, flashColor: "#FF8AC7", glowPulses: 6, lidAngle: -44 },
+  giant:     { shakeAmp: 18, scalePeak: 1.75, flashDur: 160, flashOut: 560, particleDist: 185, scaleDown: 0.66, flashColor: "#FFD580", glowPulses: 6, lidAngle: -47 },
+  fichas:    { shakeAmp: 14, scalePeak: 1.55, flashDur: 130, flashOut: 480, particleDist: 155, scaleDown: 0.69, flashColor: "#5DADE2", glowPulses: 5, lidAngle: -40 },
   legendary: { shakeAmp: 20, scalePeak: 1.90, flashDur: 180, flashOut: 600, particleDist: 200, scaleDown: 0.65, flashColor: "#FFE566", glowPulses: 7, lidAngle: -50 },
+  supreme:   { shakeAmp: 24, scalePeak: 2.10, flashDur: 220, flashOut: 700, particleDist: 230, scaleDown: 0.62, flashColor: "#FF66E0", glowPulses: 9, lidAngle: -55 },
 };
 
 type Phase = "idle" | "shaking" | "opening" | "showing" | "done";
