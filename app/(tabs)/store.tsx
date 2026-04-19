@@ -1502,7 +1502,7 @@ function AnimatedEmoteIcon({ icon, color, delay, size = 36 }: { icon: IoniconNam
   const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-12deg", "12deg"] });
   return (
     <Animated.View style={{ transform: [{ scale }, { rotate }] }}>
-      <Ionicons name={icon} size={36} color={color} />
+      <Ionicons name={icon} size={size} color={color} />
     </Animated.View>
   );
 }
