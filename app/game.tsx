@@ -1823,22 +1823,36 @@ export default function GameScreen() {
         else if (newTotalWins % 15 === 0) milestoneChest = "epic";
         else if (newTotalWins % 7 === 0) milestoneChest = "rare";
         else if (newTotalWins % 3 === 0) milestoneChest = "common";
-        // Guaranteed dedicated Event Chest on win during an event MATCH
-        // (not just a live lobby event — must be playing the event).
-        const RANK: Record<ChestType, number> = { common: 0, rare: 1, magic: 2, epic: 3, event: 4, giant: 5, fichas: 6, legendary: 7, supreme: 8 };
-        if (isEventWin && milestoneChest) {
-          chestType = RANK["event"] >= RANK[milestoneChest] ? "event" : milestoneChest;
-        } else if (isEventWin) {
-          chestType = "event";
-        } else {
-          chestType = milestoneChest;
-        }
-        if (chestType) {
-          const added = addChestToInventory(chestType, isEventWin && chestType === "event" ? "mission" : "win");
-          if (added) {
-            setPendingChestType(chestType);
+
+        // Guaranteed dedicated Event Chest on every event MATCH win.
+        // Independent from milestone chest — both can be granted.
+        if (isEventWin) {
+          const eventAdded = addChestToInventory("event", "mission");
+          if (eventAdded) {
+            chestType = "event";
+            setPendingChestType("event");
             setShowChestReward(true);
           } else {
+            Alert.alert(
+              "Inventario lleno",
+              `Ganaste el Cofre de Evento, pero tu inventario está lleno (${chestInventoryLimit}/${chestInventoryLimit}). Abre algunos cofres en tu perfil para liberar espacio.`,
+              [{ text: "Entendido" }]
+            );
+          }
+        }
+
+        // Milestone chest (3/7/15/25 wins). Granted independently — does not
+        // replace the event chest above.
+        if (milestoneChest) {
+          const added = addChestToInventory(milestoneChest, "win");
+          if (added) {
+            // Only override the visible "earned" badge if no event chest was shown.
+            if (!chestType) {
+              chestType = milestoneChest;
+              setPendingChestType(milestoneChest);
+              setShowChestReward(true);
+            }
+          } else if (!isEventWin) {
             Alert.alert(
               "Inventario lleno",
               `Ganaste un cofre, pero tu inventario está lleno (${chestInventoryLimit}/${chestInventoryLimit}). Abre algunos cofres en tu perfil para liberar espacio.`,
