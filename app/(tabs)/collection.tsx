@@ -7,11 +7,14 @@ import { useT } from "@/hooks/useT";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { STORE_ITEMS, StoreItem, StoreItemCategory, localizeItem } from "@/lib/storeItems";
+import { TranslationKey } from "@/lib/i18n";
 import BouncePressable from "@/components/BouncePressable";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { playSound } from "@/lib/sounds";
 
-type CategoryDef = { id: StoreItemCategory; icon: string; labelKey: string };
+type IconName = React.ComponentProps<typeof Ionicons>["name"];
+
+type CategoryDef = { id: StoreItemCategory; icon: IconName; labelKey: TranslationKey };
 
 const CATEGORIES: CategoryDef[] = [
   { id: "card_back",    icon: "card",          labelKey: "categoryCardBacks" },
@@ -160,13 +163,14 @@ function AvatarPreview({ item }: { item: StoreItem }) {
 function TitlePreview({ item, lang }: { item: StoreItem, lang: "es"|"en"|"pt" }) {
   const color = item.previewColor;
   const localized = localizeItem(item, lang);
+  const icon = (item.preview ?? "ribbon") as IconName;
   return (
     <View style={previewStyles.titleWrap}>
       <LinearGradient
         colors={[color + "33", color + "11"] as [string, string]}
         style={previewStyles.titleBanner}
       >
-        <Ionicons name={(item.preview as any) ?? "ribbon"} size={20} color={color} />
+        <Ionicons name={icon} size={20} color={color} />
         <Text style={[previewStyles.titleText, { color }]} numberOfLines={1}>
           {localized.name}
         </Text>
@@ -175,26 +179,27 @@ function TitlePreview({ item, lang }: { item: StoreItem, lang: "es"|"en"|"pt" })
   );
 }
 
-function AnimatedSpinIcon({ icon, color, size = 38 }: { icon: any; color: string; size?: number }) {
+function AnimatedEmoteIcon({ icon, color, delay = 0, size = 36 }: { icon: IconName; color: string; delay?: number; size?: number }) {
   const scale = useRef(new Animated.Value(1)).current;
   const rot = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
+        Animated.delay(delay),
         Animated.parallel([
-          Animated.timing(scale, { toValue: 1.18, duration: 600, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(rot,   { toValue: 1,    duration: 600, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1.25, duration: 450, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot,   { toValue: 1,    duration: 450, easing: Easing.out(Easing.quad), useNativeDriver: true }),
         ]),
         Animated.parallel([
-          Animated.timing(scale, { toValue: 1, duration: 600, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-          Animated.timing(rot,   { toValue: 0, duration: 600, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1, duration: 450, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot,   { toValue: 0, duration: 450, easing: Easing.in(Easing.quad), useNativeDriver: true }),
         ]),
       ])
     );
     loop.start();
     return () => loop.stop();
-  }, [scale, rot]);
-  const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-10deg", "10deg"] });
+  }, [delay, scale, rot]);
+  const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-12deg", "12deg"] });
   return (
     <Animated.View style={{ transform: [{ scale }, { rotate }] }}>
       <Ionicons name={icon} size={size} color={color} />
@@ -204,13 +209,14 @@ function AnimatedSpinIcon({ icon, color, size = 38 }: { icon: any; color: string
 
 function EffectPreview({ item }: { item: StoreItem }) {
   const color = item.previewColor;
+  const icon = (item.preview ?? "sparkles") as IconName;
   return (
     <View style={previewStyles.centerWrap}>
       <LinearGradient
         colors={[color + "55", color + "11"] as [string, string]}
         style={[previewStyles.effectCircle, { borderColor: color + "AA" }]}
       >
-        <Ionicons name={(item.preview as any) ?? "sparkles"} size={36} color={color} />
+        <Ionicons name={icon} size={36} color={color} />
       </LinearGradient>
     </View>
   );
@@ -218,6 +224,7 @@ function EffectPreview({ item }: { item: StoreItem }) {
 
 function EmotePreview({ item }: { item: StoreItem }) {
   const color = item.previewColor;
+  const icon = (item.preview ?? "happy") as IconName;
   return (
     <View style={previewStyles.centerWrap}>
       <LinearGradient
@@ -225,9 +232,9 @@ function EmotePreview({ item }: { item: StoreItem }) {
         style={[previewStyles.effectCircle, { borderColor: color + "88" }]}
       >
         {item.animated ? (
-          <AnimatedSpinIcon icon={item.preview as any} color={color} />
+          <AnimatedEmoteIcon icon={icon} color={color} />
         ) : (
-          <Ionicons name={(item.preview as any) ?? "happy"} size={36} color={color} />
+          <Ionicons name={icon} size={36} color={color} />
         )}
       </LinearGradient>
     </View>
@@ -255,6 +262,7 @@ export default function CollectionScreen() {
     profile,
     updateCardBack, updateCardDesign, updateTableDesign,
     updateAvatar, updateFrame, updateTitle, updateEffect,
+    updateEquippedEmotes,
   } = useProfile();
   const [activeCat, setActiveCat] = useState<StoreItemCategory>("card_back");
   const [infoItem, setInfoItem] = useState<StoreItem | null>(null);
@@ -289,6 +297,9 @@ export default function CollectionScreen() {
     }
   };
 
+  const equippedEmotes = profile.equippedEmotes ?? [];
+  const isEmoteEquipped = (id: string) => equippedEmotes.includes(id);
+
   const equip = async (item: StoreItem) => {
     await playSound("equip");
     switch (item.category) {
@@ -299,6 +310,16 @@ export default function CollectionScreen() {
       case "frame":        updateFrame(item.id); break;
       case "title":        updateTitle(item.id); break;
       case "effect":       updateEffect(item.id); break;
+      case "emote": {
+        if (isEmoteEquipped(item.id)) {
+          updateEquippedEmotes(equippedEmotes.filter(id => id !== item.id));
+        } else if (equippedEmotes.length < 8) {
+          updateEquippedEmotes([...equippedEmotes, item.id]);
+        } else {
+          setInfoItem(item);
+        }
+        break;
+      }
     }
   };
 
@@ -313,14 +334,20 @@ export default function CollectionScreen() {
 
   const renderItem = ({ item }: { item: StoreItem }) => {
     const isOwned = item.isDefault || owned.includes(item.id);
-    const isEquipped = equippedId(activeCat) === item.id;
+    const isEquipped = activeCat === "emote"
+      ? isEmoteEquipped(item.id)
+      : equippedId(activeCat) === item.id;
     const rarityColor = RARITY_COLOR[item.rarity] ?? "#95A5A6";
     const localized = localizeItem(item, lang);
 
     const handlePress = () => {
       if (!isOwned) {
         setInfoItem(item);
-      } else if (!isEquipped && activeCat !== "emote") {
+        return;
+      }
+      if (activeCat === "emote") {
+        equip(item);
+      } else if (!isEquipped) {
         equip(item);
       } else {
         setInfoItem(item);
@@ -412,9 +439,9 @@ export default function CollectionScreen() {
                 isActive && { borderColor: themeGold, backgroundColor: themeGold + "22" },
               ]}
             >
-              <Ionicons name={cat.icon as any} size={16} color={isActive ? themeGold : theme.textMuted} />
+              <Ionicons name={cat.icon} size={16} color={isActive ? themeGold : theme.textMuted} />
               <Text style={[styles.catLabel, { color: isActive ? themeGold : theme.textMuted }]}>
-                {T(cat.labelKey as any)}
+                {T(cat.labelKey as TranslationKey)}
               </Text>
             </Pressable>
           );
