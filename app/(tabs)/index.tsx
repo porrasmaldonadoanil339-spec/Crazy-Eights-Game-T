@@ -811,17 +811,24 @@ export default function PlayScreen() {
             </View>
             {evStatus === "live" && (
               <View style={{ flexDirection: "row", marginTop: 10, gap: 8 }}>
-                <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
-                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: evColor }}>+2</Text>
-                  <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>pts por victoria</Text>
+                <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center", gap: 2 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <CoinIcon size={13} color={evColor} />
+                    <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: evColor }}>+50</Text>
+                  </View>
+                  <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>monedas extra</Text>
                 </View>
-                <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
-                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: evColor }}>+1</Text>
-                  <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>pts por derrota</Text>
+                <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center", gap: 2 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <Ionicons name="star" size={13} color={evColor} />
+                    <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: evColor }}>+100</Text>
+                  </View>
+                  <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>XP extra</Text>
                 </View>
-                <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center" }}>
-                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: evColor }}>Cofre</Text>
-                  <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>a 10 puntos</Text>
+                <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center", gap: 2 }}>
+                  <Ionicons name="cube" size={14} color={evColor} />
+                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: evColor }}>de Evento</Text>
+                  <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 9, color: "#888" }}>cofre al ganar</Text>
                 </View>
               </View>
             )}

@@ -921,7 +921,7 @@ function ChestEarnedBadge({ chestType, onTap }: { chestType: ChestType; onTap: (
 }
 
 // ─── End modal ────────────────────────────────────────────────────────────────
-function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap, winStreak, rankChanged, rivalAbandoned }: {
+function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap, winStreak, rankChanged, rivalAbandoned, isEventWin }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
   cpuProfile?: CpuProfile | null; mode?: string;
   rankedProfile?: RankedProfile | null;
@@ -931,6 +931,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
   winStreak?: number;
   rankChanged?: "promotion" | "demotion" | null;
   rivalAbandoned?: boolean;
+  isEventWin?: boolean;
 }) {
   const T = useT();
   const isWin = phase === "player_wins";
@@ -1101,6 +1102,20 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
 
           {/* Divider */}
           <View style={[styles.endDivider, { backgroundColor: accentColor + "22" }]} />
+
+          {/* Event win badge */}
+          {isWin && isEventWin && (
+            <View style={{
+              flexDirection: "row", alignItems: "center", gap: 6,
+              backgroundColor: "#E74C3C22", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6,
+              borderWidth: 1, borderColor: "#E74C3C66",
+            }}>
+              <Ionicons name="flash" size={14} color="#E74C3C" />
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: "#E74C3C", letterSpacing: 0.5 }}>
+                ¡VICTORIA DE EVENTO! +50 🪙 · +100 XP · 🎁 Cofre de Evento
+              </Text>
+            </View>
+          )}
 
           {/* Rewards */}
           {(coinsEarned > 0 || xpEarned > 0) && (
@@ -1290,6 +1305,7 @@ export default function GameScreen() {
   const [lastTournamentRoundWon, setLastTournamentRoundWon] = useState<boolean | undefined>(undefined);
   const [endCoins, setEndCoins] = useState(0);
   const [endXp, setEndXp] = useState(0);
+  const [endIsEventWin, setEndIsEventWin] = useState(false);
   const [isAiThinkingVis, setIsAiThinkingVis] = useState(false);
   const [expertTimer, setExpertTimer] = useState(8);
   const [playerEmote, setPlayerEmote] = useState<Emote | null>(null);
@@ -1762,9 +1778,11 @@ export default function GameScreen() {
     const modeConfig = getModeById(session.mode);
     const diffConfig = getDifficultyById(session.difficulty);
     const duration = Date.now() - gameStartTimeRef.current;
-    const activeEventForRewards = won ? getActiveEvent(level) : null;
-    const eventCoinBonus = activeEventForRewards ? 50 : 0;
-    const eventXpBonus = activeEventForRewards ? 100 : 0;
+    // Event rewards apply ONLY when the match itself is an event match
+    // (session.eventId set), not merely because an event is live in the lobby.
+    const isEventWin = won && !!session.eventId;
+    const eventCoinBonus = isEventWin ? 50 : 0;
+    const eventXpBonus = isEventWin ? 100 : 0;
     const coins = won
       ? Math.round(modeConfig.coinsReward * diffConfig.coinMultiplier) + eventCoinBonus
       : modeConfig.coinsLoss;
@@ -1776,6 +1794,7 @@ export default function GameScreen() {
 
     setEndCoins(coins);
     setEndXp(xp);
+    setEndIsEventWin(isEventWin);
 
     // Show Epic Result Overlay
     setShowEpicResult(won ? "win" : "lose");
@@ -1804,18 +1823,18 @@ export default function GameScreen() {
         else if (newTotalWins % 15 === 0) milestoneChest = "epic";
         else if (newTotalWins % 7 === 0) milestoneChest = "rare";
         else if (newTotalWins % 3 === 0) milestoneChest = "common";
-        // Guaranteed dedicated Event Chest on win during a live event
-        const activeEvent = activeEventForRewards;
+        // Guaranteed dedicated Event Chest on win during an event MATCH
+        // (not just a live lobby event — must be playing the event).
         const RANK: Record<ChestType, number> = { common: 0, rare: 1, magic: 2, epic: 3, event: 4, giant: 5, fichas: 6, legendary: 7, supreme: 8 };
-        if (activeEvent && milestoneChest) {
+        if (isEventWin && milestoneChest) {
           chestType = RANK["event"] >= RANK[milestoneChest] ? "event" : milestoneChest;
-        } else if (activeEvent) {
+        } else if (isEventWin) {
           chestType = "event";
         } else {
           chestType = milestoneChest;
         }
         if (chestType) {
-          const added = addChestToInventory(chestType, activeEvent && chestType === "event" ? "mission" : "win");
+          const added = addChestToInventory(chestType, isEventWin && chestType === "event" ? "mission" : "win");
           if (added) {
             setPendingChestType(chestType);
             setShowChestReward(true);
@@ -2526,6 +2545,7 @@ export default function GameScreen() {
             // Reset all end-game / in-game overlay state before replay
             setEndCoins(0);
             setEndXp(0);
+            setEndIsEventWin(false);
             setRankedPromotion(null);
             setRivalAbandoned(false);
             setShowChestReward(false);
@@ -2552,6 +2572,7 @@ export default function GameScreen() {
           winStreak={profile.stats.winStreak}
           rankChanged={rankedPromotion}
           rivalAbandoned={rivalAbandoned}
+          isEventWin={endIsEventWin}
           showChest={showChestReward}
           chestType={pendingChestType}
           onChestTap={() => {
