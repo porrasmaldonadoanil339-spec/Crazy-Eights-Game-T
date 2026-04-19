@@ -25,7 +25,60 @@ interface PlayingCardProps {
   backAccent?: string;
   backPattern?: "diamonds" | "stars" | "circles" | "crosses" | "waves" | "hexagons";
   cardColors?: [string, string, string];
+  showEffectBadge?: boolean;
 }
+
+type EffectInfo = { text: string; icon?: string; bg: string; border: string };
+
+function getEffectInfo(rank: Card["rank"]): EffectInfo | null {
+  switch (rank) {
+    case "Joker": return { text: "+4",      bg: "#7C3AED", border: "#C084FC" };
+    case "2":     return { text: "+2",      bg: "#DC2626", border: "#FCA5A5" };
+    case "3":     return { text: "+3",      bg: "#EA580C", border: "#FDBA74" };
+    case "A":     return { text: "+1",      bg: "#D97706", border: "#FCD34D" };
+    case "J":     return { text: "⛔",     bg: "#F59E0B", border: "#FDE68A" };
+    case "Q":     return { text: "↻",      bg: "#2563EB", border: "#93C5FD" };
+    case "K":     return { text: "⏩",     bg: "#16A34A", border: "#86EFAC" };
+    case "8":     return { text: "🎨",     bg: "#D4AF37", border: "#FDE68A" };
+    default: return null;
+  }
+}
+
+function EffectBadge({ rank, compact }: { rank: Card["rank"]; compact: boolean }) {
+  const info = getEffectInfo(rank);
+  if (!info) return null;
+  const size = compact ? 14 : 18;
+  const fontSize = compact ? 8 : 11;
+  return (
+    <View style={[badgeStyles.wrap, {
+      backgroundColor: info.bg,
+      borderColor: info.border,
+      minWidth: size, height: size,
+      borderRadius: size / 2,
+      paddingHorizontal: compact ? 2 : 4,
+    }]} pointerEvents="none">
+      <Text style={[badgeStyles.txt, { fontSize }]} numberOfLines={1}>{info.text}</Text>
+    </View>
+  );
+}
+
+const badgeStyles = StyleSheet.create({
+  wrap: {
+    position: "absolute",
+    top: 2, right: 2,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1,
+    shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 2, shadowOffset: { width: 0, height: 1 },
+    elevation: 3,
+    zIndex: 10,
+  },
+  txt: {
+    fontFamily: "Nunito_800ExtraBold",
+    color: "#FFFFFF",
+    lineHeight: 13,
+    textAlign: "center",
+  },
+});
 
 const SIZES = {
   sm: { w: 46, h: 68,  rs: 11, ss: 13, corner: 7  },
@@ -44,7 +97,7 @@ function hexLuminance(hex: string): number {
   return 0.299 * r + 0.587 * g + 0.114 * b;
 }
 
-function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.md; cardColors?: [string, string, string] }) {
+function CardFront({ card, sobj, cardColors, showBadge, compactBadge }: { card: Card; sobj: typeof SIZES.md; cardColors?: [string, string, string]; showBadge: boolean; compactBadge: boolean }) {
   const isJoker = card.rank === "Joker";
   const isEight = card.rank === "8";
   const isFace = ["J", "Q", "K"].includes(card.rank);
@@ -87,6 +140,7 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
           <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: customSuitColor ?? "#A855F7", transform: [{ rotate: "180deg" }] }]}>★</Text>
         </View>
         <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: (customSuitColor ?? "#A855F7") + "44" }]} />
+        {showBadge && <EffectBadge rank={card.rank} compact={compactBadge} />}
       </LinearGradient>
     );
   }
@@ -164,6 +218,7 @@ function CardFront({ card, sobj, cardColors }: { card: Card; sobj: typeof SIZES.
       {(isEight || isFace) && (
         <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: color + "18" }]} />
       )}
+      {showBadge && <EffectBadge rank={card.rank} compact={compactBadge} />}
     </LinearGradient>
   );
 }
@@ -250,8 +305,10 @@ export function PlayingCard({
   backAccent,
   backPattern,
   cardColors,
+  showEffectBadge = true,
 }: PlayingCardProps) {
   const sobj = SIZES[sizeKey];
+  const compactBadge = sizeKey === "sm";
   const ty = useSharedValue(0);
   const sc = useSharedValue(1);
   const glowOp = useSharedValue(0);
@@ -351,7 +408,7 @@ export function PlayingCard({
       <View style={[styles.cardWrap, { width: sobj.w, height: sobj.h, borderRadius: sobj.corner, ...shadowEl }]}>
         {faceDown
           ? <CardBack sobj={sobj} backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
-          : <CardFront card={card} sobj={sobj} cardColors={cardColors} />
+          : <CardFront card={card} sobj={sobj} cardColors={cardColors} showBadge={showEffectBadge} compactBadge={compactBadge} />
         }
       </View>
 

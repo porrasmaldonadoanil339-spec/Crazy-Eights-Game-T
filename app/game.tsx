@@ -1723,22 +1723,49 @@ export default function GameScreen() {
     }
   }, [gameState?.pendingDraw, gameState?.aiHand?.length, gameState?.currentPlayer, dealAnimationDone]);
 
-  // Card play floating label — fires for any player (human or AI) playing any card
+  // Card play effect banner — fires for any player (human or AI) playing a special card.
+  // Reads the actual engine outcome (pendingDraw, currentSuit) so accumulated stacks
+  // (+2, +4, +6...) and chosen colors are reflected accurately.
   useEffect(() => {
     if (!gameState || !dealAnimationDone) return;
     const topCard = gameState.discardPile[gameState.discardPile.length - 1];
     if (!topCard) return;
     if (topCard.id === prevTopCardIdRef.current) return;
+    const isFirstSet = prevTopCardIdRef.current === undefined;
     prevTopCardIdRef.current = topCard.id;
-    const isSpecial = topCard.rank === "8" || topCard.rank === "Joker" || topCard.rank === "2" || topCard.rank === "7";
-    if (isSpecial) {
-      const label = topCard.rank === "2" ? "+2" : topCard.rank === "Joker" ? "+5" : topCard.rank === "7" ? "SKIP" : "WILD";
-      const color = topCard.rank === "2" ? "#FF4444" : topCard.rank === "Joker" ? "#CC44FF" : Colors.gold;
-      triggerCardFloat(label, color);
-    } else {
-      triggerCardFloat("+1", "#FFFFFF");
+    if (isFirstSet) return; // initial discard, not a played card
+    const r = topCard.rank;
+    let label = "";
+    let color = "#FFFFFF";
+    if (r === "Joker") {
+      label = T("effectPlus4").replace("{n}", String(gameState.pendingDraw || 4));
+      color = "#CC44FF";
+    } else if (r === "2") {
+      label = T("effectPlus2").replace("{n}", String(gameState.pendingDraw || 2));
+      color = "#FF4444";
+    } else if (r === "3") {
+      label = T("effectPlus3").replace("{n}", String(gameState.pendingDraw || 3));
+      color = "#FF6B35";
+    } else if (r === "A") {
+      label = T("effectPlus1").replace("{n}", String(gameState.pendingDraw || 1));
+      color = "#F39C12";
+    } else if (r === "J") {
+      label = `⛔ ${T("effectSkipped")}`;
+      color = "#F39C12";
+    } else if (r === "Q") {
+      label = `↻ ${T("effectReversed")}`;
+      color = "#3498DB";
+    } else if (r === "K") {
+      label = `⏩ ${T("effectExtraTurn")}`;
+      color = "#27AE60";
+    } else if (r === "8") {
+      const sName = suitName(gameState.currentSuit);
+      const sym = suitSymbol(gameState.currentSuit);
+      label = T("effectColorPicked").replace("{s}", `${sym} ${sName}`);
+      color = Colors.gold;
     }
-  }, [gameState?.discardPile?.length, gameState?.discardPile, dealAnimationDone]);
+    if (label) triggerCardFloat(label, color);
+  }, [gameState?.discardPile?.length, gameState?.discardPile, gameState?.pendingDraw, gameState?.currentSuit, dealAnimationDone]);
 
   const handleSendEmote = (emote: Emote) => {
     setPlayerEmote(emote);
