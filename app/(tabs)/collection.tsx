@@ -231,11 +231,7 @@ function EmotePreview({ item }: { item: StoreItem }) {
         colors={[color + "44", color + "0A"] as [string, string]}
         style={[previewStyles.effectCircle, { borderColor: color + "88" }]}
       >
-        {item.animated ? (
-          <AnimatedEmoteIcon icon={icon} color={color} />
-        ) : (
-          <Ionicons name={icon} size={36} color={color} />
-        )}
+        <AnimatedEmoteIcon icon={icon} color={color} />
       </LinearGradient>
     </View>
   );
@@ -274,7 +270,8 @@ export default function CollectionScreen() {
     ? ["#061209", "#0a1a0f", "#0d2418"]
     : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
-  const lang = (profile.language ?? "es") as "es"|"en"|"pt";
+  const rawLang = profile.language ?? "es";
+  const lang: "es"|"en"|"pt" = rawLang === "en" || rawLang === "pt" ? rawLang : "es";
 
   const owned = profile.ownedItems ?? [];
   const items = useMemo(
