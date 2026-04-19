@@ -176,7 +176,7 @@ const STEPS: Step[] = [
     subtitle: "Gana, colecciona, mejora",
     icon: "cash",
     iconColor: Colors.gold,
-    body: "Cada victoria te da monedas y XP. Usa las monedas en la Tienda para obtener nuevos dorsos de cartas, avatares y títulos. El XP desbloquea el Pase de Batalla.",
+    body: "Cada victoria te da monedas y XP. Usa las monedas en la Tienda para obtener nuevos dorsos de cartas, avatares y títulos. El XP desbloquea el Camino.",
   },
   {
     title: "¡Listo para jugar!",

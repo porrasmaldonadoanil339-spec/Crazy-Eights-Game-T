@@ -73,7 +73,7 @@ const GENERIC_REPLIES = [
   "La verdad es que me pusiste a sudar con ese último Ocho Loco.",
   "¿Alguna vez has llegado a Rango Maestro? Es mi meta de esta temporada.",
   "¡Qué buena racha llevas! Alguien anda encendido hoy.",
-  "Oye, ¿viste el nuevo pase de batalla? Las recompensas están geniales.",
+  "Oye, ¿viste el nuevo Camino? Las recompensas están geniales.",
   "A veces el azar no ayuda, pero la estrategia lo es todo aquí.",
   "¡Esa carta de +4 me dolió en el alma! Buena esa.",
 ];
