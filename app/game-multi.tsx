@@ -22,6 +22,7 @@ import {
 import { playCardFlip, playCardDraw, playButton, stopMusic } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS } from "@/lib/storeItems";
+import { EmotePanel, EmoteBubble, type Emote } from "@/components/EmotePanel";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const PLAYER_COLORS = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
@@ -226,6 +227,9 @@ export default function MultiGameScreen() {
     }
   }, [gameState.phase]);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  // ─── Emotes per player (local pass-and-play) ─────────────────────────────
+  const [activeEmotes, setActiveEmotes] = useState<Record<number, Emote | null>>({});
+  const lastEmoteAtRef = useRef<Record<number, number>>({});
 
   // Re-initialize when starting
   const handleStartGame = useCallback(() => {
@@ -237,6 +241,14 @@ export default function MultiGameScreen() {
 
   const pidx = gameState.currentPlayerIndex;
   const currentHand = gameState.hands[pidx] ?? [];
+  const handleSendEmote = useCallback((emote: Emote) => {
+    const idx = pidx;
+    lastEmoteAtRef.current[idx] = Date.now();
+    setActiveEmotes(prev => ({ ...prev, [idx]: emote }));
+    setTimeout(() => {
+      setActiveEmotes(prev => (prev[idx] === emote ? { ...prev, [idx]: null } : prev));
+    }, 2400);
+  }, [pidx]);
   const playerCount = gameState.playerCount;
   const topCard = multiGetTopCard(gameState);
   const isPlaying = gameState.phase === "playing";
@@ -464,6 +476,9 @@ export default function MultiGameScreen() {
               <View key={op.idx} style={posStyles[op.pos]}>
                 <SideOpponentFan count={handCount} name={op.name} color={op.color} side={op.pos} iconName={PLAYER_ICONS[op.idx % PLAYER_ICONS.length]} />
                 {isSkipped && <Text style={styles.skipLabel}>⊗ {T("action_skip")}</Text>}
+                <View pointerEvents="none" style={{ alignItems: "center", marginTop: 2 }}>
+                  <EmoteBubble emote={activeEmotes[op.idx] ?? null} side="cpu" />
+                </View>
               </View>
             );
           }
@@ -471,6 +486,9 @@ export default function MultiGameScreen() {
             <View key={op.idx} style={posStyles[op.pos]}>
               <OpponentFan count={handCount} name={op.name} color={op.color} highlight={isSkipped} iconName={PLAYER_ICONS[op.idx % PLAYER_ICONS.length]} />
               {isSkipped && <Text style={styles.skipLabel}>⊗ {T("action_skip")}</Text>}
+              <View pointerEvents="none" style={{ alignItems: "center", marginTop: 2 }}>
+                <EmoteBubble emote={activeEmotes[op.idx] ?? null} side="cpu" />
+              </View>
             </View>
           );
         })}
@@ -489,19 +507,36 @@ export default function MultiGameScreen() {
                 <Text style={[styles.pendingText, { color: Colors.red }]}>+{gameState.pendingDraw}</Text>
               </View>
             )}
+            {isPlaying && (
+              <EmotePanel
+                onSendEmote={handleSendEmote}
+                lastEmoteTime={lastEmoteAtRef.current[pidx] ?? 0}
+              />
+            )}
+          </View>
+          {/* Current player emote bubble */}
+          <View style={{ alignItems: "center", marginTop: 2 }} pointerEvents="none">
+            <EmoteBubble emote={activeEmotes[pidx] ?? null} side="player" />
           </View>
           <ScrollView
             horizontal showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.handContainer}
+            decelerationRate="normal"
+            bounces
+            alwaysBounceHorizontal
+            overScrollMode="always"
+            keyboardShouldPersistTaps="always"
           >
             {currentHand.map((card, i) => {
               const playable = isPlaying && multiCanPlay(card, gameState);
               const selected = selectedCard?.id === card.id;
+              const handLen = currentHand.length;
+              const overlap = handLen <= 5 ? -8 : handLen <= 8 ? (cardSz === "sm" ? -16 : -12) : (cardSz === "sm" ? -22 : -18);
               return (
                 <View
                   key={card.id}
                   style={{
-                    marginLeft: i === 0 ? 0 : cardSz === "sm" ? -20 : -16,
+                    marginLeft: i === 0 ? 0 : overlap,
                     zIndex: selected ? 100 : i,
                     transform: [{ translateY: selected ? -10 : 0 }],
                   }}

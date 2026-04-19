@@ -397,7 +397,7 @@ function StoreItemCard({ item, owned, isEquipped, isDailyHot, onPress, onEquip, 
         >
           <Ionicons name="help-circle-outline" size={16} color={theme.textMuted} />
         </Pressable>
-        <View style={[styles.rarityBadgeSmall]}>
+        <View style={[styles.rarityBadgeSmall, { backgroundColor: rarityColor + "22", borderColor: rarityColor + "66" }]}>
           <Text style={[styles.rarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
         </View>
         {item.category === "card_back" ? (
@@ -942,7 +942,7 @@ function DailyShopCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
         <Pressable onPress={(e) => { e.stopPropagation(); onInfo(); }} style={styles.infoBtn}>
           <Ionicons name="help-circle-outline" size={16} color={theme.textMuted} />
         </Pressable>
-        <View style={[styles.rarityBadgeSmall]}>
+        <View style={[styles.rarityBadgeSmall, { backgroundColor: rarityColor + "22", borderColor: rarityColor + "66" }]}>
           <Text style={[styles.rarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
         </View>
         <View style={[styles.iconPreview, { backgroundColor: item.previewColor + "33" }]}>
@@ -1019,13 +1019,19 @@ const styles = StyleSheet.create({
   itemCard: {
     width: "47.5%", borderRadius: 16, overflow: "hidden",
     borderWidth: 1.5, backgroundColor: Colors.surface,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45, shadowRadius: 8, elevation: 6,
   },
-  itemCardEquipped: { borderWidth: 2 },
-  itemCardOwned: { opacity: 0.85 },
+  itemCardEquipped: { borderWidth: 2.5 },
+  itemCardOwned: { opacity: 0.9 },
   itemCardPressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
-  itemGrad: { padding: 12, minHeight: 170, justifyContent: "space-between" },
-  rarityBadgeSmall: { alignSelf: "flex-start", marginBottom: 8 },
-  rarityText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, letterSpacing: 1 },
+  itemGrad: { padding: 12, minHeight: 180, justifyContent: "space-between" },
+  rarityBadgeSmall: {
+    alignSelf: "flex-start", marginBottom: 8,
+    paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8,
+    borderWidth: 1,
+  },
+  rarityText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 1 },
   cardPreview: {
     width: 46, height: 64, borderRadius: 7, alignItems: "center", justifyContent: "center",
     borderWidth: 1.5, borderColor: Colors.gold + "55", marginBottom: 8,

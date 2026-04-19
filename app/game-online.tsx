@@ -1487,27 +1487,30 @@ export default function OnlineGameScreen() {
             </View>
           )}
 
-          {/* Arc fan hand */}
+          {/* Arc fan hand — wrapped in horizontal ScrollView for large hands */}
           {(() => {
             const N = currentHand.length;
             if (N === 0) return null;
             const CARD_W = 62;
             const CARD_H = 90;
-            const MAX_ANGLE = Math.min(24, N * 2.8);
-            const MAX_ARC = 16;
-            const xStep = N <= 4 ? CARD_W * 0.72 : N <= 7 ? CARD_W * 0.60 : N <= 10 ? CARD_W * 0.48 : CARD_W * 0.38;
-            const totalWidth = CARD_W + (N - 1) * xStep;
-            const startX = Math.max(8, (SW - totalWidth) / 2);
+            // Reduce angle when many cards so it doesn't block horizontal swipe.
+            const MAX_ANGLE = N <= 7 ? Math.min(20, N * 2.4) : Math.min(10, N * 1.2);
+            const MAX_ARC = N <= 7 ? 16 : 8;
+            // Generous spacing so each card has its own touch target; scroll handles overflow.
+            const xStep = N <= 4 ? CARD_W * 0.78 : N <= 7 ? CARD_W * 0.66 : CARD_W * 0.58;
+            const totalWidth = CARD_W + (N - 1) * xStep + 16;
+            const fitsOnScreen = totalWidth <= SW - 16;
             const containerH = CARD_H + MAX_ARC + 8;
 
-            return (
-              <View style={{ height: containerH, width: "100%", position: "relative" }}>
+            const Hand = (
+              <View style={{ height: containerH, width: Math.max(totalWidth, SW), position: "relative" }}>
                 {currentHand.map((card, i) => {
                   const centerI = (N - 1) / 2;
                   const t = N <= 1 ? 0 : (i - centerI) / Math.max(1, centerI);
                   const angle = t * MAX_ANGLE;
                   const arcY = Math.abs(t) * MAX_ARC;
-                  const x = startX + i * xStep;
+                  const baseStart = fitsOnScreen ? Math.max(8, (SW - totalWidth) / 2) : 8;
+                  const x = baseStart + i * xStep;
                   const playable = isPlaying && multiCanPlay(card, gs);
                   const selected = selectedCard?.id === card.id;
                   return (
@@ -1518,7 +1521,7 @@ export default function OnlineGameScreen() {
                         left: x,
                         bottom: arcY,
                         zIndex: selected ? 100 : i + 1,
-                        transform: [{ rotate: `${angle}deg` }],
+                        transform: [{ rotate: `${angle}deg` }, { translateY: selected ? -8 : 0 }],
                       }}
                     >
                       <PlayingCard
@@ -1532,6 +1535,23 @@ export default function OnlineGameScreen() {
                   );
                 })}
               </View>
+            );
+
+            if (fitsOnScreen) return Hand;
+            return (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                decelerationRate="normal"
+                bounces
+                alwaysBounceHorizontal
+                overScrollMode="always"
+                keyboardShouldPersistTaps="always"
+                style={{ width: "100%", height: containerH }}
+                contentContainerStyle={{ minWidth: SW }}
+              >
+                {Hand}
+              </ScrollView>
             );
           })()}
         </View>

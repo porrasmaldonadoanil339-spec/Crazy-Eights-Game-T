@@ -2489,18 +2489,28 @@ export default function GameScreen() {
           horizontal showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.handContainer}
           style={styles.handScroll}
+          decelerationRate="normal"
+          bounces
+          alwaysBounceHorizontal
+          overScrollMode="always"
+          keyboardShouldPersistTaps="always"
         >
           {dealAnimationDone && gameState.playerHand.map((card, i) => {
             const playable = isPlayerTurn && canPlay(card, gameState);
             const selected = selectedCard?.id === card.id;
-            const angle = (i - gameState.playerHand.length / 2) * 3;
+            const handLen = gameState.playerHand.length;
+            // Dynamic spacing: less overlap when fewer cards for easier touch/scroll.
+            const overlap = handLen <= 5 ? -10 : handLen <= 8 ? -16 : -22;
+            // Reduce rotation when many cards to avoid blocking horizontal swipe.
+            const maxAngle = handLen <= 7 ? 3 : 1.5;
+            const angle = (i - handLen / 2) * maxAngle;
             return (
               <View
                 key={card.id}
                 style={{
-                  marginLeft: i === 0 ? 0 : -20,
+                  marginLeft: i === 0 ? 0 : overlap,
                   zIndex: selected ? 100 : i,
-                  transform: [{ rotate: `${angle}deg` }],
+                  transform: [{ rotate: `${angle}deg` }, { translateY: selected ? -8 : 0 }],
                   alignItems: "center",
                 }}
               >
