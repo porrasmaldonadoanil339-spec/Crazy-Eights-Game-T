@@ -38,7 +38,6 @@ import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } fro
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
 import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
-import { getActiveEvent } from "@/components/EventsCard";
 import { getEventConfig, pickRandomSuit, type EventId } from "@/lib/eventModes";
 
 const { width: SW, height: SH } = Dimensions.get("window");

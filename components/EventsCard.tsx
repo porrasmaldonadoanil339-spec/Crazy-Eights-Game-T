@@ -31,10 +31,6 @@ const DIFF_META: Record<EventDifficulty, { label: string; color: string }> = {
   hard:   { label: "DIFÍCIL", color: "#e74c3c" },
 };
 
-const CHEST_LABEL: Record<OchoEvent["chestType"], string> = {
-  common: "Común", rare: "Raro", epic: "Épico", legendary: "Legendario",
-};
-
 export function getActiveEvent(level: number): OchoEvent | null {
   const status = getEventStatus(level);
   return status.status === "live" ? status.event : null;
