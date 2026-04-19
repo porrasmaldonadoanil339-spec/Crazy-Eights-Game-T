@@ -16,7 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
-import { getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward } from "@/lib/battlePass";
+import { getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward, getSeasonTheme, SeasonExclusive } from "@/lib/battlePass";
 import { getCurrentSeason } from "@/lib/seasons";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";
@@ -259,6 +259,13 @@ export default function AchievementsScreen() {
               <Text style={[styles.bpSeasonText, { color: themeGold }]} numberOfLines={1}>{currentSeason.name.toUpperCase()}</Text>
               <Ionicons name="sparkles" size={14} color={themeGold} />
             </View>
+            <SeasonThemeCard
+              seasonNumber={seasonNumber}
+              themeColors={themeColors}
+              themeGold={themeGold}
+              lang={lang}
+              T={T}
+            />
             <View style={styles.bpHeader}>
               <View style={[styles.bpLevelBig, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "row", alignItems: "center", gap: 14 }]}>
                 <View style={[styles.bpCircleLevel, { borderColor: themeGold }]}>
@@ -539,7 +546,144 @@ const styles = StyleSheet.create({
   },
   ppRewardLabel: { fontFamily: "Nunito_700Bold", fontSize: 12 },
   ppXpReq: { fontFamily: "Nunito_400Regular", fontSize: 10 },
+  // ── Season Theme Card ───────────────────────────────────────────────────
+  stCard: { borderRadius: 14, borderWidth: 1, marginBottom: 14, overflow: "hidden" },
+  stHeader: { flexDirection: "row", alignItems: "center", gap: 10, padding: 12 },
+  stTitle: { fontFamily: "Nunito_700Bold", fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase" },
+  stSubtitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 14 },
+  stBody: { paddingHorizontal: 12, paddingBottom: 12, gap: 8 },
+  stSectionLabel: { fontFamily: "Nunito_700Bold", fontSize: 10, letterSpacing: 0.8, textTransform: "uppercase" },
+  stExclusiveList: { gap: 8 },
+  stExclusiveCard: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    padding: 10, borderRadius: 12, borderWidth: 1,
+  },
+  stExclusiveIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  stExclusiveType: { fontFamily: "Nunito_700Bold", fontSize: 10, letterSpacing: 0.5, textTransform: "uppercase" },
+  stExclusiveName: { fontFamily: "Nunito_800ExtraBold", fontSize: 13 },
+  stLimitedBadge: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    alignSelf: "flex-start",
+    paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 5, borderWidth: 1, marginTop: 2,
+  },
+  stLimitedText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, letterSpacing: 0.5 },
+  stNextToggle: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    paddingVertical: 8, paddingHorizontal: 10,
+    borderRadius: 10, borderWidth: 1, borderStyle: "dashed",
+    marginTop: 4,
+  },
+  stNextToggleText: { flex: 1, fontFamily: "Nunito_700Bold", fontSize: 11 },
 });
+
+function SeasonThemeCard({
+  seasonNumber, themeColors, themeGold, lang, T,
+}: {
+  seasonNumber: number;
+  themeColors: any;
+  themeGold: string;
+  lang: "es" | "en" | "pt";
+  T: (k: any) => string;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const [showNext, setShowNext] = useState(false);
+  // Only the first 2 exclusives per theme are actually earnable (slotted at
+  // tiers 27 & 35 — see EXCLUSIVE_SLOTS in lib/battlePass.ts). Cap the
+  // gallery so the preview never over-promises rewards the player can't get.
+  const EARNABLE_PER_SEASON = 2;
+  const currentTheme = useMemo(() => getSeasonTheme(seasonNumber), [seasonNumber]);
+  const currentExclusives = useMemo(
+    () => currentTheme.exclusives.slice(0, EARNABLE_PER_SEASON),
+    [currentTheme],
+  );
+  const nextSeasonNumber = seasonNumber + 1;
+  const nextTheme = useMemo(() => getSeasonTheme(nextSeasonNumber), [nextSeasonNumber]);
+  const nextExclusives = useMemo(
+    () => nextTheme.exclusives.slice(0, EARNABLE_PER_SEASON),
+    [nextTheme],
+  );
+
+  const exclusiveLabel = (e: SeasonExclusive) =>
+    lang === "en" ? e.enLabel : lang === "pt" ? e.ptLabel : e.rewardLabel;
+
+  const typeKey = (t: SeasonExclusive["rewardType"]) =>
+    t === "avatar" ? "exclusiveAvatar" :
+    t === "frame"  ? "exclusiveFrame"  :
+    t === "title"  ? "exclusiveTitle"  : "exclusiveBack";
+
+  const renderExclusive = (e: SeasonExclusive, dimmed: boolean) => (
+    <View
+      key={e.rewardValue}
+      style={[
+        styles.stExclusiveCard,
+        { backgroundColor: themeColors.card, borderColor: e.iconColor + (dimmed ? "55" : "AA") },
+        dimmed && { opacity: 0.6 },
+      ]}
+    >
+      <View style={[styles.stExclusiveIcon, { backgroundColor: e.iconColor + "22" }]}>
+        <Ionicons name={e.icon as any} size={22} color={e.iconColor} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={[styles.stExclusiveType, { color: themeColors.textMuted }]} numberOfLines={1}>
+          {T(typeKey(e.rewardType) as any)}
+        </Text>
+        <Text style={[styles.stExclusiveName, { color: themeColors.text }]} numberOfLines={1}>
+          {exclusiveLabel(e).replace(/^[^:]+:\s*/, "")}
+        </Text>
+        {!dimmed && (
+          <View style={[styles.stLimitedBadge, { backgroundColor: e.iconColor + "22", borderColor: e.iconColor + "88" }]}>
+            <Ionicons name="sparkles" size={9} color={e.iconColor} />
+            <Text style={[styles.stLimitedText, { color: e.iconColor }]} numberOfLines={1}>{T("limitedEdition")}</Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+
+  const comingNextLabel = T("comingNextSeason").replace("{n}", String(nextSeasonNumber));
+
+  return (
+    <View style={[styles.stCard, { backgroundColor: themeColors.surface, borderColor: themeGold + "55" }]}>
+      <Pressable onPress={() => setExpanded(!expanded)} style={styles.stHeader}>
+        <Ionicons name="color-palette" size={16} color={themeGold} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.stTitle, { color: themeGold }]} numberOfLines={1}>{T("seasonTheme")}</Text>
+          <Text style={[styles.stSubtitle, { color: themeColors.text }]} numberOfLines={1}>{currentTheme.themeName}</Text>
+        </View>
+        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={18} color={themeColors.textMuted} />
+      </Pressable>
+
+      {expanded && (
+        <View style={styles.stBody}>
+          <Text style={[styles.stSectionLabel, { color: themeColors.textMuted }]}>
+            {T("thisSeasonExclusives")}
+          </Text>
+          <View style={styles.stExclusiveList}>
+            {currentExclusives.map((e) => renderExclusive(e, false))}
+          </View>
+
+          <Pressable
+            onPress={() => setShowNext(!showNext)}
+            style={[styles.stNextToggle, { borderColor: themeColors.border }]}
+          >
+            <Ionicons name="time-outline" size={14} color={themeColors.textMuted} />
+            <Text style={[styles.stNextToggleText, { color: themeColors.textMuted }]} numberOfLines={1}>
+              {comingNextLabel} · {nextTheme.themeName}
+            </Text>
+            <Ionicons name={showNext ? "chevron-up" : "chevron-down"} size={14} color={themeColors.textMuted} />
+          </Pressable>
+
+          {showNext && (
+            <View style={styles.stExclusiveList}>
+              {nextExclusives.map((e) => renderExclusive(e, true))}
+            </View>
+          )}
+        </View>
+      )}
+    </View>
+  );
+}
 
 function PlayerPathView({
   profile, themeColors, themeGold, claimPlayerPathLevel, T, claimLabel, setRewardPopup,
