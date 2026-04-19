@@ -13,6 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/colors";
 import type { Card, Suit } from "@/lib/gameEngine";
 import { suitSymbol, suitColor } from "@/lib/gameEngine";
+import { useT } from "@/hooks/useT";
 
 interface PlayingCardProps {
   card: Card;
@@ -28,55 +29,85 @@ interface PlayingCardProps {
   showEffectBadge?: boolean;
 }
 
-type EffectInfo = { text: string; icon?: string; bg: string; border: string };
+type EffectInfo = { icon: string; labelKey?: string; bg: string; border: string };
 
 function getEffectInfo(rank: Card["rank"]): EffectInfo | null {
   switch (rank) {
-    case "Joker": return { text: "+4",      bg: "#7C3AED", border: "#C084FC" };
-    case "2":     return { text: "+2",      bg: "#DC2626", border: "#FCA5A5" };
-    case "3":     return { text: "+3",      bg: "#EA580C", border: "#FDBA74" };
-    case "A":     return { text: "+1",      bg: "#D97706", border: "#FCD34D" };
-    case "J":     return { text: "⛔",     bg: "#F59E0B", border: "#FDE68A" };
-    case "Q":     return { text: "↻",      bg: "#2563EB", border: "#93C5FD" };
-    case "K":     return { text: "⏩",     bg: "#16A34A", border: "#86EFAC" };
-    case "8":     return { text: "🎨",     bg: "#D4AF37", border: "#FDE68A" };
+    case "Joker": return { icon: "+4",  bg: "#7C3AED", border: "#C084FC" };
+    case "2":     return { icon: "+2",  bg: "#DC2626", border: "#FCA5A5" };
+    case "3":     return { icon: "+3",  bg: "#EA580C", border: "#FDBA74" };
+    case "A":     return { icon: "+1",  bg: "#D97706", border: "#FCD34D" };
+    case "J":     return { icon: "⛔", labelKey: "effectLabelSkip",    bg: "#F59E0B", border: "#FDE68A" };
+    case "Q":     return { icon: "↻",  labelKey: "effectLabelReverse", bg: "#2563EB", border: "#93C5FD" };
+    case "K":     return { icon: "⏩", labelKey: "effectLabelExtra",   bg: "#16A34A", border: "#86EFAC" };
+    case "8":     return { icon: "🎨", labelKey: "effectLabelColor",   bg: "#D4AF37", border: "#FDE68A" };
     default: return null;
   }
 }
 
-function EffectBadge({ rank, compact }: { rank: Card["rank"]; compact: boolean }) {
+// Two variants:
+//   - "mini"  → icon-only, small circle. Used in miniature contexts (size="sm").
+//   - "full"  → pill with icon + localized label (e.g. "⛔ Salto"). For draw
+//               cards (+1/+2/+3/+4) only the number is shown — it is already
+//               its own label and adding text would clutter the card.
+function EffectBadge({ rank, variant }: { rank: Card["rank"]; variant: "mini" | "full" }) {
+  const tr = useT();
   const info = getEffectInfo(rank);
   if (!info) return null;
-  const size = compact ? 14 : 18;
-  const fontSize = compact ? 8 : 11;
+
+  if (variant === "mini") {
+    const size = 14;
+    return (
+      <View style={[badgeStyles.miniWrap, {
+        backgroundColor: info.bg, borderColor: info.border,
+        minWidth: size, height: size, borderRadius: size / 2,
+      }]} pointerEvents="none">
+        <Text style={badgeStyles.miniTxt} numberOfLines={1}>{info.icon}</Text>
+      </View>
+    );
+  }
+
+  const label = info.labelKey ? tr(info.labelKey as any) : null;
   return (
-    <View style={[badgeStyles.wrap, {
-      backgroundColor: info.bg,
-      borderColor: info.border,
-      minWidth: size, height: size,
-      borderRadius: size / 2,
-      paddingHorizontal: compact ? 2 : 4,
+    <View style={[badgeStyles.fullWrap, {
+      backgroundColor: info.bg, borderColor: info.border,
     }]} pointerEvents="none">
-      <Text style={[badgeStyles.txt, { fontSize }]} numberOfLines={1}>{info.text}</Text>
+      <Text style={badgeStyles.fullIcon} numberOfLines={1}>{info.icon}</Text>
+      {label ? <Text style={badgeStyles.fullLabel} numberOfLines={1}>{label}</Text> : null}
     </View>
   );
 }
 
 const badgeStyles = StyleSheet.create({
-  wrap: {
+  miniWrap: {
     position: "absolute",
     top: 2, right: 2,
     alignItems: "center", justifyContent: "center",
-    borderWidth: 1,
+    borderWidth: 1, paddingHorizontal: 2,
     shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 2, shadowOffset: { width: 0, height: 1 },
-    elevation: 3,
-    zIndex: 10,
+    elevation: 3, zIndex: 10,
   },
-  txt: {
+  miniTxt: {
     fontFamily: "Nunito_800ExtraBold",
-    color: "#FFFFFF",
-    lineHeight: 13,
-    textAlign: "center",
+    color: "#FFFFFF", fontSize: 8, lineHeight: 11, textAlign: "center",
+  },
+  fullWrap: {
+    position: "absolute",
+    bottom: 4, left: 4, right: 4,
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderRadius: 9,
+    paddingVertical: 2, paddingHorizontal: 4, gap: 3,
+    shadowColor: "#000", shadowOpacity: 0.5, shadowRadius: 2, shadowOffset: { width: 0, height: 1 },
+    elevation: 4, zIndex: 10,
+  },
+  fullIcon: {
+    fontFamily: "Nunito_800ExtraBold",
+    color: "#FFFFFF", fontSize: 11, lineHeight: 13,
+  },
+  fullLabel: {
+    fontFamily: "Nunito_800ExtraBold",
+    color: "#FFFFFF", fontSize: 9, lineHeight: 11,
+    letterSpacing: 0.3, textTransform: "uppercase",
   },
 });
 
@@ -97,7 +128,7 @@ function hexLuminance(hex: string): number {
   return 0.299 * r + 0.587 * g + 0.114 * b;
 }
 
-function CardFront({ card, sobj, cardColors, showBadge, compactBadge }: { card: Card; sobj: typeof SIZES.md; cardColors?: [string, string, string]; showBadge: boolean; compactBadge: boolean }) {
+function CardFront({ card, sobj, cardColors, showBadge, badgeVariant }: { card: Card; sobj: typeof SIZES.md; cardColors?: [string, string, string]; showBadge: boolean; badgeVariant: "mini" | "full" }) {
   const isJoker = card.rank === "Joker";
   const isEight = card.rank === "8";
   const isFace = ["J", "Q", "K"].includes(card.rank);
@@ -140,7 +171,7 @@ function CardFront({ card, sobj, cardColors, showBadge, compactBadge }: { card: 
           <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: customSuitColor ?? "#A855F7", transform: [{ rotate: "180deg" }] }]}>★</Text>
         </View>
         <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: (customSuitColor ?? "#A855F7") + "44" }]} />
-        {showBadge && <EffectBadge rank={card.rank} compact={compactBadge} />}
+        {showBadge && <EffectBadge rank={card.rank} variant={badgeVariant} />}
       </LinearGradient>
     );
   }
@@ -218,7 +249,7 @@ function CardFront({ card, sobj, cardColors, showBadge, compactBadge }: { card: 
       {(isEight || isFace) && (
         <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: color + "18" }]} />
       )}
-      {showBadge && <EffectBadge rank={card.rank} compact={compactBadge} />}
+      {showBadge && <EffectBadge rank={card.rank} variant={badgeVariant} />}
     </LinearGradient>
   );
 }
@@ -308,7 +339,7 @@ export function PlayingCard({
   showEffectBadge = true,
 }: PlayingCardProps) {
   const sobj = SIZES[sizeKey];
-  const compactBadge = sizeKey === "sm";
+  const badgeVariant: "mini" | "full" = sizeKey === "sm" ? "mini" : "full";
   const ty = useSharedValue(0);
   const sc = useSharedValue(1);
   const glowOp = useSharedValue(0);
@@ -408,7 +439,7 @@ export function PlayingCard({
       <View style={[styles.cardWrap, { width: sobj.w, height: sobj.h, borderRadius: sobj.corner, ...shadowEl }]}>
         {faceDown
           ? <CardBack sobj={sobj} backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
-          : <CardFront card={card} sobj={sobj} cardColors={cardColors} showBadge={showEffectBadge} compactBadge={compactBadge} />
+          : <CardFront card={card} sobj={sobj} cardColors={cardColors} showBadge={showEffectBadge} badgeVariant={badgeVariant} />
         }
       </View>
 

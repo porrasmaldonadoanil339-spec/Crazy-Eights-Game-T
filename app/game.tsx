@@ -2603,6 +2603,7 @@ export default function GameScreen() {
             setLastTournamentRoundWon(undefined);
             retryCount.current += 1;
             setShowMatchmaking(true);
+            prevTopCardIdRef.current = undefined;
             if (session) startGame(session.mode, session.difficulty);
           }}
           onHome={() => router.back()}
