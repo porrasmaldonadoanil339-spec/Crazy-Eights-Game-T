@@ -88,6 +88,70 @@ export function getSeasonTheme(seasonNumber: number): SeasonTheme {
   return SEASON_THEMES[idx];
 }
 
+// ─── EXCLUSIVE LOOKUP HELPERS ───────────────────────────────────────────────
+// Battle-pass-only IDs (prefix `exclusive_s`) are NOT in `STORE_ITEMS`, so the
+// inventory and avatar/frame/title/back pickers need to resolve them via
+// SEASON_THEMES to display name, icon and a "Limited Edition · Season X" badge.
+export type ExclusiveCategory = "card_back" | "avatar" | "frame" | "title";
+
+export interface ResolvedExclusive {
+  id: string;
+  category: ExclusiveCategory;
+  name: string;          // localized, prefix-stripped (e.g. "Phoenix Lord")
+  fullLabel: string;     // localized, with prefix ("Avatar: Phoenix Lord")
+  icon: string;
+  iconColor: string;
+  seasonNumber: number;
+  themeName: string;
+  isExclusive: true;
+}
+
+const EXCLUSIVE_CATEGORY_MAP: Record<SeasonExclusive["rewardType"], ExclusiveCategory> = {
+  item:   "card_back",
+  avatar: "avatar",
+  frame:  "frame",
+  title:  "title",
+};
+
+export function findExclusiveById(id: string, lang: "es" | "en" | "pt" = "es"): ResolvedExclusive | null {
+  if (!id || !id.startsWith("exclusive_s")) return null;
+  for (let i = 0; i < SEASON_THEMES.length; i++) {
+    const theme = SEASON_THEMES[i];
+    const ex = theme.exclusives.find(e => e.rewardValue === id);
+    if (!ex) continue;
+    const fullLabel = lang === "en" ? ex.enLabel : lang === "pt" ? ex.ptLabel : ex.rewardLabel;
+    const name = fullLabel.includes(": ")
+      ? fullLabel.split(": ").slice(1).join(": ")
+      : fullLabel;
+    return {
+      id,
+      category: EXCLUSIVE_CATEGORY_MAP[ex.rewardType],
+      name,
+      fullLabel,
+      icon: ex.icon,
+      iconColor: ex.iconColor,
+      seasonNumber: i + 1,
+      themeName: theme.themeName,
+      isExclusive: true,
+    };
+  }
+  return null;
+}
+
+export function getOwnedExclusives(
+  ownedIds: string[] | undefined,
+  category: ExclusiveCategory,
+  lang: "es" | "en" | "pt" = "es",
+): ResolvedExclusive[] {
+  if (!ownedIds || ownedIds.length === 0) return [];
+  const out: ResolvedExclusive[] = [];
+  for (const id of ownedIds) {
+    const ex = findExclusiveById(id, lang);
+    if (ex && ex.category === category) out.push(ex);
+  }
+  return out;
+}
+
 // Tier slots in the epic block (21-40) where exclusives are injected.
 const EXCLUSIVE_SLOTS = [27, 35];
 

@@ -15,7 +15,7 @@ import { Colors, LightColors } from "@/constants/colors";
 import { useProfile, GameRecord } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { STORE_ITEMS, AVATARS, AVATAR_FRAMES } from "@/lib/storeItems";
-import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS } from "@/lib/battlePass";
+import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS, getOwnedExclusives, ResolvedExclusive } from "@/lib/battlePass";
 import { getLocalizedRankInfo, RANK_COLORS, RANK_ICONS, RANKS, DIVISIONS } from "@/lib/ranked";
 import { playSound } from "@/lib/sounds";
 import { GAME_MODES } from "@/lib/gameModes";
@@ -164,9 +164,10 @@ function EditNameModal({
 }
 
 function AvatarPickerModal({
-  visible, ownedItems, currentId, photoUri, onSelect, onTakePhoto, onPickPhoto, onClearPhoto, onClose,
+  visible, ownedItems, currentId, photoUri, exclusives, onSelect, onTakePhoto, onPickPhoto, onClearPhoto, onClose,
 }: {
   visible: boolean; ownedItems: string[]; currentId: string; photoUri: string;
+  exclusives: ResolvedExclusive[];
   onSelect: (id: string) => void;
   onTakePhoto: () => void;
   onPickPhoto: () => void;
@@ -221,6 +222,27 @@ function AvatarPickerModal({
                 </Pressable>
               );
             })}
+            {exclusives.map((ex) => {
+              const selected = ex.id === currentId && !photoUri;
+              return (
+                <Pressable
+                  key={ex.id}
+                  onPress={() => { onSelect(ex.id); onClose(); }}
+                  style={[styles.avatarOption, selected && styles.avatarOptionSelected, styles.exclusiveOption]}
+                >
+                  <View style={[styles.avatarIconWrap, { backgroundColor: ex.iconColor + "44" }]}>
+                    <Ionicons name={ex.icon as any} size={24} color={ex.iconColor} />
+                  </View>
+                  <Text style={styles.avatarOptionName} numberOfLines={1}>{ex.name}</Text>
+                  <View style={styles.exclusiveBadge}>
+                    <Ionicons name="star" size={7} color="#000" />
+                    <Text style={styles.exclusiveBadgeText} numberOfLines={1}>
+                      {T("limitedEditionSeason").replace("{n}", String(ex.seasonNumber))}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
           </ScrollView>
         </View>
       </Pressable>
@@ -229,9 +251,10 @@ function AvatarPickerModal({
 }
 
 function FramePickerModal({
-  visible, ownedItems, currentId, onSelect, onClose,
+  visible, ownedItems, currentId, exclusives, onSelect, onClose,
 }: {
   visible: boolean; ownedItems: string[]; currentId: string;
+  exclusives: ResolvedExclusive[];
   onSelect: (id: string) => void; onClose: () => void;
 }) {
   const T = useT();
@@ -273,6 +296,32 @@ function FramePickerModal({
                       item.rarity === "epic" ? "#9B59B6" :
                       item.rarity === "rare" ? "#2196F3" : "#95A5A6",
                   }]} />
+                </Pressable>
+              );
+            })}
+            {exclusives.map((ex) => {
+              const selected = ex.id === currentId;
+              const frameColors = [ex.iconColor, ex.iconColor + "88"] as [string, string];
+              return (
+                <Pressable
+                  key={ex.id}
+                  onPress={() => { onSelect(ex.id); onClose(); }}
+                  style={[styles.avatarOption, selected && styles.avatarOptionSelected, styles.exclusiveOption]}
+                >
+                  <LinearGradient
+                    colors={frameColors}
+                    style={styles.framePreview}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  >
+                    <View style={styles.frameInner} />
+                  </LinearGradient>
+                  <Text style={styles.avatarOptionName} numberOfLines={1}>{ex.name}</Text>
+                  <View style={styles.exclusiveBadge}>
+                    <Ionicons name="star" size={7} color="#000" />
+                    <Text style={styles.exclusiveBadgeText} numberOfLines={1}>
+                      {T("limitedEditionSeason").replace("{n}", String(ex.seasonNumber))}
+                    </Text>
+                  </View>
                 </Pressable>
               );
             })}
@@ -366,8 +415,15 @@ export default function ProfileScreen() {
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
 
   const titleItem = STORE_ITEMS.find((i) => i.id === profile.titleId);
+  const titleExclusive = React.useMemo(() => getOwnedExclusives([profile.titleId], "title", lang as "es" | "en" | "pt")[0], [profile.titleId, lang]);
   const cardBackItem = STORE_ITEMS.find((i) => i.id === profile.cardBackId);
+  const cardBackExclusive = React.useMemo(() => getOwnedExclusives([profile.cardBackId], "card_back", lang as "es" | "en" | "pt")[0], [profile.cardBackId, lang]);
   const frameItem = AVATAR_FRAMES.find((f) => f.id === profile.selectedFrameId);
+  const frameExclusive = React.useMemo(() => getOwnedExclusives([profile.selectedFrameId], "frame", lang as "es" | "en" | "pt")[0], [profile.selectedFrameId, lang]);
+
+  const ownedExclusiveAvatars = React.useMemo(() => getOwnedExclusives(profile.ownedItems, "avatar", lang as "es" | "en" | "pt"), [profile.ownedItems, lang]);
+  const ownedExclusiveFrames = React.useMemo(() => getOwnedExclusives(profile.ownedItems, "frame", lang as "es" | "en" | "pt"), [profile.ownedItems, lang]);
+  const ownedExclusiveTitles = React.useMemo(() => getOwnedExclusives(profile.ownedItems, "title", lang as "es" | "en" | "pt"), [profile.ownedItems, lang]);
   const rankInfo = getLocalizedRankInfo(profile.rankedProfile, lang);
   const country = COUNTRIES.find(c => c.code === profile.country) ?? COUNTRIES[0];
 
@@ -513,9 +569,9 @@ export default function ProfileScreen() {
               </View>
             </Pressable>
             <Pressable onPress={() => setShowFramePicker(true)} style={styles.frameBadge}>
-              <Ionicons name="ellipse" size={10} color={frameItem?.previewColor ?? Colors.gold} />
-              <Text style={[styles.frameBadgeText, { color: frameItem?.previewColor ?? Colors.gold }]}>
-                {frameItem?.name ?? T("noFrame")}
+              <Ionicons name="ellipse" size={10} color={frameItem?.previewColor ?? frameExclusive?.iconColor ?? Colors.gold} />
+              <Text style={[styles.frameBadgeText, { color: frameItem?.previewColor ?? frameExclusive?.iconColor ?? Colors.gold }]}>
+                {frameItem?.name ?? frameExclusive?.name ?? T("noFrame")}
               </Text>
             </Pressable>
           </View>
@@ -542,10 +598,10 @@ export default function ProfileScreen() {
 
             <View style={styles.badgeRow}>
               <Pressable onPress={() => setShowTitlePicker(true)} style={[styles.titleBadge, { backgroundColor: themeGold + "22", borderColor: themeGold + "44" }]}>
-                {titleItem?.preview && (
-                  <Ionicons name={titleItem.preview as any} size={11} color={themeGold} />
+                {(titleItem?.preview || titleExclusive?.icon) && (
+                  <Ionicons name={(titleItem?.preview ?? titleExclusive?.icon) as any} size={11} color={titleExclusive ? titleExclusive.iconColor : themeGold} />
                 )}
-                <Text style={[styles.titleText, { color: themeGold }]}>{titleItem?.name ?? T("noTitle")}</Text>
+                <Text style={[styles.titleText, { color: themeGold }]}>{titleItem?.name ?? titleExclusive?.name ?? T("noTitle")}</Text>
                 <Ionicons name="chevron-down" size={12} color={themeGold} />
               </Pressable>
 
@@ -582,10 +638,10 @@ export default function ProfileScreen() {
             <Text style={[styles.resourceLbl, { color: textMuted }]}>XP {T("total") || "Total"}</Text>
           </View>
           <View style={[styles.resourceCard, { backgroundColor: surfaceColor, borderColor: isDark ? Colors.border : "#aacfa0" }]}>
-            <View style={[styles.miniCard, { backgroundColor: cardBackItem?.previewColor ?? "#1A3A6A" }]}>
+            <View style={[styles.miniCard, { backgroundColor: cardBackItem?.previewColor ?? cardBackExclusive?.iconColor ?? "#1A3A6A" }]}>
               <Text style={{ color: Colors.gold, fontSize: 10 }}>◆</Text>
             </View>
-            <Text style={[styles.resourceVal, { color: themeGold, fontSize: 12 }]} numberOfLines={1}>{cardBackItem?.name ?? T("default")}</Text>
+            <Text style={[styles.resourceVal, { color: themeGold, fontSize: 12 }]} numberOfLines={1}>{cardBackItem?.name ?? cardBackExclusive?.name ?? T("default")}</Text>
             <Text style={[styles.resourceLbl, { color: textMuted }]}>{T("cardBackLabel")}</Text>
           </View>
         </View>
@@ -764,6 +820,7 @@ export default function ProfileScreen() {
         ownedItems={profile.ownedItems}
         currentId={profile.avatarId}
         photoUri={profile.photoUri}
+        exclusives={ownedExclusiveAvatars}
         onSelect={updateAvatar}
         onTakePhoto={handleTakePhoto}
         onPickPhoto={handlePickPhoto}
@@ -774,6 +831,7 @@ export default function ProfileScreen() {
         visible={showFramePicker}
         ownedItems={profile.ownedItems}
         currentId={profile.selectedFrameId}
+        exclusives={ownedExclusiveFrames}
         onSelect={updateFrame}
         onClose={() => setShowFramePicker(false)}
       />
@@ -807,6 +865,27 @@ export default function ProfileScreen() {
                     </View>
                     <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{item.name}</Text>
                     {!owned && <View style={styles.priceBadge}><CoinIcon size={9} color={Colors.gold} /><Text style={styles.priceText}>{item.price}</Text></View>}
+                  </Pressable>
+                );
+              })}
+              {ownedExclusiveTitles.map((ex) => {
+                const selected = ex.id === profile.titleId;
+                return (
+                  <Pressable
+                    key={ex.id}
+                    onPress={() => { updateTitle(ex.id); setShowTitlePicker(false); }}
+                    style={[styles.avatarOption, selected && styles.avatarOptionSelected, styles.exclusiveOption]}
+                  >
+                    <View style={[styles.avatarIconWrap, { backgroundColor: ex.iconColor + "33" }]}>
+                      <Ionicons name={ex.icon as any} size={20} color={ex.iconColor} />
+                    </View>
+                    <Text style={styles.avatarOptionName} numberOfLines={1}>{ex.name}</Text>
+                    <View style={styles.exclusiveBadge}>
+                      <Ionicons name="star" size={7} color="#000" />
+                      <Text style={styles.exclusiveBadgeText} numberOfLines={1}>
+                        {T("limitedEditionSeason").replace("{n}", String(ex.seasonNumber))}
+                      </Text>
+                    </View>
                   </Pressable>
                 );
               })}
@@ -948,6 +1027,16 @@ const styles = StyleSheet.create({
   },
   avatarOptionSelected: { borderColor: Colors.gold, backgroundColor: Colors.gold + "22" },
   avatarOptionLocked: { opacity: 0.6 },
+  exclusiveOption: { borderColor: "#D4AF37", borderWidth: 2 },
+  exclusiveBadge: {
+    flexDirection: "row", alignItems: "center", gap: 2,
+    paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4,
+    backgroundColor: "#D4AF37", maxWidth: 84,
+  },
+  exclusiveBadgeText: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: "#000",
+    letterSpacing: 0.3,
+  },
   avatarIconWrap: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center" },
   avatarOptionName: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.text, textAlign: "center" },
   priceBadge: { flexDirection: "row", alignItems: "center", gap: 2 },

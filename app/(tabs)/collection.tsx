@@ -8,6 +8,7 @@ import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { STORE_ITEMS, StoreItem, StoreItemCategory, localizeItem } from "@/lib/storeItems";
 import { TranslationKey } from "@/lib/i18n";
+import { getOwnedExclusives, ExclusiveCategory } from "@/lib/battlePass";
 import BouncePressable from "@/components/BouncePressable";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { playSound } from "@/lib/sounds";
@@ -15,6 +16,10 @@ import { playSound } from "@/lib/sounds";
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
 type CategoryDef = { id: StoreItemCategory; icon: IconName; labelKey: TranslationKey };
+
+type GridItem = StoreItem & { isExclusive?: boolean; seasonNumber?: number };
+
+const EXCLUSIVE_CATEGORIES: StoreItemCategory[] = ["card_back", "avatar", "frame", "title"];
 
 const CATEGORIES: CategoryDef[] = [
   { id: "card_back",    icon: "card",          labelKey: "categoryCardBacks" },
@@ -274,10 +279,27 @@ export default function CollectionScreen() {
   const lang: "es"|"en"|"pt" = rawLang === "en" || rawLang === "pt" ? rawLang : "es";
 
   const owned = profile.ownedItems ?? [];
-  const items = useMemo(
-    () => STORE_ITEMS.filter((i) => i.category === activeCat),
-    [activeCat]
-  );
+  const items = useMemo<GridItem[]>(() => {
+    const base: GridItem[] = STORE_ITEMS.filter((i) => i.category === activeCat);
+    if (EXCLUSIVE_CATEGORIES.includes(activeCat)) {
+      const exs = getOwnedExclusives(owned, activeCat as ExclusiveCategory, lang);
+      for (const ex of exs) {
+        base.push({
+          id: ex.id,
+          category: activeCat,
+          name: ex.name,
+          description: "",
+          price: 0,
+          preview: ex.icon,
+          previewColor: ex.iconColor,
+          rarity: "legendary",
+          isExclusive: true,
+          seasonNumber: ex.seasonNumber,
+        });
+      }
+    }
+    return base;
+  }, [activeCat, owned, lang]);
 
   const ownedCount = items.filter((i) => owned.includes(i.id) || i.isDefault).length;
 
@@ -329,13 +351,14 @@ export default function CollectionScreen() {
     }
   };
 
-  const renderItem = ({ item }: { item: StoreItem }) => {
+  const renderItem = ({ item }: { item: GridItem }) => {
     const isOwned = item.isDefault || owned.includes(item.id);
     const isEquipped = activeCat === "emote"
       ? isEmoteEquipped(item.id)
       : equippedId(activeCat) === item.id;
+    const isExclusive = !!item.isExclusive;
     const rarityColor = RARITY_COLOR[item.rarity] ?? "#95A5A6";
-    const localized = localizeItem(item, lang);
+    const localized = isExclusive ? { name: item.name, description: "" } : localizeItem(item, lang);
 
     const handlePress = () => {
       if (!isOwned) {
@@ -376,9 +399,18 @@ export default function CollectionScreen() {
           <Text style={[styles.itemName, { color: isOwned ? theme.text : theme.textMuted }]} numberOfLines={1}>
             {localized.name}
           </Text>
-          <View style={[styles.rarityChip, { backgroundColor: rarityColor + "22", borderColor: rarityColor + "55" }]}>
-            <Text style={[styles.rarityChipText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
-          </View>
+          {isExclusive ? (
+            <View style={styles.exclusiveBadge}>
+              <Ionicons name="star" size={8} color="#000" />
+              <Text style={styles.exclusiveBadgeText} numberOfLines={1}>
+                {T("limitedEditionSeason").replace("{n}", String(item.seasonNumber))}
+              </Text>
+            </View>
+          ) : (
+            <View style={[styles.rarityChip, { backgroundColor: rarityColor + "22", borderColor: rarityColor + "55" }]}>
+              <Text style={[styles.rarityChipText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
+            </View>
+          )}
         </View>
 
         {isEquipped && (
@@ -572,6 +604,16 @@ const styles = StyleSheet.create({
   lockedLabel: {
     fontFamily: "Nunito_800ExtraBold", fontSize: 11, letterSpacing: 1.5,
     textShadowColor: "rgba(0,0,0,0.8)", textShadowRadius: 3,
+  },
+  exclusiveBadge: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    paddingHorizontal: 5, paddingVertical: 2, borderRadius: 5,
+    backgroundColor: "#D4AF37",
+    maxWidth: "100%",
+  },
+  exclusiveBadgeText: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: "#000",
+    letterSpacing: 0.3,
   },
   emptyWrap: { alignItems: "center", padding: 40, gap: 10 },
   emptyText: { fontFamily: "Nunito_700Bold", fontSize: 13 },
