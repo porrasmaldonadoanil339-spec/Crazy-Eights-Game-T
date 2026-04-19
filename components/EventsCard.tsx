@@ -167,18 +167,18 @@ export default function EventsCard({ level }: EventsCardProps) {
                 <CoinIcon size={13} color={event.color} />
                 <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+50</Text>
               </View>
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>por victoria</Text>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>monedas extra</Text>
             </View>
             <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center", gap: 2 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <CoinIcon size={13} color={event.color} />
-                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+10</Text>
+                <Ionicons name="star" size={13} color={event.color} />
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: event.color }}>+100</Text>
               </View>
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>por derrota</Text>
+              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: "#888" }}>XP extra</Text>
             </View>
             <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 8, alignItems: "center", gap: 2 }}>
               <Ionicons name="cube" size={14} color={event.color} />
-              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: event.color }}>{CHEST_LABEL[event.chestType]}</Text>
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: event.color }}>de Evento</Text>
               <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 9, color: "#888" }}>cofre al ganar</Text>
             </View>
           </View>

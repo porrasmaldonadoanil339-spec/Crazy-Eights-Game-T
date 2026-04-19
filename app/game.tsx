@@ -1762,11 +1762,14 @@ export default function GameScreen() {
     const modeConfig = getModeById(session.mode);
     const diffConfig = getDifficultyById(session.difficulty);
     const duration = Date.now() - gameStartTimeRef.current;
+    const activeEventForRewards = won ? getActiveEvent(level) : null;
+    const eventCoinBonus = activeEventForRewards ? 50 : 0;
+    const eventXpBonus = activeEventForRewards ? 100 : 0;
     const coins = won
-      ? Math.round(modeConfig.coinsReward * diffConfig.coinMultiplier)
+      ? Math.round(modeConfig.coinsReward * diffConfig.coinMultiplier) + eventCoinBonus
       : modeConfig.coinsLoss;
     const xp = won
-      ? Math.round(modeConfig.xpReward * (modeConfig.hasDifficulty ? diffConfig.xpMultiplier : 1))
+      ? Math.round(modeConfig.xpReward * (modeConfig.hasDifficulty ? diffConfig.xpMultiplier : 1)) + eventXpBonus
       : 0;
     const isPerfect = session.cardsDrawnThisGame === 0 && won;
     const isComeback = (gameState?.playerHand?.length ?? 0) >= 10 && won;
@@ -1801,18 +1804,18 @@ export default function GameScreen() {
         else if (newTotalWins % 15 === 0) milestoneChest = "epic";
         else if (newTotalWins % 7 === 0) milestoneChest = "rare";
         else if (newTotalWins % 3 === 0) milestoneChest = "common";
-        // Guaranteed event chest on win during a live event — keep the BETTER of the two
-        const activeEvent = getActiveEvent(level);
+        // Guaranteed dedicated Event Chest on win during a live event
+        const activeEvent = activeEventForRewards;
         const RANK: Record<ChestType, number> = { common: 0, rare: 1, magic: 2, epic: 3, event: 4, giant: 5, fichas: 6, legendary: 7, supreme: 8 };
         if (activeEvent && milestoneChest) {
-          chestType = RANK[activeEvent.chestType] >= RANK[milestoneChest] ? activeEvent.chestType : milestoneChest;
+          chestType = RANK["event"] >= RANK[milestoneChest] ? "event" : milestoneChest;
         } else if (activeEvent) {
-          chestType = activeEvent.chestType;
+          chestType = "event";
         } else {
           chestType = milestoneChest;
         }
         if (chestType) {
-          const added = addChestToInventory(chestType, activeEvent && chestType === activeEvent.chestType ? "mission" : "win");
+          const added = addChestToInventory(chestType, activeEvent && chestType === "event" ? "mission" : "win");
           if (added) {
             setPendingChestType(chestType);
             setShowChestReward(true);
