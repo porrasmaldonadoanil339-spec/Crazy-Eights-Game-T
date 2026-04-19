@@ -605,8 +605,9 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
 
 export default function StoreScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, buyDailyShopItem, claimDailyShopFree, updateCardBack, updateCardDesign, updateTableDesign, updateAvatar, updateTitle, updateFrame, updateEffect, updateEquippedEmotes } = useProfile();
+  const { profile, buyDailyShopItem, claimDailyShopFree, updateCardBack, updateCardDesign, updateTableDesign, updateAvatar, updateTitle, updateFrame, updateEffect, updateEquippedEmotes, buyItem } = useProfile();
   const [confirmItem, setConfirmItem] = useState<DailyShopItem | null>(null);
+  const [confirmEmote, setConfirmEmote] = useState<StoreItem | null>(null);
   const [infoItem, setInfoItem] = useState<StoreItem | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -720,6 +721,29 @@ export default function StoreScreen() {
     }
   };
 
+  const handleBuyEmote = async () => {
+    if (!confirmEmote) return;
+    const item = confirmEmote;
+    setConfirmEmote(null);
+    if ((profile.ownedItems ?? []).includes(item.id)) {
+      showToast("Ya lo tienes");
+      return;
+    }
+    if (profile.coins < item.price) {
+      await playSound("error");
+      showToast(T("insufficientCoins"));
+      return;
+    }
+    const ok = buyItem(item);
+    if (ok) {
+      await playSound("purchase");
+      showToast(`${item.name} ${T("obtainedItem")}!`);
+    } else {
+      await playSound("error");
+      showToast(T("insufficientCoins"));
+    }
+  };
+
   const handleClaimFree = async () => {
     if (freeClaimed) return;
     const ok = claimDailyShopFree(freeItem.id);
@@ -755,7 +779,13 @@ export default function StoreScreen() {
         contentContainerStyle={{ paddingBottom: bottomPad + 90 }}
       >
         <ChestShop themeColors={theme} themeGold={themeGold} showToast={showToast} T={T} />
-        <AnimatedEmotesShowcase themeColors={theme} themeGold={themeGold} />
+        <EmotesSection
+          themeColors={theme}
+          themeGold={themeGold}
+          equippedEmotes={equippedEmotes}
+          onBuyTap={(e) => setConfirmEmote(e)}
+          onEquipToggle={toggleEmote}
+        />
 
         <View style={styles.dailyFreeWrap}>
           <LinearGradient colors={["#2ECC7144", "#1A8F4A22"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyFreeGrad}>
@@ -820,6 +850,13 @@ export default function StoreScreen() {
         visible={!!confirmItem}
         onConfirm={handlePurchase}
         onCancel={() => setConfirmItem(null)}
+      />
+
+      <ConfirmModal
+        item={confirmEmote}
+        visible={!!confirmEmote}
+        onConfirm={handleBuyEmote}
+        onCancel={() => setConfirmEmote(null)}
       />
 
       <InfoModal
@@ -1349,23 +1386,62 @@ const styles = StyleSheet.create({
     flex: 1, padding: 10, borderRadius: 12, borderWidth: 1,
     alignItems: "center", gap: 6, minHeight: 110,
   },
+  chestCardScroll: {
+    flex: 0, width: 96, justifyContent: "center",
+  },
+  emoteGrid: {
+    flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4,
+  },
+  emoteShopCard: {
+    width: "23.6%", padding: 6, borderRadius: 10, borderWidth: 1,
+    alignItems: "center", gap: 4, minHeight: 96,
+  },
+  emoteShopIcon: {
+    width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center",
+  },
+  emoteShopName: {
+    fontFamily: "Nunito_700Bold", fontSize: 10, textAlign: "center",
+  },
+  emoteShopStatus: {
+    flexDirection: "row", alignItems: "center", gap: 2,
+    paddingHorizontal: 4, paddingVertical: 2, borderRadius: 5, borderWidth: 0.8,
+  },
+  emoteShopStatusText: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 8, letterSpacing: 0.4,
+  },
+  emoteShopFree: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: "#2ECC71", letterSpacing: 0.4,
+  },
+  emoteShopBuy: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+  },
+  emoteShopBuyPrice: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: Colors.gold,
+  },
   chestName: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, letterSpacing: 0.5 },
   chestPriceRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   chestPriceText: { fontFamily: "Nunito_800ExtraBold", fontSize: 12 },
 });
 
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
+
+type ShopChestType = "common" | "rare" | "epic" | "event" | "legendary";
+
 function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any; themeGold: string; showToast: (s: string) => void; T: (k: any) => string }) {
   const { profile, buyChestWithFichas } = useProfile();
-  const PRICES: Record<"common" | "rare" | "epic" | "legendary", number> = {
-    common: 25, rare: 80, epic: 200, legendary: 500,
+  const PRICES: Record<ShopChestType, number> = {
+    common: 25, rare: 80, epic: 200, event: 280, legendary: 500,
   };
-  const COLORS: Record<string, string> = {
-    common: "#A0724A", rare: "#1A6FC4", epic: "#7B2FBE", legendary: "#D4AF37",
+  const COLORS: Record<ShopChestType, string> = {
+    common: "#A0724A", rare: "#1A6FC4", epic: "#7B2FBE", event: "#E74C3C", legendary: "#D4AF37",
   };
-  const NAMES: Record<string, string> = {
-    common: "Común", rare: "Raro", epic: "Épico", legendary: "Legendario",
+  const NAMES: Record<ShopChestType, string> = {
+    common: "Común", rare: "Raro", epic: "Épico", event: "Evento", legendary: "Legendario",
   };
-  const handleBuy = async (type: "common" | "rare" | "epic" | "legendary") => {
+  const ICONS: Record<ShopChestType, IoniconName> = {
+    common: "cube", rare: "cube", epic: "diamond", event: "flame", legendary: "star",
+  };
+  const handleBuy = async (type: ShopChestType) => {
     await playSound("purchase");
     const balance = profile.fichas ?? 0;
     if (balance < PRICES[type]) { showToast(`Fichas insuficientes`); return; }
@@ -1383,14 +1459,14 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
         <Ionicons name="diamond" size={12} color="#3498DB" />
         <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#3498DB" }}>{profile.fichas ?? 0}</Text>
       </View>
-      <View style={styles.chestRow}>
-        {(["common", "rare", "epic", "legendary"] as const).map((t) => (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 4 }}>
+        {(["common", "rare", "epic", "event", "legendary"] as const).map((t) => (
           <BouncePressable
             key={t}
             onPress={() => handleBuy(t)}
-            style={[styles.chestCard, { backgroundColor: themeColors.surface, borderColor: COLORS[t] + "88" }]}
+            style={[styles.chestCard, styles.chestCardScroll, { backgroundColor: themeColors.surface, borderColor: COLORS[t] + "88" }]}
           >
-            <Ionicons name={t === "legendary" ? "star" : t === "epic" ? "diamond" : "cube"} size={28} color={COLORS[t]} />
+            <Ionicons name={ICONS[t]} size={28} color={COLORS[t]} />
             <Text style={[styles.chestName, { color: COLORS[t] }]}>{NAMES[t]}</Text>
             <View style={styles.chestPriceRow}>
               <Ionicons name="diamond" size={11} color="#3498DB" />
@@ -1398,12 +1474,12 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
             </View>
           </BouncePressable>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
-function AnimatedEmoteIcon({ icon, color, delay }: { icon: any; color: string; delay: number }) {
+function AnimatedEmoteIcon({ icon, color, delay, size = 36 }: { icon: IoniconName; color: string; delay: number; size?: number }) {
   const scale = useRef(new Animated.Value(1)).current;
   const rot = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -1431,25 +1507,91 @@ function AnimatedEmoteIcon({ icon, color, delay }: { icon: any; color: string; d
   );
 }
 
-function AnimatedEmotesShowcase({ themeColors, themeGold }: { themeColors: any; themeGold: string }) {
-  const EMOTES_ANIM = [
-    { icon: "sparkles", color: "#D4AF37", label: "Ocho!", delay: 0 },
-    { icon: "trophy",   color: "#9B59B6", label: "Bravo!", delay: 300 },
-    { icon: "happy",    color: "#F1C40F", label: "Jaja",   delay: 600 },
-  ];
+function EmoteShopCard({
+  item, owned, isEquipped, delay, themeColors, onTap,
+}: {
+  item: StoreItem;
+  owned: boolean;
+  isEquipped: boolean;
+  delay: number;
+  themeColors: any;
+  onTap: () => void;
+}) {
+  const T = useT();
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const localized = localizeItem(item, lang);
+  const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
+  return (
+    <BouncePressable onPress={onTap} style={[
+      styles.emoteShopCard,
+      { backgroundColor: themeColors.surface, borderColor: isEquipped ? Colors.gold + "AA" : rarityColor + "66" },
+    ]}>
+      <View style={[styles.emoteShopIcon, { backgroundColor: item.previewColor + "22" }]}>
+        <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={28} />
+      </View>
+      <Text style={[styles.emoteShopName, { color: themeColors.text }]} numberOfLines={1}>{localized.name}</Text>
+      {owned ? (
+        isEquipped ? (
+          <View style={[styles.emoteShopStatus, { backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "66" }]}>
+            <Ionicons name="checkmark-circle" size={10} color={Colors.gold} />
+            <Text style={[styles.emoteShopStatusText, { color: Colors.gold }]}>{T("inUse")}</Text>
+          </View>
+        ) : (
+          <View style={[styles.emoteShopStatus, { backgroundColor: "#2ECC7122", borderColor: "#2ECC7166" }]}>
+            <Ionicons name="bag-handle" size={10} color="#2ECC71" />
+            <Text style={[styles.emoteShopStatusText, { color: "#2ECC71" }]}>Inventario</Text>
+          </View>
+        )
+      ) : item.isDefault || item.price === 0 ? (
+        <Text style={styles.emoteShopFree}>{T("free")}</Text>
+      ) : (
+        <View style={styles.emoteShopBuy}>
+          <CoinIcon size={11} color={Colors.gold} />
+          <Text style={styles.emoteShopBuyPrice}>{item.price}</Text>
+        </View>
+      )}
+    </BouncePressable>
+  );
+}
+
+function EmotesSection({
+  themeColors, themeGold, equippedEmotes, onBuyTap, onEquipToggle,
+}: {
+  themeColors: any;
+  themeGold: string;
+  equippedEmotes: string[];
+  onBuyTap: (e: StoreItem) => void;
+  onEquipToggle: (e: StoreItem) => void;
+}) {
+  const T = useT();
+  const { profile } = useProfile();
+  const ordered = useMemo(() => sortItemsByRarityAndPrice(EMOTES), []);
   return (
     <View style={[styles.chestShopWrap, { borderColor: themeGold + "55" }]}>
       <View style={styles.chestShopHeader}>
         <Ionicons name="happy" size={14} color={themeGold} />
-        <Text style={[styles.chestShopTitle, { color: themeGold }]}>EMOTES ANIMADOS</Text>
+        <Text style={[styles.chestShopTitle, { color: themeGold }]}>EMOTES</Text>
+        <View style={{ flex: 1 }} />
+        <CoinIcon size={12} color={themeGold} />
+        <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: themeGold }}>{profile.coins}</Text>
       </View>
-      <View style={styles.chestRow}>
-        {EMOTES_ANIM.map((e) => (
-          <View key={e.label} style={[styles.chestCard, { backgroundColor: themeColors.surface, borderColor: e.color + "88" }]}>
-            <AnimatedEmoteIcon icon={e.icon} color={e.color} delay={e.delay} />
-            <Text style={[styles.chestName, { color: e.color }]}>{e.label}</Text>
-          </View>
-        ))}
+      <View style={styles.emoteGrid}>
+        {ordered.map((item, idx) => {
+          const owned = (profile.ownedItems ?? []).includes(item.id);
+          const isEquipped = owned && equippedEmotes.includes(item.id);
+          return (
+            <EmoteShopCard
+              key={item.id}
+              item={item}
+              owned={owned}
+              isEquipped={isEquipped}
+              delay={(idx % 6) * 120}
+              themeColors={themeColors}
+              onTap={() => owned ? onEquipToggle(item) : onBuyTap(item)}
+            />
+          );
+        })}
       </View>
     </View>
   );
