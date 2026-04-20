@@ -1,4 +1,5 @@
 import { STORE_ITEMS, localizeItem } from "./storeItems";
+import type { Lang } from "./i18n";
 
 export interface BattlePassTier {
   tier: number;
@@ -28,13 +29,22 @@ export interface SeasonExclusive {
 }
 
 export interface SeasonTheme {
-  themeName: string;
+  themeName: Record<Lang, string>;
   exclusives: SeasonExclusive[]; // at least 2 per season, slotted at tiers 27 & 35
 }
 
 export const SEASON_THEMES: SeasonTheme[] = [
   {
-    themeName: "Hierro y Fuego",
+    themeName: {
+      es: "Hierro y Fuego", en: "Iron and Fire", pt: "Ferro e Fogo",
+      fr: "Fer et Feu", de: "Eisen und Feuer", it: "Ferro e Fuoco",
+      tr: "Demir ve Ateş", ru: "Железо и Огонь", pl: "Żelazo i Ogień",
+      nl: "IJzer en Vuur", sv: "Järn och Eld", da: "Jern og Ild",
+      fi: "Rauta ja Tuli", no: "Jern og Ild", zh: "钢铁与烈焰",
+      ja: "鉄と炎", ko: "강철과 불꽃", hi: "लोहा और आग",
+      th: "เหล็กและเปลวไฟ", vi: "Sắt và Lửa", id: "Besi dan Api",
+      ar: "الحديد والنار",
+    },
     exclusives: [
       { rewardType: "avatar", rewardValue: "exclusive_s1_phoenix_lord",  rewardLabel: "Avatar: Señor Fénix",        enLabel: "Avatar: Phoenix Lord",        ptLabel: "Avatar: Senhor Fênix",       icon: "flame",    iconColor: "#FF4500" },
       { rewardType: "frame",  rewardValue: "exclusive_s1_ember_frame",   rewardLabel: "Marco: Brasa Eterna",        enLabel: "Frame: Eternal Ember",        ptLabel: "Moldura: Brasa Eterna",      icon: "ellipse",  iconColor: "#FF6B00" },
@@ -42,7 +52,16 @@ export const SEASON_THEMES: SeasonTheme[] = [
     ],
   },
   {
-    themeName: "Tormenta Eterna",
+    themeName: {
+      es: "Tormenta Eterna", en: "Eternal Storm", pt: "Tempestade Eterna",
+      fr: "Tempête Éternelle", de: "Ewiger Sturm", it: "Tempesta Eterna",
+      tr: "Sonsuz Fırtına", ru: "Вечная Буря", pl: "Wieczna Burza",
+      nl: "Eeuwige Storm", sv: "Evig Storm", da: "Evig Storm",
+      fi: "Ikuinen Myrsky", no: "Evig Storm", zh: "永恒风暴",
+      ja: "永遠の嵐", ko: "영원한 폭풍", hi: "शाश्वत तूफ़ान",
+      th: "พายุนิรันดร์", vi: "Bão Vĩnh Cửu", id: "Badai Abadi",
+      ar: "العاصفة الأبدية",
+    },
     exclusives: [
       { rewardType: "avatar", rewardValue: "exclusive_s2_storm_caller",  rewardLabel: "Avatar: Invocador de Tormentas", enLabel: "Avatar: Storm Caller",     ptLabel: "Avatar: Invocador de Tempestades", icon: "thunderstorm", iconColor: "#4A90E2" },
       { rewardType: "frame",  rewardValue: "exclusive_s2_lightning_frame", rewardLabel: "Marco: Relámpago",         enLabel: "Frame: Lightning",            ptLabel: "Moldura: Relâmpago",         icon: "flash",    iconColor: "#FFD700" },
@@ -50,7 +69,16 @@ export const SEASON_THEMES: SeasonTheme[] = [
     ],
   },
   {
-    themeName: "Reino Sombrío",
+    themeName: {
+      es: "Reino Sombrío", en: "Shadow Realm", pt: "Reino Sombrio",
+      fr: "Royaume des Ombres", de: "Schattenreich", it: "Regno delle Ombre",
+      tr: "Gölgeler Krallığı", ru: "Царство Теней", pl: "Królestwo Cieni",
+      nl: "Schaduwrijk", sv: "Skuggriket", da: "Skyggeriget",
+      fi: "Varjojen Valtakunta", no: "Skyggeriket", zh: "暗影领域",
+      ja: "影の王国", ko: "그림자 왕국", hi: "छाया का साम्राज्य",
+      th: "อาณาจักรเงา", vi: "Vương Quốc Bóng Tối", id: "Kerajaan Bayangan",
+      ar: "مملكة الظلال",
+    },
     exclusives: [
       { rewardType: "avatar", rewardValue: "exclusive_s3_shadow_walker", rewardLabel: "Avatar: Caminante Sombrío",  enLabel: "Avatar: Shadow Walker",       ptLabel: "Avatar: Andarilho Sombrio",  icon: "moon",     iconColor: "#6A0DAD" },
       { rewardType: "item",   rewardValue: "exclusive_s3_void_back",     rewardLabel: "Dorso: Vacío Profundo",      enLabel: "Back: Deep Void",             ptLabel: "Dorso: Vazio Profundo",      icon: "card",     iconColor: "#1a0020" },
@@ -58,7 +86,16 @@ export const SEASON_THEMES: SeasonTheme[] = [
     ],
   },
   {
-    themeName: "Cielos Cósmicos",
+    themeName: {
+      es: "Cielos Cósmicos", en: "Cosmic Skies", pt: "Céus Cósmicos",
+      fr: "Cieux Cosmiques", de: "Kosmische Himmel", it: "Cieli Cosmici",
+      tr: "Kozmik Gökyüzü", ru: "Космические Небеса", pl: "Kosmiczne Niebiosa",
+      nl: "Kosmische Hemelen", sv: "Kosmiska Himlar", da: "Kosmiske Himle",
+      fi: "Kosmiset Taivaat", no: "Kosmiske Himler", zh: "宇宙苍穹",
+      ja: "宇宙の空", ko: "우주의 하늘", hi: "ब्रह्मांडीय आकाश",
+      th: "ท้องฟ้าจักรวาล", vi: "Bầu Trời Vũ Trụ", id: "Langit Kosmik",
+      ar: "السماوات الكونية",
+    },
     exclusives: [
       { rewardType: "avatar", rewardValue: "exclusive_s4_starborn",      rewardLabel: "Avatar: Nacido de Estrellas",enLabel: "Avatar: Starborn",            ptLabel: "Avatar: Nascido das Estrelas",icon: "sparkles", iconColor: "#A855F7" },
       { rewardType: "frame",  rewardValue: "exclusive_s4_nebula_frame",  rewardLabel: "Marco: Nebulosa",            enLabel: "Frame: Nebula",               ptLabel: "Moldura: Nebulosa",          icon: "ellipse",  iconColor: "#A855F7" },
@@ -66,7 +103,16 @@ export const SEASON_THEMES: SeasonTheme[] = [
     ],
   },
   {
-    themeName: "Bosque Encantado",
+    themeName: {
+      es: "Bosque Encantado", en: "Enchanted Forest", pt: "Floresta Encantada",
+      fr: "Forêt Enchantée", de: "Verzauberter Wald", it: "Foresta Incantata",
+      tr: "Büyülü Orman", ru: "Зачарованный Лес", pl: "Zaczarowany Las",
+      nl: "Betoverd Bos", sv: "Förtrollad Skog", da: "Fortryllet Skov",
+      fi: "Lumottu Metsä", no: "Fortryllet Skog", zh: "魔法森林",
+      ja: "魔法の森", ko: "마법의 숲", hi: "जादुई जंगल",
+      th: "ป่ามนตรา", vi: "Rừng Phép Thuật", id: "Hutan Sihir",
+      ar: "الغابة المسحورة",
+    },
     exclusives: [
       { rewardType: "avatar", rewardValue: "exclusive_s5_druid",         rewardLabel: "Avatar: Druida Ancestral",   enLabel: "Avatar: Ancient Druid",       ptLabel: "Avatar: Druida Ancestral",   icon: "leaf",     iconColor: "#27AE60" },
       { rewardType: "frame",  rewardValue: "exclusive_s5_vine_frame",    rewardLabel: "Marco: Enredadera",          enLabel: "Frame: Vine",                 ptLabel: "Moldura: Trepadeira",        icon: "ellipse",  iconColor: "#27AE60" },
@@ -74,7 +120,16 @@ export const SEASON_THEMES: SeasonTheme[] = [
     ],
   },
   {
-    themeName: "Era de Hielo",
+    themeName: {
+      es: "Era de Hielo", en: "Ice Age", pt: "Era do Gelo",
+      fr: "Ère Glaciaire", de: "Eiszeit", it: "Era Glaciale",
+      tr: "Buz Çağı", ru: "Ледниковый Период", pl: "Epoka Lodowcowa",
+      nl: "IJstijdperk", sv: "Istiden", da: "Istiden",
+      fi: "Jääkausi", no: "Istiden", zh: "冰河时代",
+      ja: "氷河時代", ko: "빙하 시대", hi: "हिम युग",
+      th: "ยุคน้ำแข็ง", vi: "Kỷ Băng Hà", id: "Zaman Es",
+      ar: "العصر الجليدي",
+    },
     exclusives: [
       { rewardType: "avatar", rewardValue: "exclusive_s6_frost_giant",   rewardLabel: "Avatar: Gigante de Hielo",   enLabel: "Avatar: Frost Giant",         ptLabel: "Avatar: Gigante de Gelo",    icon: "snow",     iconColor: "#7FDBFF" },
       { rewardType: "item",   rewardValue: "exclusive_s6_glacier_back",  rewardLabel: "Dorso: Glaciar Eterno",      enLabel: "Back: Eternal Glacier",       ptLabel: "Dorso: Geleira Eterna",      icon: "card",     iconColor: "#B8DDEF" },
@@ -86,6 +141,13 @@ export const SEASON_THEMES: SeasonTheme[] = [
 export function getSeasonTheme(seasonNumber: number): SeasonTheme {
   const idx = ((seasonNumber - 1) % SEASON_THEMES.length + SEASON_THEMES.length) % SEASON_THEMES.length;
   return SEASON_THEMES[idx];
+}
+
+// Returns the season's theme name in the requested language, falling back to
+// English and then Spanish if a translation is missing.
+export function getSeasonThemeName(seasonNumber: number, lang: Lang): string {
+  const theme = getSeasonTheme(seasonNumber);
+  return theme.themeName[lang] ?? theme.themeName.en ?? theme.themeName.es;
 }
 
 // ─── EXCLUSIVE LOOKUP HELPERS ───────────────────────────────────────────────
@@ -131,7 +193,7 @@ export function findExclusiveById(id: string, lang: "es" | "en" | "pt" = "es"): 
       icon: ex.icon,
       iconColor: ex.iconColor,
       seasonNumber: i + 1,
-      themeName: theme.themeName,
+      themeName: theme.themeName[lang] ?? theme.themeName.en ?? theme.themeName.es,
       isExclusive: true,
     };
   }

@@ -1,4 +1,5 @@
-import { getSeasonTheme } from "./battlePass";
+import { getSeasonThemeName } from "./battlePass";
+import type { Lang } from "./i18n";
 
 export interface Season {
   id: string;
@@ -18,7 +19,7 @@ export interface SeasonReward {
 const BASE_DATE = new Date("2026-03-01T00:00:00Z");
 const SEASON_DURATION_DAYS = 28;
 
-export function getCurrentSeason(): Season & { daysRemaining: number } {
+export function getCurrentSeason(lang: Lang = "es"): Season & { daysRemaining: number } {
   const now = new Date();
   const elapsedMs = now.getTime() - BASE_DATE.getTime();
   const elapsedDays = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
@@ -35,7 +36,7 @@ export function getCurrentSeason(): Season & { daysRemaining: number } {
 
   return {
     id: `season_${seasonNumber}`,
-    name: `${getSeasonTheme(seasonNumber).themeName} · T${seasonNumber}`,
+    name: `${getSeasonThemeName(seasonNumber, lang)} · T${seasonNumber}`,
     number: seasonNumber,
     startDate: seasonStart.toISOString(),
     endDate: seasonEnd.toISOString(),

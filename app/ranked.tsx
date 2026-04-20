@@ -11,6 +11,7 @@ import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
 import { getRankInfo, RANKS, RANK_COLORS, RANK_ICONS, DIVISIONS } from "@/lib/ranked";
 import { getCurrentSeason, getSeasonRewardsForRank } from "@/lib/seasons";
+import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { PlayerProfileModal, type PlayerProfileData } from "@/components/PlayerProfileModal";
 
@@ -101,7 +102,10 @@ export default function RankedScreen() {
   const isDark = profile.darkMode !== false;
   const themeColors = isDark ? Colors : LightColors;
   const rankInfo = useMemo(() => getRankInfo(profile.rankedProfile), [profile.rankedProfile]);
-  const season = useMemo(() => getCurrentSeason(), []);
+  const season = useMemo(
+    () => getCurrentSeason((profile.language ?? "es") as Lang),
+    [profile.language],
+  );
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   
   const [visibleCount, setVisibleCount] = useState(50);

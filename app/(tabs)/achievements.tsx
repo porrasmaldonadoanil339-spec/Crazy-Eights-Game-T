@@ -16,10 +16,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
-import { getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward, getSeasonTheme, SeasonExclusive } from "@/lib/battlePass";
+import { getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward, getSeasonTheme, getSeasonThemeName, SeasonExclusive } from "@/lib/battlePass";
 import { getCurrentSeason } from "@/lib/seasons";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";
+import type { Lang } from "@/lib/i18n";
 import RewardPopup from "@/components/RewardPopup";
 import BouncePressable from "@/components/BouncePressable";
 
@@ -50,6 +51,7 @@ export default function AchievementsScreen() {
   const T = useT();
   const theme = useTheme();
   const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const fullLang = (profile.language ?? "es") as Lang;
 
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
 
@@ -75,7 +77,7 @@ export default function AchievementsScreen() {
     }
   };
 
-  const currentSeason = getCurrentSeason();
+  const currentSeason = getCurrentSeason(fullLang);
   const seasonNumber = currentSeason.number;
   const seasonTiers = useMemo(() => getBattlePassTiers(seasonNumber), [seasonNumber]);
 
@@ -308,7 +310,7 @@ export default function AchievementsScreen() {
               seasonNumber={seasonNumber}
               themeColors={themeColors}
               themeGold={themeGold}
-              lang={lang}
+              lang={fullLang}
               T={T}
             />
             <View style={styles.bpHeader}>
@@ -699,7 +701,7 @@ function SeasonThemeCard({
   seasonNumber: number;
   themeColors: any;
   themeGold: string;
-  lang: "es" | "en" | "pt";
+  lang: Lang;
   T: (k: any) => string;
 }) {
   const [expanded, setExpanded] = useState(true);
@@ -720,8 +722,14 @@ function SeasonThemeCard({
     [nextTheme],
   );
 
+  const currentThemeName = getSeasonThemeName(seasonNumber, lang);
+  const nextThemeName = getSeasonThemeName(nextSeasonNumber, lang);
+
+  // Exclusive item labels are only translated to es/en/pt; for any other
+  // language fall back to the English label rather than Spanish so the user
+  // still sees a non-Spanish string.
   const exclusiveLabel = (e: SeasonExclusive) =>
-    lang === "en" ? e.enLabel : lang === "pt" ? e.ptLabel : e.rewardLabel;
+    lang === "es" ? e.rewardLabel : lang === "pt" ? e.ptLabel : e.enLabel;
 
   const typeKey = (t: SeasonExclusive["rewardType"]) =>
     t === "avatar" ? "exclusiveAvatar" :
@@ -765,7 +773,7 @@ function SeasonThemeCard({
         <Ionicons name="color-palette" size={16} color={themeGold} />
         <View style={{ flex: 1 }}>
           <Text style={[styles.stTitle, { color: themeGold }]} numberOfLines={1}>{T("seasonTheme")}</Text>
-          <Text style={[styles.stSubtitle, { color: themeColors.text }]} numberOfLines={1}>{currentTheme.themeName}</Text>
+          <Text style={[styles.stSubtitle, { color: themeColors.text }]} numberOfLines={1}>{currentThemeName}</Text>
         </View>
         <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={18} color={themeColors.textMuted} />
       </Pressable>
@@ -785,7 +793,7 @@ function SeasonThemeCard({
           >
             <Ionicons name="time-outline" size={14} color={themeColors.textMuted} />
             <Text style={[styles.stNextToggleText, { color: themeColors.textMuted }]} numberOfLines={1}>
-              {comingNextLabel} · {nextTheme.themeName}
+              {comingNextLabel} · {nextThemeName}
             </Text>
             <Ionicons name={showNext ? "chevron-up" : "chevron-down"} size={14} color={themeColors.textMuted} />
           </Pressable>
