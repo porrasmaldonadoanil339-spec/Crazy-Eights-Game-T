@@ -788,8 +788,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const today = new Date().toDateString();
     if (profile.lastDailyRewardDate === today) return null;
     const reward = DAILY_REWARDS[profile.dailyRewardIndex % DAILY_REWARDS.length];
+    const currentInv = profile.chestInventory ?? [];
+    if (reward.chestType && currentInv.length >= CHEST_INVENTORY_LIMIT) {
+      return null;
+    }
     update((p) => {
-      const newInventory = [...(p.chestInventory ?? [])];
+      const inv = p.chestInventory ?? [];
+      if (reward.chestType && inv.length >= CHEST_INVENTORY_LIMIT) return p;
+      const newInventory = [...inv];
       if (reward.chestType) {
         const newChest = createChest(reward.chestType, "daily");
         newInventory.push(newChest);
@@ -804,7 +810,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       };
     });
     return reward;
-  }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, update]);
+  }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, profile.chestInventory, update]);
 
   const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
     update((p) => ({ ...p, ...settings }));

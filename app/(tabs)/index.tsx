@@ -287,10 +287,12 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
 const CHEST_COLORS: Record<string, string> = { common: "#A0522D", rare: "#4A90E2", epic: "#9B59B6", legendary: "#D4AF37" };
 
 // Daily reward modal
-function DailyRewardModal({ visible, reward, onClaim }: {
+function DailyRewardModal({ visible, reward, onClaim, inventoryFull, onClose }: {
   visible: boolean;
   reward: { coins: number; xp: number; label: string; icon: string; iconColor: string; chestType?: string } | null;
   onClaim: () => void;
+  inventoryFull?: boolean;
+  onClose?: () => void;
 }) {
   const T = useT();
   const sc = useSharedValue(0.7);
@@ -313,6 +315,7 @@ function DailyRewardModal({ visible, reward, onClaim }: {
   if (!reward) return null;
 
   const isChestDay = !!reward.chestType;
+  const blocked = isChestDay && !!inventoryFull;
   const chestColor = isChestDay ? (CHEST_COLORS[reward.chestType!] ?? "#A0522D") : reward.iconColor;
   const gradColors: [string, string] = isChestDay
     ? (reward.chestType === "legendary" ? ["#1a1200", "#2a1f00"] : reward.chestType === "epic" ? ["#1a0a2e", "#0a0520"] : reward.chestType === "rare" ? ["#0a1628", "#051020"] : ["#1a0f08", "#0d0806"])
@@ -339,9 +342,14 @@ function DailyRewardModal({ visible, reward, onClaim }: {
               </View>
             )}
             <Text style={[styles.dailyLabel, isChestDay && { color: chestColor, fontSize: 17 }]}>{reward.label}</Text>
-            {isChestDay && (
+            {isChestDay && !blocked && (
               <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: "#aaa", textAlign: "center", marginBottom: 4 }}>
                 Se ha agregado a tu inventario de cofres
+              </Text>
+            )}
+            {blocked && (
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 13, color: "#ff8a8a", textAlign: "center", marginBottom: 4, paddingHorizontal: 8 }}>
+                {T("dailyChestInventoryFull")}
               </Text>
             )}
             <View style={styles.dailyChips}>
@@ -358,9 +366,9 @@ function DailyRewardModal({ visible, reward, onClaim }: {
                 </View>
               )}
             </View>
-            <Pressable onPress={onClaim} style={styles.dailyClaimBtn}>
-              <LinearGradient colors={isChestDay ? [chestColor, chestColor + "BB"] : [Colors.gold, Colors.goldLight]} style={styles.dailyClaimGrad}>
-                <Text style={styles.dailyClaimText}>{T("claimReward").toUpperCase()}</Text>
+            <Pressable onPress={blocked ? (onClose ?? onClaim) : onClaim} style={styles.dailyClaimBtn}>
+              <LinearGradient colors={blocked ? ["#5a2a2a", "#3a1818"] : isChestDay ? [chestColor, chestColor + "BB"] : [Colors.gold, Colors.goldLight]} style={styles.dailyClaimGrad}>
+                <Text style={styles.dailyClaimText}>{(blocked ? T("close") : T("claimReward")).toUpperCase()}</Text>
               </LinearGradient>
             </Pressable>
           </LinearGradient>
@@ -401,7 +409,7 @@ function PokerTitle() {
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
-  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory, battlePassTier, recordFichasModePlay, fichasModePlaysRemaining } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory, battlePassTier, recordFichasModePlay, fichasModePlaysRemaining, isChestInventoryFull } = useProfile();
   const { setTabBarVisible, splashReady } = useUIState();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
@@ -633,7 +641,11 @@ export default function PlayScreen() {
   };
 
   const handleClaimDaily = () => {
-    claimDailyReward();
+    const result = claimDailyReward();
+    if (result === null && todaysDailyReward.chestType && isChestInventoryFull) {
+      setShowDailyModal(false);
+      return;
+    }
     playSound("daily_reward").catch(() => {});
     setShowDailyModal(false);
   };
@@ -1220,6 +1232,8 @@ export default function PlayScreen() {
         visible={showDailyModal}
         reward={canClaimDailyReward ? todaysDailyReward : null}
         onClaim={handleClaimDaily}
+        inventoryFull={isChestInventoryFull}
+        onClose={() => setShowDailyModal(false)}
       />
 
       <ChestOpeningModal
