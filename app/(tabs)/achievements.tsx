@@ -386,8 +386,10 @@ export default function AchievementsScreen() {
 
             {seasonTiers.map((tier) => {
               const reached = profile.totalXp >= tier.xpRequired;
-              const claimed = profile.claimedBattlePassTiers.includes(tier.tier);
-              const canClaim = reached && !claimed;
+              const claimedFree = profile.claimedBattlePassTiers.includes(tier.tier);
+              const claimedPremium = (profile.claimedBattlePassPremiumTiers ?? []).includes(tier.tier);
+              const canClaimFree = reached && !claimedFree;
+              const canClaimPremium = reached && !claimedPremium;
               // Free reward = varies by tier (coins, plus chests at milestones every 5/10/25/50)
               const freeReward = getFreeReward(tier.tier);
               const isPremiumTrack = ["item","avatar","frame","effect","chest","title"].includes(tier.rewardType) || (tier.rewardType === "coins" && Number(tier.rewardValue) >= 200);
@@ -398,8 +400,9 @@ export default function AchievementsScreen() {
                   style={[
                     styles.bpBlock,
                     { backgroundColor: themeColors.surface, borderColor: themeColors.border, paddingVertical: 10 },
-                    reached && !claimed && { borderColor: themeGold + "88" },
-                    claimed && styles.bpTierClaimed,
+                    reached && !claimedFree && { borderColor: themeGold + "88" },
+                    claimedFree && claimedPremium && styles.bpTierClaimed,
+                    claimedFree && !canClaimPremium && !isPremiumBattlePassActive && styles.bpTierClaimed,
                   ]}
                 >
                   <View style={styles.bpVerticalRow}>
@@ -413,14 +416,14 @@ export default function AchievementsScreen() {
                         )}
                       </View>
                       <Text style={[styles.bpVColLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={2}>{freeReward.label}</Text>
-                      {canClaim ? (
+                      {canClaimFree ? (
                         <BouncePressable
-                          onPress={() => handleClaimBP(tier.tier)}
+                          onPress={() => handleClaimBP(tier.tier, "free")}
                           style={[styles.bpClaimBtn, { backgroundColor: themeGold, marginTop: 4 }]}
                         >
                           <Text style={styles.bpClaimText}>{claimLabel}</Text>
                         </BouncePressable>
-                      ) : claimed ? (
+                      ) : claimedFree ? (
                         <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
                       ) : null}
                     </View>
@@ -451,14 +454,14 @@ export default function AchievementsScreen() {
                         </View>
                       )}
                       {isPremiumBattlePassActive ? (
-                        canClaim ? (
+                        canClaimPremium ? (
                           <BouncePressable
-                            onPress={() => handleClaimBP(tier.tier)}
+                            onPress={() => handleClaimBP(tier.tier, "premium")}
                             style={[styles.bpClaimBtn, { backgroundColor: themeGold, marginTop: 4 }]}
                           >
                             <Text style={styles.bpClaimText}>{claimLabel}</Text>
                           </BouncePressable>
-                        ) : claimed ? (
+                        ) : claimedPremium ? (
                           <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
                         ) : (
                           <Ionicons name="lock-closed" size={14} color={themeColors.textDim} style={{ marginTop: 2 }} />
