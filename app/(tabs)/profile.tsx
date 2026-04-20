@@ -19,6 +19,7 @@ import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS, getOwnedExclusives, R
 import { getLocalizedRankInfo, RANK_COLORS, RANK_ICONS, RANKS, DIVISIONS } from "@/lib/ranked";
 import { playSound } from "@/lib/sounds";
 import { GAME_MODES } from "@/lib/gameModes";
+import { EVENT_ORDER, EVENT_CONFIGS } from "@/lib/eventModes";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Lang, t } from "@/lib/i18n";
 
@@ -762,6 +763,59 @@ export default function ProfileScreen() {
               </View>
             );
           })}
+        </View>
+
+        <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("byEvent")}</Text>
+        <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0", paddingVertical: 4 }]}>
+          {(() => {
+            const totalEventGames = EVENT_ORDER.reduce(
+              (sum, eid) => sum + ((profile.stats.gamesByEvent ?? {})[eid] ?? 0),
+              0,
+            );
+            if (totalEventGames === 0) {
+              return (
+                <View style={{ paddingVertical: 18, paddingHorizontal: 12, alignItems: "center" }}>
+                  <Ionicons name="calendar-outline" size={28} color={textMuted} />
+                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 12, color: textMuted, marginTop: 6, textAlign: "center" }}>
+                    {T("noEventGames")}
+                  </Text>
+                </View>
+              );
+            }
+            return EVENT_ORDER.map((eid, idx) => {
+              const cfg = EVENT_CONFIGS[eid];
+              const wins = (profile.stats.winsByEvent ?? {})[eid] ?? 0;
+              const games = (profile.stats.gamesByEvent ?? {})[eid] ?? 0;
+              const winRateE = games > 0 ? Math.round((wins / games) * 100) : 0;
+              const isLast = idx === EVENT_ORDER.length - 1;
+              return (
+                <View key={eid} style={{ paddingVertical: 10, paddingHorizontal: 4, borderBottomWidth: isLast ? 0 : 1, borderBottomColor: isDark ? Colors.border : "#aacfa0" }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+                    <View style={[styles.modeIconSm, { backgroundColor: cfg.color + "33" }]}>
+                      <Ionicons name={cfg.icon as any} size={14} color={cfg.color} />
+                    </View>
+                    <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: cfg.color, marginLeft: 8 }}>
+                      {cfg.name}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: textColor }}>{games}</Text>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsGames").toUpperCase()}</Text>
+                    </View>
+                    <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#27AE60" }}>{wins}</Text>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsWins").toUpperCase()}</Text>
+                    </View>
+                    <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: winRateE >= 50 ? "#D4AF37" : textMuted }}>{winRateE}%</Text>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsWinRate").toUpperCase()}</Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            });
+          })()}
         </View>
 
         {/* Rank Progression */}
