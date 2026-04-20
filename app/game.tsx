@@ -38,7 +38,7 @@ import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } fro
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
 import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
-import { getEventConfig, pickRandomSuit, type EventId } from "@/lib/eventModes";
+import { getEventConfig, getEventName, getEventShortName, getEventDesc, pickRandomSuit, type EventId } from "@/lib/eventModes";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
@@ -1387,7 +1387,7 @@ export default function GameScreen() {
     if (turnId === 0 || turnId % everyN !== 0) return;
     lastShuffleTurnRef.current = turnId;
     const newSuit = pickRandomSuit(gameState.currentSuit);
-    setCurrentSuit(newSuit, "🔀 ¡Palo cambiado al azar!");
+    setCurrentSuit(newSuit, `🔀 ${T("eventRandomShuffleBanner")}`);
     setEventShuffleFlash(true);
     setTimeout(() => setEventShuffleFlash(false), 1400);
   }, [gameState?.turnId, gameState?.currentPlayer, gameState?.phase, dealAnimationDone, eventConfig?.randomSuitShuffle, eventConfig?.randomShuffleEvery]);
@@ -2213,8 +2213,8 @@ export default function GameScreen() {
       {showEventBanner && eventConfig && (
         <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.lastCardBanner, { pointerEvents: "none" }]}>
           <LinearGradient colors={[eventConfig.color, "#000"]} style={styles.lastCardBannerInner}>
-            <Text style={styles.lastCardBannerText} numberOfLines={1}>EVENTO · {eventConfig.name.toUpperCase()}</Text>
-            <Text style={[styles.lastCardBannerText, { fontSize: 10, marginTop: 2, opacity: 0.9 }]} numberOfLines={2}>{eventConfig.desc}</Text>
+            <Text style={styles.lastCardBannerText} numberOfLines={1}>{T("eventLabel")} · {getEventName(eventConfig.id, T).toUpperCase()}</Text>
+            <Text style={[styles.lastCardBannerText, { fontSize: 10, marginTop: 2, opacity: 0.9 }]} numberOfLines={2}>{getEventDesc(eventConfig.id, T)}</Text>
           </LinearGradient>
         </Animated.View>
       )}
@@ -2223,7 +2223,7 @@ export default function GameScreen() {
       {eventShuffleFlash && (
         <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.challengeViolationBanner, { pointerEvents: "none", borderColor: "#9B59B6" }]}>
           <Ionicons name="shuffle" size={20} color="#9B59B6" />
-          <Text style={[styles.challengeViolationText, { color: "#fff" }]}>¡Palo cambiado al azar!</Text>
+          <Text style={[styles.challengeViolationText, { color: "#fff" }]}>{T("eventRandomShuffleBanner")}</Text>
         </Animated.View>
       )}
 
@@ -2311,7 +2311,7 @@ export default function GameScreen() {
           {eventConfig && (
             <View style={[styles.modePill, { borderColor: eventConfig.color + "66", backgroundColor: eventConfig.color + "18" }]}>
               <Ionicons name={eventConfig.icon as any} size={11} color={eventConfig.color} />
-              <Text style={[styles.modeLabel, { color: eventConfig.color }]} numberOfLines={1}>EVENTO · {eventConfig.shortName.toUpperCase()}</Text>
+              <Text style={[styles.modeLabel, { color: eventConfig.color }]} numberOfLines={1}>{T("eventLabel")} · {getEventShortName(eventConfig.id, T).toUpperCase()}</Text>
             </View>
           )}
         </View>

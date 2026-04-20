@@ -1,4 +1,5 @@
 import type { Suit } from "./gameEngine";
+import type { TranslationKey } from "./i18n";
 
 export type EventId = "speed" | "random" | "double" | "survival";
 
@@ -62,6 +63,37 @@ export const EVENT_CONFIGS: Record<EventId, EventConfig> = {
 export function getEventConfig(id: EventId | undefined | null): EventConfig | null {
   if (!id) return null;
   return EVENT_CONFIGS[id] ?? null;
+}
+
+const EVENT_NAME_KEYS: Record<EventId, TranslationKey> = {
+  speed: "eventSpeedName",
+  random: "eventRandomName",
+  double: "eventDoubleName",
+  survival: "eventSurvivalName",
+};
+const EVENT_SHORT_KEYS: Record<EventId, TranslationKey> = {
+  speed: "eventSpeedShort",
+  random: "eventRandomShort",
+  double: "eventDoubleShort",
+  survival: "eventSurvivalShort",
+};
+const EVENT_DESC_KEYS: Record<EventId, TranslationKey> = {
+  speed: "eventSpeedDesc",
+  random: "eventRandomDesc",
+  double: "eventDoubleDesc",
+  survival: "eventSurvivalDesc",
+};
+
+type Translator = (key: TranslationKey) => string;
+
+export function getEventName(id: EventId, T: Translator): string {
+  return T(EVENT_NAME_KEYS[id]);
+}
+export function getEventShortName(id: EventId, T: Translator): string {
+  return T(EVENT_SHORT_KEYS[id]);
+}
+export function getEventDesc(id: EventId, T: Translator): string {
+  return T(EVENT_DESC_KEYS[id]);
 }
 
 export const EVENT_ORDER: EventId[] = ["speed", "random", "double", "survival"];

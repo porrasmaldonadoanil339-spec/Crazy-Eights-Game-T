@@ -19,7 +19,7 @@ import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS, getOwnedExclusives, R
 import { getLocalizedRankInfo, RANK_COLORS, RANK_ICONS, RANKS, DIVISIONS } from "@/lib/ranked";
 import { playSound } from "@/lib/sounds";
 import { GAME_MODES } from "@/lib/gameModes";
-import { EVENT_ORDER, EVENT_CONFIGS } from "@/lib/eventModes";
+import { EVENT_ORDER, EVENT_CONFIGS, getEventName } from "@/lib/eventModes";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Lang, t } from "@/lib/i18n";
 
@@ -795,7 +795,7 @@ export default function ProfileScreen() {
                       <Ionicons name={cfg.icon as any} size={14} color={cfg.color} />
                     </View>
                     <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: cfg.color, marginLeft: 8 }}>
-                      {cfg.name}
+                      {getEventName(eid, T)}
                     </Text>
                   </View>
                   <View style={{ flexDirection: "row", gap: 6 }}>
