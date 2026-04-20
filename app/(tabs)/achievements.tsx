@@ -259,6 +259,12 @@ export default function AchievementsScreen() {
               <Text style={[styles.bpSeasonText, { color: themeGold }]} numberOfLines={1}>{currentSeason.name.toUpperCase()}</Text>
               <Ionicons name="sparkles" size={14} color={themeGold} />
             </View>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: -6, marginBottom: 8 }}>
+              <Ionicons name="time-outline" size={12} color={themeColors.textMuted} />
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: themeColors.textMuted, letterSpacing: 0.4 }}>
+                {(T("endsIn" as any) || "Termina en")}: {currentSeason.daysRemaining}d
+              </Text>
+            </View>
             <SeasonThemeCard
               seasonNumber={seasonNumber}
               themeColors={themeColors}

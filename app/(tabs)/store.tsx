@@ -2,7 +2,7 @@ import { CoinIcon } from "@/components/CoinIcon";
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
-  Platform, Modal, FlatList, Animated, Easing,
+  Platform, Modal, FlatList, Animated, Easing, Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -1447,14 +1447,24 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
   const ICONS: Record<ShopChestType, IoniconName> = {
     common: "cube", rare: "cube", epic: "diamond", event: "flame", legendary: "star",
   };
+  const doPurchase = (type: ShopChestType) => {
+    const ok = buyChestWithFichas(type);
+    if (ok) showToast(`¡Cofre ${NAMES[type]} comprado!`);
+    else showToast(`No se pudo comprar`);
+  };
   const handleBuy = async (type: ShopChestType) => {
     await playSound("purchase");
     const balance = profile.fichas ?? 0;
     if (balance < PRICES[type]) { showToast(`Fichas insuficientes`); return; }
     if ((profile.chestInventory ?? []).length >= 10) { showToast(`Inventario lleno`); return; }
-    const ok = buyChestWithFichas(type);
-    if (ok) showToast(`¡Cofre ${NAMES[type]} comprado!`);
-    else showToast(`No se pudo comprar`);
+    Alert.alert(
+      `Comprar cofre ${NAMES[type]}`,
+      `¿Confirmar compra por ${PRICES[type]} fichas?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Comprar", style: "default", onPress: () => doPurchase(type) },
+      ],
+    );
   };
   return (
     <View style={styles.chestShopWrap}>
