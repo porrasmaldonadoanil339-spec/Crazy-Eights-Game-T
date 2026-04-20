@@ -103,17 +103,59 @@ function buildLocalState(srv: ServerGameState): MultiGameState {
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 
-function pickCpuProfiles(count: number, playerLevel: number): CpuProfile[] {
-  const range = 15;
-  let candidates = CPU_PROFILES.filter(p => Math.abs(p.level - playerLevel) <= range);
-  
-  if (candidates.length < count) {
-    const wideRange = 30;
-    candidates = CPU_PROFILES.filter(p => Math.abs(p.level - playerLevel) <= wideRange);
+function cpuRankFromLevel(level: number): number {
+  if (level <= 10) return 0;
+  if (level <= 20) return 1;
+  if (level <= 30) return 2;
+  if (level <= 40) return 3;
+  if (level <= 50) return 4;
+  if (level <= 60) return 5;
+  if (level <= 70) return 6;
+  if (level <= 80) return 7;
+  if (level <= 90) return 8;
+  if (level <= 95) return 9;
+  if (level <= 99) return 10;
+  return 11;
+}
+
+function pickCpuProfiles(
+  count: number,
+  playerLevel: number,
+  opts?: { rankedRank?: number },
+): CpuProfile[] {
+  // Casual / non-ranked: original ±15 level window around player
+  if (opts?.rankedRank === undefined) {
+    const range = 15;
+    let candidates = CPU_PROFILES.filter(p => Math.abs(p.level - playerLevel) <= range);
+    if (candidates.length < count) {
+      const wideRange = 30;
+      candidates = CPU_PROFILES.filter(p => Math.abs(p.level - playerLevel) <= wideRange);
+    }
+    const shuffled = [...(candidates.length >= count ? candidates : CPU_PROFILES)].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
   }
 
-  const shuffled = [...(candidates.length >= count ? candidates : CPU_PROFILES)].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  // Ranked: progressive difficulty curve by player rank.
+  // Target average CPU level scales with rank (Bronce ~15, Oro ~35, Diamante ~55, Mítico+ 75+).
+  const playerRank = Math.max(0, Math.min(11, opts.rankedRank));
+  const targetLevel = Math.max(1, playerRank * 10 + 5);
+
+  // Strict ±1 rank filter (matchmaking justo: nunca un Bronce vs Diamante)
+  let candidates = CPU_PROFILES.filter(p => Math.abs(cpuRankFromLevel(p.level) - playerRank) <= 1);
+
+  // Fallback: ±2 rangos si el pool quedó muy chico
+  if (candidates.length < count) {
+    candidates = CPU_PROFILES.filter(p => Math.abs(cpuRankFromLevel(p.level) - playerRank) <= 2);
+  }
+  // Último fallback: cualquier CPU
+  if (candidates.length < count) {
+    candidates = CPU_PROFILES;
+  }
+
+  // Bias hacia el targetLevel: ordenar por cercanía y muestrear de los más cercanos
+  const sorted = [...candidates].sort((a, b) => Math.abs(a.level - targetLevel) - Math.abs(b.level - targetLevel));
+  const pool = sorted.slice(0, Math.max(count * 3, count + 4));
+  return pool.sort(() => Math.random() - 0.5).slice(0, count);
 }
 
 function wrFromLevel(level: number) {
@@ -685,7 +727,11 @@ export default function OnlineGameScreen() {
   const modeParam = params.mode || "classic";
 
   const [currentCpuProfiles, setCurrentCpuProfiles] = useState<CpuProfile[]>(() => {
-    const profiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
+    const profiles = pickCpuProfiles(
+      playerCount - 1,
+      playerLevel || 1,
+      modeParam === "ranked" ? { rankedRank: profile.rankedProfile.rank } : undefined,
+    );
     if (params.names) {
       params.names.split(",").forEach((name, i) => {
         if (name.trim() && profiles[i]) {
@@ -1226,7 +1272,11 @@ export default function OnlineGameScreen() {
       router.replace("/ranked-lobby");
       return;
     }
-    const newProfiles = pickCpuProfiles(playerCount - 1, playerLevel || 1);
+    const newProfiles = pickCpuProfiles(
+      playerCount - 1,
+      playerLevel || 1,
+      modeParam === "ranked" ? { rankedRank: profile.rankedProfile.rank } : undefined,
+    );
     setCurrentCpuProfiles(newProfiles);
     const newNames = [humanName, ...newProfiles.map(c => c.name)];
     const gs = initMultiGame(newNames, 8);

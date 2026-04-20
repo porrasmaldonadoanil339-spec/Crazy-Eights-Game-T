@@ -1,7 +1,7 @@
 import { CoinIcon } from "@/components/CoinIcon";
 import React, { useState, useMemo } from "react";
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList,
+  View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Alert,
 } from "react-native";
 import {
   MAX_PLAYER_PATH_LEVEL,
@@ -34,7 +34,7 @@ type Tab = "playerpath" | "battlepass" | "achievements";
 
 export default function AchievementsScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, claimAchievementReward, claimBattlePassTier, claimPlayerPathLevel, xpProgress, battlePassTier } = useProfile();
+  const { profile, claimAchievementReward, claimBattlePassTier, claimPlayerPathLevel, xpProgress, battlePassTier, isPremiumBattlePassActive, unlockPremiumBattlePass, premiumBattlePassCost } = useProfile();
   const [activeTab, setActiveTab] = useState<Tab>("playerpath");
   const [toast, setToast] = useState<string | null>(null);
   const [rewardPopup, setRewardPopup] = useState<{
@@ -79,22 +79,61 @@ export default function AchievementsScreen() {
   const seasonNumber = currentSeason.number;
   const seasonTiers = useMemo(() => getBattlePassTiers(seasonNumber), [seasonNumber]);
 
-  const handleClaimBP = async (tier: number) => {
+  const handleUnlockPremiumBP = async () => {
     await playSound("achievement");
-    claimBattlePassTier(tier);
+    if ((profile.fichas ?? 0) < premiumBattlePassCost) {
+      Alert.alert(
+        T("notEnoughFichas" as any) || "Fichas insuficientes",
+        `${T("needFichasMsg" as any) || "Necesitas"} ${premiumBattlePassCost} ${T("fichas" as any) || "fichas"} ${T("toUnlockPremium" as any) || "para desbloquear el Pase Premium"}.`,
+      );
+      return;
+    }
+    Alert.alert(
+      T("confirmPremiumTitle" as any) || "Desbloquear Pase Premium",
+      `${T("confirmPremiumBody" as any) || "Vas a gastar"} ${premiumBattlePassCost} ${T("fichas" as any) || "fichas"} ${T("forCurrentSeason" as any) || "para activar el Pase Premium de la temporada actual"}.`,
+      [
+        { text: T("cancel" as any) || "Cancelar", style: "cancel" },
+        {
+          text: T("confirm" as any) || "Confirmar",
+          onPress: async () => {
+            const ok = unlockPremiumBattlePass();
+            if (ok) {
+              await playSound("purchase");
+              showToast(T("premiumUnlocked" as any) || "¡Pase Premium activo!");
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleClaimBP = async (tier: number, track: "free" | "premium" = "free") => {
+    await playSound("achievement");
+    claimBattlePassTier(tier, track);
     const bp = seasonTiers.find((t) => t.tier === tier);
     const free = getFreeReward(tier);
     const isCoins = bp?.rewardType === "coins" && typeof bp.rewardValue === "number";
-    const totalCoins = free.coins + (isCoins ? (bp!.rewardValue as number) : 0);
-    setRewardPopup({
-      visible: true,
-      title: "¡RECOMPENSA OBTENIDA!",
-      subtitle: `${T("level")} ${tier}`,
-      coins: totalCoins,
-      itemName: bp ? getBPRewardLabel(bp, lang) : undefined,
-      itemIcon: bp?.rewardType === "chest" ? "cube" : bp?.rewardType === "coins" ? "cash" : "trophy",
-      accent: Colors.gold,
-    });
+    if (track === "free") {
+      setRewardPopup({
+        visible: true,
+        title: "¡RECOMPENSA OBTENIDA!",
+        subtitle: `${T("level")} ${tier}`,
+        coins: free.coins,
+        itemName: undefined,
+        itemIcon: free.icon === "cash" ? "cash" : "cube",
+        accent: Colors.gold,
+      });
+    } else {
+      setRewardPopup({
+        visible: true,
+        title: "¡RECOMPENSA OBTENIDA!",
+        subtitle: `${T("level")} ${tier}`,
+        coins: isCoins ? (bp!.rewardValue as number) : 0,
+        itemName: bp ? getBPRewardLabel(bp, lang) : undefined,
+        itemIcon: bp?.rewardType === "chest" ? "cube" : bp?.rewardType === "coins" ? "cash" : "trophy",
+        accent: Colors.gold,
+      });
+    }
   };
 
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
@@ -288,6 +327,51 @@ export default function AchievementsScreen() {
               </View>
             </View>
 
+            {!isPremiumBattlePassActive && (
+              <BouncePressable
+                onPress={handleUnlockPremiumBP}
+                style={{
+                  marginHorizontal: 12,
+                  marginBottom: 10,
+                  borderRadius: 14,
+                  borderWidth: 2,
+                  borderColor: themeGold,
+                  backgroundColor: themeGold + "18",
+                  paddingVertical: 12,
+                  paddingHorizontal: 14,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <Ionicons name="diamond" size={18} color={themeGold} />
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: themeGold, letterSpacing: 0.5 }}>
+                  {(T("unlockPremiumBP" as any) || "Desbloquear Premium")} · {premiumBattlePassCost}
+                </Text>
+                <Ionicons name="server" size={14} color={themeGold} />
+              </BouncePressable>
+            )}
+            {isPremiumBattlePassActive && (
+              <View style={{
+                marginHorizontal: 12,
+                marginBottom: 10,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: themeGold + "55",
+                backgroundColor: themeGold + "11",
+                paddingVertical: 8,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+              }}>
+                <Ionicons name="checkmark-circle" size={16} color={themeGold} />
+                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 12, color: themeGold, letterSpacing: 0.5 }}>
+                  {T("premiumActive" as any) || "Pase Premium activo"}
+                </Text>
+              </View>
+            )}
             <View style={styles.bpColumnsHeader}>
               <View style={[styles.bpColTag, { backgroundColor: "#2ecc7122", borderColor: "#2ecc7155" }]}>
                 <Ionicons name="gift" size={11} color="#2ecc71" />
@@ -366,7 +450,30 @@ export default function AchievementsScreen() {
                           <Text style={[styles.bpExclusiveText, { color: tier.iconColor }]} numberOfLines={1}>{T("limitedEdition") as string}</Text>
                         </View>
                       )}
-                      <Ionicons name="lock-closed" size={14} color={themeColors.textDim} style={{ marginTop: 2 }} />
+                      {isPremiumBattlePassActive ? (
+                        canClaim ? (
+                          <BouncePressable
+                            onPress={() => handleClaimBP(tier.tier)}
+                            style={[styles.bpClaimBtn, { backgroundColor: themeGold, marginTop: 4 }]}
+                          >
+                            <Text style={styles.bpClaimText}>{claimLabel}</Text>
+                          </BouncePressable>
+                        ) : claimed ? (
+                          <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+                        ) : (
+                          <Ionicons name="lock-closed" size={14} color={themeColors.textDim} style={{ marginTop: 2 }} />
+                        )
+                      ) : (
+                        <Pressable
+                          onPress={handleUnlockPremiumBP}
+                          style={{ marginTop: 4, flexDirection: "row", alignItems: "center", gap: 3 }}
+                        >
+                          <Ionicons name="lock-closed" size={12} color={themeGold} />
+                          <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: themeGold, letterSpacing: 0.3 }} numberOfLines={1}>
+                            {T("premiumLocked" as any) || "PREMIUM"}
+                          </Text>
+                        </Pressable>
+                      )}
                     </View>
                   </View>
                   <Text style={[styles.bpTierXp, { color: themeColors.textDim, textAlign: "center", marginTop: 4 }]}>{tier.xpRequired} {xpRequiredLabel}</Text>

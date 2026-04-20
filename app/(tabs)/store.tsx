@@ -1028,10 +1028,10 @@ const styles = StyleSheet.create({
   itemGrad: { padding: 12, minHeight: 180, justifyContent: "space-between" },
   rarityBadgeSmall: {
     alignSelf: "flex-start", marginBottom: 8,
-    paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8,
-    borderWidth: 1,
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
+    borderWidth: 1.2,
   },
-  rarityText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 1 },
+  rarityText: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, letterSpacing: 1.1 },
   cardPreview: {
     width: 46, height: 64, borderRadius: 7, alignItems: "center", justifyContent: "center",
     borderWidth: 1.5, borderColor: Colors.gold + "55", marginBottom: 8,
@@ -1389,8 +1389,10 @@ const styles = StyleSheet.create({
   chestShopTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, letterSpacing: 1.2 },
   chestRow: { flexDirection: "row", gap: 8 },
   chestCard: {
-    flex: 1, padding: 10, borderRadius: 12, borderWidth: 1,
+    flex: 1, padding: 10, borderRadius: 16, borderWidth: 1.5,
     alignItems: "center", gap: 6, minHeight: 110,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45, shadowRadius: 8, elevation: 6,
   },
   chestCardScroll: {
     flex: 0, width: 96, justifyContent: "center",
@@ -1399,8 +1401,10 @@ const styles = StyleSheet.create({
     flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4,
   },
   emoteShopCard: {
-    width: "23.6%", padding: 6, borderRadius: 10, borderWidth: 1,
+    width: "23.6%", padding: 6, borderRadius: 12, borderWidth: 1.5,
     alignItems: "center", gap: 4, minHeight: 96,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4, shadowRadius: 6, elevation: 5,
   },
   emoteShopIcon: {
     width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center",

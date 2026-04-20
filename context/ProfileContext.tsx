@@ -107,6 +107,8 @@ export interface PlayerProfile {
   ownedItems: string[];
   achievementProgress: AchievementProgress[];
   claimedBattlePassTiers: number[];
+  claimedBattlePassPremiumTiers: number[];
+  premiumBattlePassSeasons: number[];
   claimedPlayerPathLevels: number[];
   battlePassSeasonNumber: number;
   stats: PlayerStats;
@@ -209,6 +211,8 @@ const DEFAULT_PROFILE: PlayerProfile = {
     claimedReward: false,
   })),
   claimedBattlePassTiers: [1],
+  claimedBattlePassPremiumTiers: [],
+  premiumBattlePassSeasons: [],
   claimedPlayerPathLevels: [],
   battlePassSeasonNumber: 1,
   stats: DEFAULT_STATS,
@@ -287,7 +291,10 @@ interface ProfileContextValue {
     eventId?: string | null;
   }) => void;
   updateAchievementProgress: (id: AchievementId, amount: number) => void;
-  claimBattlePassTier: (tier: number) => void;
+  claimBattlePassTier: (tier: number, track?: "free" | "premium") => void;
+  isPremiumBattlePassActive: boolean;
+  unlockPremiumBattlePass: () => boolean;
+  premiumBattlePassCost: number;
   claimAchievementReward: (id: AchievementId) => void;
   claimDailyReward: () => DailyReward | null;
   canClaimDailyReward: boolean;
@@ -335,7 +342,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const current = getCurrentSeason().number;
       setProfile((p) => {
         if (p.battlePassSeasonNumber === current) return p;
-        return { ...p, battlePassSeasonNumber: current, claimedBattlePassTiers: [1] };
+        return { ...p, battlePassSeasonNumber: current, claimedBattlePassTiers: [1], claimedBattlePassPremiumTiers: [] };
       });
     }, 60_000);
     return () => clearInterval(t);
@@ -388,6 +395,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
               if (savedSeason !== currentSeason) return [1];
               return saved.claimedBattlePassTiers ?? [1];
             })(),
+            claimedBattlePassPremiumTiers: (() => {
+              const savedSeason = saved.battlePassSeasonNumber ?? 1;
+              const currentSeason = getCurrentSeason().number;
+              if (savedSeason !== currentSeason) return [];
+              return saved.claimedBattlePassPremiumTiers ?? [];
+            })(),
+            premiumBattlePassSeasons: saved.premiumBattlePassSeasons ?? [],
             battlePassSeasonNumber: getCurrentSeason().number,
             lastDailyRewardDate: saved.lastDailyRewardDate ?? "",
             lastDailyShopFreeDate: saved.lastDailyShopFreeDate ?? "",
@@ -784,26 +798,42 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     });
   }, [update]);
 
-  const claimBattlePassTier = useCallback((tier: number) => {
+  const claimBattlePassTier = useCallback((tier: number, track: "free" | "premium" = "free") => {
     update((p) => {
-      if (p.claimedBattlePassTiers.includes(tier)) return p;
       const seasonTiers = getBattlePassTiers(getCurrentSeason().number);
       const bpTier = seasonTiers.find((t) => t.tier === tier);
       if (!bpTier) return p;
-      // FREE-track reward: varies by tier (coins, or chest at milestones)
-      const free = getFreeReward(tier);
-      let next = {
-        ...p,
-        claimedBattlePassTiers: [...p.claimedBattlePassTiers, tier],
-        coins: p.coins + free.coins,
-      };
-      if (free.type === "chest" && free.chestType) {
-        const inv = next.chestInventory ?? [];
-        if (inv.length < 10) {
-          next = { ...next, chestInventory: [...inv, createChest(free.chestType, "mission")] };
+      // Cannot claim tier you have not reached yet.
+      if ((p.totalXp ?? 0) < bpTier.xpRequired) return p;
+
+      if (track === "free") {
+        if (p.claimedBattlePassTiers.includes(tier)) return p;
+        const free = getFreeReward(tier);
+        let next = {
+          ...p,
+          claimedBattlePassTiers: [...p.claimedBattlePassTiers, tier],
+          coins: p.coins + free.coins,
+        };
+        if (free.type === "chest" && free.chestType) {
+          const inv = next.chestInventory ?? [];
+          if (inv.length < 10) {
+            next = { ...next, chestInventory: [...inv, createChest(free.chestType, "mission")] };
+          }
         }
+        return next;
       }
-      // Premium-track reward
+
+      // Premium track — requires unlock for current season and not already claimed
+      const currentSeasonNum = getCurrentSeason().number;
+      const hasPremium = (p.premiumBattlePassSeasons ?? []).includes(currentSeasonNum);
+      if (!hasPremium) return p;
+      const premiumClaimed = p.claimedBattlePassPremiumTiers ?? [];
+      if (premiumClaimed.includes(tier)) return p;
+
+      let next: PlayerProfile = {
+        ...p,
+        claimedBattlePassPremiumTiers: [...premiumClaimed, tier],
+      };
       if (bpTier.rewardType === "coins" && typeof bpTier.rewardValue === "number") {
         next = { ...next, coins: next.coins + bpTier.rewardValue };
       }
@@ -823,6 +853,25 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       return next;
     });
   }, [update]);
+
+  const PREMIUM_BP_COST = 500;
+  const isPremiumBattlePassActive = (profile.premiumBattlePassSeasons ?? []).includes(getCurrentSeason().number);
+
+  const unlockPremiumBattlePass = useCallback((): boolean => {
+    const seasonNum = getCurrentSeason().number;
+    if ((profile.premiumBattlePassSeasons ?? []).includes(seasonNum)) return false;
+    if ((profile.fichas ?? 0) < PREMIUM_BP_COST) return false;
+    update((p) => {
+      if ((p.premiumBattlePassSeasons ?? []).includes(seasonNum)) return p;
+      if ((p.fichas ?? 0) < PREMIUM_BP_COST) return p;
+      return {
+        ...p,
+        fichas: (p.fichas ?? 0) - PREMIUM_BP_COST,
+        premiumBattlePassSeasons: [...(p.premiumBattlePassSeasons ?? []), seasonNum],
+      };
+    });
+    return true;
+  }, [profile.premiumBattlePassSeasons, profile.fichas, update]);
 
   const claimDailyReward = useCallback((): DailyReward | null => {
     const today = new Date().toDateString();
@@ -1077,6 +1126,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         recordGameResult,
         updateAchievementProgress,
         claimBattlePassTier,
+        isPremiumBattlePassActive,
+        unlockPremiumBattlePass,
+        premiumBattlePassCost: PREMIUM_BP_COST,
         claimAchievementReward,
         claimDailyReward,
         canClaimDailyReward,
