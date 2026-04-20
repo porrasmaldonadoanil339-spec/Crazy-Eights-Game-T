@@ -1,6 +1,7 @@
 export type AchievementId =
   // Event wins
   | "event_any_win" | "event_speed_win" | "event_random_win" | "event_double_win" | "event_survival_win"
+  | "event_versatile"
   // Win milestones
   | "first_win" | "win_5" | "win_25" | "win_100" | "win_250" | "win_500"
   // Mode wins
@@ -862,6 +863,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: "event_random_win",   title: "Caos Domado",              description: "Gana 3 eventos de Cartas Aleatorias.",          icon: "shuffle",          iconColor: "#9B59B6", target: 3,    coinsReward: 150,  xpReward: 350,  rarity: "rare" },
   { id: "event_double_win",   title: "Doble o Nada",             description: "Gana 3 eventos de Doble Efecto.",               icon: "copy",             iconColor: "#E74C3C", target: 3,    coinsReward: 150,  xpReward: 350,  rarity: "rare" },
   { id: "event_survival_win", title: "Superviviente",            description: "Gana 3 eventos de Supervivencia.",              icon: "shield",           iconColor: "#27AE60", target: 3,    coinsReward: 150,  xpReward: 350,  rarity: "rare" },
+  { id: "event_versatile",    title: "Versátil de Eventos",      description: "Gana al menos 1 partida en 3 eventos distintos.", icon: "trophy",        iconColor: "#1ABC9C", target: 3,    coinsReward: 250,  xpReward: 600,  rarity: "epic" },
   // ─── Win milestones ──────────────────────────────────────────────
   { id: "first_win",        title: "Primera Victoria",          description: "Gana tu primera partida.",                        icon: "star",             iconColor: "#FFD700", target: 1,    coinsReward: 20,   xpReward: 50,   rarity: "common" },
   { id: "win_5",            title: "Jugador Experimentado",     description: "Gana 5 partidas.",                                icon: "star-half",        iconColor: "#FFD700", target: 5,    coinsReward: 30,   xpReward: 80,   rarity: "common" },

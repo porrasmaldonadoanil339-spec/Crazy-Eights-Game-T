@@ -1962,6 +1962,12 @@ export default function GameScreen() {
         if (session.eventId === "random")   updateAchievementProgress("event_random_win", 1);
         if (session.eventId === "double")   updateAchievementProgress("event_double_win", 1);
         if (session.eventId === "survival") updateAchievementProgress("event_survival_win", 1);
+        // "Versátil de Eventos": grant 1 progress only the first time the
+        // player wins inside a brand-new event id. Reads from winsByEvent.
+        const priorWinsForEvent = (profile.stats.winsByEvent ?? {})[session.eventId] ?? 0;
+        if (priorWinsForEvent === 0) {
+          updateAchievementProgress("event_versatile", 1);
+        }
       }
     } else {
       // Even if lost, progress "play_mode" and "cards_played"

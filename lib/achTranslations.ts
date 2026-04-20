@@ -1954,6 +1954,8 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
   secret_ext_69_d: { es: "Desbloquea el secreto número 3450.", en: "Unlock secret number 3450.", pt: "Desbloqueie o segredo número 3450." },
   secret_ext_70_t: { es: "Secreto 3500", en: "Secret 3500", pt: "Segredo 3500" },
   secret_ext_70_d: { es: "Desbloquea el secreto número 3500.", en: "Unlock secret number 3500.", pt: "Desbloqueie o segredo número 3500." },
+  event_versatile_t: { es: "Versátil de Eventos", en: "Event Versatile", pt: "Versátil de Eventos" },
+  event_versatile_d: { es: "Gana al menos 1 partida en 3 eventos distintos.", en: "Win at least 1 match in 3 different events.", pt: "Vença ao menos 1 partida em 3 eventos diferentes." },
 };
 
 function get3(obj: { es: string; en: string; pt: string } | undefined, lang: Lang): string {
