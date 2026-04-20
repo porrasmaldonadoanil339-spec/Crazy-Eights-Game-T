@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import { Alert } from "react-native";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
@@ -53,7 +54,7 @@ export default function RankedLobbyScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
-  const { profile, level } = useProfile();
+  const { profile, level, isRankedOnCooldown, rankedCooldownRemainingMs } = useProfile();
   const T = useT();
 
   const lang = profile.language ?? "es";
@@ -115,6 +116,14 @@ export default function RankedLobbyScreen() {
 
   const handleSearch = useCallback(async () => {
     await playButton().catch(() => {});
+    if (isRankedOnCooldown) {
+      const mins = Math.ceil(rankedCooldownRemainingMs / 60000);
+      Alert.alert(
+        T("rankedCooldownTitle" as any) || "Penalización activa",
+        `${T("rankedCooldownBody" as any) || "Has abandonado demasiadas partidas clasificatorias. Espera"} ${mins} ${T("minutes" as any) || "min"} ${T("rankedCooldownTry" as any) || "para volver a buscar partida."}`,
+      );
+      return;
+    }
     setPhase("searching");
     let progress = 0;
     const iv = setInterval(() => {

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image, ActivityIndicator, Alert,
+  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image, ActivityIndicator, Alert, BackHandler,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -656,7 +656,7 @@ export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
   const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string; skipLobby?: string; names?: string }>();
-  const { profile, level: playerLevel, addXp, updateRanked, recordGameResult, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
+  const { profile, level: playerLevel, addXp, updateRanked, recordRankedAbandon, recordGameResult, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
   const T = useT();
 
   const isOnline = !!params.code;
@@ -711,6 +711,17 @@ export default function OnlineGameScreen() {
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [disconnectedPlayerMsg, setDisconnectedPlayerMsg] = useState<string | null>(null);
+
+  // Intercept Android hardware back button → show confirm modal instead of leaving silently.
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (showExitModal) return false;
+      setShowExitModal(true);
+      return true;
+    });
+    return () => sub.remove();
+  }, [showExitModal]);
 
   // ─── In-game menu ────────────────────────────────────────────────────────
   const [showGameMenu, setShowGameMenu] = useState(false);
@@ -1883,6 +1894,21 @@ export default function OnlineGameScreen() {
                   playButton().catch(() => {});
                   setShowExitModal(false);
                   addXp(-25);
+                  // Ranked abandon penalty: only when match is actively in play (post-deal, pre-result) and rival hasn't already left.
+                  const inProgress = gameState
+                    && (gameState.phase === "playing" || gameState.phase === "choosing_suit")
+                    && !rivalAbandoned
+                    && lobbyPhase === "game";
+                  if (modeParam === "ranked" && inProgress) {
+                    const r = recordRankedAbandon();
+                    if (r.cooldownMs > 0) {
+                      const mins = Math.round(r.cooldownMs / 60000);
+                      Alert.alert(
+                        T("rankedExitWarningTitle" as any) || "Advertencia",
+                        `${T("rankedAbandonPenalty" as any) || "Has abandonado demasiadas partidas. Penalización"}: -${r.totalStarLoss} ⭐\n${T("rankedCooldownMsg" as any) || "Cooldown"}: ${mins} min`,
+                      );
+                    }
+                  }
                   router.back();
                 }}
                 style={{ flex: 1, backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}

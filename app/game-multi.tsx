@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView,
-  Modal, Platform, Dimensions, useWindowDimensions,
+  Modal, Platform, Dimensions, useWindowDimensions, BackHandler,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -227,9 +227,22 @@ export default function MultiGameScreen() {
     }
   }, [gameState.phase]);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [showExitModal, setShowExitModal] = useState(false);
   // ─── Emotes per player (local pass-and-play) ─────────────────────────────
   const [activeEmotes, setActiveEmotes] = useState<Record<number, Emote | null>>({});
   const lastEmoteAtRef = useRef<Record<number, number>>({});
+
+  // Intercept Android hardware back button → confirm before leaving the match.
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (!gameStarted) return false;
+      if (showExitModal) return false;
+      setShowExitModal(true);
+      return true;
+    });
+    return () => sub.remove();
+  }, [gameStarted, showExitModal]);
 
   // Re-initialize when starting
   const handleStartGame = useCallback(() => {
@@ -402,7 +415,7 @@ export default function MultiGameScreen() {
 
       {/* Header */}
       <View style={[styles.header, { height: headerH }]}>
-        <Pressable onPress={() => { playButton().catch(() => {}); router.back(); }} style={styles.backBtn}>
+        <Pressable onPress={() => { playButton().catch(() => {}); setShowExitModal(true); }} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={18} color={Colors.gold} />
         </Pressable>
         <View style={styles.headerMid}>
@@ -592,6 +605,41 @@ export default function MultiGameScreen() {
           winnerColor={PLAYER_COLORS[gameState.winnerIndex % PLAYER_COLORS.length]}
           onClose={() => { playButton().catch(() => {}); router.back(); }}
         />
+      )}
+
+      {/* Exit confirmation */}
+      {showExitModal && (
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.72)", justifyContent: "center", alignItems: "center", zIndex: 999 }]}>
+          <View style={{ backgroundColor: "#0d1a10", borderRadius: 18, padding: 24, margin: 24, width: "88%", maxWidth: 360, borderWidth: 1, borderColor: "#D4AF3744" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <Ionicons name="exit-outline" size={24} color="#E74C3C" />
+              <Text style={{ color: "#fff", fontFamily: "Nunito_800ExtraBold", fontSize: 18 }}>
+                {T("exitGame" as any) || "¿Salir de la partida?"}
+              </Text>
+            </View>
+            <Text style={{ color: "#BDC3C7", fontFamily: "Nunito_400Regular", fontSize: 13, marginBottom: 20, lineHeight: 20 }}>
+              {T("exitGameSub" as any) || "¿Estás seguro de que deseas salir? Tu progreso se perderá."}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <Pressable
+                onPress={() => { playButton().catch(() => {}); setShowExitModal(false); }}
+                style={{ flex: 1, backgroundColor: "#1a2a1a", borderRadius: 12, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: "#D4AF3733" }}
+              >
+                <Text style={{ color: "#D4AF37", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
+                  {T("cancel") || "Cancelar"}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => { playButton().catch(() => {}); setShowExitModal(false); router.back(); }}
+                style={{ flex: 1, backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}
+              >
+                <Text style={{ color: "#fff", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
+                  {T("exitConfirm" as any) || "Salir"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
       )}
     </View>
   );

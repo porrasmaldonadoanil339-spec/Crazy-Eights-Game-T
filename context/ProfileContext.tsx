@@ -155,6 +155,10 @@ export interface PlayerProfile {
   linkedFacebook?: string;
   rankedProfile: RankedProfile;
   chestInventory: Chest[];
+  // Ranked anti-abuse: timestamps (ms) of recent abandons. Used to apply
+  // progressive penalties and a short matchmaking cooldown after repeated leaves.
+  recentRankedAbandons?: number[];
+  rankedCooldownUntil?: number;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -239,6 +243,8 @@ const DEFAULT_PROFILE: PlayerProfile = {
   animationsEnabled: true,
   rankedProfile: { rank: 0, division: 0, stars: 0, maxStars: 5, totalWins: 0, totalLosses: 0 },
   chestInventory: [],
+  recentRankedAbandons: [],
+  rankedCooldownUntil: 0,
 };
 
 interface ProfileContextValue {
@@ -289,6 +295,9 @@ interface ProfileContextValue {
   updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
   updateEquippedEmotes: (emoteIds: string[]) => void;
   updateRanked: (delta: number) => void;
+  recordRankedAbandon: () => { totalStarLoss: number; cooldownMs: number; abandonsInWindow: number };
+  isRankedOnCooldown: boolean;
+  rankedCooldownRemainingMs: number;
   watchAd: () => boolean;
   adsWatchedToday: number;
   adDailyLimit: number;
@@ -523,6 +532,37 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         ownedItems: [...p.ownedItems, ...itemsToAdd],
       };
     });
+  }, [update]);
+
+  // ─── Ranked anti-abuse: penalty + cooldown for repeated abandons ─────────
+  // Window: rolling 24 hours. Tiers:
+  //   1 abandon  →  -1 star  (base loss)
+  //   2 abandons →  -1 star
+  //   3-4        →  -2 stars (extra penalty)
+  //   5+         →  -3 stars + 10 min cooldown (no matchmaking)
+  const ABANDON_WINDOW_MS = 24 * 60 * 60 * 1000;
+  const recordRankedAbandon = useCallback(() => {
+    const now = Date.now();
+    let result = { totalStarLoss: 1, cooldownMs: 0, abandonsInWindow: 1 };
+    update((p) => {
+      const recent = (p.recentRankedAbandons ?? []).filter(t => now - t < ABANDON_WINDOW_MS);
+      recent.push(now);
+      const count = recent.length;
+      let starLoss = 1;
+      let cooldownMs = 0;
+      if (count >= 5) { starLoss = 3; cooldownMs = 10 * 60 * 1000; }
+      else if (count >= 3) { starLoss = 2; }
+      result = { totalStarLoss: starLoss, cooldownMs, abandonsInWindow: count };
+      const nextRanked = addStars(p.rankedProfile, -starLoss);
+      const cooldownUntil = cooldownMs > 0 ? now + cooldownMs : (p.rankedCooldownUntil ?? 0);
+      return {
+        ...p,
+        rankedProfile: nextRanked,
+        recentRankedAbandons: recent,
+        rankedCooldownUntil: cooldownUntil,
+      };
+    });
+    return result;
   }, [update]);
 
   const updatePhotoUri = useCallback((uri: string) => {
@@ -1044,6 +1084,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         updateSettings,
         updateEquippedEmotes,
         updateRanked,
+        recordRankedAbandon,
+        isRankedOnCooldown: !!(profile.rankedCooldownUntil && profile.rankedCooldownUntil > Date.now()),
+        rankedCooldownRemainingMs: Math.max(0, (profile.rankedCooldownUntil ?? 0) - Date.now()),
         watchAd,
         adsWatchedToday,
         adDailyLimit: AD_DAILY_LIMIT,
