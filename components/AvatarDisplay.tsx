@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing } from "react-native-reanimated";
 import { AVATARS, AVATAR_FRAMES } from "@/lib/storeItems";
+import { findExclusiveById } from "@/lib/battlePass";
 
 export interface AvatarDisplayProps {
   avatarId: string;
@@ -16,16 +17,24 @@ export interface AvatarDisplayProps {
 export function AvatarDisplay({ avatarId, frameId, photoUri, size = 60, iconSize }: AvatarDisplayProps) {
   const avatarItem = AVATARS.find(a => a.id === avatarId);
   const frameItem = frameId ? AVATAR_FRAMES.find(f => f.id === frameId) : null;
+  const exclusiveAvatar = !avatarItem && avatarId?.startsWith("exclusive_s") ? findExclusiveById(avatarId) : null;
+  const exclusiveFrame = !frameItem && frameId?.startsWith("exclusive_s") ? findExclusiveById(frameId) : null;
   const iSize = iconSize ?? Math.floor(size * 0.52);
   const radius = size / 2;
 
-  const iconColor = avatarItem?.previewColor ?? "#D4AF37";
-  const frameColors = frameItem?.backColors ?? [iconColor + "dd", iconColor + "88"];
-  const frameBorderWidth = frameItem ? 4 : 2;
+  const iconName = avatarItem?.preview ?? exclusiveAvatar?.icon ?? "person";
+  const iconColor = avatarItem?.previewColor ?? exclusiveAvatar?.iconColor ?? "#D4AF37";
+  const exclusiveFrameColor = exclusiveFrame?.iconColor;
+  const frameColors = frameItem?.backColors
+    ?? (exclusiveFrameColor ? [exclusiveFrameColor, exclusiveFrameColor + "88"] : [iconColor + "dd", iconColor + "88"]);
+  const frameBorderWidth = frameItem || exclusiveFrame ? 4 : 2;
 
-  // Detect "elite" frames: legendary/gold themes get extra shine
+  // Detect "elite" frames: legendary/gold themes get extra shine.
+  // All season exclusives (avatar or frame) are treated as legendary-elite.
   const frameRarity = (frameItem as any)?.rarity ?? null;
-  const isElite = frameRarity === "legendary" || frameRarity === "epic" || frameId === "frame_gold" || frameId === "frame_legend" || frameId === "frame_diamond";
+  const isElite = frameRarity === "legendary" || frameRarity === "epic"
+    || frameId === "frame_gold" || frameId === "frame_legend" || frameId === "frame_diamond"
+    || !!exclusiveAvatar || !!exclusiveFrame;
 
   // Continuous shimmer rotation for elite frames
   const shimmer = useSharedValue(0);
@@ -141,7 +150,7 @@ export function AvatarDisplay({ avatarId, frameId, photoUri, size = 60, iconSize
                 backgroundColor: iconColor + "44",
               }}
             />
-            <Ionicons name={(avatarItem?.preview ?? "person") as any} size={iSize} color={iconColor} />
+            <Ionicons name={iconName as any} size={iSize} color={iconColor} />
             {/* Tiny sparkle for elite */}
             {isElite && (
               <View style={{ position: "absolute", top: size * 0.12, right: size * 0.14 }}>
