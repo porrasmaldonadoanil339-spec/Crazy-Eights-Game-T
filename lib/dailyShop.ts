@@ -59,6 +59,13 @@ export function getDailyShopItems(dateKey: string = getDailyDateKey()): DailySho
   return picked.map((item) => ({ ...item, ...priceFor(item) }));
 }
 
+export function getDailyEmotes(dateKey: string = getDailyDateKey(), count: number = 3): StoreItem[] {
+  const eligible = STORE_ITEMS.filter((s) => s.category === "emote" && !s.isDefault);
+  if (eligible.length <= count) return eligible;
+  const rnd = mulberry32(hashString("emotes:" + dateKey));
+  return pickShuffled(eligible, count, rnd);
+}
+
 export function getDailyFreeItem(dateKey: string = getDailyDateKey()): DailyShopItem {
   const eligible = STORE_ITEMS.filter(
     (s) => !s.isDefault && (s.rarity === "common" || s.rarity === "rare")

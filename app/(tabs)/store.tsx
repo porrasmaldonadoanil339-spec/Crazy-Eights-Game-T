@@ -15,7 +15,7 @@ import { playSound } from "@/lib/sounds";
 import { useT } from "@/hooks/useT";
 import { router } from "expo-router";
 import BouncePressable from "@/components/BouncePressable";
-import { getDailyShopItems, getDailyFreeItem, getDailyDateKey, DailyShopItem } from "@/lib/dailyShop";
+import { getDailyShopItems, getDailyFreeItem, getDailyDateKey, getDailyEmotes, DailyShopItem } from "@/lib/dailyShop";
 
 const RARITY_COLORS_MAP: Record<string, string> = {
   common: "#95A5A6",
@@ -1590,12 +1590,17 @@ function EmotesSection({
 }) {
   const T = useT();
   const { profile } = useProfile();
-  const ordered = useMemo(() => sortItemsByRarityAndPrice(EMOTES), []);
+  const ordered = useMemo(() => {
+    const daily = getDailyEmotes();
+    const dailyIds = new Set(daily.map((e) => e.id));
+    const ownedExtra = EMOTES.filter((e) => (profile.ownedItems ?? []).includes(e.id) && !dailyIds.has(e.id));
+    return sortItemsByRarityAndPrice([...daily, ...ownedExtra]);
+  }, [profile.ownedItems]);
   return (
     <View style={[styles.chestShopWrap, { borderColor: themeGold + "55" }]}>
       <View style={styles.chestShopHeader}>
         <Ionicons name="happy" size={14} color={themeGold} />
-        <Text style={[styles.chestShopTitle, { color: themeGold }]}>EMOTES</Text>
+        <Text style={[styles.chestShopTitle, { color: themeGold }]}>EMOTES · 3 DEL DÍA</Text>
         <View style={{ flex: 1 }} />
         <CoinIcon size={12} color={themeGold} />
         <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: themeGold }}>{profile.coins}</Text>
