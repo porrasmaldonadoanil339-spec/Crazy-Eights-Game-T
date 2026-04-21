@@ -10,6 +10,7 @@ import { Colors, LightColors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
 import { getRankInfo, RANKS, RANK_COLORS, RANK_ICONS, DIVISIONS } from "@/lib/ranked";
+import { RankShield } from "@/components/RankShield";
 import { getCurrentSeason, getSeasonRewardsForRank } from "@/lib/seasons";
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -262,7 +263,7 @@ export default function RankedScreen() {
         </View>
         
         <View style={styles.rankBadgeSmall}>
-          <Ionicons name={RANK_ICONS[item.rank] as any} size={14} color={RANK_COLORS[item.rank]} />
+          <RankShield rank={item.rank} size={22} showGlow={false} />
           <Text style={[styles.rankBadgeTextSmall, { color: RANK_COLORS[item.rank] }]}>Lv.{item.level}</Text>
         </View>
       </Pressable>
@@ -332,9 +333,7 @@ export default function RankedScreen() {
             />
           </View>
           <View style={styles.rankBadgeContainer}>
-            <View style={[styles.rankIconCircle, { backgroundColor: rankInfo.color + "22", borderColor: rankInfo.color }]}>
-              <Ionicons name={RANK_ICONS[profile.rankedProfile.rank] as any} size={50} color={rankInfo.color} />
-            </View>
+            <RankShield rank={profile.rankedProfile.rank} size={92} />
           </View>
         </View>
 
@@ -413,9 +412,8 @@ export default function RankedScreen() {
                 const reward = getSeasonRewardsForRank(idx);
                 return (
                   <View style={styles.rewardItem}>
-                    <View style={[styles.rewardRankIcon, { backgroundColor: RANK_COLORS[idx] + "22" }]}>
-                      <Ionicons name={RANK_ICONS[idx] as any} size={20} color={RANK_COLORS[idx]} />
-                    </View>
+                    <RankShield rank={idx} size={36} showGlow={false} />
+                    <View style={{ width: 8 }} />
                     <View style={styles.rewardInfo}>
                       <Text style={[styles.rewardRankName, { color: themeColors.text }]}>{T(`rank${rank}` as any) || rank}</Text>
                       <Text style={[styles.rewardText, { color: themeColors.textMuted }]}>

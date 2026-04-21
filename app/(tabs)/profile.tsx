@@ -21,6 +21,7 @@ import { playSound } from "@/lib/sounds";
 import { GAME_MODES } from "@/lib/gameModes";
 import { EVENT_ORDER, EVENT_CONFIGS, getEventName } from "@/lib/eventModes";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { RankShield } from "@/components/RankShield";
 import { Lang, t } from "@/lib/i18n";
 
 const TITLE_ITEMS = STORE_ITEMS.filter((i) => i.category === "title");
@@ -867,7 +868,11 @@ export default function ProfileScreen() {
                     opacity: isUnlocked ? 1 : 0.4,
                   }}
                 >
-                  <Ionicons name={icon as any} size={22} color={isUnlocked ? color : (isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)")} />
+                  {isUnlocked ? (
+                    <RankShield rank={rankIdx} size={36} showGlow={false} />
+                  ) : (
+                    <Ionicons name={icon as any} size={26} color={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"} />
+                  )}
                   <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: isUnlocked ? color : textMuted, textAlign: "center", marginTop: 4 }} numberOfLines={1}>
                     {localNames.rankName}
                   </Text>

@@ -1,0 +1,197 @@
+Por favor, corregir e implementar EXACTAMENTE lo siguiente en cada sección del juego:
+
+========================
+🟣 TIENDA
+=========
+
+1. EMOTES (VISUAL)
+   PROBLEMA:
+
+* Los emotes se ven ovalados (recortados)
+
+SOLUCIÓN:
+✔ ELIMINAR completamente el óvalo
+✔ Mostrar el emote en su forma ORIGINAL (imagen completa)
+✔ No recortar ni deformar
+
+ANIMACIÓN:
+✔ El emote debe verse en MOVIMIENTO (animado) en la tienda
+✔ Debe verse EXACTAMENTE igual que en partida
+
+REGLAS:
+✔ Mostrar SOLO 3 emotes diarios
+✔ Cambian cada día
+✔ No repetir
+
+---
+
+2. COFRES (COMPRA)
+   AL PRESIONAR UN COFRE:
+
+1) Mostrar:
+   “¿Deseas comprar?”
+
+2) Al presionar ACEPTAR:
+
+SI NO tiene fichas:
+✔ Mostrar: “Fichas insuficientes”
+✔ NO sonido
+✔ NO compra
+
+SI tiene fichas:
+✔ Realizar compra correctamente
+
+---
+
+3. REGALO DIARIO
+   ✔ Mantener sistema sorpresa
+
+FLUJO:
+
+1. Presionar regalo
+2. Mostrar:
+   “Se agregó un regalo a tu inventario”
+3. Aparece como cofre
+
+AL ABRIR:
+✔ Animación
+✔ Sonido
+✔ Da 1 ítem aleatorio
+
+---
+
+========================
+🟢 PARTIDAS
+===========
+
+1. SCROLL DEL MAZO
+   ✔ Ubicación: parte inferior
+
+✔ Agregar scroll horizontal:
+
+* Deslizar derecha
+* Deslizar izquierda
+
+✔ Mostrar TODO el mazo
+✔ Funciona en TODOS los modos
+
+✔ Movimiento fluido
+✔ Cartas alineadas
+
+---
+
+2. TEXTOS DE ACCIÓN
+   ✔ Corregir mensajes:
+
+SI jugador:
+
+* “Robaste carta”
+* “Jugaste carta”
+
+SI rival:
+
+* “El rival robó carta”
+* “El rival jugó carta”
+
+❌ No confundir jugador con rival
+
+---
+
+========================
+🔵 MODO DESAFÍO
+===============
+
+✔ Debe adaptarse correctamente a las reglas del juego
+✔ Mismo comportamiento que partidas normales
+✔ Cartas y efectos funcionando correctamente
+
+---
+
+========================
+🔴 MODO CLASIFICATORIA
+======================
+
+1. RANGOS (IMPLEMENTAR)
+   Hierro → 500 monedas + ítems
+   Bronce → 1000 monedas
+   Plata → 2000 monedas
+   Oro → 3500 monedas
+   Platino → 5000 monedas
+   Diamante → 8000 monedas
+   Épico → 12000 monedas + título
+   Mítico → 12000 monedas + título
+   Maestro → 12000 monedas + título
+   Gran Maestro → 12000 monedas + título
+   Legendario → 12000 monedas + título
+   Divino → 12000 monedas + título
+
+---
+
+2. ESCUDOS DE RANGO
+   PROBLEMA:
+
+* No llaman la atención
+
+SOLUCIÓN:
+✔ Rediseñar escudos estilo competitivo (tipo Clash Royale)
+✔ Más detallados y llamativos
+✔ Mantener colores actuales
+✔ Hacerlos más profesionales
+
+---
+
+3. RECOMPENSAS
+   ✔ Mejorarlas usando ítems del juego:
+
+* Cartas
+* Dorsos
+* Emotes
+* Efectos
+* Títulos
+
+✔ Deben sentirse valiosas
+
+---
+
+4. TAMAÑO DE CARTAS (CRÍTICO)
+   PROBLEMA:
+
+* Cartas muy pequeñas
+
+SOLUCIÓN:
+✔ Aumentar tamaño de cartas del jugador
+✔ Aumentar tamaño de cartas del rival
+
+✔ Usar mismo tamaño que otros modos
+✔ O adaptar tamaño proporcional al espacio
+
+OBJETIVO:
+✔ Que se vean claras y grandes
+
+---
+
+5. EFECTOS VISUALES
+   PROBLEMA:
+
+* No se ven igual que otros modos
+
+SOLUCIÓN:
+✔ Aplicar TODOS los efectos visuales de otros modos
+✔ Misma calidad visual
+✔ Misma animación
+
+OBJETIVO:
+✔ Que Clasificatoria sea igual o mejor que otros modos
+
+---
+
+========================
+🎯 OBJETIVO FINAL
+=================
+
+✔ Mejorar calidad visual
+✔ Corregir errores de interfaz
+✔ Hacer modos más atractivos
+✔ Lograr experiencia tipo juego profesional
+
+Aplicar TODO exactamente como se indica.
