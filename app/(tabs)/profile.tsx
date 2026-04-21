@@ -409,6 +409,8 @@ export default function ProfileScreen() {
   const [showTitlePicker, setShowTitlePicker] = useState(false);
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   const T = useT();
   const lang = (profile.language ?? "es") as Lang;
@@ -663,10 +665,19 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={16} color={textMuted} />
         </Pressable>
 
-        {/* Recent Match History */}
+        {/* Recent Match History (toggle) */}
         {(profile.stats.recentGames ?? []).length > 0 && (
           <>
-            <Text style={[styles.sectionLabel, { color: themeGold }]}>HISTORIAL RECIENTE</Text>
+            <Pressable
+              onPress={() => setShowHistory((v) => !v)}
+              style={[styles.toggleHeader, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}
+            >
+              <Ionicons name="time-outline" size={16} color={themeGold} />
+              <Text style={[styles.toggleHeaderText, { color: themeGold }]}>HISTORIAL</Text>
+              <View style={{ flex: 1 }} />
+              <Ionicons name={showHistory ? "chevron-up" : "chevron-down"} size={18} color={themeGold} />
+            </Pressable>
+            {showHistory && (
             <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0", paddingVertical: 4, paddingHorizontal: 0 }]}>
               {(profile.stats.recentGames ?? []).slice(0, 8).map((game: GameRecord, idx: number) => {
                 const modeInfo = GAME_MODES.find(m => m.id === game.mode);
@@ -707,10 +718,21 @@ export default function ProfileScreen() {
                 );
               })}
             </View>
+            )}
           </>
         )}
 
-        <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("statistics") || "ESTADÍSTICAS"}</Text>
+        <Pressable
+          onPress={() => setShowStats((v) => !v)}
+          style={[styles.toggleHeader, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}
+        >
+          <Ionicons name="stats-chart" size={16} color={themeGold} />
+          <Text style={[styles.toggleHeaderText, { color: themeGold }]}>{(T("statistics") || "ESTADÍSTICAS").toUpperCase()}</Text>
+          <View style={{ flex: 1 }} />
+          <Ionicons name={showStats ? "chevron-up" : "chevron-down"} size={18} color={themeGold} />
+        </Pressable>
+        {showStats && (
+        <>
         <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}>
           <StatRow label={T("gamesPlayed")} value={profile.stats.totalGames} textColor={textColor} textMuted={textMuted} />
           <StatRow label={T("wins")} value={profile.stats.totalWins} textColor={textColor} textMuted={textMuted} />
@@ -729,7 +751,7 @@ export default function ProfileScreen() {
           <StatRow label={T("onlineMultiGames")} value={profile.stats.onlineMultiGames ?? 0} textColor={textColor} textMuted={textMuted} />
         </View>
 
-        <Text style={[styles.sectionLabel, { color: themeGold }]}>{T("byMode")}</Text>
+        <Text style={[styles.sectionLabel, { color: themeGold, marginTop: 14 }]}>{T("byMode")}</Text>
         <View style={[styles.statsBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0", paddingVertical: 4 }]}>
           {GAME_MODES.map((mode, idx) => {
             const wins = profile.stats.winsByMode[mode.id] ?? 0;
@@ -817,6 +839,8 @@ export default function ProfileScreen() {
             });
           })()}
         </View>
+        </>
+        )}
 
         {/* Rank Progression */}
         <Text style={[styles.sectionLabel, { color: themeGold }]}>{t("rankProgress", lang).toUpperCase()}</Text>
@@ -1014,6 +1038,15 @@ const styles = StyleSheet.create({
   miniCard: {
     width: 24, height: 34, borderRadius: 4,
     alignItems: "center", justifyContent: "center",
+  },
+  toggleHeader: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderRadius: 10, borderWidth: 1,
+    marginTop: 14,
+  },
+  toggleHeaderText: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 12, letterSpacing: 1,
   },
   sectionLabel: {
     fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textMuted,
