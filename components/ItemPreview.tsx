@@ -24,14 +24,14 @@ const PATTERN_SYMBOL: Record<string, string> = {
   diamonds: "◆", stars: "★", circles: "●", crosses: "✚", waves: "〜", hexagons: "⬡",
 };
 
-function CardBackPreview({ item }: { item: StoreItem }) {
+function CardBackPreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
   const colors = (item.backColors?.slice(0, 2) ?? [item.previewColor, item.previewColor + "88"]) as [string, string];
   const accent = item.backAccent ?? Colors.gold;
   const rarity = item.rarity;
   return (
     <LinearGradient
       colors={colors}
-      style={[previewStyles.cardShape, {
+      style={[compact ? previewStyles.cardShapeCompact : previewStyles.cardShape, {
         borderWidth: RARITY_BORDER_W[rarity] ?? 1.5,
         borderColor: (RARITY_COLOR[rarity] ?? "#95A5A6") + "AA",
       }]}
@@ -57,13 +57,13 @@ function CardBackPreview({ item }: { item: StoreItem }) {
   );
 }
 
-function CardDesignPreview({ item }: { item: StoreItem }) {
+function CardDesignPreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
   const bg = item.backColors?.[0] ?? "#FEFDF4";
   const tc = item.backColors?.[1] ?? "#333333";
   const ac = item.backColors?.[2] ?? Colors.gold;
   const rarity = item.rarity;
   return (
-    <View style={[previewStyles.cardShape, {
+    <View style={[compact ? previewStyles.cardShapeCompact : previewStyles.cardShape, {
       borderWidth: RARITY_BORDER_W[rarity] ?? 1.5,
       borderColor: (RARITY_COLOR[rarity] ?? "#95A5A6") + "AA",
       overflow: "hidden",
@@ -94,10 +94,10 @@ function CardDesignPreview({ item }: { item: StoreItem }) {
   );
 }
 
-function TablePreview({ item }: { item: StoreItem }) {
+function TablePreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
   const colors = (item.backColors ?? [item.previewColor, item.previewColor + "88"]) as [string, string];
   return (
-    <View style={[previewStyles.cardShape, {
+    <View style={[compact ? previewStyles.cardShapeCompact : previewStyles.cardShape, {
       borderWidth: RARITY_BORDER_W[item.rarity] ?? 1.5,
       borderColor: (RARITY_COLOR[item.rarity] ?? "#95A5A6") + "AA",
       overflow: "hidden",
@@ -119,31 +119,34 @@ function TablePreview({ item }: { item: StoreItem }) {
   );
 }
 
-function FramePreview({ item }: { item: StoreItem }) {
+function FramePreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
   return (
     <View style={previewStyles.centerWrap}>
-      <AvatarDisplay avatarId="avatar_default" frameId={item.id} size={70} />
+      <AvatarDisplay avatarId="avatar_default" frameId={item.id} size={compact ? 52 : 70} />
     </View>
   );
 }
 
-function AvatarPreview({ item }: { item: StoreItem }) {
+function AvatarPreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
   return (
     <View style={previewStyles.centerWrap}>
-      <AvatarDisplay avatarId={item.id} size={70} />
+      <AvatarDisplay avatarId={item.id} size={compact ? 52 : 70} />
     </View>
   );
 }
 
-function TitlePreview({ item, lang }: { item: StoreItem; lang: "es" | "en" | "pt" }) {
+function TitlePreview({ item, lang, compact }: { item: StoreItem; lang: "es" | "en" | "pt"; compact?: boolean }) {
   const color = item.previewColor;
   const localized = localizeItem(item, lang);
   const icon = (item.preview ?? "ribbon") as IconName;
   return (
     <View style={previewStyles.titleWrap}>
-      <LinearGradient colors={[color + "33", color + "11"] as [string, string]} style={previewStyles.titleBanner}>
-        <Ionicons name={icon} size={20} color={color} />
-        <Text style={[previewStyles.titleText, { color }]} numberOfLines={1}>{localized.name}</Text>
+      <LinearGradient
+        colors={[color + "33", color + "11"] as [string, string]}
+        style={compact ? previewStyles.titleBannerCompact : previewStyles.titleBanner}
+      >
+        <Ionicons name={icon} size={compact ? 14 : 20} color={color} />
+        <Text style={[compact ? previewStyles.titleTextCompact : previewStyles.titleText, { color }]} numberOfLines={1}>{localized.name}</Text>
       </LinearGradient>
     </View>
   );
@@ -177,40 +180,46 @@ function AnimatedEmoteIcon({ icon, color, delay = 0, size = 36 }: { icon: IconNa
   );
 }
 
-function EffectPreview({ item }: { item: StoreItem }) {
+function EffectPreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
   const color = item.previewColor;
   const icon = (item.preview ?? "sparkles") as IconName;
   return (
     <View style={previewStyles.centerWrap}>
-      <LinearGradient colors={[color + "55", color + "11"] as [string, string]} style={[previewStyles.effectCircle, { borderColor: color + "AA" }]}>
-        <Ionicons name={icon} size={36} color={color} />
+      <LinearGradient
+        colors={[color + "55", color + "11"] as [string, string]}
+        style={[compact ? previewStyles.effectCircleCompact : previewStyles.effectCircle, { borderColor: color + "AA" }]}
+      >
+        <Ionicons name={icon} size={compact ? 26 : 36} color={color} />
       </LinearGradient>
     </View>
   );
 }
 
-function EmotePreview({ item }: { item: StoreItem }) {
+function EmotePreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
   const color = item.previewColor;
   const icon = (item.preview ?? "happy") as IconName;
   return (
     <View style={previewStyles.centerWrap}>
-      <LinearGradient colors={[color + "44", color + "0A"] as [string, string]} style={[previewStyles.effectCircle, { borderColor: color + "88" }]}>
-        <AnimatedEmoteIcon icon={icon} color={color} />
+      <LinearGradient
+        colors={[color + "44", color + "0A"] as [string, string]}
+        style={[compact ? previewStyles.effectCircleCompact : previewStyles.effectCircle, { borderColor: color + "88" }]}
+      >
+        <AnimatedEmoteIcon icon={icon} color={color} size={compact ? 24 : 36} />
       </LinearGradient>
     </View>
   );
 }
 
-export function ItemPreview({ item, lang }: { item: StoreItem; lang: "es" | "en" | "pt" }) {
+export function ItemPreview({ item, lang, compact }: { item: StoreItem; lang: "es" | "en" | "pt"; compact?: boolean }) {
   switch (item.category) {
-    case "card_back":    return <CardBackPreview item={item} />;
-    case "card_design":  return <CardDesignPreview item={item} />;
-    case "table_design": return <TablePreview item={item} />;
-    case "avatar":       return <AvatarPreview item={item} />;
-    case "frame":        return <FramePreview item={item} />;
-    case "title":        return <TitlePreview item={item} lang={lang} />;
-    case "effect":       return <EffectPreview item={item} />;
-    case "emote":        return <EmotePreview item={item} />;
+    case "card_back":    return <CardBackPreview item={item} compact={compact} />;
+    case "card_design":  return <CardDesignPreview item={item} compact={compact} />;
+    case "table_design": return <TablePreview item={item} compact={compact} />;
+    case "avatar":       return <AvatarPreview item={item} compact={compact} />;
+    case "frame":        return <FramePreview item={item} compact={compact} />;
+    case "title":        return <TitlePreview item={item} lang={lang} compact={compact} />;
+    case "effect":       return <EffectPreview item={item} compact={compact} />;
+    case "emote":        return <EmotePreview item={item} compact={compact} />;
     default:             return null;
   }
 }
@@ -218,6 +227,10 @@ export function ItemPreview({ item, lang }: { item: StoreItem; lang: "es" | "en"
 export const previewStyles = StyleSheet.create({
   cardShape: {
     width: 78, height: 108, borderRadius: 9,
+    alignItems: "center", justifyContent: "center", position: "relative",
+  },
+  cardShapeCompact: {
+    width: 56, height: 78, borderRadius: 7,
     alignItems: "center", justifyContent: "center", position: "relative",
   },
   backPatternWrap: {
@@ -257,13 +270,25 @@ export const previewStyles = StyleSheet.create({
     width: 80, height: 80, borderRadius: 40,
     alignItems: "center", justifyContent: "center", borderWidth: 2,
   },
+  effectCircleCompact: {
+    width: 56, height: 56, borderRadius: 28,
+    alignItems: "center", justifyContent: "center", borderWidth: 2,
+  },
   titleWrap: { alignItems: "center", justifyContent: "center", width: "100%" },
   titleBanner: {
     flexDirection: "row", alignItems: "center", gap: 8,
     paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10,
     minWidth: 130, maxWidth: "100%", justifyContent: "center",
   },
+  titleBannerCompact: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    paddingHorizontal: 6, paddingVertical: 6, borderRadius: 8,
+    maxWidth: "100%", justifyContent: "center",
+  },
   titleText: {
     fontFamily: "Nunito_800ExtraBold", fontSize: 13, letterSpacing: 0.5, flexShrink: 1,
+  },
+  titleTextCompact: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 0.3, flexShrink: 1,
   },
 });

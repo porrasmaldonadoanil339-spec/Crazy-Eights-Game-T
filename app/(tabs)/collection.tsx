@@ -177,18 +177,18 @@ export default function CollectionScreen() {
         style={styles.gridItem}
       >
         <View style={styles.previewSlot}>
-          <ItemPreview item={item} lang={lang} />
+          <ItemPreview item={item} lang={lang} compact />
 
           {isEquipped && (
             <View style={[styles.equippedBadgeFloat, { backgroundColor: themeGold }]} pointerEvents="none">
-              <Ionicons name="checkmark" size={12} color="#000" />
+              <Ionicons name="checkmark" size={10} color="#000" />
             </View>
           )}
 
           {!isOwned && (
             <View style={styles.lockOverlay} pointerEvents="none">
               <View style={[styles.lockCircle, { backgroundColor: rarityColor + "EE", borderColor: rarityColor }]}>
-                <Ionicons name="lock-closed" size={22} color="#fff" />
+                <Ionicons name="lock-closed" size={16} color="#fff" />
               </View>
             </View>
           )}
@@ -242,38 +242,41 @@ export default function CollectionScreen() {
         </View>
       </View>
 
-      <FlatList
-        horizontal
-        data={CATEGORIES}
-        keyExtractor={(c) => c.id}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.catRow}
-        renderItem={({ item: cat }) => {
-          const isActive = activeCat === cat.id;
-          return (
-            <Pressable
-              onPress={() => setActiveCat(cat.id)}
-              style={[
-                styles.catBtn,
-                { backgroundColor: theme.surface, borderColor: theme.border },
-                isActive && { borderColor: themeGold, backgroundColor: themeGold + "22" },
-              ]}
-            >
-              <Ionicons name={cat.icon} size={16} color={isActive ? themeGold : theme.textMuted} />
-              <Text style={[styles.catLabel, { color: isActive ? themeGold : theme.textMuted }]}>
-                {T(cat.labelKey as TranslationKey)}
-              </Text>
-            </Pressable>
-          );
-        }}
-      />
+      <View style={[styles.catBarWrap, { backgroundColor: isDark ? "rgba(6,18,9,0.95)" : "rgba(232,245,226,0.95)", borderBottomColor: theme.border }]}>
+        <FlatList
+          horizontal
+          data={CATEGORIES}
+          keyExtractor={(c) => c.id}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.catRow}
+          renderItem={({ item: cat }) => {
+            const isActive = activeCat === cat.id;
+            return (
+              <Pressable
+                onPress={() => setActiveCat(cat.id)}
+                style={[
+                  styles.catBtn,
+                  { backgroundColor: theme.surface, borderColor: theme.border },
+                  isActive && { borderColor: themeGold, backgroundColor: themeGold + "22" },
+                ]}
+              >
+                <Ionicons name={cat.icon} size={16} color={isActive ? themeGold : theme.textMuted} />
+                <Text style={[styles.catLabel, { color: isActive ? themeGold : theme.textMuted }]}>
+                  {T(cat.labelKey as TranslationKey)}
+                </Text>
+              </Pressable>
+            );
+          }}
+        />
+      </View>
 
       <FlatList
         data={items}
         keyExtractor={(i) => i.id}
-        numColumns={2}
+        numColumns={4}
+        key="grid-4col"
         renderItem={renderItem}
-        columnWrapperStyle={{ gap: 12 }}
+        columnWrapperStyle={styles.colWrapper}
         contentContainerStyle={styles.gridContent}
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
@@ -339,64 +342,71 @@ const styles = StyleSheet.create({
     borderRadius: 10, borderWidth: 1,
   },
   counterText: { fontFamily: "Nunito_800ExtraBold", fontSize: 13 },
-  catRow: { paddingHorizontal: 16, gap: 8, paddingBottom: 12 },
-  catBtn: {
-    flexDirection: "row", alignItems: "center", gap: 6,
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 10, borderWidth: 1,
-    height: 36,
+  catBarWrap: {
+    borderBottomWidth: 1,
+    paddingBottom: 6,
+    marginBottom: 6,
+    zIndex: 5,
   },
-  catLabel: { fontFamily: "Nunito_700Bold", fontSize: 12 },
-  gridContent: { paddingHorizontal: 16, paddingBottom: 100, gap: 16 },
+  catRow: { paddingHorizontal: 12, gap: 6, paddingBottom: 4 },
+  catBtn: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    paddingHorizontal: 10, paddingVertical: 7,
+    borderRadius: 8, borderWidth: 1,
+    height: 32,
+  },
+  catLabel: { fontFamily: "Nunito_700Bold", fontSize: 11 },
+  gridContent: { paddingHorizontal: 8, paddingBottom: 100, paddingTop: 6, gap: 14 },
+  colWrapper: { gap: 6, justifyContent: "flex-start" },
   gridItem: {
-    flex: 1, paddingVertical: 8, paddingHorizontal: 4,
+    flex: 1, paddingVertical: 4, paddingHorizontal: 2,
     alignItems: "center",
-    maxWidth: "48%",
-    gap: 8,
+    maxWidth: "25%",
+    gap: 4,
   },
   previewSlot: {
-    minHeight: 120,
+    minHeight: 86,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
   },
-  itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, textAlign: "center", marginTop: 2 },
+  itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, textAlign: "center", marginTop: 2 },
   rarityChip: {
-    paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1,
+    paddingHorizontal: 5, paddingVertical: 1, borderRadius: 5, borderWidth: 1,
   },
-  rarityChipText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 0.5 },
+  rarityChipText: { fontFamily: "Nunito_800ExtraBold", fontSize: 7, letterSpacing: 0.4 },
   equippedBadgeFloat: {
-    position: "absolute", top: -4, right: 4,
-    width: 22, height: 22, borderRadius: 11,
+    position: "absolute", top: -2, right: 2,
+    width: 18, height: 18, borderRadius: 9,
     alignItems: "center", justifyContent: "center",
-    borderWidth: 2, borderColor: "#000",
+    borderWidth: 1.5, borderColor: "#000",
     zIndex: 10,
   },
   equippedTextLine: {
-    fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 1, marginTop: 2,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 7, letterSpacing: 0.8, marginTop: 1,
   },
   lockOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(0,0,0,0.55)",
-    borderRadius: 12,
+    borderRadius: 10,
   },
   lockCircle: {
-    width: 44, height: 44, borderRadius: 22,
+    width: 32, height: 32, borderRadius: 16,
     alignItems: "center", justifyContent: "center",
-    borderWidth: 2,
+    borderWidth: 1.5,
   },
   exclusiveBadge: {
-    flexDirection: "row", alignItems: "center", gap: 3,
-    paddingHorizontal: 5, paddingVertical: 2, borderRadius: 5,
+    flexDirection: "row", alignItems: "center", gap: 2,
+    paddingHorizontal: 3, paddingVertical: 1, borderRadius: 4,
     backgroundColor: "#D4AF37",
     maxWidth: "100%",
   },
   exclusiveBadgeText: {
-    fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: "#000",
-    letterSpacing: 0.3,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 6, color: "#000",
+    letterSpacing: 0.2,
   },
   emptyWrap: { alignItems: "center", padding: 40, gap: 10 },
   emptyText: { fontFamily: "Nunito_700Bold", fontSize: 13 },
