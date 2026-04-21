@@ -1,0 +1,274 @@
+Por favor, corregir e implementar EXACTAMENTE lo siguiente:
+
+========================
+🟣 TIENDA
+=========
+
+1. VISUAL DE ÍTEMS (CRÍTICO)
+   PROBLEMA:
+
+* El primer ítem se ve CORTADO
+* No se aprovecha todo el espacio disponible
+
+SOLUCIÓN:
+✔ El ítem debe ocupar TODO el espacio de su recuadro
+✔ No debe estar recortado en ninguna parte
+✔ Ajustar padding/margin para que se vea COMPLETO
+
+APLICAR:
+✔ A TODOS los ítems de la tienda
+✔ No solo al primero
+
+---
+
+2. TIPOS DE ÍTEMS (IMPORTANTE)
+   Los 6 ítems diarios pueden ser:
+
+✔ Cartas
+✔ Dorsos
+✔ Mesas
+✔ Avatares
+✔ Marcos
+✔ Efectos
+✔ Títulos
+
+REGLAS:
+✔ Debe haber VARIEDAD (mezclar tipos)
+✔ NO repetir ítems ya obtenidos
+✔ Rotación cada 24 horas
+
+---
+
+3. NOMBRE DEL ÍTEM
+   PROBLEMA:
+
+* El texto estorba la visual
+
+SOLUCIÓN:
+✔ OCULTAR nombre del ítem en la tienda
+✔ Mostrar solo la imagen
+
+OBJETIVO:
+✔ Mejor visual antes de comprar
+
+---
+
+4. EMOTES EN TIENDA
+   PROBLEMA:
+
+* Se ven ovalados
+* No se aprecia bien el diseño
+
+SOLUCIÓN:
+✔ ELIMINAR el óvalo completamente
+✔ Mostrar imagen completa del emote
+
+✔ Mostrar animación del emote en vivo
+✔ Debe verse igual que en partida
+
+REGLAS:
+✔ Mostrar SOLO 3 emotes
+✔ Cambian cada día
+✔ No repetir
+
+---
+
+5. COFRES (COMPRA)
+   AL PRESIONAR:
+
+✔ Mostrar:
+“¿Deseas comprar?”
+
+AL ACEPTAR:
+
+SI NO tiene fichas:
+✔ Mostrar: “Fichas insuficientes”
+✔ NO sonido
+✔ NO compra
+
+SI tiene fichas:
+✔ Realizar compra correctamente
+
+---
+
+6. REGALO DIARIO
+   ✔ NO mostrar recompensa antes (sorpresa)
+
+FLUJO:
+
+1. Presionar regalo
+2. Mostrar:
+   “Se agregó un regalo a tu inventario”
+3. Aparece como cofre
+
+AL ABRIR:
+✔ Animación
+✔ Sonido
+✔ Da 1 ítem aleatorio
+
+---
+
+7. DISEÑO DE DORSOS (PUNTOS / EFECTOS)
+   PROBLEMA:
+
+* Los “puntos” del diseño no se ven bien
+
+SOLUCIÓN:
+✔ Mantener los puntos (estilo del juego)
+✔ Mejorarlos visualmente:
+
+✔ Agregar brillo (glow suave)
+✔ Agregar animación ligera (movimiento o parpadeo)
+✔ Mejorar contraste
+
+OBJETIVO:
+✔ Que se vean más premium
+✔ Que llamen la atención
+
+---
+
+========================
+🔶 PASE DE BATALLA PREMIUM
+==========================
+
+PROBLEMA:
+
+* Recompensas poco atractivas
+
+SOLUCIÓN:
+✔ Cambiar recompensas usando:
+
+* Cartas
+* Dorsos
+* Mesas
+* Emotes
+* Marcos
+* Efectos
+* Títulos
+* Cofres
+
+✔ Deben ser llamativas
+✔ Debe sentirse que vale la pena pagar
+
+---
+
+========================
+🔴 MODO CLASIFICATORIA
+======================
+
+1. BUSCAR RIVAL (PERFIL)
+   ✔ Mientras busca rival:
+
+✔ Mostrar avatar del jugador
+✔ Mostrar nombre/perfil
+
+OBJETIVO:
+✔ Simular juego online
+
+---
+
+2. DISEÑO Y EFECTOS
+   PROBLEMA:
+
+* Clasificatoria se ve peor
+
+SOLUCIÓN:
+✔ Aplicar TODOS los efectos de otros modos
+✔ Misma calidad visual
+✔ Mismas animaciones
+
+✔ Debe verse igual o mejor
+
+---
+
+3. CARTAS (TAMAÑO)
+   PROBLEMA:
+
+* Cartas muy pequeñas
+
+SOLUCIÓN:
+✔ Aumentar tamaño de cartas
+✔ Usar tamaño de otros modos
+
+✔ Mejor visibilidad
+
+---
+
+========================
+🟢 PARTIDAS
+===========
+
+1. SCROLL DEL MAZO (CRÍTICO)
+   ✔ Ubicación: parte inferior
+
+✔ Agregar scroll horizontal:
+
+* Deslizar derecha
+* Deslizar izquierda
+
+✔ Mostrar TODO el mazo
+✔ Funciona en TODOS los modos
+
+✔ Movimiento fluido
+✔ Cartas alineadas
+
+---
+
+2. TEXTOS DE ACCIÓN
+   PROBLEMA:
+
+* Confunde jugador con rival
+
+SOLUCIÓN:
+
+SI jugador:
+✔ “Robaste carta”
+✔ “Jugaste carta”
+
+SI rival:
+✔ “El rival robó carta”
+✔ “El rival jugó carta”
+
+---
+
+3. EMOTES (INTERFAZ)
+   PROBLEMA:
+
+* Sistema actual no es bueno
+
+SOLUCIÓN:
+✔ Sistema tipo Clash Royale
+
+AL PRESIONAR:
+✔ Abrir panel de emotes
+
+✔ Mostrar:
+
+* Emotes visibles
+* Animados
+
+AL SELECCIONAR:
+✔ Se reproduce animación en partida
+
+---
+
+4. ANIMACIÓN DE EMOTES
+   ✔ Siempre en movimiento
+   ✔ Animación fluida
+   ✔ Igual que en tienda
+
+❌ No usar imágenes estáticas
+
+---
+
+========================
+🎯 OBJETIVO FINAL
+=================
+
+✔ Mejorar visual de tienda
+✔ Hacer el juego más profesional
+✔ Mejorar experiencia en partidas
+✔ Hacer el pase premium atractivo
+✔ Mejorar efectos y animaciones
+
+Aplicar TODO exactamente como se indica.

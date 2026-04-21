@@ -414,7 +414,17 @@ function StoreItemCard({ item, owned, isEquipped, isDailyHot, onPress, onEquip, 
               {[0,1,2].map(row => (
                 <View key={row} style={{ flexDirection: "row", gap: 3 }}>
                   {[0,1,2,3].map(col => (
-                    <Text key={col} style={{ fontSize: 7, color: item.backAccent ?? Colors.gold, opacity: 0.4 }}>
+                    <Text
+                      key={col}
+                      style={{
+                        fontSize: 9,
+                        color: item.backAccent ?? Colors.gold,
+                        opacity: 0.85,
+                        textShadowColor: (item.backAccent ?? Colors.gold) + "cc",
+                        textShadowRadius: 4,
+                        textShadowOffset: { width: 0, height: 0 },
+                      }}
+                    >
                       {PATTERN_SYMBOL[item.backPattern ?? "diamonds"] ?? "◆"}
                     </Text>
                   ))}
@@ -480,8 +490,7 @@ function StoreItemCard({ item, owned, isEquipped, isDailyHot, onPress, onEquip, 
             <Ionicons name={item.preview as any} size={28} color={owned ? item.previewColor : item.previewColor + "aa"} />
           </View>
         )}
-        <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={1}>{localized.name}</Text>
-        <Text style={[styles.itemDesc, { color: theme.textMuted }]} numberOfLines={2}>{localized.description}</Text>
+        <View style={{ flex: 1 }} />
         <View style={styles.itemFooter}>
           {owned ? (
             <EquipBadge isEquipped={isEquipped} onEquip={onEquip} T={T} />
@@ -951,11 +960,9 @@ function DailyShopCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
         <View style={[styles.rarityBadgeSmall, { backgroundColor: rarityColor + "22", borderColor: rarityColor + "66" }]}>
           <Text style={[styles.rarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
         </View>
-        <View style={styles.shopPreviewSlot}>
+        <View style={styles.shopPreviewSlotLarge}>
           <ItemPreview item={item} lang={lang} />
         </View>
-        <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={1}>{localized.name}</Text>
-        <Text style={[styles.itemDesc, { color: theme.textMuted }]} numberOfLines={2}>{localized.description}</Text>
         <View style={styles.itemFooter}>
           {owned ? (
             <EquipBadge isEquipped={isEquipped} onEquip={onEquip} T={T} />
@@ -1110,6 +1117,7 @@ const styles = StyleSheet.create({
   },
   iconPreview: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center", marginBottom: 8 },
   shopPreviewSlot: { height: 116, width: "100%", alignItems: "center", justifyContent: "center", marginBottom: 8, marginTop: 4 },
+  shopPreviewSlotLarge: { flex: 1, minHeight: 130, width: "100%", alignItems: "center", justifyContent: "center", marginBottom: 6, marginTop: 2, paddingHorizontal: 2 },
   itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: Colors.text, marginBottom: 3 },
   itemDesc: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textMuted, lineHeight: 14, flex: 1 },
   itemFooter: { marginTop: 6 },
