@@ -11,6 +11,7 @@ import { Colors, LightColors } from "@/constants/colors";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/context/ProfileContext";
 import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS, EMOTES, localizeItem } from "@/lib/storeItems";
+import { ItemPreview } from "@/components/ItemPreview";
 import { playSound } from "@/lib/sounds";
 import { useT } from "@/hooks/useT";
 import { router } from "expo-router";
@@ -946,8 +947,8 @@ function DailyShopCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
         <View style={[styles.rarityBadgeSmall, { backgroundColor: rarityColor + "22", borderColor: rarityColor + "66" }]}>
           <Text style={[styles.rarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
         </View>
-        <View style={[styles.iconPreview, { backgroundColor: item.previewColor + "33" }]}>
-          <Ionicons name={item.preview as any} size={28} color={item.previewColor} />
+        <View style={styles.shopPreviewSlot}>
+          <ItemPreview item={item} lang={lang} />
         </View>
         <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={1}>{localized.name}</Text>
         <Text style={[styles.itemDesc, { color: theme.textMuted }]} numberOfLines={2}>{localized.description}</Text>
@@ -1104,6 +1105,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.06)",
   },
   iconPreview: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center", marginBottom: 8 },
+  shopPreviewSlot: { height: 116, width: "100%", alignItems: "center", justifyContent: "center", marginBottom: 8, marginTop: 4 },
   itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: Colors.text, marginBottom: 3 },
   itemDesc: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textMuted, lineHeight: 14, flex: 1 },
   itemFooter: { marginTop: 6 },
