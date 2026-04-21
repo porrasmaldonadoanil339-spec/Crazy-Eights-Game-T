@@ -62,7 +62,12 @@ export default function AchievementsScreen() {
 
   const handleClaimAchievement = async (id: AchievementId) => {
     await playSound("achievement");
-    claimAchievementReward(id);
+    const result = claimAchievementReward(id);
+    if (result === "inventory_full") {
+      showToast(T("dailyChestInventoryFull"));
+      return;
+    }
+    if (result !== "ok") return;
     const a = ACHIEVEMENTS.find((ac) => ac.id === id);
     if (a) {
       setRewardPopup({
@@ -111,7 +116,12 @@ export default function AchievementsScreen() {
 
   const handleClaimBP = async (tier: number, track: "free" | "premium" = "free") => {
     await playSound("achievement");
-    claimBattlePassTier(tier, track);
+    const result = claimBattlePassTier(tier, track);
+    if (result === "inventory_full") {
+      showToast(T("dailyChestInventoryFull"));
+      return;
+    }
+    if (result !== "ok") return;
     const bp = seasonTiers.find((t) => t.tier === tier);
     const free = getFreeReward(tier);
     const isCoins = bp?.rewardType === "coins" && typeof bp.rewardValue === "number";
@@ -225,6 +235,7 @@ export default function AchievementsScreen() {
           T={T}
           claimLabel={claimLabel}
           setRewardPopup={setRewardPopup}
+          showToast={showToast}
         />
       )}
       {activeTab !== "playerpath" && (
@@ -810,15 +821,16 @@ function SeasonThemeCard({
 }
 
 function PlayerPathView({
-  profile, themeColors, themeGold, claimPlayerPathLevel, T, claimLabel, setRewardPopup,
+  profile, themeColors, themeGold, claimPlayerPathLevel, T, claimLabel, setRewardPopup, showToast,
 }: {
   profile: any;
   themeColors: any;
   themeGold: string;
-  claimPlayerPathLevel: (level: number) => boolean;
+  claimPlayerPathLevel: (level: number) => "ok" | "inventory_full" | "fail";
   T: (k: any) => string;
   claimLabel: string;
   setRewardPopup: (s: any) => void;
+  showToast: (msg: string) => void;
 }) {
   const progress = getPlayerPathProgress(profile.totalXp);
   const claimedSet = useMemo(
@@ -837,8 +849,12 @@ function PlayerPathView({
   const initialIndex = Math.max(0, Math.min(MAX_PLAYER_PATH_LEVEL - 1, progress.level - 2));
 
   const handleClaim = (lvl: number) => {
-    const ok = claimPlayerPathLevel(lvl);
-    if (!ok) return;
+    const result = claimPlayerPathLevel(lvl);
+    if (result === "inventory_full") {
+      showToast(T("dailyChestInventoryFull"));
+      return;
+    }
+    if (result !== "ok") return;
     const data = getPlayerPathLevelData(lvl);
     const r = data.reward;
     setRewardPopup({

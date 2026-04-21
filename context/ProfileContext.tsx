@@ -274,7 +274,7 @@ interface ProfileContextValue {
   claimDailyShopFree: (itemId: string) => boolean;
   recordFichasModePlay: () => void;
   fichasModePlaysRemaining: () => number;
-  claimPlayerPathLevel: (level: number) => boolean;
+  claimPlayerPathLevel: (level: number) => "ok" | "inventory_full" | "fail";
   addXp: (amount: number) => void;
   buyItem: (item: StoreItem) => boolean;
   recordGameResult: (params: {
@@ -291,11 +291,11 @@ interface ProfileContextValue {
     eventId?: string | null;
   }) => void;
   updateAchievementProgress: (id: AchievementId, amount: number) => void;
-  claimBattlePassTier: (tier: number, track?: "free" | "premium") => void;
+  claimBattlePassTier: (tier: number, track?: "free" | "premium") => "ok" | "inventory_full" | "fail";
   isPremiumBattlePassActive: boolean;
   unlockPremiumBattlePass: () => boolean;
   premiumBattlePassCost: number;
-  claimAchievementReward: (id: AchievementId) => void;
+  claimAchievementReward: (id: AchievementId) => "ok" | "inventory_full" | "fail";
   claimDailyReward: () => DailyReward | null;
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
@@ -625,27 +625,33 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     magic: 150, giant: 350, event: 280, supreme: 800, fichas: 100,
   };
 
-  const claimPlayerPathLevel = useCallback((level: number): boolean => {
-    let success = false;
+  const claimPlayerPathLevel = useCallback((level: number): "ok" | "inventory_full" | "fail" => {
+    let result: "ok" | "inventory_full" | "fail" = "fail";
     update((p) => {
       const claimed = p.claimedPlayerPathLevels ?? [];
       if (claimed.includes(level)) return p;
       const reached = getPlayerPathLevel(p.totalXp);
       if (level > reached || level < 1 || level > MAX_PLAYER_PATH_LEVEL) return p;
       const reward = getPlayerPathReward(level);
-      success = true;
+      // Block claim if reward is a chest and inventory is full — keep reward pending.
+      if (reward.type === "chest") {
+        const inv = p.chestInventory ?? [];
+        if (inv.length >= CHEST_INVENTORY_LIMIT) {
+          result = "inventory_full";
+          return p;
+        }
+      }
+      result = "ok";
       let next: PlayerProfile = { ...p, claimedPlayerPathLevels: [...claimed, level] };
       if (reward.type === "coins") next = { ...next, coins: next.coins + reward.amount };
       else if (reward.type === "fichas") next = { ...next, fichas: (next.fichas ?? 0) + reward.amount };
       else if (reward.type === "chest") {
         const inv = next.chestInventory ?? [];
-        if (inv.length < CHEST_INVENTORY_LIMIT) {
-          next = { ...next, chestInventory: [...inv, createChest(reward.chestType, "achievement")] };
-        }
+        next = { ...next, chestInventory: [...inv, createChest(reward.chestType, "achievement")] };
       }
       return next;
     });
-    return success;
+    return result;
   }, [update]);
 
   const buyChestWithFichas = useCallback((chestType: ChestType): boolean => {
@@ -768,11 +774,27 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     });
   }, [update]);
 
-  const claimAchievementReward = useCallback((id: AchievementId) => {
+  const claimAchievementReward = useCallback((id: AchievementId): "ok" | "inventory_full" | "fail" => {
+    let result: "ok" | "inventory_full" | "fail" = "fail";
     update((p) => {
       const achievement = ACHIEVEMENTS.find((a) => a.id === id);
       const ach = p.achievementProgress.find((a) => a.id === id);
       if (!achievement || !ach || !ach.unlocked || ach.claimedReward) return p;
+      const rarityToChest: Record<string, ChestType | undefined> = {
+        rare: "common",
+        epic: "rare",
+        legendary: "epic",
+      };
+      const chestType = rarityToChest[achievement.rarity];
+      // Block claim if a chest reward would be lost — keep reward pending.
+      if (chestType) {
+        const inv = p.chestInventory ?? [];
+        if (inv.length >= CHEST_INVENTORY_LIMIT) {
+          result = "inventory_full";
+          return p;
+        }
+      }
+      result = "ok";
       const newProgress = p.achievementProgress.map((ap) =>
         ap.id === id ? { ...ap, claimedReward: true } : ap
       );
@@ -782,23 +804,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         totalXp: p.totalXp + achievement.xpReward,
         achievementProgress: newProgress,
       };
-      const rarityToChest: Record<string, ChestType | undefined> = {
-        rare: "common",
-        epic: "rare",
-        legendary: "epic",
-      };
-      const chestType = rarityToChest[achievement.rarity];
       if (chestType) {
         const inventory = next.chestInventory ?? [];
-        if (inventory.length < 10) {
-          next = { ...next, chestInventory: [...inventory, createChest(chestType, "achievement")] };
-        }
+        next = { ...next, chestInventory: [...inventory, createChest(chestType, "achievement")] };
       }
       return next;
     });
+    return result;
   }, [update]);
 
-  const claimBattlePassTier = useCallback((tier: number, track: "free" | "premium" = "free") => {
+  const claimBattlePassTier = useCallback((tier: number, track: "free" | "premium" = "free"): "ok" | "inventory_full" | "fail" => {
+    let result: "ok" | "inventory_full" | "fail" = "fail";
     update((p) => {
       const seasonTiers = getBattlePassTiers(getCurrentSeason().number);
       const bpTier = seasonTiers.find((t) => t.tier === tier);
@@ -809,6 +825,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (track === "free") {
         if (p.claimedBattlePassTiers.includes(tier)) return p;
         const free = getFreeReward(tier);
+        if (free.type === "chest" && free.chestType) {
+          const inv = p.chestInventory ?? [];
+          if (inv.length >= CHEST_INVENTORY_LIMIT) {
+            result = "inventory_full";
+            return p;
+          }
+        }
+        result = "ok";
         let next = {
           ...p,
           claimedBattlePassTiers: [...p.claimedBattlePassTiers, tier],
@@ -816,9 +840,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         };
         if (free.type === "chest" && free.chestType) {
           const inv = next.chestInventory ?? [];
-          if (inv.length < 10) {
-            next = { ...next, chestInventory: [...inv, createChest(free.chestType, "mission")] };
-          }
+          next = { ...next, chestInventory: [...inv, createChest(free.chestType, "mission")] };
         }
         return next;
       }
@@ -830,6 +852,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const premiumClaimed = p.claimedBattlePassPremiumTiers ?? [];
       if (premiumClaimed.includes(tier)) return p;
 
+      if (bpTier.rewardType === "chest") {
+        const inv = p.chestInventory ?? [];
+        if (inv.length >= CHEST_INVENTORY_LIMIT) {
+          result = "inventory_full";
+          return p;
+        }
+      }
+      result = "ok";
       let next: PlayerProfile = {
         ...p,
         claimedBattlePassPremiumTiers: [...premiumClaimed, tier],
@@ -846,12 +876,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (bpTier.rewardType === "chest") {
         const chestT = bpTier.rewardValue as ChestType;
         const inv = next.chestInventory ?? [];
-        if (inv.length < 10) {
-          next = { ...next, chestInventory: [...inv, createChest(chestT, "mission")] };
-        }
+        next = { ...next, chestInventory: [...inv, createChest(chestT, "mission")] };
       }
       return next;
     });
+    return result;
   }, [update]);
 
   const PREMIUM_BP_COST = 500;
