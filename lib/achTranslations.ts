@@ -1954,8 +1954,18 @@ const ach: Record<string, { es: string; en: string; pt: string }> = {
   secret_ext_69_d: { es: "Desbloquea el secreto número 3450.", en: "Unlock secret number 3450.", pt: "Desbloqueie o segredo número 3450." },
   secret_ext_70_t: { es: "Secreto 3500", en: "Secret 3500", pt: "Segredo 3500" },
   secret_ext_70_d: { es: "Desbloquea el secreto número 3500.", en: "Unlock secret number 3500.", pt: "Desbloqueie o segredo número 3500." },
-  event_versatile_t: { es: "Versátil de Eventos", en: "Event Versatile", pt: "Versátil de Eventos" },
-  event_versatile_d: { es: "Gana al menos 1 partida en 3 eventos distintos.", en: "Win at least 1 match in 3 different events.", pt: "Vença ao menos 1 partida em 3 eventos diferentes." },
+  event_any_win_t:      { es: "Cazador de Eventos",  en: "Event Hunter",        pt: "Caçador de Eventos" },
+  event_any_win_d:      { es: "Gana 5 partidas en cualquier evento especial.", en: "Win 5 games in any special event.", pt: "Vença 5 partidas em qualquer evento especial." },
+  event_speed_win_t:    { es: "Reflejos Veloces",    en: "Quick Reflexes",      pt: "Reflexos Rápidos" },
+  event_speed_win_d:    { es: "Gana 3 eventos de Velocidad Extrema.", en: "Win 3 Extreme Speed events.", pt: "Vença 3 eventos de Velocidade Extrema." },
+  event_random_win_t:   { es: "Caos Domado",         en: "Tamed Chaos",         pt: "Caos Domado" },
+  event_random_win_d:   { es: "Gana 3 eventos de Cartas Aleatorias.", en: "Win 3 Random Cards events.", pt: "Vença 3 eventos de Cartas Aleatórias." },
+  event_double_win_t:   { es: "Doble o Nada",        en: "Double or Nothing",   pt: "Dobro ou Nada" },
+  event_double_win_d:   { es: "Gana 3 eventos de Doble Efecto.", en: "Win 3 Double Effect events.", pt: "Vença 3 eventos de Efeito Duplo." },
+  event_survival_win_t: { es: "Superviviente",       en: "Survivor",            pt: "Sobrevivente" },
+  event_survival_win_d: { es: "Gana 3 eventos de Supervivencia.", en: "Win 3 Survival events.", pt: "Vença 3 eventos de Sobrevivência." },
+  event_versatile_t:    { es: "Versátil de Eventos", en: "Event Versatile",     pt: "Versátil de Eventos" },
+  event_versatile_d:    { es: "Gana al menos 1 partida en 3 eventos distintos.", en: "Win at least 1 match in 3 different events.", pt: "Vença ao menos 1 partida em 3 eventos diferentes." },
 };
 
 function get3(obj: { es: string; en: string; pt: string } | undefined, lang: Lang): string {
