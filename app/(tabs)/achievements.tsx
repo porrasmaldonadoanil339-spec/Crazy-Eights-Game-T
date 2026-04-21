@@ -86,15 +86,7 @@ export default function AchievementsScreen() {
   const seasonNumber = currentSeason.number;
   const seasonTiers = useMemo(() => getBattlePassTiers(seasonNumber), [seasonNumber]);
 
-  const handleUnlockPremiumBP = async () => {
-    await playSound("achievement");
-    if ((profile.fichas ?? 0) < premiumBattlePassCost) {
-      Alert.alert(
-        T("notEnoughFichas" as any) || "Fichas insuficientes",
-        `${T("needFichasMsg" as any) || "Necesitas"} ${premiumBattlePassCost} ${T("fichas" as any) || "fichas"} ${T("toUnlockPremium" as any) || "para desbloquear el Pase Premium"}.`,
-      );
-      return;
-    }
+  const handleUnlockPremiumBP = () => {
     Alert.alert(
       T("confirmPremiumTitle" as any) || "Desbloquear Pase Premium",
       `${T("confirmPremiumBody" as any) || "Vas a gastar"} ${premiumBattlePassCost} ${T("fichas" as any) || "fichas"} ${T("forCurrentSeason" as any) || "para activar el Pase Premium de la temporada actual"}.`,
@@ -103,10 +95,17 @@ export default function AchievementsScreen() {
         {
           text: T("confirm" as any) || "Confirmar",
           onPress: async () => {
+            if ((profile.fichas ?? 0) < premiumBattlePassCost) {
+              await playSound("error");
+              showToast(T("notEnoughFichas" as any) || "Fichas insuficientes");
+              return;
+            }
             const ok = unlockPremiumBattlePass();
             if (ok) {
               await playSound("purchase");
               showToast(T("premiumUnlocked" as any) || "¡Pase Premium activo!");
+            } else {
+              await playSound("error");
             }
           },
         },

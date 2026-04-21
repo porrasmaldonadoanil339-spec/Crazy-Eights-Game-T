@@ -35,7 +35,8 @@ const RARITY_SORT_ORDER: Record<string, number> = {
   common: 0,
   rare: 1,
   epic: 2,
-  legendary: 3,
+  event: 3,
+  legendary: 4,
 };
 
 function applyPriceMultiplier(item: StoreItem): StoreItem {
@@ -1454,23 +1455,39 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
   const today = new Date().toDateString();
   const purchasesToday = profile.lastChestPurchaseDate === today ? (profile.chestPurchasesToday ?? 0) : 0;
   const dailyRemaining = Math.max(0, 3 - purchasesToday);
-  const doPurchase = (type: ShopChestType) => {
-    const ok = buyChestWithFichas(type);
-    if (ok) showToast(`¡Cofre ${NAMES[type]} comprado!`);
-    else showToast(`No se pudo comprar`);
-  };
-  const handleBuy = async (type: ShopChestType) => {
-    await playSound("purchase");
+  const doPurchase = async (type: ShopChestType) => {
     const balance = profile.fichas ?? 0;
-    if (balance < PRICES[type]) { showToast(`Fichas insuficientes`); return; }
-    if ((profile.chestInventory ?? []).length >= 10) { showToast(`Inventario lleno`); return; }
-    if (dailyRemaining <= 0) { showToast(`Límite diario alcanzado (3/día)`); return; }
+    if (balance < PRICES[type]) {
+      await playSound("error");
+      showToast(`Fichas insuficientes`);
+      return;
+    }
+    if ((profile.chestInventory ?? []).length >= 10) {
+      await playSound("error");
+      showToast(`Inventario lleno`);
+      return;
+    }
+    if (dailyRemaining <= 0) {
+      await playSound("error");
+      showToast(`Límite diario alcanzado (3/día)`);
+      return;
+    }
+    const ok = buyChestWithFichas(type);
+    if (ok) {
+      await playSound("purchase");
+      showToast(`¡Cofre ${NAMES[type]} comprado!`);
+    } else {
+      await playSound("error");
+      showToast(`No se pudo comprar`);
+    }
+  };
+  const handleBuy = (type: ShopChestType) => {
     Alert.alert(
       `Comprar cofre ${NAMES[type]}`,
       `¿Confirmar compra por ${PRICES[type]} fichas?\n\nCompras restantes hoy: ${dailyRemaining}/3`,
       [
         { text: "Cancelar", style: "cancel" },
-        { text: "Comprar", style: "default", onPress: () => doPurchase(type) },
+        { text: "Comprar", style: "default", onPress: () => { doPurchase(type); } },
       ],
     );
   };

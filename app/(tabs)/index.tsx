@@ -297,21 +297,32 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, onClose }: 
   const T = useT();
   const sc = useSharedValue(0.7);
   const chestPulse = useSharedValue(1);
+  const chestShake = useSharedValue(0);
+  const revealScale = useSharedValue(0);
+  const [revealed, setRevealed] = useState(false);
+  const [opening, setOpening] = useState(false);
+
   useEffect(() => {
     if (visible) {
       sc.value = withSpring(1, { damping: 12 });
-      if (reward?.chestType) {
-        chestPulse.value = withRepeat(withSequence(
-          withTiming(1.12, { duration: 700, easing: Easing.inOut(Easing.sin) }),
-          withTiming(1, { duration: 700, easing: Easing.inOut(Easing.sin) })
-        ), -1, true);
-      }
+      setRevealed(false);
+      setOpening(false);
+      revealScale.value = 0;
+      chestPulse.value = withRepeat(withSequence(
+        withTiming(1.12, { duration: 700, easing: Easing.inOut(Easing.sin) }),
+        withTiming(1, { duration: 700, easing: Easing.inOut(Easing.sin) })
+      ), -1, true);
     } else {
       sc.value = 0.7;
     }
   }, [visible]);
+
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
-  const chestStyle = useAnimatedStyle(() => ({ transform: [{ scale: chestPulse.value }] }));
+  const chestStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: chestPulse.value }, { translateX: chestShake.value }],
+  }));
+  const revealStyle = useAnimatedStyle(() => ({ transform: [{ scale: revealScale.value }] }));
+
   if (!reward) return null;
 
   const isChestDay = !!reward.chestType;
@@ -320,57 +331,93 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, onClose }: 
   const gradColors: [string, string] = isChestDay
     ? (reward.chestType === "legendary" ? ["#1a1200", "#2a1f00"] : reward.chestType === "epic" ? ["#1a0a2e", "#0a0520"] : reward.chestType === "rare" ? ["#0a1628", "#051020"] : ["#1a0f08", "#0d0806"])
     : ["#1a2e10", "#0a1a08"];
+  const mysteryColor = "#D4AF37";
+
+  const handleOpen = () => {
+    if (opening || revealed || blocked) return;
+    setOpening(true);
+    chestShake.value = withSequence(
+      withTiming(-8, { duration: 70 }),
+      withTiming(8, { duration: 70 }),
+      withTiming(-6, { duration: 70 }),
+      withTiming(6, { duration: 70 }),
+      withTiming(-3, { duration: 70 }),
+      withTiming(0, { duration: 70 }),
+    );
+    setTimeout(() => {
+      setRevealed(true);
+      revealScale.value = withSpring(1, { damping: 8, stiffness: 120 });
+      setOpening(false);
+    }, 480);
+  };
 
   return (
     <Modal transparent animationType="fade" visible={visible}>
       <View style={styles.dailyOverlay}>
         <Animated.View style={[styles.dailyModal, animStyle]}>
-          <LinearGradient colors={gradColors} style={styles.dailyGrad}>
+          <LinearGradient colors={revealed ? gradColors : ["#1a1200", "#2a1f00"]} style={styles.dailyGrad}>
             <Text style={styles.dailyTitle}>{T("dailyReward")}</Text>
-            {isChestDay ? (
-              <Animated.View style={[styles.dailyIconWrap, { borderColor: chestColor + "99", backgroundColor: chestColor + "18" }, chestStyle]}>
-                {reward.icon === "cash" ? <CoinIcon size={52} color={chestColor} /> : <Ionicons name={reward.icon as any} size={52} color={chestColor} />}
-                <View style={{ position: "absolute", bottom: -6, right: -6, backgroundColor: chestColor, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 }}>
-                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: "#000" }}>
-                    {reward.chestType === "legendary" ? "LEGENDARIO" : reward.chestType === "epic" ? "EPICO" : reward.chestType === "rare" ? "RARO" : "COMUN"}
+
+            {!revealed ? (
+              <>
+                <Animated.View style={[styles.dailyIconWrap, { borderColor: mysteryColor + "AA", backgroundColor: mysteryColor + "1A", borderWidth: 3 }, chestStyle]}>
+                  <Ionicons name="gift" size={56} color={mysteryColor} />
+                  <View style={{ position: "absolute", bottom: -6, right: -6, backgroundColor: mysteryColor, borderRadius: 14, width: 26, height: 26, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#000" }}>?</Text>
+                  </View>
+                </Animated.View>
+                <Text style={[styles.dailyLabel, { color: mysteryColor, fontSize: 16 }]}>¿Qué traerá hoy?</Text>
+                {blocked && (
+                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 13, color: "#ff8a8a", textAlign: "center", marginBottom: 4, paddingHorizontal: 8 }}>
+                    {T("dailyChestInventoryFull")}
                   </Text>
-                </View>
-              </Animated.View>
+                )}
+                <Pressable onPress={blocked ? (onClose ?? onClaim) : handleOpen} style={styles.dailyClaimBtn} disabled={opening}>
+                  <LinearGradient colors={blocked ? ["#5a2a2a", "#3a1818"] : [mysteryColor, "#F5D976"]} style={styles.dailyClaimGrad}>
+                    <Text style={styles.dailyClaimText}>{(blocked ? T("close") : (opening ? "..." : "ABRIR REGALO")).toUpperCase()}</Text>
+                  </LinearGradient>
+                </Pressable>
+              </>
             ) : (
-              <View style={[styles.dailyIconWrap, { borderColor: reward.iconColor + "88" }]}>
-                {reward.icon === "cash" ? <CoinIcon size={42} color={reward.iconColor} /> : <Ionicons name={reward.icon as any} size={42} color={reward.iconColor} />}
-              </View>
-            )}
-            <Text style={[styles.dailyLabel, isChestDay && { color: chestColor, fontSize: 17 }]}>{reward.label}</Text>
-            {isChestDay && !blocked && (
-              <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: "#aaa", textAlign: "center", marginBottom: 4 }}>
-                Se ha agregado a tu inventario de cofres
-              </Text>
-            )}
-            {blocked && (
-              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 13, color: "#ff8a8a", textAlign: "center", marginBottom: 4, paddingHorizontal: 8 }}>
-                {T("dailyChestInventoryFull")}
-              </Text>
-            )}
-            <View style={styles.dailyChips}>
-              {reward.coins > 0 && (
-                <View style={styles.dailyChip}>
-                  <CoinIcon size={14} color={Colors.gold} />
-                  <Text style={styles.dailyChipText}>+{reward.coins}</Text>
+              <>
+                <Animated.View style={revealStyle}>
+                  {isChestDay ? (
+                    <View style={[styles.dailyIconWrap, { borderColor: chestColor + "99", backgroundColor: chestColor + "18" }]}>
+                      <Ionicons name={reward.icon as any} size={52} color={chestColor} />
+                      <View style={{ position: "absolute", bottom: -6, right: -6, backgroundColor: chestColor, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 }}>
+                        <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: "#000" }}>
+                          {reward.chestType === "legendary" ? "LEGENDARIO" : reward.chestType === "epic" ? "EPICO" : reward.chestType === "rare" ? "RARO" : "COMUN"}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={[styles.dailyIconWrap, { borderColor: reward.iconColor + "88" }]}>
+                      {reward.icon === "cash" ? <CoinIcon size={42} color={reward.iconColor} /> : <Ionicons name={reward.icon as any} size={42} color={reward.iconColor} />}
+                    </View>
+                  )}
+                </Animated.View>
+                <Text style={[styles.dailyLabel, isChestDay && { color: chestColor, fontSize: 17 }]}>{reward.label}</Text>
+                <View style={styles.dailyChips}>
+                  {reward.coins > 0 && (
+                    <View style={styles.dailyChip}>
+                      <CoinIcon size={14} color={Colors.gold} />
+                      <Text style={styles.dailyChipText}>+{reward.coins}</Text>
+                    </View>
+                  )}
+                  {reward.xp > 0 && (
+                    <View style={styles.dailyChipXp}>
+                      <Ionicons name="star" size={12} color={Colors.gold} />
+                      <Text style={styles.dailyChipText}>+{reward.xp} XP</Text>
+                    </View>
+                  )}
                 </View>
-              )}
-              {reward.xp > 0 && (
-                <View style={styles.dailyChipXp}>
-                  <Ionicons name="star" size={12} color={Colors.gold} />
-                  <Text style={styles.dailyChipText}>+{reward.xp} XP</Text>
-                </View>
-              )}
-            </View>
-            <Pressable onPress={blocked ? (onClose ?? onClaim) : onClaim} style={styles.dailyClaimBtn}>
-              <LinearGradient colors={blocked ? ["#5a2a2a", "#3a1818"] : isChestDay ? [chestColor, chestColor + "BB"] : [Colors.gold, Colors.goldLight]} style={styles.dailyClaimGrad}>
-                <Text style={styles.dailyClaimText}>{(blocked ? T("close") : T("claimReward")).toUpperCase()}</Text>
-              </LinearGradient>
-            </Pressable>
+                <Pressable onPress={onClaim} style={styles.dailyClaimBtn}>
+                  <LinearGradient colors={isChestDay ? [chestColor, chestColor + "BB"] : [Colors.gold, Colors.goldLight]} style={styles.dailyClaimGrad}>
+                    <Text style={styles.dailyClaimText}>{T("claimReward").toUpperCase()}</Text>
+                  </LinearGradient>
+                </Pressable>
+              </>
+            )}
           </LinearGradient>
         </Animated.View>
       </View>
