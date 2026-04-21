@@ -115,6 +115,9 @@ export interface PlayerProfile {
   // Daily rewards
   lastDailyRewardDate: string;
   dailyRewardIndex: number;
+  // Daily chest purchase limit (max 3/day)
+  chestPurchasesToday: number;
+  lastChestPurchaseDate: string;
   // Daily shop
   lastDailyShopFreeDate: string;
   purchasedDailyShopIds: string[];
@@ -218,6 +221,8 @@ const DEFAULT_PROFILE: PlayerProfile = {
   stats: DEFAULT_STATS,
   lastDailyRewardDate: "",
   dailyRewardIndex: 0,
+  chestPurchasesToday: 0,
+  lastChestPurchaseDate: "",
   lastDailyShopFreeDate: "",
   purchasedDailyShopIds: [],
   lastDailyShopDate: "",
@@ -404,6 +409,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             premiumBattlePassSeasons: saved.premiumBattlePassSeasons ?? [],
             battlePassSeasonNumber: getCurrentSeason().number,
             lastDailyRewardDate: saved.lastDailyRewardDate ?? "",
+            chestPurchasesToday: saved.chestPurchasesToday ?? 0,
+            lastChestPurchaseDate: saved.lastChestPurchaseDate ?? "",
             lastDailyShopFreeDate: saved.lastDailyShopFreeDate ?? "",
             purchasedDailyShopIds: saved.purchasedDailyShopIds ?? [],
             lastDailyShopDate: saved.lastDailyShopDate ?? "",
@@ -656,17 +663,23 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const buyChestWithFichas = useCallback((chestType: ChestType): boolean => {
     let success = false;
+    const today = new Date().toDateString();
     update((p) => {
       const price = CHEST_FICHA_PRICES[chestType];
       const balance = p.fichas ?? 0;
       const inv = p.chestInventory ?? [];
       if (balance < price) return p;
       if (inv.length >= CHEST_INVENTORY_LIMIT) return p;
+      const sameDay = p.lastChestPurchaseDate === today;
+      const purchasesToday = sameDay ? (p.chestPurchasesToday ?? 0) : 0;
+      if (purchasesToday >= 3) return p;
       success = true;
       return {
         ...p,
         fichas: balance - price,
         chestInventory: [...inv, createChest(chestType, "purchase")],
+        chestPurchasesToday: purchasesToday + 1,
+        lastChestPurchaseDate: today,
       };
     });
     return success;
@@ -893,11 +906,41 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     update((p) => {
       if ((p.premiumBattlePassSeasons ?? []).includes(seasonNum)) return p;
       if ((p.fichas ?? 0) < PREMIUM_BP_COST) return p;
-      return {
+      // Clash Royale–style: auto-grant every premium reward already reached by current XP
+      const tiers = getBattlePassTiers(seasonNum);
+      const reachedPremium = tiers.filter((t) => (p.totalXp ?? 0) >= t.xpRequired);
+      const alreadyClaimed = new Set(p.claimedBattlePassPremiumTiers ?? []);
+      let next: PlayerProfile = {
         ...p,
         fichas: (p.fichas ?? 0) - PREMIUM_BP_COST,
         premiumBattlePassSeasons: [...(p.premiumBattlePassSeasons ?? []), seasonNum],
       };
+      const newlyClaimed: number[] = [];
+      for (const t of reachedPremium) {
+        if (alreadyClaimed.has(t.tier)) continue;
+        newlyClaimed.push(t.tier);
+        if (t.rewardType === "coins" && typeof t.rewardValue === "number") {
+          next = { ...next, coins: next.coins + t.rewardValue };
+        } else if (["item", "avatar", "title", "frame", "effect"].includes(t.rewardType)) {
+          const itemId = t.rewardValue as string;
+          if (!next.ownedItems.includes(itemId)) {
+            next = { ...next, ownedItems: [...next.ownedItems, itemId] };
+          }
+        } else if (t.rewardType === "chest") {
+          const chestT = t.rewardValue as ChestType;
+          const inv = next.chestInventory ?? [];
+          if (inv.length < CHEST_INVENTORY_LIMIT) {
+            next = { ...next, chestInventory: [...inv, createChest(chestT, "mission")] };
+          }
+        }
+      }
+      if (newlyClaimed.length > 0) {
+        next = {
+          ...next,
+          claimedBattlePassPremiumTiers: [...(next.claimedBattlePassPremiumTiers ?? []), ...newlyClaimed],
+        };
+      }
+      return next;
     });
     return true;
   }, [profile.premiumBattlePassSeasons, profile.fichas, update]);

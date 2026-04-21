@@ -1435,22 +1435,25 @@ const styles = StyleSheet.create({
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
-type ShopChestType = "common" | "rare" | "epic" | "event" | "legendary";
+type ShopChestType = "common" | "rare" | "epic" | "legendary";
 
 function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any; themeGold: string; showToast: (s: string) => void; T: (k: any) => string }) {
   const { profile, buyChestWithFichas } = useProfile();
   const PRICES: Record<ShopChestType, number> = {
-    common: 25, rare: 80, epic: 200, event: 280, legendary: 500,
+    common: 25, rare: 80, epic: 200, legendary: 500,
   };
   const COLORS: Record<ShopChestType, string> = {
-    common: "#A0724A", rare: "#1A6FC4", epic: "#7B2FBE", event: "#E74C3C", legendary: "#D4AF37",
+    common: "#A0724A", rare: "#1A6FC4", epic: "#7B2FBE", legendary: "#D4AF37",
   };
   const NAMES: Record<ShopChestType, string> = {
-    common: "Común", rare: "Raro", epic: "Épico", event: "Evento", legendary: "Legendario",
+    common: "Común", rare: "Raro", epic: "Épico", legendary: "Legendario",
   };
   const ICONS: Record<ShopChestType, IoniconName> = {
-    common: "cube", rare: "cube", epic: "diamond", event: "flame", legendary: "star",
+    common: "cube", rare: "cube", epic: "diamond", legendary: "star",
   };
+  const today = new Date().toDateString();
+  const purchasesToday = profile.lastChestPurchaseDate === today ? (profile.chestPurchasesToday ?? 0) : 0;
+  const dailyRemaining = Math.max(0, 3 - purchasesToday);
   const doPurchase = (type: ShopChestType) => {
     const ok = buyChestWithFichas(type);
     if (ok) showToast(`¡Cofre ${NAMES[type]} comprado!`);
@@ -1461,9 +1464,10 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
     const balance = profile.fichas ?? 0;
     if (balance < PRICES[type]) { showToast(`Fichas insuficientes`); return; }
     if ((profile.chestInventory ?? []).length >= 10) { showToast(`Inventario lleno`); return; }
+    if (dailyRemaining <= 0) { showToast(`Límite diario alcanzado (3/día)`); return; }
     Alert.alert(
       `Comprar cofre ${NAMES[type]}`,
-      `¿Confirmar compra por ${PRICES[type]} fichas?`,
+      `¿Confirmar compra por ${PRICES[type]} fichas?\n\nCompras restantes hoy: ${dailyRemaining}/3`,
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Comprar", style: "default", onPress: () => doPurchase(type) },
@@ -1474,13 +1478,13 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
     <View style={styles.chestShopWrap}>
       <View style={styles.chestShopHeader}>
         <Ionicons name="cube" size={14} color={themeGold} />
-        <Text style={[styles.chestShopTitle, { color: themeGold }]}>COFRES (FICHAS)</Text>
+        <Text style={[styles.chestShopTitle, { color: themeGold }]}>COFRES (FICHAS) · {dailyRemaining}/3 hoy</Text>
         <View style={{ flex: 1 }} />
         <Ionicons name="diamond" size={12} color="#3498DB" />
         <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#3498DB" }}>{profile.fichas ?? 0}</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 4 }}>
-        {(["common", "rare", "epic", "event", "legendary"] as const).map((t) => (
+        {(["common", "rare", "epic", "legendary"] as const).map((t) => (
           <BouncePressable
             key={t}
             onPress={() => handleBuy(t)}
