@@ -640,7 +640,11 @@ export default function StoreScreen() {
     return () => clearInterval(t);
   }, []);
   const dateKey = useMemo(() => getDailyDateKey(new Date(nowTick)), [nowTick]);
-  const dailyItems = useMemo(() => getDailyShopItems(dateKey).map(i => ({ ...i, ...localizeItem(i, lang) })), [dateKey, lang]);
+  const ownedIds = profile.ownedItems ?? [];
+  const dailyItems = useMemo(
+    () => getDailyShopItems(dateKey, ownedIds).map(i => ({ ...i, ...localizeItem(i, lang) })),
+    [dateKey, lang, ownedIds],
+  );
   const freeItem = useMemo(() => {
     const f = getDailyFreeItem(dateKey);
     return { ...f, ...localizeItem(f, lang) };
@@ -1610,11 +1614,13 @@ function EmotesSection({
   const T = useT();
   const { profile } = useProfile();
   const ordered = useMemo(() => {
-    const daily = getDailyEmotes();
-    const dailyIds = new Set(daily.map((e) => e.id));
-    const ownedExtra = EMOTES.filter((e) => (profile.ownedItems ?? []).includes(e.id) && !dailyIds.has(e.id));
-    return sortItemsByRarityAndPrice([...daily, ...ownedExtra]);
-  }, [profile.ownedItems]);
+    const exclude = [
+      ...(profile.ownedItems ?? []),
+      ...equippedEmotes,
+    ];
+    const daily = getDailyEmotes(undefined, 3, exclude);
+    return sortItemsByRarityAndPrice(daily);
+  }, [profile.ownedItems, equippedEmotes]);
   return (
     <View style={[styles.chestShopWrap, { borderColor: themeGold + "55" }]}>
       <View style={styles.chestShopHeader}>

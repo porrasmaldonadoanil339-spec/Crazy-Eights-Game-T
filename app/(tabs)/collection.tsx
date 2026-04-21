@@ -41,6 +41,10 @@ const RARITY_COLOR: Record<string, string> = {
   legendary: "#D4AF37",
 };
 
+const RARITY_ORDER: Record<string, number> = {
+  common: 0, rare: 1, epic: 2, event: 3, legendary: 4,
+};
+
 
 export default function CollectionScreen() {
   const insets = useSafeAreaInsets();
@@ -84,6 +88,12 @@ export default function CollectionScreen() {
         });
       }
     }
+    base.sort((a, b) => {
+      const ra = RARITY_ORDER[a.rarity] ?? 0;
+      const rb = RARITY_ORDER[b.rarity] ?? 0;
+      if (ra !== rb) return ra - rb;
+      return a.name.localeCompare(b.name);
+    });
     return base;
   }, [activeCat, owned, lang]);
 
@@ -132,6 +142,7 @@ export default function CollectionScreen() {
     switch (r) {
       case "rare":      return T("rarityRare");
       case "epic":      return T("rarityEpic");
+      case "event":     return "EVENTO";
       case "legendary": return T("rarityLegendary");
       default:          return T("rarityCommon");
     }
@@ -163,59 +174,53 @@ export default function CollectionScreen() {
     return (
       <BouncePressable
         onPress={handlePress}
-        style={[
-          styles.gridItem,
-          {
-            backgroundColor: theme.surface,
-            borderColor: isEquipped ? themeGold : rarityColor + "55",
-            borderWidth: isEquipped ? 2 : 1,
-          },
-        ]}
+        style={styles.gridItem}
       >
-        <LinearGradient
-          colors={[rarityColor + "14", "transparent"] as [string, string]}
-          style={StyleSheet.absoluteFill}
-        />
-
         <View style={styles.previewSlot}>
           <ItemPreview item={item} lang={lang} />
-        </View>
 
-        <View style={styles.itemFooter}>
-          <Text style={[styles.itemName, { color: isOwned ? theme.text : theme.textMuted }]} numberOfLines={1}>
-            {localized.name}
-          </Text>
-          {isExclusive ? (
-            <View style={styles.exclusiveBadge}>
-              <Ionicons name="star" size={8} color="#000" />
-              <Text style={styles.exclusiveBadgeText} numberOfLines={1}>
-                {T("limitedEditionSeason").replace("{n}", String(item.seasonNumber))}
-              </Text>
+          {isEquipped && (
+            <View style={[styles.equippedBadgeFloat, { backgroundColor: themeGold }]} pointerEvents="none">
+              <Ionicons name="checkmark" size={12} color="#000" />
             </View>
-          ) : (
-            <View style={[styles.rarityChip, { backgroundColor: rarityColor + "22", borderColor: rarityColor + "55" }]}>
-              <Text style={[styles.rarityChipText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
+          )}
+
+          {!isOwned && (
+            <View style={styles.lockOverlay} pointerEvents="none">
+              <View style={[styles.lockCircle, { backgroundColor: rarityColor + "EE", borderColor: rarityColor }]}>
+                <Ionicons name="lock-closed" size={22} color="#fff" />
+              </View>
             </View>
           )}
         </View>
 
-        {isEquipped && (
-          <View style={[styles.equippedBadge, { backgroundColor: themeGold }]} pointerEvents="none">
-            <Ionicons name="checkmark" size={11} color="#000" />
-            <Text style={styles.equippedText}>{T("equipped")}</Text>
+        <Text
+          style={[
+            styles.itemName,
+            { color: isOwned ? theme.text : theme.textMuted },
+          ]}
+          numberOfLines={1}
+        >
+          {localized.name}
+        </Text>
+
+        {isExclusive ? (
+          <View style={styles.exclusiveBadge}>
+            <Ionicons name="star" size={8} color="#000" />
+            <Text style={styles.exclusiveBadgeText} numberOfLines={1}>
+              {T("limitedEditionSeason").replace("{n}", String(item.seasonNumber))}
+            </Text>
+          </View>
+        ) : (
+          <View style={[styles.rarityChip, { backgroundColor: rarityColor + "22", borderColor: rarityColor + "55" }]}>
+            <Text style={[styles.rarityChipText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
           </View>
         )}
 
-        {!isOwned && (
-          <>
-            <View style={styles.lockedDim} pointerEvents="none" />
-            <View style={styles.lockCenter} pointerEvents="none">
-              <View style={[styles.lockCircle, { backgroundColor: rarityColor + "EE", borderColor: rarityColor }]}>
-                <Ionicons name="lock-closed" size={26} color="#fff" />
-              </View>
-              <Text style={[styles.lockedLabel, { color: "#fff" }]}>{T("locked")}</Text>
-            </View>
-          </>
+        {isEquipped && (
+          <Text style={[styles.equippedTextLine, { color: themeGold }]}>
+            {T("equipped")}
+          </Text>
         )}
       </BouncePressable>
     );
@@ -342,61 +347,46 @@ const styles = StyleSheet.create({
     height: 36,
   },
   catLabel: { fontFamily: "Nunito_700Bold", fontSize: 12 },
-  gridContent: { paddingHorizontal: 16, paddingBottom: 100, gap: 12 },
+  gridContent: { paddingHorizontal: 16, paddingBottom: 100, gap: 16 },
   gridItem: {
-    flex: 1, borderRadius: 16, padding: 14,
+    flex: 1, paddingVertical: 8, paddingHorizontal: 4,
     alignItems: "center",
     maxWidth: "48%",
-    minHeight: 210,
-    overflow: "hidden",
-    position: "relative",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45, shadowRadius: 8, elevation: 6,
+    gap: 8,
   },
   previewSlot: {
-    height: 112,
+    minHeight: 120,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
+    position: "relative",
   },
-  itemFooter: { width: "100%", alignItems: "center", gap: 5 },
-  itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, textAlign: "center" },
+  itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, textAlign: "center", marginTop: 2 },
   rarityChip: {
     paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1,
   },
   rarityChipText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 0.5 },
-  equippedBadge: {
-    position: "absolute", top: 8, right: 8,
-    flexDirection: "row", alignItems: "center", gap: 3,
-    paddingHorizontal: 7, paddingVertical: 3, borderRadius: 7,
+  equippedBadgeFloat: {
+    position: "absolute", top: -4, right: 4,
+    width: 22, height: 22, borderRadius: 11,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: "#000",
+    zIndex: 10,
   },
-  equippedText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: "#000" },
-  lockedDim: {
-    position: "absolute",
-    top: 0, left: 0, right: 0,
-    bottom: 64,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+  equippedTextLine: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 1, marginTop: 2,
   },
-  lockCenter: {
-    position: "absolute",
-    top: 14, left: 0, right: 0,
-    bottom: 64,
+  lockOverlay: {
+    ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 12,
   },
   lockCircle: {
-    width: 46, height: 46, borderRadius: 23,
+    width: 44, height: 44, borderRadius: 22,
     alignItems: "center", justifyContent: "center",
     borderWidth: 2,
-    shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 8, elevation: 6,
-  },
-  lockedLabel: {
-    fontFamily: "Nunito_800ExtraBold", fontSize: 11, letterSpacing: 1.5,
-    textShadowColor: "rgba(0,0,0,0.8)", textShadowRadius: 3,
   },
   exclusiveBadge: {
     flexDirection: "row", alignItems: "center", gap: 3,

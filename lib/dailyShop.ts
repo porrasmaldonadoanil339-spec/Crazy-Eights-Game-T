@@ -52,15 +52,26 @@ function priceFor(item: StoreItem): { finalPrice: number; payCurrency: "coins" |
   return { finalPrice: Math.max(15, Math.round(base * mult)), payCurrency: "coins" };
 }
 
-export function getDailyShopItems(dateKey: string = getDailyDateKey()): DailyShopItem[] {
-  const eligible = STORE_ITEMS.filter((s) => !s.isDefault);
+export function getDailyShopItems(
+  dateKey: string = getDailyDateKey(),
+  excludeIds: string[] = [],
+): DailyShopItem[] {
+  const exclude = new Set(excludeIds);
+  const eligible = STORE_ITEMS.filter((s) => !s.isDefault && !exclude.has(s.id));
   const rnd = mulberry32(hashString("shop:" + dateKey));
   const picked = pickShuffled(eligible, 6, rnd);
   return picked.map((item) => ({ ...item, ...priceFor(item) }));
 }
 
-export function getDailyEmotes(dateKey: string = getDailyDateKey(), count: number = 3): StoreItem[] {
-  const eligible = STORE_ITEMS.filter((s) => s.category === "emote" && !s.isDefault);
+export function getDailyEmotes(
+  dateKey: string = getDailyDateKey(),
+  count: number = 3,
+  excludeIds: string[] = [],
+): StoreItem[] {
+  const exclude = new Set(excludeIds);
+  const eligible = STORE_ITEMS.filter(
+    (s) => s.category === "emote" && !s.isDefault && !exclude.has(s.id),
+  );
   if (eligible.length <= count) return eligible;
   const rnd = mulberry32(hashString("emotes:" + dateKey));
   return pickShuffled(eligible, count, rnd);
