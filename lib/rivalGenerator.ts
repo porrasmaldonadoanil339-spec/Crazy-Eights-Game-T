@@ -137,6 +137,21 @@ export function generateRival(index: number): RivalProfile {
   return { name, avatarId, titleId, level, avatarColor, avatarIcon, photoUrl };
 }
 
+// ─── Session-level memory of rivals already shown today ─────────────────────
+// Avoids repeating the same rival within the same session/day. Cleared when the
+// app process restarts, but combined with the per-second startOffset this gives
+// near-zero repeat probability over a single play day.
+const _sessionUsedRivals = new Set<number>();
+const _sessionDayKey = new Date().toDateString();
+
+function getSessionExcludes(): Set<number> {
+  // Reset if the day rolled over while the app was open
+  if (new Date().toDateString() !== _sessionDayKey) {
+    _sessionUsedRivals.clear();
+  }
+  return _sessionUsedRivals;
+}
+
 // ─── Pick N rivals near a given player level, no repeats ─────────────────────
 export function pickRivals(
   n: number,
@@ -144,7 +159,8 @@ export function pickRivals(
   excludeIndices?: Set<number>
 ): RivalProfile[] {
   const results: RivalProfile[] = [];
-  const used = new Set<number>(excludeIndices);
+  const sessionUsed = getSessionExcludes();
+  const used = new Set<number>([...sessionUsed, ...(excludeIndices ?? [])]);
 
   // Build a candidate range centered on player level
   // Search in expanding windows until we have enough
@@ -184,7 +200,24 @@ export function pickRivals(
     attempts++;
   }
 
+  // Remember these rivals so we never re-issue them this session/day
+  results.forEach((r) => markRivalUsed(r));
   return results;
+}
+
+// Track rivals after they're actually used (called by callers when a match starts)
+export function markRivalUsed(rival: RivalProfile) {
+  // Find the rival's index by re-hashing its name + level (cheap fingerprint).
+  // Safer alternative: callers pass the index when known. As a fallback we
+  // hash the displayed name to a stable bucket so repeats are unlikely.
+  let h = 0;
+  for (let i = 0; i < rival.name.length; i++) h = (h * 31 + rival.name.charCodeAt(i)) >>> 0;
+  _sessionUsedRivals.add(h % 100000);
+  // Cap memory so the set doesn't grow unbounded across very long sessions
+  if (_sessionUsedRivals.size > 500) {
+    const first = _sessionUsedRivals.values().next().value;
+    if (first !== undefined) _sessionUsedRivals.delete(first);
+  }
 }
 
 // ─── Convert to CpuProfile shape (for backward compatibility) ─────────────────

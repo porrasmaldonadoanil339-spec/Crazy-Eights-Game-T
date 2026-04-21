@@ -1414,7 +1414,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4, shadowRadius: 6, elevation: 5,
   },
   emoteShopIcon: {
-    width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center",
+    width: 48, height: 48, alignItems: "center", justifyContent: "center",
   },
   emoteShopName: {
     fontFamily: "Nunito_700Bold", fontSize: 10, textAlign: "center",
@@ -1574,8 +1574,8 @@ function EmoteShopCard({
       styles.emoteShopCard,
       { backgroundColor: themeColors.surface, borderColor: isEquipped ? Colors.gold + "AA" : rarityColor + "66" },
     ]}>
-      <View style={[styles.emoteShopIcon, { backgroundColor: item.previewColor + "22" }]}>
-        <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={28} />
+      <View style={styles.emoteShopIcon}>
+        <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={40} />
       </View>
       <Text style={[styles.emoteShopName, { color: themeColors.text }]} numberOfLines={1}>{localized.name}</Text>
       {owned ? (

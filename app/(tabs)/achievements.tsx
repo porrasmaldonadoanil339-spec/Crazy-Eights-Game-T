@@ -176,7 +176,7 @@ export default function AchievementsScreen() {
       <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
-        <Text style={[styles.screenTitle, { color: themeGold }]}>{T("achievements")}</Text>
+        <Text style={[styles.screenTitle, { color: themeGold }]}>{(T("tabAchievements") || "CAMINO").toUpperCase()}</Text>
         <View style={[styles.counterBadge, { backgroundColor: themeGold + "22", borderColor: themeGold + "44" }]}>
           <Ionicons name="trophy" size={14} color={themeGold} />
           <Text style={[styles.counterText, { color: themeGold }]}>{unlockedCount}/{ACHIEVEMENTS.length}</Text>
@@ -346,22 +346,30 @@ export default function AchievementsScreen() {
                   marginHorizontal: 12,
                   marginBottom: 10,
                   borderRadius: 14,
+                  overflow: "hidden",
                   borderWidth: 2,
-                  borderColor: themeGold,
-                  backgroundColor: themeGold + "18",
-                  paddingVertical: 12,
-                  paddingHorizontal: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
+                  borderColor: "#FFD700",
                 }}
               >
-                <Ionicons name="diamond" size={18} color={themeGold} />
-                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: themeGold, letterSpacing: 0.5 }}>
-                  {(T("unlockPremiumBP" as any) || "Desbloquear Premium")} · {premiumBattlePassCost}
-                </Text>
-                <Ionicons name="server" size={14} color={themeGold} />
+                <LinearGradient
+                  colors={["#FFB300", "#FF8C00", "#E65100"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    paddingVertical: 14,
+                    paddingHorizontal: 14,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Ionicons name="diamond" size={20} color="#fff" />
+                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#fff", letterSpacing: 0.5, textShadowColor: "rgba(0,0,0,0.35)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
+                    {(T("unlockPremiumBP" as any) || "Desbloquear Premium")} · {premiumBattlePassCost}
+                  </Text>
+                  <Ionicons name="diamond" size={14} color="#fff" />
+                </LinearGradient>
               </BouncePressable>
             )}
             {isPremiumBattlePassActive && (

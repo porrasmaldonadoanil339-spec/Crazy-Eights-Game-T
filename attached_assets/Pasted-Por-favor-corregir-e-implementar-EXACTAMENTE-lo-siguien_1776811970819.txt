@@ -1,0 +1,205 @@
+Por favor, corregir e implementar EXACTAMENTE lo siguiente, indicando comportamiento preciso en cada sección:
+
+========================
+🟢 PARTIDAS
+===========
+
+1. SCROLL DEL MAZO (CRÍTICO)
+   UBICACIÓN:
+
+* Parte inferior (donde están las cartas del mazo)
+
+IMPLEMENTACIÓN:
+✔ Agregar scroll horizontal (tipo deslizable)
+✔ El jugador debe poder:
+
+* Deslizar hacia la DERECHA
+* Deslizar hacia la IZQUIERDA
+
+COMPORTAMIENTO:
+✔ Mostrar TODO el mazo de cartas
+✔ Funciona en TODOS los modos de juego
+✔ Funciona:
+
+* Con mazo lleno
+* Con mazo incompleto
+
+✔ Movimiento fluido
+✔ Cartas alineadas en una sola fila horizontal
+✔ No cortar cartas
+
+---
+
+2. TEXTOS DE ACCIONES (ERROR)
+   PROBLEMA:
+
+* Cuando el jugador hace una acción aparece “Rival”
+
+SOLUCIÓN:
+✔ Diferenciar correctamente:
+
+SI el jugador actúa:
+→ Mostrar: “Robaste carta”, “Jugaste carta”, etc.
+
+SI el rival actúa:
+→ Mostrar: “El rival robó carta”, “El rival jugó carta”
+
+❌ Nunca confundir jugador con rival
+
+---
+
+3. MODO CLASIFICATORIA
+   ✔ Debe tener las MISMAS reglas y funcionalidades que otros modos
+   ✔ Mismo comportamiento de cartas
+   ✔ Mismo sistema de juego
+
+---
+
+4. MODO TORNEO
+   ✔ El jugador debe jugar 3 partidas contra el MISMO rival
+
+---
+
+5. SISTEMA DE RIVALES (MUY IMPORTANTE)
+   OBJETIVO:
+   Simular que el juego es online
+
+IMPLEMENTACIÓN:
+✔ NO repetir el mismo rival:
+
+* En la misma sesión
+* En el mismo día
+
+✔ Generar nombres/perfiles variados
+✔ Rotación de rivales constante
+
+---
+
+========================
+🟣 TIENDA
+=========
+
+1. COFRES (COMPRA)
+   Al presionar un cofre:
+
+1) Mostrar:
+   “¿Deseas comprar?”
+
+2) Al aceptar:
+
+SI NO tiene fichas:
+✔ Mostrar: “Fichas insuficientes”
+✔ NO sonido
+✔ NO compra
+
+SI tiene fichas:
+✔ Comprar correctamente
+
+---
+
+2. REGALO DIARIO (CORREGIR)
+   PROBLEMA:
+   No está funcionando como se indicó
+
+SOLUCIÓN EXACTA:
+
+✔ NO mostrar recompensa antes
+
+FLUJO:
+
+1. Presionar botón de regalo
+2. Mostrar:
+   “Se agregó un regalo a tu inventario”
+3. El regalo aparece como cofre en inventario
+
+AL ABRIR:
+✔ Animación tipo cofre
+✔ Sonido
+✔ Da 1 ítem aleatorio de la colección
+
+---
+
+3. EMOTES EN TIENDA
+   PROBLEMA:
+   Hay óvalo que tapa la imagen
+
+SOLUCIÓN:
+✔ Quitar óvalo
+✔ Mostrar imagen completa del emote
+
+REGLAS:
+✔ Mostrar SOLO 3 emotes
+✔ Cambian cada día
+✔ No repetir
+
+---
+
+========================
+🔶 PASE DE BATALLA
+==================
+
+1. BOTÓN PASE PREMIUM
+   ✔ Cambiar color (más llamativo)
+
+Al presionar:
+
+1. Mostrar:
+   “¿Deseas comprar el Pase de Batalla Premium?”
+
+2. Si no tiene fichas:
+   ✔ Mostrar: “Fichas insuficientes”
+   ✔ NO sonido
+   ✔ NO compra
+
+---
+
+2. RECOMPENSAS PREMIUM (MEJORAR)
+   ✔ Cambiar recompensas actuales
+
+USAR:
+
+* Ítems de la colección:
+  ✔ Cartas
+  ✔ Dorsos
+  ✔ Mesas
+  ✔ Marcos
+  ✔ Efectos
+  ✔ Emotes
+  ✔ Títulos
+  ✔ Cofres
+
+✔ Deben ser atractivas
+✔ Debe sentirse que vale la pena comprar
+
+---
+
+========================
+🔷 INTERFAZ CAMINO
+==================
+
+PROBLEMA:
+
+* Texto superior dice “LOGROS”
+
+SOLUCIÓN:
+✔ Cambiar texto superior a:
+“CAMINO” (EN MAYÚSCULAS)
+
+✔ Botones:
+
+* CAMINO (correcto)
+* Pase de Batalla (mantener)
+* Logros (mantener)
+
+---
+
+========================
+🎯 OBJETIVO FINAL
+=================
+
+✔ Corregir errores de lógica
+✔ Mejorar experiencia en partidas
+✔ Hacer sistema más profesional
+✔ Simular experiencia online real
+
+Aplicar TODO exactamente como se indica.
