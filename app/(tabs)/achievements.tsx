@@ -16,7 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
-import { getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward, getSeasonTheme, getSeasonThemeName, SeasonExclusive } from "@/lib/battlePass";
+import { getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward, getSeasonTheme, getSeasonThemeName, getExclusiveLabel, SeasonExclusive } from "@/lib/battlePass";
 import { getCurrentSeason } from "@/lib/seasons";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";
@@ -735,11 +735,9 @@ function SeasonThemeCard({
   const currentThemeName = getSeasonThemeName(seasonNumber, lang);
   const nextThemeName = getSeasonThemeName(nextSeasonNumber, lang);
 
-  // Exclusive item labels are only translated to es/en/pt; for any other
-  // language fall back to the English label rather than Spanish so the user
-  // still sees a non-Spanish string.
-  const exclusiveLabel = (e: SeasonExclusive) =>
-    lang === "es" ? e.rewardLabel : lang === "pt" ? e.ptLabel : e.enLabel;
+  // Exclusive item labels are localized to all 22 supported languages, with
+  // English then Spanish as the fallback chain when a translation is missing.
+  const exclusiveLabel = (e: SeasonExclusive) => getExclusiveLabel(e, lang);
 
   const typeKey = (t: SeasonExclusive["rewardType"]) =>
     t === "avatar" ? "exclusiveAvatar" :

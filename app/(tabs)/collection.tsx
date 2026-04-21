@@ -7,7 +7,7 @@ import { useT } from "@/hooks/useT";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { STORE_ITEMS, StoreItem, StoreItemCategory, localizeItem } from "@/lib/storeItems";
-import { TranslationKey } from "@/lib/i18n";
+import { TranslationKey, Lang } from "@/lib/i18n";
 import { getOwnedExclusives, ExclusiveCategory } from "@/lib/battlePass";
 import BouncePressable from "@/components/BouncePressable";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
@@ -65,14 +65,16 @@ export default function CollectionScreen() {
     ? ["#061209", "#0a1a0f", "#0d2418"]
     : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
-  const rawLang = profile.language ?? "es";
-  const lang: "es"|"en"|"pt" = rawLang === "en" || rawLang === "pt" ? rawLang : "es";
+  const fullLang = (profile.language ?? "es") as Lang;
+  // localizeItem / ItemPreview only support es/en/pt; narrow once for those
+  // callers while exclusives use the full Lang for their localized labels.
+  const lang: "es" | "en" | "pt" = fullLang === "en" || fullLang === "pt" ? fullLang : "es";
 
   const owned = profile.ownedItems ?? [];
   const items = useMemo<GridItem[]>(() => {
     const base: GridItem[] = STORE_ITEMS.filter((i) => i.category === activeCat);
     if (EXCLUSIVE_CATEGORIES.includes(activeCat)) {
-      const exs = getOwnedExclusives(owned, activeCat as ExclusiveCategory, lang);
+      const exs = getOwnedExclusives(owned, activeCat as ExclusiveCategory, fullLang);
       for (const ex of exs) {
         base.push({
           id: ex.id,
@@ -95,7 +97,7 @@ export default function CollectionScreen() {
       return a.name.localeCompare(b.name);
     });
     return base;
-  }, [activeCat, owned, lang]);
+  }, [activeCat, owned, lang, fullLang]);
 
   const ownedCount = items.filter((i) => owned.includes(i.id) || i.isDefault).length;
 

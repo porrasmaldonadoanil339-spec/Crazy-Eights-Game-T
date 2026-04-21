@@ -418,15 +418,15 @@ export default function ProfileScreen() {
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
 
   const titleItem = STORE_ITEMS.find((i) => i.id === profile.titleId);
-  const titleExclusive = React.useMemo(() => getOwnedExclusives([profile.titleId], "title", lang as "es" | "en" | "pt")[0], [profile.titleId, lang]);
+  const titleExclusive = React.useMemo(() => getOwnedExclusives([profile.titleId], "title", lang)[0], [profile.titleId, lang]);
   const cardBackItem = STORE_ITEMS.find((i) => i.id === profile.cardBackId);
-  const cardBackExclusive = React.useMemo(() => getOwnedExclusives([profile.cardBackId], "card_back", lang as "es" | "en" | "pt")[0], [profile.cardBackId, lang]);
+  const cardBackExclusive = React.useMemo(() => getOwnedExclusives([profile.cardBackId], "card_back", lang)[0], [profile.cardBackId, lang]);
   const frameItem = AVATAR_FRAMES.find((f) => f.id === profile.selectedFrameId);
-  const frameExclusive = React.useMemo(() => getOwnedExclusives([profile.selectedFrameId], "frame", lang as "es" | "en" | "pt")[0], [profile.selectedFrameId, lang]);
+  const frameExclusive = React.useMemo(() => getOwnedExclusives([profile.selectedFrameId], "frame", lang)[0], [profile.selectedFrameId, lang]);
 
-  const ownedExclusiveAvatars = React.useMemo(() => getOwnedExclusives(profile.ownedItems, "avatar", lang as "es" | "en" | "pt"), [profile.ownedItems, lang]);
-  const ownedExclusiveFrames = React.useMemo(() => getOwnedExclusives(profile.ownedItems, "frame", lang as "es" | "en" | "pt"), [profile.ownedItems, lang]);
-  const ownedExclusiveTitles = React.useMemo(() => getOwnedExclusives(profile.ownedItems, "title", lang as "es" | "en" | "pt"), [profile.ownedItems, lang]);
+  const ownedExclusiveAvatars = React.useMemo(() => getOwnedExclusives(profile.ownedItems, "avatar", lang), [profile.ownedItems, lang]);
+  const ownedExclusiveFrames = React.useMemo(() => getOwnedExclusives(profile.ownedItems, "frame", lang), [profile.ownedItems, lang]);
+  const ownedExclusiveTitles = React.useMemo(() => getOwnedExclusives(profile.ownedItems, "title", lang), [profile.ownedItems, lang]);
   const rankInfo = getLocalizedRankInfo(profile.rankedProfile, lang);
   const country = COUNTRIES.find(c => c.code === profile.country) ?? COUNTRIES[0];
 

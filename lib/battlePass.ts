@@ -10,7 +10,7 @@ export interface BattlePassTier {
   icon: string;
   iconColor: string;
   isExclusive?: boolean;
-  exclusiveLabel?: { es: string; en: string; pt: string };
+  exclusiveLabel?: Record<Lang, string>;
 }
 
 // ─── SEASONAL EXCLUSIVES ────────────────────────────────────────────────────
@@ -21,9 +21,8 @@ export interface BattlePassTier {
 export interface SeasonExclusive {
   rewardType: "item" | "avatar" | "frame" | "title";
   rewardValue: string;
-  rewardLabel: string; // base ES label
-  enLabel: string;
-  ptLabel: string;
+  /** Full prefixed label (e.g. "Avatar: Phoenix Lord") per supported language. */
+  label: Record<Lang, string>;
   icon: string;
   iconColor: string;
 }
@@ -31,6 +30,58 @@ export interface SeasonExclusive {
 export interface SeasonTheme {
   themeName: Record<Lang, string>;
   exclusives: SeasonExclusive[]; // at least 2 per season, slotted at tiers 27 & 35
+}
+
+// Localized prefix used in front of the exclusive's name. `item` is the
+// card-back category in the SeasonExclusive type system.
+const EXCLUSIVE_PREFIXES: Record<SeasonExclusive["rewardType"], Record<Lang, string>> = {
+  avatar: {
+    es:"Avatar", en:"Avatar", pt:"Avatar", fr:"Avatar", de:"Avatar", it:"Avatar",
+    tr:"Avatar", ru:"Аватар", pl:"Awatar", nl:"Avatar", sv:"Avatar", da:"Avatar",
+    fi:"Avatar", no:"Avatar", zh:"头像", ja:"アバター", ko:"아바타", hi:"अवतार",
+    th:"อวตาร", vi:"Ảnh đại diện", id:"Avatar", ar:"الصورة الرمزية",
+  },
+  frame: {
+    es:"Marco", en:"Frame", pt:"Moldura", fr:"Cadre", de:"Rahmen", it:"Cornice",
+    tr:"Çerçeve", ru:"Рамка", pl:"Ramka", nl:"Kader", sv:"Ram", da:"Ramme",
+    fi:"Kehys", no:"Ramme", zh:"边框", ja:"フレーム", ko:"프레임", hi:"फ्रेम",
+    th:"กรอบ", vi:"Khung", id:"Bingkai", ar:"إطار",
+  },
+  title: {
+    es:"Título", en:"Title", pt:"Título", fr:"Titre", de:"Titel", it:"Titolo",
+    tr:"Unvan", ru:"Титул", pl:"Tytuł", nl:"Titel", sv:"Titel", da:"Titel",
+    fi:"Titteli", no:"Tittel", zh:"称号", ja:"称号", ko:"칭호", hi:"उपाधि",
+    th:"ฉายา", vi:"Danh hiệu", id:"Gelar", ar:"لقب",
+  },
+  item: {
+    es:"Dorso", en:"Back", pt:"Dorso", fr:"Dos", de:"Rückseite", it:"Retro",
+    tr:"Arka", ru:"Рубашка", pl:"Rewers", nl:"Achterkant", sv:"Baksida", da:"Bagside",
+    fi:"Tausta", no:"Bakside", zh:"卡背", ja:"カード裏", ko:"카드 뒷면", hi:"पिछला भाग",
+    th:"หลังการ์ด", vi:"Mặt sau", id:"Punggung Kartu", ar:"ظهر البطاقة",
+  },
+};
+
+const ALL_LANGS: Lang[] = [
+  "es","en","pt","fr","de","it","tr","ru","pl","nl","sv","da","fi","no",
+  "zh","ja","ko","hi","th","vi","id","ar",
+];
+
+// Build the full `label` record by joining the localized category prefix with
+// the localized exclusive name in each language.
+function mkExclusiveLabel(
+  type: SeasonExclusive["rewardType"],
+  names: Record<Lang, string>,
+): Record<Lang, string> {
+  const prefixes = EXCLUSIVE_PREFIXES[type];
+  const out = {} as Record<Lang, string>;
+  for (const l of ALL_LANGS) out[l] = `${prefixes[l]}: ${names[l]}`;
+  return out;
+}
+
+// Resolve an exclusive's full label in the requested language, falling back
+// to English then Spanish if a translation is missing.
+export function getExclusiveLabel(ex: SeasonExclusive, lang: Lang): string {
+  return ex.label[lang] ?? ex.label.en ?? ex.label.es;
 }
 
 export const SEASON_THEMES: SeasonTheme[] = [
@@ -46,9 +97,31 @@ export const SEASON_THEMES: SeasonTheme[] = [
       ar: "الحديد والنار",
     },
     exclusives: [
-      { rewardType: "avatar", rewardValue: "exclusive_s1_phoenix_lord",  rewardLabel: "Avatar: Señor Fénix",        enLabel: "Avatar: Phoenix Lord",        ptLabel: "Avatar: Senhor Fênix",       icon: "flame",    iconColor: "#FF4500" },
-      { rewardType: "frame",  rewardValue: "exclusive_s1_ember_frame",   rewardLabel: "Marco: Brasa Eterna",        enLabel: "Frame: Eternal Ember",        ptLabel: "Moldura: Brasa Eterna",      icon: "ellipse",  iconColor: "#FF6B00" },
-      { rewardType: "title",  rewardValue: "exclusive_s1_iron_burned",   rewardLabel: "Título: Forjado en Fuego",   enLabel: "Title: Forged in Fire",       ptLabel: "Título: Forjado no Fogo",    icon: "ribbon",   iconColor: "#C0392B" },
+      { rewardType: "avatar", rewardValue: "exclusive_s1_phoenix_lord", icon: "flame",   iconColor: "#FF4500",
+        label: mkExclusiveLabel("avatar", {
+          es:"Señor Fénix", en:"Phoenix Lord", pt:"Senhor Fênix", fr:"Seigneur Phénix", de:"Phönixfürst",
+          it:"Signore Fenice", tr:"Anka Lordu", ru:"Лорд Феникс", pl:"Pan Feniksów", nl:"Feniksheer",
+          sv:"Fenixlord", da:"Føniksherre", fi:"Feeniksherra", no:"Føniksherre", zh:"凤凰之主",
+          ja:"不死鳥の主", ko:"불사조의 군주", hi:"फीनिक्स लॉर्ड", th:"เจ้าฟีนิกซ์",
+          vi:"Lãnh Chúa Phượng Hoàng", id:"Tuan Phoenix", ar:"سيد العنقاء",
+        }) },
+      { rewardType: "frame",  rewardValue: "exclusive_s1_ember_frame", icon: "ellipse", iconColor: "#FF6B00",
+        label: mkExclusiveLabel("frame", {
+          es:"Brasa Eterna", en:"Eternal Ember", pt:"Brasa Eterna", fr:"Braise Éternelle", de:"Ewige Glut",
+          it:"Brace Eterna", tr:"Ebedi Köz", ru:"Вечный Уголь", pl:"Wieczny Żar", nl:"Eeuwige Sintels",
+          sv:"Evig Glöd", da:"Evig Glød", fi:"Ikuinen Hiillos", no:"Evig Glør", zh:"永恒余烬",
+          ja:"永遠の残り火", ko:"영원한 불씨", hi:"शाश्वत अंगारा", th:"ถ่านนิรันดร์",
+          vi:"Tro Tàn Vĩnh Cửu", id:"Bara Abadi", ar:"جمرة أبدية",
+        }) },
+      { rewardType: "title",  rewardValue: "exclusive_s1_iron_burned", icon: "ribbon",  iconColor: "#C0392B",
+        label: mkExclusiveLabel("title", {
+          es:"Forjado en Fuego", en:"Forged in Fire", pt:"Forjado no Fogo", fr:"Forgé dans le Feu",
+          de:"Im Feuer Geschmiedet", it:"Forgiato nel Fuoco", tr:"Ateşte Dövülmüş", ru:"Закалённый в Огне",
+          pl:"Wykuty w Ogniu", nl:"Gesmeed in Vuur", sv:"Smidd i Eld", da:"Smedet i Ild",
+          fi:"Tulessa Taottu", no:"Smidd i Ild", zh:"烈火淬炼", ja:"炎で鍛えられし者",
+          ko:"불꽃에 단련된 자", hi:"अग्नि में गढ़ा", th:"หลอมในเปลวไฟ", vi:"Tôi Luyện Trong Lửa",
+          id:"Ditempa dalam Api", ar:"مصاغ في النار",
+        }) },
     ],
   },
   {
@@ -63,9 +136,31 @@ export const SEASON_THEMES: SeasonTheme[] = [
       ar: "العاصفة الأبدية",
     },
     exclusives: [
-      { rewardType: "avatar", rewardValue: "exclusive_s2_storm_caller",  rewardLabel: "Avatar: Invocador de Tormentas", enLabel: "Avatar: Storm Caller",     ptLabel: "Avatar: Invocador de Tempestades", icon: "thunderstorm", iconColor: "#4A90E2" },
-      { rewardType: "frame",  rewardValue: "exclusive_s2_lightning_frame", rewardLabel: "Marco: Relámpago",         enLabel: "Frame: Lightning",            ptLabel: "Moldura: Relâmpago",         icon: "flash",    iconColor: "#FFD700" },
-      { rewardType: "title",  rewardValue: "exclusive_s2_thunderlord",   rewardLabel: "Título: Señor del Trueno",   enLabel: "Title: Thunder Lord",         ptLabel: "Título: Senhor do Trovão",   icon: "ribbon",   iconColor: "#4A90E2" },
+      { rewardType: "avatar", rewardValue: "exclusive_s2_storm_caller", icon: "thunderstorm", iconColor: "#4A90E2",
+        label: mkExclusiveLabel("avatar", {
+          es:"Invocador de Tormentas", en:"Storm Caller", pt:"Invocador de Tempestades", fr:"Invocateur de Tempête",
+          de:"Sturmrufer", it:"Evocatore di Tempeste", tr:"Fırtına Çağıran", ru:"Призыватель Бурь",
+          pl:"Przyzywacz Burzy", nl:"Stormroeper", sv:"Stormkallare", da:"Stormkalder",
+          fi:"Myrskykutsuja", no:"Stormkaller", zh:"风暴召唤者", ja:"嵐の招来者",
+          ko:"폭풍 소환사", hi:"तूफान आह्वानकर्ता", th:"ผู้เรียกพายุ", vi:"Triệu Hồi Bão Tố",
+          id:"Pemanggil Badai", ar:"مستدعي العاصفة",
+        }) },
+      { rewardType: "frame",  rewardValue: "exclusive_s2_lightning_frame", icon: "flash", iconColor: "#FFD700",
+        label: mkExclusiveLabel("frame", {
+          es:"Relámpago", en:"Lightning", pt:"Relâmpago", fr:"Foudre", de:"Blitz", it:"Fulmine",
+          tr:"Şimşek", ru:"Молния", pl:"Błyskawica", nl:"Bliksem", sv:"Blixt", da:"Lyn",
+          fi:"Salama", no:"Lyn", zh:"闪电", ja:"稲妻", ko:"번개", hi:"बिजली",
+          th:"สายฟ้า", vi:"Tia Sét", id:"Petir", ar:"برق",
+        }) },
+      { rewardType: "title",  rewardValue: "exclusive_s2_thunderlord", icon: "ribbon", iconColor: "#4A90E2",
+        label: mkExclusiveLabel("title", {
+          es:"Señor del Trueno", en:"Thunder Lord", pt:"Senhor do Trovão", fr:"Seigneur du Tonnerre",
+          de:"Donnerfürst", it:"Signore del Tuono", tr:"Gök Gürültüsü Lordu", ru:"Лорд Грома",
+          pl:"Pan Gromów", nl:"Donderheer", sv:"Åskherre", da:"Tordenherre",
+          fi:"Ukkosenherra", no:"Tordenherre", zh:"雷霆之主", ja:"雷霆の主",
+          ko:"천둥의 군주", hi:"गर्जन प्रभु", th:"เจ้าสายฟ้า", vi:"Lãnh Chúa Sấm Sét",
+          id:"Tuan Petir", ar:"سيد الرعد",
+        }) },
     ],
   },
   {
@@ -80,9 +175,32 @@ export const SEASON_THEMES: SeasonTheme[] = [
       ar: "مملكة الظلال",
     },
     exclusives: [
-      { rewardType: "avatar", rewardValue: "exclusive_s3_shadow_walker", rewardLabel: "Avatar: Caminante Sombrío",  enLabel: "Avatar: Shadow Walker",       ptLabel: "Avatar: Andarilho Sombrio",  icon: "moon",     iconColor: "#6A0DAD" },
-      { rewardType: "item",   rewardValue: "exclusive_s3_void_back",     rewardLabel: "Dorso: Vacío Profundo",      enLabel: "Back: Deep Void",             ptLabel: "Dorso: Vazio Profundo",      icon: "card",     iconColor: "#1a0020" },
-      { rewardType: "title",  rewardValue: "exclusive_s3_nightbringer",  rewardLabel: "Título: Portador de Noche",  enLabel: "Title: Nightbringer",         ptLabel: "Título: Portador da Noite",  icon: "ribbon",   iconColor: "#6A0DAD" },
+      { rewardType: "avatar", rewardValue: "exclusive_s3_shadow_walker", icon: "moon", iconColor: "#6A0DAD",
+        label: mkExclusiveLabel("avatar", {
+          es:"Caminante Sombrío", en:"Shadow Walker", pt:"Andarilho Sombrio", fr:"Marcheur des Ombres",
+          de:"Schattenwanderer", it:"Camminatore d'Ombra", tr:"Gölge Yürüyüşçü", ru:"Странник Теней",
+          pl:"Wędrowiec Cieni", nl:"Schaduwloper", sv:"Skuggvandrare", da:"Skyggevandrer",
+          fi:"Varjokulkija", no:"Skyggevandrer", zh:"暗影行者", ja:"影渡り",
+          ko:"그림자 방랑자", hi:"छाया पथिक", th:"ผู้เดินเงา", vi:"Kẻ Bước Trong Bóng Tối",
+          id:"Pengembara Bayangan", ar:"ماشي الظلال",
+        }) },
+      { rewardType: "item",   rewardValue: "exclusive_s3_void_back", icon: "card", iconColor: "#1a0020",
+        label: mkExclusiveLabel("item", {
+          es:"Vacío Profundo", en:"Deep Void", pt:"Vazio Profundo", fr:"Vide Profond", de:"Tiefe Leere",
+          it:"Vuoto Profondo", tr:"Derin Boşluk", ru:"Глубокая Пустота", pl:"Głęboka Pustka",
+          nl:"Diepe Leegte", sv:"Djupa Tomheten", da:"Dyb Tomhed", fi:"Syvä Tyhjyys",
+          no:"Dyp Tomhet", zh:"深邃虚空", ja:"深淵", ko:"깊은 공허", hi:"गहरा शून्य",
+          th:"ความว่างเปล่าลึก", vi:"Hư Vô Sâu Thẳm", id:"Kekosongan Dalam", ar:"الفراغ العميق",
+        }) },
+      { rewardType: "title",  rewardValue: "exclusive_s3_nightbringer", icon: "ribbon", iconColor: "#6A0DAD",
+        label: mkExclusiveLabel("title", {
+          es:"Portador de Noche", en:"Nightbringer", pt:"Portador da Noite", fr:"Porteur de Nuit",
+          de:"Nachtbringer", it:"Portatore di Notte", tr:"Gece Getiren", ru:"Несущий Ночь",
+          pl:"Niosący Noc", nl:"Nachtbrenger", sv:"Nattbringaren", da:"Natbringer",
+          fi:"Yön Tuoja", no:"Nattbringer", zh:"夜之使者", ja:"夜をもたらす者",
+          ko:"밤의 인도자", hi:"रात्रि वाहक", th:"ผู้นำพาราตรี", vi:"Kẻ Mang Đêm Tối",
+          id:"Pembawa Malam", ar:"جالب الليل",
+        }) },
     ],
   },
   {
@@ -97,9 +215,30 @@ export const SEASON_THEMES: SeasonTheme[] = [
       ar: "السماوات الكونية",
     },
     exclusives: [
-      { rewardType: "avatar", rewardValue: "exclusive_s4_starborn",      rewardLabel: "Avatar: Nacido de Estrellas",enLabel: "Avatar: Starborn",            ptLabel: "Avatar: Nascido das Estrelas",icon: "sparkles", iconColor: "#A855F7" },
-      { rewardType: "frame",  rewardValue: "exclusive_s4_nebula_frame",  rewardLabel: "Marco: Nebulosa",            enLabel: "Frame: Nebula",               ptLabel: "Moldura: Nebulosa",          icon: "ellipse",  iconColor: "#A855F7" },
-      { rewardType: "item",   rewardValue: "exclusive_s4_constellation_back", rewardLabel: "Dorso: Constelación", enLabel: "Back: Constellation",         ptLabel: "Dorso: Constelação",         icon: "card",     iconColor: "#001a40" },
+      { rewardType: "avatar", rewardValue: "exclusive_s4_starborn", icon: "sparkles", iconColor: "#A855F7",
+        label: mkExclusiveLabel("avatar", {
+          es:"Nacido de Estrellas", en:"Starborn", pt:"Nascido das Estrelas", fr:"Né des Étoiles",
+          de:"Sterngeboren", it:"Nato dalle Stelle", tr:"Yıldızdan Doğan", ru:"Звёзднорождённый",
+          pl:"Zrodzony z Gwiazd", nl:"Stergeboren", sv:"Stjärnfödd", da:"Stjernefødt",
+          fi:"Tähdistä Syntynyt", no:"Stjernefødt", zh:"星辰之子", ja:"星生まれ",
+          ko:"별의 후예", hi:"तारों से जन्मा", th:"ผู้ถือกำเนิดดาว", vi:"Sinh Ra Từ Sao",
+          id:"Lahir dari Bintang", ar:"مولود النجوم",
+        }) },
+      { rewardType: "frame",  rewardValue: "exclusive_s4_nebula_frame", icon: "ellipse", iconColor: "#A855F7",
+        label: mkExclusiveLabel("frame", {
+          es:"Nebulosa", en:"Nebula", pt:"Nebulosa", fr:"Nébuleuse", de:"Nebel", it:"Nebulosa",
+          tr:"Nebula", ru:"Туманность", pl:"Mgławica", nl:"Nevel", sv:"Nebulosa", da:"Nebula",
+          fi:"Sumu", no:"Nebula", zh:"星云", ja:"星雲", ko:"성운", hi:"नीहारिका",
+          th:"เนบิวลา", vi:"Tinh Vân", id:"Nebula", ar:"سديم",
+        }) },
+      { rewardType: "item",   rewardValue: "exclusive_s4_constellation_back", icon: "card", iconColor: "#001a40",
+        label: mkExclusiveLabel("item", {
+          es:"Constelación", en:"Constellation", pt:"Constelação", fr:"Constellation", de:"Sternbild",
+          it:"Costellazione", tr:"Takımyıldız", ru:"Созвездие", pl:"Konstelacja",
+          nl:"Sterrenbeeld", sv:"Stjärnbild", da:"Stjernebillede", fi:"Tähtikuvio",
+          no:"Stjernebilde", zh:"星座", ja:"星座", ko:"별자리", hi:"नक्षत्र",
+          th:"กลุ่มดาว", vi:"Chòm Sao", id:"Rasi Bintang", ar:"كوكبة",
+        }) },
     ],
   },
   {
@@ -114,9 +253,31 @@ export const SEASON_THEMES: SeasonTheme[] = [
       ar: "الغابة المسحورة",
     },
     exclusives: [
-      { rewardType: "avatar", rewardValue: "exclusive_s5_druid",         rewardLabel: "Avatar: Druida Ancestral",   enLabel: "Avatar: Ancient Druid",       ptLabel: "Avatar: Druida Ancestral",   icon: "leaf",     iconColor: "#27AE60" },
-      { rewardType: "frame",  rewardValue: "exclusive_s5_vine_frame",    rewardLabel: "Marco: Enredadera",          enLabel: "Frame: Vine",                 ptLabel: "Moldura: Trepadeira",        icon: "ellipse",  iconColor: "#27AE60" },
-      { rewardType: "title",  rewardValue: "exclusive_s5_woodlands",     rewardLabel: "Título: Guardián del Bosque",enLabel: "Title: Forest Guardian",      ptLabel: "Título: Guardião da Floresta",icon: "ribbon",  iconColor: "#27AE60" },
+      { rewardType: "avatar", rewardValue: "exclusive_s5_druid", icon: "leaf", iconColor: "#27AE60",
+        label: mkExclusiveLabel("avatar", {
+          es:"Druida Ancestral", en:"Ancient Druid", pt:"Druida Ancestral", fr:"Druide Ancien",
+          de:"Alter Druide", it:"Druido Antico", tr:"Kadim Drud", ru:"Древний Друид",
+          pl:"Pradawny Druid", nl:"Oude Druïde", sv:"Forntida Druid", da:"Ældgammel Druide",
+          fi:"Muinainen Druidi", no:"Eldgammel Druide", zh:"远古德鲁伊", ja:"古代のドルイド",
+          ko:"고대 드루이드", hi:"प्राचीन ड्रूड", th:"ดรูอิดโบราณ", vi:"Druid Cổ Đại",
+          id:"Druid Kuno", ar:"درويد قديم",
+        }) },
+      { rewardType: "frame",  rewardValue: "exclusive_s5_vine_frame", icon: "ellipse", iconColor: "#27AE60",
+        label: mkExclusiveLabel("frame", {
+          es:"Enredadera", en:"Vine", pt:"Trepadeira", fr:"Liane", de:"Ranke", it:"Liana",
+          tr:"Sarmaşık", ru:"Лоза", pl:"Pnącze", nl:"Wijnrank", sv:"Ranka", da:"Ranke",
+          fi:"Köynnös", no:"Ranke", zh:"藤蔓", ja:"蔦", ko:"덩굴", hi:"बेल",
+          th:"เถาวัลย์", vi:"Dây Leo", id:"Tanaman Rambat", ar:"كرمة",
+        }) },
+      { rewardType: "title",  rewardValue: "exclusive_s5_woodlands", icon: "ribbon", iconColor: "#27AE60",
+        label: mkExclusiveLabel("title", {
+          es:"Guardián del Bosque", en:"Forest Guardian", pt:"Guardião da Floresta", fr:"Gardien de la Forêt",
+          de:"Waldhüter", it:"Guardiano della Foresta", tr:"Orman Muhafızı", ru:"Хранитель Леса",
+          pl:"Strażnik Lasu", nl:"Boswachter", sv:"Skogsväktare", da:"Skovvogter",
+          fi:"Metsänvartija", no:"Skogsvokter", zh:"森林守护者", ja:"森の守護者",
+          ko:"숲의 수호자", hi:"वन रक्षक", th:"ผู้พิทักษ์ป่า", vi:"Hộ Vệ Rừng",
+          id:"Penjaga Hutan", ar:"حارس الغابة",
+        }) },
     ],
   },
   {
@@ -131,9 +292,33 @@ export const SEASON_THEMES: SeasonTheme[] = [
       ar: "العصر الجليدي",
     },
     exclusives: [
-      { rewardType: "avatar", rewardValue: "exclusive_s6_frost_giant",   rewardLabel: "Avatar: Gigante de Hielo",   enLabel: "Avatar: Frost Giant",         ptLabel: "Avatar: Gigante de Gelo",    icon: "snow",     iconColor: "#7FDBFF" },
-      { rewardType: "item",   rewardValue: "exclusive_s6_glacier_back",  rewardLabel: "Dorso: Glaciar Eterno",      enLabel: "Back: Eternal Glacier",       ptLabel: "Dorso: Geleira Eterna",      icon: "card",     iconColor: "#B8DDEF" },
-      { rewardType: "title",  rewardValue: "exclusive_s6_iceborn",       rewardLabel: "Título: Hijo del Hielo",     enLabel: "Title: Iceborn",              ptLabel: "Título: Filho do Gelo",      icon: "ribbon",   iconColor: "#7FDBFF" },
+      { rewardType: "avatar", rewardValue: "exclusive_s6_frost_giant", icon: "snow", iconColor: "#7FDBFF",
+        label: mkExclusiveLabel("avatar", {
+          es:"Gigante de Hielo", en:"Frost Giant", pt:"Gigante de Gelo", fr:"Géant des Glaces",
+          de:"Frostriese", it:"Gigante del Gelo", tr:"Buz Devi", ru:"Ледяной Великан",
+          pl:"Lodowy Olbrzym", nl:"Vorstreus", sv:"Frostjätte", da:"Frostkæmpe",
+          fi:"Pakkasjättiläinen", no:"Frostkjempe", zh:"霜巨人", ja:"霜の巨人",
+          ko:"서리 거인", hi:"हिम दानव", th:"ยักษ์น้ำแข็ง", vi:"Gã Khổng Lồ Băng Giá",
+          id:"Raksasa Es", ar:"عملاق الصقيع",
+        }) },
+      { rewardType: "item",   rewardValue: "exclusive_s6_glacier_back", icon: "card", iconColor: "#B8DDEF",
+        label: mkExclusiveLabel("item", {
+          es:"Glaciar Eterno", en:"Eternal Glacier", pt:"Geleira Eterna", fr:"Glacier Éternel",
+          de:"Ewiger Gletscher", it:"Ghiacciaio Eterno", tr:"Ebedi Buzul", ru:"Вечный Ледник",
+          pl:"Wieczny Lodowiec", nl:"Eeuwige Gletsjer", sv:"Evig Glaciär", da:"Evig Gletsjer",
+          fi:"Ikuinen Jäätikkö", no:"Evig Isbre", zh:"永恒冰川", ja:"永遠の氷河",
+          ko:"영원한 빙하", hi:"शाश्वत हिमनद", th:"ธารน้ำแข็งนิรันดร์", vi:"Sông Băng Vĩnh Cửu",
+          id:"Gletser Abadi", ar:"نهر جليدي أبدي",
+        }) },
+      { rewardType: "title",  rewardValue: "exclusive_s6_iceborn", icon: "ribbon", iconColor: "#7FDBFF",
+        label: mkExclusiveLabel("title", {
+          es:"Hijo del Hielo", en:"Iceborn", pt:"Filho do Gelo", fr:"Né des Glaces",
+          de:"Eisgeboren", it:"Nato dal Ghiaccio", tr:"Buzdan Doğan", ru:"Рождённый Льдом",
+          pl:"Zrodzony z Lodu", nl:"IJsgeboren", sv:"Isfödd", da:"Isfødt",
+          fi:"Jäästä Syntynyt", no:"Isfødt", zh:"冰之子", ja:"氷生まれ",
+          ko:"얼음의 후예", hi:"हिम जन्मा", th:"ผู้ถือกำเนิดน้ำแข็ง", vi:"Sinh Ra Từ Băng",
+          id:"Lahir dari Es", ar:"مولود الجليد",
+        }) },
     ],
   },
 ];
@@ -175,13 +360,13 @@ const EXCLUSIVE_CATEGORY_MAP: Record<SeasonExclusive["rewardType"], ExclusiveCat
   title:  "title",
 };
 
-export function findExclusiveById(id: string, lang: "es" | "en" | "pt" = "es"): ResolvedExclusive | null {
+export function findExclusiveById(id: string, lang: Lang = "es"): ResolvedExclusive | null {
   if (!id || !id.startsWith("exclusive_s")) return null;
   for (let i = 0; i < SEASON_THEMES.length; i++) {
     const theme = SEASON_THEMES[i];
     const ex = theme.exclusives.find(e => e.rewardValue === id);
     if (!ex) continue;
-    const fullLabel = lang === "en" ? ex.enLabel : lang === "pt" ? ex.ptLabel : ex.rewardLabel;
+    const fullLabel = getExclusiveLabel(ex, lang);
     const name = fullLabel.includes(": ")
       ? fullLabel.split(": ").slice(1).join(": ")
       : fullLabel;
@@ -203,7 +388,7 @@ export function findExclusiveById(id: string, lang: "es" | "en" | "pt" = "es"): 
 export function getOwnedExclusives(
   ownedIds: string[] | undefined,
   category: ExclusiveCategory,
-  lang: "es" | "en" | "pt" = "es",
+  lang: Lang = "es",
 ): ResolvedExclusive[] {
   if (!ownedIds || ownedIds.length === 0) return [];
   const out: ResolvedExclusive[] = [];
@@ -434,11 +619,11 @@ export function getBattlePassTiers(seasonNumber: number): BattlePassTier[] {
       ...t,
       rewardType: exclusive.rewardType,
       rewardValue: exclusive.rewardValue,
-      rewardLabel: exclusive.rewardLabel,
+      rewardLabel: exclusive.label.es,
       icon: exclusive.icon,
       iconColor: exclusive.iconColor,
       isExclusive: true,
-      exclusiveLabel: { es: exclusive.rewardLabel, en: exclusive.enLabel, pt: exclusive.ptLabel },
+      exclusiveLabel: exclusive.label,
     };
   });
 }
