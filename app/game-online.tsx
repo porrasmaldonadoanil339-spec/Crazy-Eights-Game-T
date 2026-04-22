@@ -12,6 +12,7 @@ import Animated, {
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
+import { t, Lang } from "@/lib/i18n";
 import { PlayingCard } from "@/components/PlayingCard";
 import { DealAnimation } from "@/components/DealAnimation";
 import {
@@ -952,14 +953,15 @@ export default function OnlineGameScreen() {
       else if (newTotalWins % 7 === 0) chestType = "rare";
       else if (newTotalWins % 3 === 0) chestType = "common";
       if (chestType) {
-        const added = addChestToInventory(chestType, "win");
-        if (added) {
+        const result = addChestToInventory(chestType, "win");
+        if (result.added) {
           setPendingChestType(chestType);
         } else {
+          const lang: Lang = (profile.language ?? "es") as Lang;
           Alert.alert(
-            "Inventario lleno",
-            `Ganaste un cofre, pero tu inventario está lleno (${chestInventoryLimit}/${chestInventoryLimit}). Abre algunos cofres en tu perfil para liberar espacio.`,
-            [{ text: "Entendido" }]
+            t("chestInventoryFullTitle", lang),
+            t(result.queued ? "chestQueuedWinMsg" : "chestLostWinMsg", lang),
+            [{ text: t("gotItBtn", lang) }]
           );
         }
       }

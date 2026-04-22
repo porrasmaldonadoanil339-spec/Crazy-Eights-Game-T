@@ -15,7 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
-import { t } from "@/lib/i18n";
+import { t, Lang } from "@/lib/i18n";
 import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
 import { PlayingCard } from "@/components/PlayingCard";
@@ -1857,40 +1857,35 @@ export default function GameScreen() {
         else if (newTotalWins % 7 === 0) milestoneChest = "rare";
         else if (newTotalWins % 3 === 0) milestoneChest = "common";
 
+        const lang: Lang = (profile.language ?? "es") as Lang;
+        const overflowAlerts: { msgKey: "chestQueuedEventMsg" | "chestQueuedWinMsg" | "chestQueuedStreakMsg" | "chestLostEventMsg" | "chestLostWinMsg" | "chestLostStreakMsg" }[] = [];
+
         // Guaranteed dedicated Event Chest on every event MATCH win.
         // Independent from milestone chest — both can be granted.
         if (isEventWin) {
-          const eventAdded = addChestToInventory("event", "mission");
-          if (eventAdded) {
+          const result = addChestToInventory("event", "mission");
+          if (result.added) {
             chestType = "event";
             setPendingChestType("event");
             setShowChestReward(true);
           } else {
-            Alert.alert(
-              "Inventario lleno",
-              `Ganaste el Cofre de Evento, pero tu inventario está lleno (${chestInventoryLimit}/${chestInventoryLimit}). Abre algunos cofres en tu perfil para liberar espacio.`,
-              [{ text: "Entendido" }]
-            );
+            overflowAlerts.push({ msgKey: result.queued ? "chestQueuedEventMsg" : "chestLostEventMsg" });
           }
         }
 
         // Milestone chest (3/7/15/25 wins). Granted independently — does not
         // replace the event chest above.
         if (milestoneChest) {
-          const added = addChestToInventory(milestoneChest, "win");
-          if (added) {
+          const result = addChestToInventory(milestoneChest, "win");
+          if (result.added) {
             // Only override the visible "earned" badge if no event chest was shown.
             if (!chestType) {
               chestType = milestoneChest;
               setPendingChestType(milestoneChest);
               setShowChestReward(true);
             }
-          } else if (!isEventWin) {
-            Alert.alert(
-              "Inventario lleno",
-              `Ganaste un cofre, pero tu inventario está lleno (${chestInventoryLimit}/${chestInventoryLimit}). Abre algunos cofres en tu perfil para liberar espacio.`,
-              [{ text: "Entendido" }]
-            );
+          } else {
+            overflowAlerts.push({ msgKey: result.queued ? "chestQueuedWinMsg" : "chestLostWinMsg" });
           }
         }
         // Win streak milestone chests (shown only if no win-count chest already triggered)
@@ -1902,18 +1897,28 @@ export default function GameScreen() {
           else if (newStreak === 5) streakChest = "rare";
           else if (newStreak === 3) streakChest = "common";
           if (streakChest) {
-            const added = addChestToInventory(streakChest, "streak");
-            if (added) {
+            const result = addChestToInventory(streakChest, "streak");
+            if (result.added) {
               setPendingChestType(streakChest);
               setShowChestReward(true);
             } else {
-              Alert.alert(
-                "Inventario lleno",
-                `Ganaste un cofre por racha, pero tu inventario está lleno (${chestInventoryLimit}/${chestInventoryLimit}). Abre algunos cofres en tu perfil para liberar espacio.`,
-                [{ text: "Entendido" }]
-              );
+              overflowAlerts.push({ msgKey: result.queued ? "chestQueuedStreakMsg" : "chestLostStreakMsg" });
             }
           }
+        }
+
+        // Surface overflow notices to the player so chests don't vanish silently.
+        // Show only one alert to avoid stacking dialogs on the game-over modal,
+        // but prioritise any "lost" notice over a "queued" one so the player
+        // never misses the worse outcome when both happen in the same match.
+        if (overflowAlerts.length > 0) {
+          const lost = overflowAlerts.find((a) => a.msgKey.startsWith("chestLost"));
+          const pick = lost ?? overflowAlerts[0];
+          Alert.alert(
+            t("chestInventoryFullTitle", lang),
+            t(pick.msgKey, lang),
+            [{ text: t("gotItBtn", lang) }]
+          );
         }
       }
       if (session.mode === "ranked") {

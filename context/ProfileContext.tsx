@@ -160,6 +160,10 @@ export interface PlayerProfile {
   linkedFacebook?: string;
   rankedProfile: RankedProfile;
   chestInventory: Chest[];
+  // Overflow queue for chests earned while inventory was full. They are
+  // automatically promoted into the inventory whenever the player opens an
+  // existing chest, so they're never lost silently.
+  chestOverflow?: Chest[];
   // Ranked anti-abuse: timestamps (ms) of recent abandons. Used to apply
   // progressive penalties and a short matchmaking cooldown after repeated leaves.
   recentRankedAbandons?: number[];
@@ -252,6 +256,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   animationsEnabled: true,
   rankedProfile: { rank: 0, division: 0, stars: 0, maxStars: 5, totalWins: 0, totalLosses: 0 },
   chestInventory: [],
+  chestOverflow: [],
   recentRankedAbandons: [],
   rankedCooldownUntil: 0,
 };
@@ -321,16 +326,19 @@ interface ProfileContextValue {
   linkAccount: (provider: "google" | "facebook", email: string) => void;
   unlinkAccount: (provider: "google" | "facebook") => void;
   markTutorialSeen: () => void;
-  addChestToInventory: (type: ChestType, source: Chest["source"]) => boolean;
+  addChestToInventory: (type: ChestType, source: Chest["source"]) => { added: boolean; queued: boolean };
   isChestInventoryFull: boolean;
   chestInventoryLimit: number;
   openChestFromInventory: (chestId: string) => ChestReward | null;
   chestInventory: Chest[];
+  chestOverflow: Chest[];
+  chestOverflowCount: number;
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
 const STORAGE_KEY = "ocho_profile_v3";
 const CHEST_INVENTORY_LIMIT = 10;
+const CHEST_OVERFLOW_LIMIT = 20;
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<PlayerProfile>(() => ({
@@ -1136,15 +1144,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     update((p) => ({ ...p, tutorialSeen: true }));
   }, [update]);
 
-  const addChestToInventory = useCallback((type: ChestType, source: Chest["source"]): boolean => {
+  const addChestToInventory = useCallback((type: ChestType, source: Chest["source"]): { added: boolean; queued: boolean } => {
     let added = false;
+    let queued = false;
     update((p) => {
       const inventory = p.chestInventory ?? [];
-      if (inventory.length >= CHEST_INVENTORY_LIMIT) return p;
-      added = true;
-      return { ...p, chestInventory: [...inventory, createChest(type, source)] };
+      if (inventory.length < CHEST_INVENTORY_LIMIT) {
+        added = true;
+        return { ...p, chestInventory: [...inventory, createChest(type, source)] };
+      }
+      const overflow = p.chestOverflow ?? [];
+      if (overflow.length >= CHEST_OVERFLOW_LIMIT) return p;
+      queued = true;
+      return { ...p, chestOverflow: [...overflow, createChest(type, source)] };
     });
-    return added;
+    return { added, queued };
   }, [update]);
 
   const openChestFromInventory = useCallback((chestId: string): ChestReward | null => {
@@ -1154,7 +1168,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const chest = inventory.find((c) => c.id === chestId);
       if (!chest) return p;
       reward = openChestReward(chest, p.ownedItems);
-      const newInventory = inventory.filter((c) => c.id !== chestId);
+      const filtered = inventory.filter((c) => c.id !== chestId);
+      const overflow = p.chestOverflow ?? [];
+      // Promote the oldest queued chest into the inventory now that a slot is free.
+      let newInventory = filtered;
+      let newOverflow = overflow;
+      if (overflow.length > 0 && filtered.length < CHEST_INVENTORY_LIMIT) {
+        newInventory = [...filtered, overflow[0]];
+        newOverflow = overflow.slice(1);
+      }
       const newOwnedItems = reward.item ? [...p.ownedItems, reward.item.id] : p.ownedItems;
       return {
         ...p,
@@ -1162,6 +1184,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         totalXp: p.totalXp + reward.xp,
         ownedItems: newOwnedItems,
         chestInventory: newInventory,
+        chestOverflow: newOverflow,
       };
     });
     return reward;
@@ -1227,6 +1250,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         chestInventoryLimit: CHEST_INVENTORY_LIMIT,
         openChestFromInventory,
         chestInventory: profile.chestInventory ?? [],
+        chestOverflow: profile.chestOverflow ?? [],
+        chestOverflowCount: (profile.chestOverflow ?? []).length,
       }}
     >
       {children}
