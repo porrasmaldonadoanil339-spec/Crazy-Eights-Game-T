@@ -17,8 +17,10 @@ import { PlayingCard } from "@/components/PlayingCard";
 import {
   MultiGameState, Card, Suit,
   initMultiGame, multiCanPlay, multiPlayCard, multiDraw, multiChooseSuit, multiConfirmTurn,
+  multiApplyRandomShuffle,
   suitName, suitSymbol, suitColor, multiGetTopCard,
 } from "@/lib/multiplayerEngine";
+import { getEventConfig } from "@/lib/eventModes";
 import { playCardFlip, playCardDraw, playButton, stopMusic } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS } from "@/lib/storeItems";
@@ -230,8 +232,58 @@ export default function MultiGameScreen() {
       stopMusic().catch(() => {});
     }
   }, [gameState.phase]);
+
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
+
+  // ─── Live event hooks ─────────────────────────────────────────────────────
+  // Always derive from the authoritative game state's eventId so the hooks
+  // can't drift from what initMultiGame actually applied.
+  const eventConfig = React.useMemo(
+    () => getEventConfig(gameState.eventId ?? null),
+    [gameState.eventId],
+  );
+
+  // "Cartas Aleatorias" — shuffle the active suit at random every 4 turns.
+  const lastShuffleTurnRef = useRef<number>(-1);
+  useEffect(() => {
+    if (!gameStarted) return;
+    if (gameState.eventId !== "random") return;
+    if (gameState.phase !== "playing" && gameState.phase !== "pass_device") return;
+    if (gameState.pendingDraw > 0) return;
+    const tid = gameState.turnId ?? 0;
+    if (tid === 0 || tid % 4 !== 0) return;
+    if (lastShuffleTurnRef.current === tid) return;
+    lastShuffleTurnRef.current = tid;
+    setGameState(prev => multiApplyRandomShuffle(prev));
+  }, [gameStarted, gameState.turnId, gameState.phase, gameState.pendingDraw, gameState.eventId]);
+
+  // "Velocidad Extrema" — auto-draw if the current player takes longer than turnSeconds.
+  // Reset every time the turn rotates or pass-device → playing transition occurs.
+  const speedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (speedTimerRef.current) {
+      clearTimeout(speedTimerRef.current);
+      speedTimerRef.current = null;
+    }
+    if (!gameStarted) return;
+    const sec = eventConfig?.turnSeconds;
+    if (!sec) return;
+    if (gameState.phase !== "playing") return;
+    speedTimerRef.current = setTimeout(() => {
+      setGameState(prev => {
+        if (prev.phase !== "playing") return prev;
+        return multiDraw(prev);
+      });
+      setSelectedCard(null);
+    }, sec * 1000);
+    return () => {
+      if (speedTimerRef.current) {
+        clearTimeout(speedTimerRef.current);
+        speedTimerRef.current = null;
+      }
+    };
+  }, [gameStarted, eventConfig?.turnSeconds, gameState.phase, gameState.turnId, gameState.currentPlayerIndex]);
   // ─── Emotes per player (local pass-and-play) ─────────────────────────────
   const [activeEmotes, setActiveEmotes] = useState<Record<number, Emote | null>>({});
   const lastEmoteAtRef = useRef<Record<number, number>>({});

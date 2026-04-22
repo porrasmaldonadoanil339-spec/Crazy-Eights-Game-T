@@ -2,7 +2,7 @@ import { Server as SocketServer } from "socket.io";
 import { Server as HttpServer } from "http";
 import {
   initMultiGame, multiPlayCard, multiDraw, multiChooseSuit,
-  multiGetTopCard, MultiGameState, cpuPlayMulti,
+  multiGetTopCard, MultiGameState, cpuPlayMulti, multiApplyRandomShuffle,
 } from "../lib/multiplayerEngine";
 import type { Card, Suit } from "../lib/multiplayerEngine";
 
@@ -32,6 +32,24 @@ interface Room {
   status: "waiting" | "pre_match" | "playing" | "done";
   createdAt: number;
   mode: string;
+  lastShuffleTurnId?: number;
+}
+
+// "Cartas Aleatorias" event — change the active suit at random every N turns.
+const RANDOM_SHUFFLE_EVERY = 4;
+function maybeApplyRandomShuffle(room: Room): boolean {
+  const gs = room.gameState;
+  if (!gs) return false;
+  if (gs.eventId !== "random") return false;
+  if (gs.phase !== "playing" && gs.phase !== "pass_device") return false;
+  if (gs.pendingDraw > 0) return false;
+  const turnId = gs.turnId ?? 0;
+  if (turnId === 0) return false;
+  if (turnId % RANDOM_SHUFFLE_EVERY !== 0) return false;
+  if (room.lastShuffleTurnId === turnId) return false;
+  room.lastShuffleTurnId = turnId;
+  room.gameState = multiApplyRandomShuffle(gs);
+  return true;
 }
 
 interface MatchmakingEntry extends RoomPlayerProfile {
@@ -140,6 +158,7 @@ function publicState(room: Room) {
     pendingDrawType: gs.pendingDrawType,
     jActive: gs.jActive,
     jSuit: gs.jSuit,
+    eventId: gs.eventId ?? null,
   };
 }
 
@@ -396,8 +415,9 @@ export function setupRooms(httpServer: HttpServer) {
       try {
         const newState = multiPlayCard(room.gameState, card);
         room.gameState = newState;
+        maybeApplyRandomShuffle(room);
         broadcastGameState(room, io);
-        if (newState.phase !== "choosing_suit" && newState.phase !== "game_over") {
+        if (room.gameState.phase !== "choosing_suit" && room.gameState.phase !== "game_over") {
           scheduleAutoplay(room, io);
         }
       } catch {}
@@ -415,8 +435,9 @@ export function setupRooms(httpServer: HttpServer) {
       try {
         const newState = multiDraw(room.gameState);
         room.gameState = newState;
+        maybeApplyRandomShuffle(room);
         broadcastGameState(room, io);
-        if (newState.phase !== "game_over") {
+        if (room.gameState.phase !== "game_over") {
           scheduleAutoplay(room, io);
         }
       } catch {}
@@ -434,6 +455,7 @@ export function setupRooms(httpServer: HttpServer) {
       try {
         const newState = multiChooseSuit(room.gameState, suit);
         room.gameState = newState;
+        maybeApplyRandomShuffle(room);
         broadcastGameState(room, io);
         scheduleAutoplay(room, io);
       } catch {}
@@ -545,6 +567,7 @@ function startGame(room: Room, io: SocketServer) {
   const gs = initMultiGame(names, 8, getActiveEventIdForServer());
   room.gameState = gs;
   room.hands = [...gs.hands];
+  room.lastShuffleTurnId = undefined;
 
   io.to(room.code).emit("game_starting", {
     playerCount: room.players.length,
@@ -602,8 +625,9 @@ function scheduleAutoplay(room: Room, io: SocketServer) {
       try {
         const newState = cpuPlayMulti(room.gameState);
         room.gameState = newState;
+        maybeApplyRandomShuffle(room);
         broadcastGameState(room, io);
-        if (newState.phase !== "game_over" && newState.phase !== "choosing_suit") {
+        if (room.gameState.phase !== "game_over" && room.gameState.phase !== "choosing_suit") {
           scheduleAutoplay(room, io);
         }
       } catch {}

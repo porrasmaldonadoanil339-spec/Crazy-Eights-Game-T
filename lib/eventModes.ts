@@ -60,9 +60,12 @@ export const EVENT_CONFIGS: Record<EventId, EventConfig> = {
   },
 };
 
-export function getEventConfig(id: EventId | undefined | null): EventConfig | null {
+export function getEventConfig(id: string | undefined | null): EventConfig | null {
   if (!id) return null;
-  return EVENT_CONFIGS[id] ?? null;
+  // Runtime narrow — accepts any string (e.g. server payloads) and returns
+  // null for unknown ids without resorting to type assertions.
+  if (id in EVENT_CONFIGS) return EVENT_CONFIGS[id as EventId];
+  return null;
 }
 
 const EVENT_NAME_KEYS: Record<EventId, TranslationKey> = {

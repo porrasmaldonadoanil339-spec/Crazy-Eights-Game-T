@@ -32,9 +32,11 @@ function multiEventDrawMultiplier(state: MultiGameState): number {
 export function initMultiGame(playerNames: string[], cardsPerPlayer = 8, eventId?: string | null): MultiGameState {
   const deck = createDeck();
   const playerCount = playerNames.length;
+  // Survival event: every player starts with 12 cards (mirrors single-player).
+  const effectiveCards = eventId === "survival" ? 12 : cardsPerPlayer;
   const hands: Card[][] = [];
   for (let i = 0; i < playerCount; i++) {
-    hands.push(deck.splice(0, cardsPerPlayer));
+    hands.push(deck.splice(0, effectiveCards));
   }
 
   let topCard = deck.splice(0, 1)[0];
@@ -308,6 +310,21 @@ export function multiDraw(state: MultiGameState): MultiGameState {
     ns.phase = "pass_device";
     ns.message = gm("mpNoPlay", { p: ns.playerNames[next] });
   }
+  return ns;
+}
+
+/**
+ * Random-event shuffle: replaces the active suit with a different one,
+ * mirroring the "Cartas Aleatorias" effect from single-player.
+ * Does NOT advance the turn; only mutates currentSuit and the message.
+ */
+export function multiApplyRandomShuffle(state: MultiGameState): MultiGameState {
+  const ns = clone(state);
+  const all: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
+  const choices = all.filter(s => s !== ns.currentSuit);
+  const next = choices[Math.floor(Math.random() * choices.length)];
+  ns.currentSuit = next;
+  ns.message = gm("mpRandomShuffle", { s: suitName(next) });
   return ns;
 }
 

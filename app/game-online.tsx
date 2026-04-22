@@ -28,6 +28,8 @@ import {
 import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import { getActiveEvent } from "@/components/EventsCard";
+import { multiApplyRandomShuffle } from "@/lib/multiplayerEngine";
+import { getEventConfig } from "@/lib/eventModes";
 import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
 import { getModeById } from "@/lib/gameModes";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
@@ -54,6 +56,7 @@ interface ServerGameState {
   jSuit: Suit | null;
   myHand: Card[];
   myPlayerIndex: number;
+  eventId?: string | null;
 }
 
 const DUMMY_CARD: Card = { id: "xx", rank: "2", suit: "hearts" };
@@ -100,6 +103,7 @@ function buildLocalState(srv: ServerGameState): MultiGameState {
     pendingDrawSuit: null,
     jActive: srv.jActive,
     jSuit: srv.jSuit,
+    eventId: srv.eventId ?? null,
   };
 }
 
@@ -1116,8 +1120,15 @@ export default function OnlineGameScreen() {
   }, [gameState?.turnId, gameState?.phase, lobbyPhase]);
 
   // ─── Inactivity timer (auto-draw after 30s idle; bar appears at 20s warning) ──
-  const INACTIVITY_TIMEOUT = 30;
-  const INACTIVITY_SHOW_DELAY = 20;
+  // Speed event shortens this to a 5s per-turn timer that's always visible.
+  // Source of truth is the authoritative gameState.eventId from the server
+  // (or from offline initMultiGame) — never the client's level-gated lobby view.
+  const onlineEventConfig = React.useMemo(
+    () => getEventConfig(gameState?.eventId ?? null),
+    [gameState?.eventId],
+  );
+  const INACTIVITY_TIMEOUT = onlineEventConfig?.turnSeconds ?? 30;
+  const INACTIVITY_SHOW_DELAY = onlineEventConfig?.turnSeconds ? 0 : 20;
   useEffect(() => {
     const isActive =
       gameState?.phase === "playing" &&
@@ -1140,10 +1151,17 @@ export default function OnlineGameScreen() {
           clearInterval(inactivityRef.current);
           inactivityRef.current = null;
           setShowInactivityBar(false);
-          setGameState(prev => {
-            if (!prev || prev.phase !== "playing" || prev.currentPlayerIndex !== 0) return prev;
-            return multiDraw(prev);
-          });
+          if (isOnline) {
+            // Online rooms are server-authoritative — emit to the server so
+            // the turn timeout (e.g. Speed event) is enforced consistently
+            // for every client. The server will reject if it's not our turn.
+            socketRef.current?.emit("draw_card");
+          } else {
+            setGameState(prev => {
+              if (!prev || prev.phase !== "playing" || prev.currentPlayerIndex !== 0) return prev;
+              return multiDraw(prev);
+            });
+          }
           setSelectedCard(null);
         }
       }, 100);
@@ -1161,7 +1179,23 @@ export default function OnlineGameScreen() {
         inactivityRef.current = null;
       }
     };
-  }, [gameState?.currentPlayerIndex, gameState?.phase, lobbyPhase]);
+  }, [gameState?.currentPlayerIndex, gameState?.phase, lobbyPhase, gameState?.turnId, INACTIVITY_TIMEOUT, INACTIVITY_SHOW_DELAY]);
+
+  // ─── "Cartas Aleatorias" event: shuffle active suit every 4 turns (offline only) ──
+  // Online matches handle this on the server so all clients stay in sync.
+  const lastShuffleTurnRef = useRef<number>(-1);
+  useEffect(() => {
+    if (isOnline) return;
+    if (!gameState) return;
+    if (gameState.eventId !== "random") return;
+    if (gameState.phase !== "playing" && gameState.phase !== "pass_device") return;
+    if (gameState.pendingDraw > 0) return;
+    const tid = gameState.turnId ?? 0;
+    if (tid === 0 || tid % 4 !== 0) return;
+    if (lastShuffleTurnRef.current === tid) return;
+    lastShuffleTurnRef.current = tid;
+    setGameState(prev => (prev ? multiApplyRandomShuffle(prev) : prev));
+  }, [gameState?.turnId, gameState?.phase, gameState?.pendingDraw, gameState?.eventId, isOnline]);
 
   // ─── CPU emote timer (random emotes every 20-60s during gameplay) ─────────
   useEffect(() => {
