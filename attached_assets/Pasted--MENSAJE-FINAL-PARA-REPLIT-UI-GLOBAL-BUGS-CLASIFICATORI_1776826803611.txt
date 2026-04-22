@@ -1,0 +1,82 @@
+🔴 MENSAJE FINAL PARA REPLIT — UI GLOBAL + BUGS + CLASIFICATORIA + TIENDA
+
+Quiero implementar y corregir exactamente lo siguiente en el juego:
+
+🟣 1. TIENDA / COLECCIÓN — NOMBRES (CRÍTICO)
+❌ PROBLEMA:
+El nombre de la colección y los ítems no se ven correctamente dentro de la UI
+Se ven cortados o fuera de su contenedor
+✔ SOLUCIÓN:
+El nombre de la COLECCIÓN debe verse completo dentro de su sección
+Los nombres de TODOS los ítems deben verse completos dentro de la tienda
+No debe haber texto cortado ni abreviado
+Ajustar tamaño o layout si es necesario
+🟣 2. TIENDA — EMOTES (CRÍTICO VISUAL)
+❌ PROBLEMA:
+Los emotes aparecen dentro de un óvalo o máscara circular que se ve feo
+✔ SOLUCIÓN:
+Eliminar completamente el efecto de óvalo
+Mostrar el emote en formato limpio
+Mantener animación completa del emote
+Sin recortes ni deformaciones
+🟡 3. REGALO DIARIO (COFRE)
+❌ PROBLEMA:
+Se muestra texto indicando tiempo o información del regalo
+✔ SOLUCIÓN:
+Debe ser una SORPRESA TOTAL
+NO mostrar tiempo ni información previa
+Solo mostrar:
+👉 “Se agregó un regalo a tu inventario”
+Luego aparecer como cofre en inventario
+🔴 4. BOTÓN DE RETROCESO DEL CELULAR (ANDROID BACK)
+✔ REQUISITO:
+
+Cuando el jugador presione el botón de retroceso del celular:
+
+En TODOS los modos:
+Clasificatoria
+Evento
+Clásico
+Relámpago
+Torneo
+Desafío
+Práctica
+Reto de fichas
+Online
+✔ COMPORTAMIENTO:
+Debe aparecer un mensaje de confirmación:
+👉 “¿Deseas salir de la partida/juego?”
+Igual que en juegos tipo Clash Royale
+Evitar salida accidental del juego
+🟢 5. BARRA INFERIOR (UI DEL JUEGO)
+
+Botones:
+
+Tienda
+Colección
+Jugar
+Camino
+Perfil
+✔ SOLUCIÓN:
+Deben estar un poco MÁS ABAJO
+Adaptados correctamente al tamaño del celular
+UI responsiva (no flotante ni mal posicionada)
+🔵 6. CLASIFICATORIA — BUSQUEDA DE JUGADORES
+❌ PROBLEMA:
+No aparece el avatar del jugador en la pantalla de búsqueda
+✔ SOLUCIÓN:
+Debe aparecer SIEMPRE:
+Avatar seleccionado del jugador
+Nombre del jugador
+🎯 OBJETIVO:
+Dar sensación de matchmaking online real
+Evitar pantalla vacía o bug visual
+🎯 OBJETIVO FINAL
+UI completamente adaptada a celular
+Tienda sin textos cortados
+Emotes sin óvalos ni deformaciones
+Regalo diario como sorpresa real
+Botón de retroceso funcional tipo Clash Royale
+Barra inferior bien posicionada
+Clasificatoria con avatar visible en matchmaking
+Experiencia profesional y consistente en todo el juego

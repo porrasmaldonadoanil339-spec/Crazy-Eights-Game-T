@@ -38,9 +38,13 @@ export default function TabLayout() {
           }),
           borderTopWidth: 0,
           elevation: 0,
-          height: 50 + (Platform.OS === "web" ? 34 : insets.bottom),
-          paddingBottom: Platform.OS === "web" ? 34 : insets.bottom,
+          height: 58 + (Platform.OS === "web" ? 34 : insets.bottom),
+          paddingBottom: (Platform.OS === "web" ? 34 : insets.bottom) + 4,
+          paddingTop: 8,
         } : { display: "none" },
+        tabBarItemStyle: {
+          paddingTop: 4,
+        },
         tabBarBackground: () =>
           Platform.OS === "ios" ? (
             <BlurView intensity={80} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />

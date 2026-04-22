@@ -14,6 +14,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { playButton, startMenuMusic } from "@/lib/audioManager";
 import { getLocalizedRankInfo } from "@/lib/ranked";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
+import { AVATARS } from "@/lib/storeItems";
 
 const AVATAR_COLORS = ["#E74C3C","#9B59B6","#E67E22","#2ECC71","#1A8FC1","#D4AF37","#C0392B","#27AE60","#8E44AD","#F39C12"];
 const RANK_GOLD = "#D4AF37";
@@ -236,6 +237,21 @@ export default function RankedLobbyScreen() {
       {phase === "searching" && (
         <View style={styles.searchingWrap}>
           <Animated.View entering={FadeIn.duration(400)}>
+            {/* Player avatar + name (matchmaking-real feel) */}
+            <View style={styles.searchingPlayerCard}>
+              <View style={[styles.searchingPlayerAvatar, { borderColor: ACCENT }]}>
+                <Ionicons
+                  name={(AVATARS.find(a => a.id === profile.avatarId)?.preview ?? "person") as any}
+                  size={28}
+                  color={ACCENT}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.searchingPlayerName} numberOfLines={1}>{profile.name || T("you")}</Text>
+                <Text style={styles.searchingPlayerSub}>Nv. {level} · {rankInfo.displayName}</Text>
+              </View>
+              <View style={[styles.onlineDotMe, { backgroundColor: "#2ECC71" }]} />
+            </View>
             <View style={styles.searchingIcon}>
               <Ionicons name={rankInfo.icon as any} size={40} color={rankInfo.color} />
             </View>
@@ -404,6 +420,21 @@ const styles = StyleSheet.create({
   },
   infoTxt: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "rgba(255,255,255,0.35)" },
   searchingWrap: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 },
+  searchingPlayerCard: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
+    marginBottom: 24, alignSelf: "stretch",
+  },
+  searchingPlayerAvatar: {
+    width: 52, height: 52, borderRadius: 26, borderWidth: 2,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    alignItems: "center", justifyContent: "center",
+  },
+  searchingPlayerName: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#fff" },
+  searchingPlayerSub: { fontFamily: "Nunito_700Bold", fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
+  onlineDotMe: { width: 10, height: 10, borderRadius: 5 },
   searchingIcon: {
     width: 80, height: 80, borderRadius: 40,
     backgroundColor: RANK_GOLD + "22", borderWidth: 2, borderColor: RANK_GOLD + "66",

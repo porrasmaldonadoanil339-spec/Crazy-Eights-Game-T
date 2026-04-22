@@ -197,13 +197,15 @@ function ConfirmModal({
       <View style={[styles.modalBg, { backgroundColor: theme.overlay }]}>
         <View style={[styles.confirmModal, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <LinearGradient colors={modalGrad} style={StyleSheet.absoluteFill} />
-          <View style={[styles.confirmIconWrap, { backgroundColor: item.previewColor + "33", borderColor: rarityColor + "66", borderWidth: 1.5 }]}>
-            {item.category === "emote" ? (
-              <AnimatedEmoteIcon icon={item.preview as any} color={item.previewColor} delay={0} size={40} />
-            ) : (
+          {item.category === "emote" ? (
+            <View style={styles.confirmEmoteWrap}>
+              <AnimatedEmoteIcon icon={item.preview as any} color={item.previewColor} delay={0} size={64} />
+            </View>
+          ) : (
+            <View style={[styles.confirmIconWrap, { backgroundColor: item.previewColor + "33", borderColor: rarityColor + "66", borderWidth: 1.5 }]}>
               <Ionicons name={item.preview as any} size={32} color={item.previewColor} />
-            )}
-          </View>
+            </View>
+          )}
           <View style={[styles.rarityBadge, { backgroundColor: rarityColor + "22" }]}>
             <Text style={[styles.rarityBadgeText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
           </View>
@@ -265,9 +267,15 @@ function InfoModal({
       <View style={[styles.modalBg, { backgroundColor: theme.overlay }]}>
         <View style={[styles.infoModal, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <LinearGradient colors={modalGrad} style={StyleSheet.absoluteFill} />
-          <View style={[styles.confirmIconWrap, { backgroundColor: item.previewColor + "33", borderColor: rarityColor + "66", borderWidth: 1.5 }]}>
-            <Ionicons name={item.preview as any} size={32} color={item.previewColor} />
-          </View>
+          {item.category === "emote" ? (
+            <View style={styles.confirmEmoteWrap}>
+              <AnimatedEmoteIcon icon={item.preview as any} color={item.previewColor} delay={0} size={64} />
+            </View>
+          ) : (
+            <View style={[styles.confirmIconWrap, { backgroundColor: item.previewColor + "33", borderColor: rarityColor + "66", borderWidth: 1.5 }]}>
+              <Ionicons name={item.preview as any} size={32} color={item.previewColor} />
+            </View>
+          )}
           <View style={[styles.rarityBadge, { backgroundColor: rarityColor + "22" }]}>
             <Text style={[styles.rarityBadgeText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
           </View>
@@ -776,7 +784,7 @@ export default function StoreScreen() {
     const ok = claimDailyShopFree(freeItem.id);
     if (ok) {
       await playSound("purchase");
-      showToast(`¡${freeItem.name}!`);
+      showToast(T("dailyGiftAdded") ?? "Se agregó un regalo a tu inventario");
     }
   };
 
@@ -820,9 +828,15 @@ export default function StoreScreen() {
               <Ionicons name="gift" size={28} color="#2ECC71" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.dailyFreeTitle}>REGALO DIARIO</Text>
-              <Text style={[styles.dailyFreeName, { color: theme.text }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{freeItem.name}</Text>
-              <Text style={[styles.dailyFreeDesc, { color: theme.textMuted }]} numberOfLines={2}>{freeItem.description}</Text>
+              <Text style={styles.dailyFreeTitle}>{T("dailyGift") ?? "REGALO DIARIO"}</Text>
+              <Text style={[styles.dailyFreeName, { color: theme.text }]} numberOfLines={1}>
+                {freeClaimed ? (T("dailyGiftClaimed") ?? "¡Reclamado!") : "???"}
+              </Text>
+              <Text style={[styles.dailyFreeDesc, { color: theme.textMuted }]} numberOfLines={2}>
+                {freeClaimed
+                  ? (T("dailyGiftSeeInventory") ?? "Mira tu inventario")
+                  : (T("dailyGiftMystery") ?? "¡Sorpresa! Reclámalo para descubrir qué hay dentro")}
+              </Text>
             </View>
             <BouncePressable
               style={[styles.dailyFreeBtn, freeClaimed && { opacity: 0.5 }]}
@@ -1180,6 +1194,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   confirmIconWrap: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center", marginBottom: 2 },
+  confirmEmoteWrap: { width: 80, height: 80, alignItems: "center", justifyContent: "center", marginBottom: 2 },
   rarityBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8 },
   rarityBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 1 },
   confirmName: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: Colors.text },
