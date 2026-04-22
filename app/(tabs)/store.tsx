@@ -2,7 +2,7 @@ import { CoinIcon } from "@/components/CoinIcon";
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
-  Platform, Modal, FlatList, Animated, Easing, Alert,
+  Platform, Modal, FlatList, Animated, Easing,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -1460,6 +1460,7 @@ type ShopChestType = "common" | "rare" | "epic" | "legendary";
 
 function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any; themeGold: string; showToast: (s: string) => void; T: (k: any) => string }) {
   const { profile, buyChestWithFichas } = useProfile();
+  const [confirmType, setConfirmType] = useState<ShopChestType | null>(null);
   const PRICES: Record<ShopChestType, number> = {
     common: 25, rare: 80, epic: 200, legendary: 500,
   };
@@ -1502,14 +1503,12 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
     }
   };
   const handleBuy = (type: ShopChestType) => {
-    Alert.alert(
-      `Comprar cofre ${NAMES[type]}`,
-      `¿Confirmar compra por ${PRICES[type]} fichas?\n\nCompras restantes hoy: ${dailyRemaining}/3`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Comprar", style: "default", onPress: () => { doPurchase(type); } },
-      ],
-    );
+    setConfirmType(type);
+  };
+  const handleConfirm = () => {
+    const t = confirmType;
+    setConfirmType(null);
+    if (t) doPurchase(t);
   };
   return (
     <View style={styles.chestShopWrap}>
@@ -1536,7 +1535,68 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
           </BouncePressable>
         ))}
       </ScrollView>
+      <ChestConfirmModal
+        visible={!!confirmType}
+        chestType={confirmType}
+        name={confirmType ? NAMES[confirmType] : ""}
+        price={confirmType ? PRICES[confirmType] : 0}
+        color={confirmType ? COLORS[confirmType] : "#fff"}
+        icon={confirmType ? ICONS[confirmType] : "cube"}
+        dailyRemaining={dailyRemaining}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmType(null)}
+      />
     </View>
+  );
+}
+
+function ChestConfirmModal({
+  visible, chestType, name, price, color, icon, dailyRemaining, onConfirm, onCancel,
+}: {
+  visible: boolean;
+  chestType: ShopChestType | null;
+  name: string;
+  price: number;
+  color: string;
+  icon: IoniconName;
+  dailyRemaining: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const T = useT();
+  const theme = useTheme();
+  const modalGrad = theme.isDark ? ["#0a1a0c","#061209"] as const : ["#e0f0d8","#cce4c4"] as const;
+  if (!chestType) return null;
+  return (
+    <Modal transparent animationType="fade" visible={visible} onRequestClose={onCancel}>
+      <View style={[styles.modalBg, { backgroundColor: theme.overlay }]}>
+        <View style={[styles.confirmModal, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <LinearGradient colors={modalGrad} style={StyleSheet.absoluteFill} />
+          <View style={[styles.confirmIconWrap, { backgroundColor: color + "33", borderColor: color + "66", borderWidth: 1.5 }]}>
+            <Ionicons name={icon} size={32} color={color} />
+          </View>
+          <Text style={[styles.confirmName, { color: theme.text }]}>Cofre {name}</Text>
+          <Text style={[styles.confirmDesc, { color: theme.textMuted, textAlign: "center" }]}>
+            Compras restantes hoy: {dailyRemaining}/3
+          </Text>
+          <View style={styles.priceRow}>
+            <Ionicons name="diamond" size={18} color="#3498DB" />
+            <Text style={[styles.priceText, { color: "#3498DB" }]}>{price} fichas</Text>
+          </View>
+          <View style={styles.confirmBtns}>
+            <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={[styles.cancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
+            </Pressable>
+            <BouncePressable onPress={onConfirm} style={styles.buyBtn}>
+              <LinearGradient colors={["#7FD0FF", "#3498DB"]} style={styles.buyBtnGrad}>
+                <Ionicons name="bag-check" size={16} color="#1a0a00" />
+                <Text style={styles.buyBtnText}>{T("buy")}</Text>
+              </LinearGradient>
+            </BouncePressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
