@@ -394,8 +394,8 @@ function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSki
       <View style={side ? gameStyles.sideCardFan : gameStyles.topCardFan}>
         {Array.from({ length: maxCards }).map((_, i) => (
           <View key={i} style={{
-            marginLeft: side ? 0 : i === 0 ? 0 : -18,
-            marginTop: side ? (i === 0 ? 0 : -22) : 0,
+            marginLeft: side ? 0 : i === 0 ? 0 : -28,
+            marginTop: side ? (i === 0 ? 0 : -42) : 0,
             zIndex: i,
             transform: side
               ? [{ rotate: `${side === "left" ? 90 : -90}deg` }]
@@ -2069,10 +2069,11 @@ const gameStyles = StyleSheet.create({
   cpuCountText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9 },
 
   faceDownMini: {
-    width: 28, height: 40, borderRadius: 5,
-    overflow: "hidden", borderWidth: 1, borderColor: "#4A90E244",
+    width: 44, height: 64, borderRadius: 7,
+    overflow: "hidden", borderWidth: 1.5, borderColor: Colors.gold + "66",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowRadius: 4, elevation: 4,
   },
-  faceDownDot: { fontSize: 7, color: "#4A90E2", opacity: 0.3, textAlign: "center", marginTop: 12 },
+  faceDownDot: { fontSize: 16, color: "#D4AF37", opacity: 0.55, textAlign: "center", marginTop: 22 },
 
   // Player zone
   playerZone: { position: "absolute", left: 0, right: 0, gap: 2 },

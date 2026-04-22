@@ -271,8 +271,8 @@ function InfoModal({
           <View style={[styles.rarityBadge, { backgroundColor: rarityColor + "22" }]}>
             <Text style={[styles.rarityBadgeText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
           </View>
-          <Text style={[styles.confirmName, { color: theme.text }]}>{localized.name}</Text>
-          <Text style={[styles.confirmDesc, { color: theme.textMuted, textAlign: 'center' }]}>{localized.description}</Text>
+          <Text style={[styles.confirmName, { color: theme.text, textAlign: 'center' }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>{localized.name}</Text>
+          <Text style={[styles.confirmDesc, { color: theme.textMuted, textAlign: 'center' }]} numberOfLines={4}>{localized.description}</Text>
           
           <View style={[styles.infoPreviewBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.infoPreviewText, { color: theme.text }]}>{previewText}</Text>
@@ -344,7 +344,7 @@ function EffectCard({ item, owned, isEquipped, isDailyHot, onPress, onEquip, onI
         </View>
         <View style={{ flex: 1 }}>
           <View style={styles.effectTopRow}>
-            <Text style={[styles.effectName, { color: theme.text }]}>{localized.name}</Text>
+            <Text style={[styles.effectName, { color: theme.text }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{localized.name}</Text>
             <View style={[styles.effectRarityBadge, { backgroundColor: rarityColor + "22" }]}>
               <Text style={[styles.effectRarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
             </View>
@@ -572,7 +572,7 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
         )}
         <View style={{ flex: 1 }}>
           <View style={styles.effectTopRow}>
-            <Text style={[styles.effectName, { color: theme.text }]}>{localized.name}</Text>
+            <Text style={[styles.effectName, { color: theme.text }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{localized.name}</Text>
             <View style={[styles.effectRarityBadge, { backgroundColor: rarityColor + "22" }]}>
               <Text style={[styles.effectRarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
             </View>
