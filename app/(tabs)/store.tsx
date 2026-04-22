@@ -583,7 +583,7 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
         >
           <Ionicons name="help-circle-outline" size={18} color={theme.textMuted} />
         </Pressable>
-        <View style={[styles.effectIconWrap, { backgroundColor: item.previewColor + "33", borderColor: item.previewColor + "44", width: 44, height: 44 }]}>
+        <View style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           {item.animated ? (
             <AnimatedEmoteIcon icon={item.preview as any} color={item.previewColor} delay={0} />
           ) : (

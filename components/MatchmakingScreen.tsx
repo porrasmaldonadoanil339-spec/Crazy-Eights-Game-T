@@ -8,6 +8,7 @@ import { Colors } from "@/constants/colors";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import type { CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
+import { startSearchMusic } from "@/lib/audioManager";
 import { useT } from "@/hooks/useT";
 
 const { width: SW } = Dimensions.get("window");
@@ -54,6 +55,7 @@ export function MatchmakingScreen({
 
   useEffect(() => {
     playSound("shuffle").catch(() => {});
+    startSearchMusic().catch(() => {});
 
     // Slide in both cards
     Animated.parallel([

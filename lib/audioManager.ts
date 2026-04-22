@@ -10,15 +10,17 @@ const SOUNDS = {
   lose:     require("@/assets/sounds/lose.wav"),
   button:   require("@/assets/sounds/button.wav"),
   wild:     require("@/assets/sounds/wild.wav"),
-  menuMusic: require("@/assets/sounds/menu-music.wav"),
-  gameMusic: require("@/assets/sounds/game-music.wav"),
+  menuMusic: require("@/assets/sounds/menu-music.mp3"),
+  gameMusic: require("@/assets/sounds/game-music.mp3"),
+  searchMusic: require("@/assets/sounds/search-music.mp3"),
 };
 
 type SoundKey = keyof typeof SOUNDS;
+type MusicTrack = "menu" | "search" | "game";
 
 let bgPlayer: AudioPlayer | null = null;
 let sfxPlayers: Map<SoundKey, AudioPlayer> = new Map();
-let currentTrack: "menu" | "game" | null = null;
+let currentTrack: MusicTrack | null = null;
 let isMusicEnabled = true;
 let isSfxMuted = false;
 let isHapticEnabled = true;
@@ -30,8 +32,8 @@ let isInitialized = false;
 // Ensures only one music transition happens at a time.
 // If multiple requests come in during a transition, only the last one is applied.
 let transitionInProgress = false;
-let pendingTrack: "menu" | "game" | null = null;
-let lastRequestedTrack: "menu" | "game" | null = null;
+let pendingTrack: MusicTrack | null = null;
+let lastRequestedTrack: MusicTrack | null = null;
 
 async function safe(fn: () => Promise<void>) {
   try { await fn(); } catch {}
@@ -90,7 +92,13 @@ async function fadeInCurrent() {
   }
 }
 
-async function applyMusicTransition(track: "menu" | "game") {
+function sourceForTrack(track: MusicTrack) {
+  if (track === "menu") return SOUNDS.menuMusic;
+  if (track === "search") return SOUNDS.searchMusic;
+  return SOUNDS.gameMusic;
+}
+
+async function applyMusicTransition(track: MusicTrack) {
   if (currentTrack === track && bgPlayer) return;
   if (!isMusicEnabled) return;
 
@@ -100,7 +108,7 @@ async function applyMusicTransition(track: "menu" | "game") {
   }
   await _stopMusicInternal();
   await safe(async () => {
-    bgPlayer = createAudioPlayer(track === "menu" ? SOUNDS.menuMusic : SOUNDS.gameMusic);
+    bgPlayer = createAudioPlayer(sourceForTrack(track));
     bgPlayer.volume = 0;
     bgPlayer.loop = true;
     bgPlayer.play();
@@ -110,7 +118,7 @@ async function applyMusicTransition(track: "menu" | "game") {
   await fadeInCurrent();
 }
 
-async function requestMusicTrack(track: "menu" | "game") {
+async function requestMusicTrack(track: MusicTrack) {
   // Record the latest desired track
   lastRequestedTrack = track;
   pendingTrack = track;
@@ -137,6 +145,10 @@ export async function startMenuMusic() {
 
 export async function startGameMusic() {
   await requestMusicTrack("game");
+}
+
+export async function startSearchMusic() {
+  await requestMusicTrack("search");
 }
 
 async function _stopMusicInternal() {
@@ -172,7 +184,7 @@ export async function resumeMusic() {
   await safe(async () => bgPlayer!.play());
 }
 
-export function getCurrentTrack(): "menu" | "game" | null {
+export function getCurrentTrack(): MusicTrack | null {
   return currentTrack;
 }
 
