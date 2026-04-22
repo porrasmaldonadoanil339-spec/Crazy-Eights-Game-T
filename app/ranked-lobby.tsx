@@ -11,7 +11,8 @@ import { Alert } from "react-native";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
-import { playButton, startMenuMusic } from "@/lib/audioManager";
+import { playButton, startMenuMusic, startSearchMusic } from "@/lib/audioManager";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { getLocalizedRankInfo } from "@/lib/ranked";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { AVATARS } from "@/lib/storeItems";
@@ -126,6 +127,7 @@ export default function RankedLobbyScreen() {
       return;
     }
     setPhase("searching");
+    startSearchMusic().catch(() => {});
     let progress = 0;
     const iv = setInterval(() => {
       progress += Math.random() * 8 + 4;
@@ -239,16 +241,20 @@ export default function RankedLobbyScreen() {
           <Animated.View entering={FadeIn.duration(400)}>
             {/* Player avatar + name (matchmaking-real feel) */}
             <View style={styles.searchingPlayerCard}>
-              <View style={[styles.searchingPlayerAvatar, { borderColor: ACCENT }]}>
-                <Ionicons
-                  name={(AVATARS.find(a => a.id === profile.avatarId)?.preview ?? "person") as any}
-                  size={28}
-                  color={ACCENT}
+              <View style={[styles.searchingPlayerAvatar, { borderColor: ACCENT, backgroundColor: "transparent", borderWidth: 0, padding: 0 }]}>
+                <AvatarDisplay
+                  avatarId={profile.avatarId}
+                  frameId={profile.selectedFrameId}
+                  photoUri={profile.photoUri || undefined}
+                  size={56}
                 />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.searchingPlayerName} numberOfLines={1}>{profile.name || T("you")}</Text>
-                <Text style={styles.searchingPlayerSub}>Nv. {level} · {rankInfo.displayName}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
+                  <Ionicons name={rankInfo.icon as any} size={14} color={rankInfo.color} />
+                  <Text style={[styles.searchingPlayerSub, { color: ACCENT }]} numberOfLines={1}>Nv. {level} · {rankInfo.displayName}</Text>
+                </View>
               </View>
               <View style={[styles.onlineDotMe, { backgroundColor: "#2ECC71" }]} />
             </View>

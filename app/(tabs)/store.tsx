@@ -583,11 +583,11 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
         >
           <Ionicons name="help-circle-outline" size={18} color={theme.textMuted} />
         </Pressable>
-        <View style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <View style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", flexShrink: 0, backgroundColor: item.previewColor + "1F", borderWidth: 1, borderColor: item.previewColor + "55" }}>
           {item.animated ? (
             <AnimatedEmoteIcon icon={item.preview as any} color={item.previewColor} delay={0} />
           ) : (
-            <Ionicons name={item.preview as any} size={22} color={item.previewColor} />
+            <Ionicons name={item.preview as any} size={26} color={item.previewColor} />
           )}
         </View>
         {item.animated && (
@@ -596,14 +596,10 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
             <Text style={styles.animatedBadgeText}>ANIM</Text>
           </View>
         )}
-        <View style={{ flex: 1 }}>
-          <View style={styles.effectTopRow}>
-            <Text style={[styles.effectName, { color: theme.text }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{localized.name}</Text>
-            <View style={[styles.effectRarityBadge, { backgroundColor: rarityColor + "22" }]}>
-              <Text style={[styles.effectRarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
-            </View>
+        <View style={{ flex: 1, justifyContent: "center", gap: 6 }}>
+          <View style={[styles.effectRarityBadge, { backgroundColor: rarityColor + "22", alignSelf: "flex-start" }]}>
+            <Text style={[styles.effectRarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
           </View>
-          <Text style={[styles.effectDesc, { color: theme.textMuted }]} numberOfLines={1}>{localized.description}</Text>
           <View style={styles.effectFooter}>
             {owned ? (
               <Pressable
@@ -680,9 +676,12 @@ export default function StoreScreen() {
   }, []);
   const dateKey = useMemo(() => getDailyDateKey(new Date(nowTick)), [nowTick]);
   const ownedIds = profile.ownedItems ?? [];
+  // IMPORTANT: do NOT pass ownedIds to getDailyShopItems — otherwise the 6 daily
+  // items reshuffle every time the user buys one. The list is fixed for the
+  // entire date window and only rotates when the date key flips at midnight.
   const dailyItems = useMemo(
-    () => getDailyShopItems(dateKey, ownedIds),
-    [dateKey, ownedIds],
+    () => getDailyShopItems(dateKey),
+    [dateKey],
   );
   const freeItem = useMemo(() => getDailyFreeItem(dateKey), [dateKey]);
   const today = dateKey;

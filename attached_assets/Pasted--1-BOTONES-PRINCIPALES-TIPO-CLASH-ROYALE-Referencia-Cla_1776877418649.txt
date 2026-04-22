@@ -1,0 +1,169 @@
+ 1. BOTONES PRINCIPALES (TIPO CLASH ROYALE)
+Referencia: Clash Royale
+🔴 PROBLEMA:
+Los botones (TIENDA, COLECCIÓN, JUGAR, CAMINO, PERFIL) están muy arriba.
+✅ SOLUCIÓN:
+•	Mover TODOS a la parte inferior de la pantalla 
+•	Crear una barra fija inferior (bottom bar) 
+📌 Estructura:
+[ TIENDA | COLECCIÓN | JUGAR | CAMINO | PERFIL ]
+📌 Reglas:
+•	Pegados al borde inferior (safe area) 
+•	Botones grandes (mobile friendly) 
+•	Icono + texto 
+•	“JUGAR” más grande al centro 
+•	Espaciado uniforme 
+________________________________________
+🛒 2. TIENDA (NO CAMBIAR ITEMS AL COMPRAR)
+🔴 PROBLEMA:
+Compras 1 ítem → cambian todos ❌
+✅ SOLUCIÓN:
+•	Los 6 ítems se mantienen fijos 
+•	SOLO cambian cuando termina el tiempo (ej: 24h) 
+📌 Lógica:
+items = fijos_por_dia
+
+if tiempo_expira:
+    generar_nuevos_items()
+✔ Puedes comprar cualquier ítem sin afectar los demás
+________________________________________
+🎭 3. TIENDA – EMOTES (CORRECCIONES)
+🔴 PROBLEMAS:
+•	Hay un óvalo vertical encima del emote ❌ 
+•	Aparecen letras debajo del emote ❌ 
+✅ SOLUCIÓN:
+•	ELIMINAR el óvalo vertical (overlay) 
+•	MANTENER el círculo normal del emote 
+•	ELIMINAR texto innecesario debajo del emote 
+✔ Mantener:
+•	Rareza (común, raro, épico, etc.) 
+•	Precio 
+________________________________________
+🏆 4. RECOMPENSAS CLASIFICATORIA (MÁS VISUALES)
+🔴 PROBLEMA:
+Se ven simples
+✅ SOLUCIÓN:
+•	Agregar brillo, animaciones y efectos 
+•	Mostrar recompensas grandes al subir rango 
+✔ Ejemplo:
+•	Subes rango → animación + recompensa visible 
+________________________________________
+🎵 5. MÚSICA (CORREGIR ERROR)
+🔴 PROBLEMA:
+Sigue la música del menú en clasificatoria ❌
+✅ SOLUCIÓN:
+📌 Flujo correcto:
+MENÚ → música menú
+
+CLICK "JUGAR" →
+    música búsqueda
+
+PARTIDA INICIA →
+    música batalla
+✔ Siempre detener la música anterior antes de cambiar
+________________________________________
+🎁 6. PASE DE BATALLA (PREMIUM)
+🔴 PROBLEMA:
+Se ve poco atractivo
+✅ SOLUCIÓN:
+•	Recompensas premium más llamativas: 
+o	Brillos 
+o	Colores dorados 
+o	Animaciones 
+✔ Diferenciar:
+•	Gratis → normal 
+•	Premium → épico/llamativo 
+________________________________________
+🆔 7. NIVEL Y TÍTULO EN PARTIDA
+✅ SOLUCIÓN:
+Mostrar así:
+[ICONO] "TÍTULO"
+Nivel X
+✔ Para:
+•	Jugador 
+•	Rival 
+________________________________________
+🎁 8. RECOMPENSAS DIARIAS (SEPARACIÓN)
+📌 Sistemas:
+1.	Login diario → al entrar al juego ✔ 
+2.	Regalo tienda → solo dentro de TIENDA ✔ 
+✔ NO mezclar
+________________________________________
+⚔️ 9. FUNCIONALIDAD DE CARTAS (ERROR CRÍTICO)
+🔴 PROBLEMA:
+•	Cartas no aplican bien efectos (+1, +2, +3) 
+•	Algunas funcionan distinto en clasificatoria ❌ 
+✅ SOLUCIÓN:
+•	TODAS las cartas deben usar la MISMA lógica 
+✔ Igual en:
+•	Clásico 
+•	Clasificatoria 
+•	Todos los modos 
+❗ NO deben cambiar comportamientos entre modos
+________________________________________
+🔍 10. AVATAR EN BÚSQUEDA MODO CLASIFICATORIA (ERROR GRAVE)
+🔴 PROBLEMA:
+No aparece tu avatar en matchmaking
+✅ SOLUCIÓN:
+•	Mostrar: 
+Avatar + Nombre + Rango
+✔ En pantalla de búsqueda
+________________________________________
+🏅 11. RANGOS VISIBLES (TIPO CLASH / FREE FIRE)
+🔴 PROBLEMA:
+No aparece rango visual
+✅ SOLUCIÓN:
+•	Mostrar logo de rango: 
+o	En búsqueda 
+o	En partida 
+✔ Estilo:
+[ICONO RANGO] Jugador
+________________________________________
+⚖️ 12. EMPAREJAMIENTO POR RANGO
+🔴 PROBLEMA:
+Te empareja con rangos incorrectos ❌
+✅ SOLUCIÓN:
+•	Solo contra jugadores de tu rango 
+📌 Ejemplo:
+if jugador.rango == rival.rango:
+    match_valido
+✔ Mantener coherencia competitiva
+________________________________________
+✨ 13. EFECTOS DE CARTAS (CLASIFICATORIA)
+🔴 PROBLEMA:
+Se ve apagado comparado con clásico ❌
+✅ SOLUCIÓN:
+•	Usar mismos efectos visuales en todos los modos 
+✔ Al lanzar carta:
+•	Animación 
+•	Impacto visual 
+•	Efectos 
+________________________________________
+🎮 14. BOTÓN SALIR (TIPO CLASH ROYALE)
+🔴 PROBLEMA:
+No funciona igual que botón del celular
+✅ SOLUCIÓN:
+•	Ambos deben mostrar el mismo mensaje 
+📌 Ejemplo:
+¿Salir de la partida?
+[SI] [NO]
+✔ Tanto:
+•	Botón UI 
+•	Botón físico del celular 
+________________________________________________________________________________
+✅ RESUMEN FINAL
+✔ Botones abajo tipo Clash Royale
+✔ Tienda no cambia ítems al comprar
+✔ Emotes corregidos (sin óvalo ni letras extra)
+✔ Recompensas más llamativas
+✔ Música corregida
+✔ Pase premium mejorado
+✔ Títulos con icono
+✔ Recompensas separadas
+✔ Cartas con misma lógica en todos los modos
+✔ Avatar visible en búsqueda
+✔ Rangos visibles y coherentes
+✔ Matchmaking balanceado
+✔ Efectos iguales en clasificatoria
+✔ Botón salir correcto
+✔ UI consistente en todos los modos
