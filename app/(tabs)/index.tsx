@@ -72,11 +72,14 @@ function FloatSuit({ suit, x, y, size, opacity, duration, isDark }: {
     opacity: opac.value,
   }));
 
-  const isRed = suit === "heart" || suit === "diamond";
+  const isRed = suit === "heart" || suit === "diamond" || suit === "heart-outline";
+  const isGold = suit === "sparkles" || suit === "flash" || suit === "star" || suit === "star-outline";
   const iconName = suit as any;
-  const color = isDark 
-    ? (isRed ? "#C0392B" : "#ffffff") 
-    : (isRed ? "#C0392B" : "#1a4a1a");
+  const color = isGold
+    ? (isDark ? "#F4D03F" : "#B8860B")
+    : isDark 
+      ? (isRed ? "#E74C3C" : "#ffffff") 
+      : (isRed ? "#C0392B" : "#1a4a1a");
 
   return (
     <Animated.View style={[style, { pointerEvents: "none" } as any]}>
@@ -86,14 +89,23 @@ function FloatSuit({ suit, x, y, size, opacity, duration, isDark }: {
 }
 
 function AnimatedBackground({ isDark }: { isDark: boolean }) {
-  const baseOpacity = isDark ? 0.06 : 0.03;
+  const baseOpacity = isDark ? 0.12 : 0.06;
+  const accentOpacity = isDark ? 0.18 : 0.09;
   const positions = [
-    { suit: "heart", x: 0.1, y: 0.15, size: 40, dur: 8000 },
-    { suit: "leaf", x: 0.85, y: 0.1, size: 35, dur: 9500 },
-    { suit: "diamond", x: 0.75, y: 0.5, size: 45, dur: 11000 },
-    { suit: "flower", x: 0.05, y: 0.6, size: 38, dur: 12500 },
-    { suit: "heart", x: 0.2, y: 0.85, size: 42, dur: 14000 },
-    { suit: "star", x: 0.8, y: 0.8, size: 36, dur: 10500 },
+    { suit: "heart", x: 0.08, y: 0.10, size: 48, dur: 8000, op: baseOpacity },
+    { suit: "leaf", x: 0.86, y: 0.08, size: 42, dur: 9500, op: baseOpacity },
+    { suit: "diamond", x: 0.78, y: 0.32, size: 52, dur: 11000, op: baseOpacity },
+    { suit: "flower", x: 0.04, y: 0.42, size: 44, dur: 12500, op: baseOpacity },
+    { suit: "heart", x: 0.22, y: 0.78, size: 50, dur: 14000, op: baseOpacity },
+    { suit: "star", x: 0.82, y: 0.72, size: 40, dur: 10500, op: accentOpacity },
+    { suit: "sparkles", x: 0.5, y: 0.18, size: 30, dur: 7000, op: accentOpacity },
+    { suit: "flash", x: 0.65, y: 0.55, size: 36, dur: 9000, op: accentOpacity },
+    { suit: "diamond-outline", x: 0.32, y: 0.5, size: 34, dur: 13000, op: baseOpacity },
+    { suit: "star-outline", x: 0.12, y: 0.28, size: 28, dur: 11500, op: accentOpacity },
+    { suit: "sparkles", x: 0.92, y: 0.88, size: 26, dur: 8500, op: accentOpacity },
+    { suit: "flash", x: 0.18, y: 0.62, size: 32, dur: 10000, op: accentOpacity },
+    { suit: "heart-outline", x: 0.55, y: 0.92, size: 30, dur: 12000, op: baseOpacity },
+    { suit: "star", x: 0.4, y: 0.05, size: 24, dur: 9500, op: accentOpacity },
   ];
 
   return (
@@ -105,7 +117,7 @@ function AnimatedBackground({ isDark }: { isDark: boolean }) {
           x={p.x} 
           y={p.y} 
           size={p.size} 
-          opacity={baseOpacity} 
+          opacity={p.op} 
           duration={p.dur} 
           isDark={isDark} 
         />
