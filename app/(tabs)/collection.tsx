@@ -147,8 +147,9 @@ export default function CollectionScreen() {
     }
   };
 
-  const renderItem = ({ item }: { item: GridItem }) => {
+  const renderItem = ({ item, index }: { item: GridItem; index: number }) => {
     const isOwned = item.isDefault || owned.includes(item.id);
+    const isFirstInRow = index % 4 === 0;
     const isEquipped = activeCat === "emote"
       ? isEmoteEquipped(item.id)
       : equippedId(activeCat) === item.id;
@@ -175,7 +176,7 @@ export default function CollectionScreen() {
     return (
       <BouncePressable
         onPress={handlePress}
-        style={styles.gridItem}
+        style={[styles.gridItem, isFirstInRow && { marginLeft: 8 }]}
       >
         <View style={styles.previewSlot}>
           {/* Locked items: desaturated (Clash Royale-style grayed look). No overlays, no padlock icon. */}

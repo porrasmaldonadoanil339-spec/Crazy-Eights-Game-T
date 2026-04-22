@@ -1,0 +1,87 @@
+🔴 MENSAJE FINAL PARA REPLIT — TIENDA + CLASIFICATORIA + EVENTOS + AUDIO
+
+Quiero implementar y corregir exactamente lo siguiente en el juego:
+
+🟣 1. TIENDA — EMOTES (CRÍTICO)
+❌ PROBLEMA:
+Al comprar emotes aparecen con moneda incorrecta (MONEDAS)
+✔ SOLUCIÓN:
+Los emotes deben comprarse SOLO con FICHAS
+Cambiar sistema de pago exclusivamente para emotes
+No usar monedas en ningún caso para emotes
+🟣 2. COLECCIÓN — PRIMER ÍTEM (UI AJUSTE)
+✔ CAMBIO:
+El primer ítem de TODAS las columnas de la colección debe moverse un poco hacia la DERECHA
+Solo un ajuste leve
+Para mejorar visibilidad
+
+Aplica a:
+
+Cartas
+Dorsos
+Mesas
+Marcos
+Avatares
+Efectos
+Títulos
+🔴 3. CLASIFICATORIA — RANKING (CRÍTICO)
+❌ PROBLEMA:
+El ranking es siempre igual cada semana
+Esto hace evidente que no es online real
+✔ SOLUCIÓN:
+El ranking debe variar constantemente
+Cambios semanales o dinámicos
+Simular actividad real de jugadores
+🎯 OBJETIVO:
+Dar sensación de sistema online real
+Evitar patrones repetidos
+🔴 4. CLASIFICATORIA — MATCHMAKING (AVATAR)
+❌ PROBLEMA:
+Al buscar partida NO aparece el avatar del jugador
+✔ SOLUCIÓN:
+Durante “Buscando jugadores” debe mostrarse:
+Avatar seleccionado del jugador
+Nombre del jugador
+🎯 OBJETIVO:
+Simular matchmaking real tipo online
+Evitar pantalla vacía o bug visual
+🟡 5. EVENTOS — COFRES (RECOMPENSAS)
+✔ CAMBIO:
+Los cofres de eventos deben tener diseño según el evento
+✔ REGLA:
+Cada evento tiene su propio estilo visual
+El cofre debe adaptarse al color del evento ganado
+Ejemplo: evento rojo → cofre rojo
+evento azul → cofre azul
+🎯 OBJETIVO:
+Más identidad visual por evento
+Recompensas más atractivas
+🟢 6. BOTONES INFERIORES — UI
+
+Botones:
+
+Tienda
+Colección
+Jugar
+Camino
+Perfil
+✔ SOLUCIÓN:
+Mejorar visibilidad del texto
+Que se lea claramente en móvil
+NO mover estructura del botón, solo el texto
+🎵 7. MÚSICA DEL JUEGO (MENÚ)
+✔ CAMBIO:
+Cambiar SOLO la música del menú principal
+Mantener música de partidas (NO cambiar)
+✔ REQUISITO:
+Música del menú debe ser más adecuada para juego de cartas
+Más épica / estratégica / moderna
+Mejor ambientación general
+🎯 OBJETIVO FINAL
+Emotes comprados correctamente con fichas
+Colección mejor alineada visualmente
+Clasificatoria más realista (ranking dinámico + avatar visible)
+Eventos con cofres personalizados por color
+UI inferior más legible
+Música del menú mejorada
+Experiencia más profesional y coherente

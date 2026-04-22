@@ -77,8 +77,19 @@ function buildLeaderboard(
 ): RankEntry[] {
   const multiplier = period === "alltime" ? 1 : period === "monthly" ? 0.12 : 0.03;
 
+  const now = new Date();
+  const weekKey = (() => {
+    const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    const dayNum = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() - dayNum + 3);
+    const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+    const diff = (d.getTime() - firstThursday.getTime()) / 86400000;
+    return d.getUTCFullYear() * 100 + Math.floor(diff / 7) + 1;
+  })();
+  const monthKey = now.getFullYear() * 100 + now.getMonth() + 1;
+  const periodSeed = period === "weekly" ? 7777 + weekKey * 31 : period === "monthly" ? 3333 + monthKey * 17 : 1111;
   const cpuEntries: RankEntry[] = CPU_PROFILES.map((p, i) => {
-    const seed = i * 13 + (period === "weekly" ? 7777 : period === "monthly" ? 3333 : 1111);
+    const seed = i * 13 + periodSeed;
     const baseWins = Math.floor(p.level * 18 * (1 + seededRand(seed) * 2));
     const wins = Math.max(1, Math.floor(baseWins * multiplier));
     return {
@@ -93,7 +104,7 @@ function buildLeaderboard(
     };
   });
 
-  const extraSeed = period === "weekly" ? 50000 : period === "monthly" ? 60000 : 70000;
+  const extraSeed = period === "weekly" ? 50000 + weekKey * 41 : period === "monthly" ? 60000 + monthKey * 23 : 70000;
   const extraCount = 1000 - CPU_PROFILES.length - 1;
   const extraEntries = generateExtraPlayers(Math.max(0, extraCount), extraSeed).map(e => ({
     ...e,

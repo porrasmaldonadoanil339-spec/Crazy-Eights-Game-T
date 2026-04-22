@@ -213,15 +213,24 @@ function ConfirmModal({
           <Text style={[styles.confirmName, { color: theme.text }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{localized.name}</Text>
           <Text style={[styles.confirmDesc, { color: theme.textMuted }]} numberOfLines={3}>{localized.description}</Text>
           <View style={styles.priceRow}>
-            <CoinIcon size={18} color={theme.gold} />
-            <Text style={[styles.priceText, { color: theme.gold }]}>{item.price} {T("coins")}</Text>
+            {item.category === "emote" ? (
+              <>
+                <Ionicons name="diamond" size={18} color="#3498DB" />
+                <Text style={[styles.priceText, { color: "#3498DB" }]}>{item.price} fichas</Text>
+              </>
+            ) : (
+              <>
+                <CoinIcon size={18} color={theme.gold} />
+                <Text style={[styles.priceText, { color: theme.gold }]}>{item.price} {T("coins")}</Text>
+              </>
+            )}
           </View>
           <View style={styles.confirmBtns}>
             <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Text style={[styles.cancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
             </Pressable>
             <BouncePressable onPress={onConfirm} style={styles.buyBtn}>
-              <LinearGradient colors={[theme.goldLight, theme.gold]} style={styles.buyBtnGrad}>
+              <LinearGradient colors={item.category === "emote" ? ["#67E8F9", "#3B82F6"] : [theme.goldLight, theme.gold]} style={styles.buyBtnGrad}>
                 <Ionicons name="bag-check" size={16} color="#1a0a00" />
                 <Text style={styles.buyBtnText}>{T("buy")}</Text>
               </LinearGradient>
