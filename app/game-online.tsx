@@ -26,6 +26,7 @@ import {
 } from "@/lib/audioManager";
 import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
+import { getActiveEvent } from "@/components/EventsCard";
 import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
 import { getModeById } from "@/lib/gameModes";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
@@ -907,7 +908,7 @@ export default function OnlineGameScreen() {
   // ─── Skip-lobby: initialize game immediately for ranked (pre-lobbied) games ──
   useEffect(() => {
     if (!skipLobby) return;
-    const gs = initMultiGame(allNames, 8);
+    const gs = initMultiGame(allNames, 8, getActiveEvent(playerLevel)?.id ?? null);
     gs.phase = "playing";
     setGameState(gs);
   }, [skipLobby]);
@@ -997,7 +998,7 @@ export default function OnlineGameScreen() {
     }
 
     timers.push(setTimeout(() => {
-      const gs = initMultiGame(allNames, 8);
+      const gs = initMultiGame(allNames, 8, getActiveEvent(playerLevel)?.id ?? null);
       gs.phase = "playing"; // Online starts directly, no pass_device for human
       setGameState(gs);
       setLobbyPhase("dealing");
@@ -1279,7 +1280,7 @@ export default function OnlineGameScreen() {
     );
     setCurrentCpuProfiles(newProfiles);
     const newNames = [humanName, ...newProfiles.map(c => c.name)];
-    const gs = initMultiGame(newNames, 8);
+    const gs = initMultiGame(newNames, 8, getActiveEvent(playerLevel)?.id ?? null);
     gs.phase = "playing";
     setGameState(gs);
     setSelectedCard(null);

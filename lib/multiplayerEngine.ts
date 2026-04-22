@@ -22,9 +22,14 @@ export interface MultiGameState {
   jActive: boolean;   // legacy
   jSuit: Suit | null; // legacy
   lastSkipped?: number;
+  eventId?: string | null;
 }
 
-export function initMultiGame(playerNames: string[], cardsPerPlayer = 8): MultiGameState {
+function multiEventDrawMultiplier(state: MultiGameState): number {
+  return state.eventId === "double" ? 2 : 1;
+}
+
+export function initMultiGame(playerNames: string[], cardsPerPlayer = 8, eventId?: string | null): MultiGameState {
   const deck = createDeck();
   const playerCount = playerNames.length;
   const hands: Card[][] = [];
@@ -61,6 +66,7 @@ export function initMultiGame(playerNames: string[], cardsPerPlayer = 8): MultiG
     jActive: false,
     jSuit: null,
     lastSkipped: undefined,
+    eventId: eventId ?? null,
   };
 }
 
@@ -162,7 +168,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
 
   if (card.rank === "Joker") {
     // Joker — +4 anytime, sets stack to "Joker" type
-    ns.pendingDraw += 4;
+    ns.pendingDraw += 4 * multiEventDrawMultiplier(ns);
     ns.pendingDrawType = "Joker";
     ns.pendingDrawSuit = null;
     ns.currentPlayerIndex = next;
@@ -172,7 +178,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
   }
 
   if (card.rank === "A") {
-    ns.pendingDraw += 1;
+    ns.pendingDraw += 1 * multiEventDrawMultiplier(ns);
     ns.pendingDrawType = "A";
     ns.pendingDrawSuit = card.suit;
     ns.currentSuit = card.suit;
@@ -183,7 +189,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
   }
 
   if (card.rank === "2") {
-    ns.pendingDraw += 2;
+    ns.pendingDraw += 2 * multiEventDrawMultiplier(ns);
     ns.pendingDrawType = "2";
     ns.pendingDrawSuit = card.suit;
     ns.currentSuit = card.suit;
@@ -194,7 +200,7 @@ export function multiPlayCard(state: MultiGameState, card: Card, chosenSuit?: Su
   }
 
   if (card.rank === "3") {
-    ns.pendingDraw += 3;
+    ns.pendingDraw += 3 * multiEventDrawMultiplier(ns);
     ns.pendingDrawType = "3";
     ns.pendingDrawSuit = card.suit;
     ns.currentSuit = card.suit;

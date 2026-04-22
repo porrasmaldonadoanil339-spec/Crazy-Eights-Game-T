@@ -42,6 +42,22 @@ interface MatchmakingEntry extends RoomPlayerProfile {
 const rooms = new Map<string, Room>();
 const matchmakingQueues = new Map<string, MatchmakingEntry[]>();
 
+// Mirrors the live-event schedule from components/EventsCard.tsx so the server
+// can determine which event is currently active without depending on
+// per-player level gates (those only control client-side visibility).
+const EVENT_IDS = ["speed", "random", "double", "survival"] as const;
+const EVENT_DURATION_DAYS = 2;
+const EVENT_CYCLE_MS = 3 * 24 * 3600 * 1000;
+const EVENT_BASE_MS = new Date("2026-03-01T00:00:00Z").getTime();
+function getActiveEventIdForServer(): string | null {
+  const elapsed = Date.now() - EVENT_BASE_MS;
+  if (elapsed < 0) return null;
+  const cycleIndex = Math.floor(elapsed / EVENT_CYCLE_MS);
+  const cyclePos = elapsed % EVENT_CYCLE_MS;
+  if (cyclePos >= EVENT_DURATION_DAYS * 24 * 3600 * 1000) return null;
+  return EVENT_IDS[cycleIndex % EVENT_IDS.length];
+}
+
 const DEFAULT_PROFILE: Omit<RoomPlayerProfile, "name"> = {
   avatarColor: "#D4AF37",
   avatarIcon: "person",
@@ -526,7 +542,7 @@ function startGame(room: Room, io: SocketServer) {
   // Sort players by playerIndex to ensure correct hand assignment
   const sortedPlayers = [...room.players].sort((a, b) => a.playerIndex - b.playerIndex);
   const names = sortedPlayers.map(p => p.name);
-  const gs = initMultiGame(names, 8);
+  const gs = initMultiGame(names, 8, getActiveEventIdForServer());
   room.gameState = gs;
   room.hands = [...gs.hands];
 

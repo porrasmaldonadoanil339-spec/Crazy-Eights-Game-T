@@ -23,6 +23,7 @@ import { playCardFlip, playCardDraw, playButton, stopMusic } from "@/lib/audioMa
 import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS } from "@/lib/storeItems";
 import { EmotePanel, EmoteBubble, type Emote } from "@/components/EmotePanel";
+import { getActiveEvent } from "@/components/EventsCard";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const PLAYER_COLORS = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
@@ -217,9 +218,12 @@ export default function MultiGameScreen() {
     return Array.from({ length: 6 }, (_, i) => `${T("player")} ${i + 1}`);
   }, [T]);
 
+  const { level: playerLevel } = useProfile();
+  const activeEventId = React.useMemo(() => getActiveEvent(playerLevel)?.id ?? null, [playerLevel]);
+
   const [gameStarted, setGameStarted] = useState(false);
   const [playerCountSelect, setPlayerCountSelect] = useState(3);
-  const [gameState, setGameState] = useState<MultiGameState>(() => initMultiGame(playerNames.slice(0, playerCountSelect)));
+  const [gameState, setGameState] = useState<MultiGameState>(() => initMultiGame(playerNames.slice(0, playerCountSelect), 8, activeEventId));
 
   useEffect(() => {
     if (gameState.phase === "game_over") {
@@ -248,9 +252,9 @@ export default function MultiGameScreen() {
   const handleStartGame = useCallback(() => {
     playButton().catch(() => {});
     const selectedNames = playerNames.slice(0, playerCountSelect);
-    setGameState(initMultiGame(selectedNames));
+    setGameState(initMultiGame(selectedNames, 8, activeEventId));
     setGameStarted(true);
-  }, [playerCountSelect, playerNames]);
+  }, [playerCountSelect, playerNames, activeEventId]);
 
   const pidx = gameState.currentPlayerIndex;
   const currentHand = gameState.hands[pidx] ?? [];
