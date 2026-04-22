@@ -38,12 +38,13 @@ export default function TabLayout() {
           }),
           borderTopWidth: 0,
           elevation: 0,
-          height: 58 + (Platform.OS === "web" ? 34 : insets.bottom),
-          paddingBottom: (Platform.OS === "web" ? 34 : insets.bottom) + 4,
-          paddingTop: 8,
+          height: 64 + (Platform.OS === "web" ? 34 : insets.bottom),
+          paddingBottom: (Platform.OS === "web" ? 34 : insets.bottom) + 6,
+          paddingTop: 6,
         } : { display: "none" },
         tabBarItemStyle: {
-          paddingTop: 4,
+          paddingTop: 2,
+          paddingHorizontal: 0,
         },
         tabBarBackground: () =>
           Platform.OS === "ios" ? (
@@ -51,8 +52,12 @@ export default function TabLayout() {
           ) : null,
         tabBarLabelStyle: {
           fontFamily: "Nunito_700Bold",
-          fontSize: 10,
+          fontSize: 11,
+          marginTop: 2,
+          marginBottom: 0,
+          includeFontPadding: false,
         },
+        tabBarAllowFontScaling: false,
       }}
     >
       <Tabs.Screen

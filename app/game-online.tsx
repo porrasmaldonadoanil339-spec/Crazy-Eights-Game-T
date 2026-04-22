@@ -721,8 +721,8 @@ export default function OnlineGameScreen() {
   const botPad = Platform.OS === "web" ? 34 : insets.bottom + 4;
   const headerH = 50;
   const zoneH = SH - topPad - botPad - headerH;
-  const tableW = Math.min(SW * 0.64, 250);
-  const tableH = tableW * 0.55;
+  const tableW = Math.min(SW * 0.72, 290);
+  const tableH = tableW * 0.62;
   const tableCenterY = zoneH * 0.44;
 
   const playerCount = Math.min(4, Math.max(2, parseInt(params.count ?? "3", 10)));
@@ -2033,7 +2033,7 @@ const gameStyles = StyleSheet.create({
   },
   tableContent: {
     flex: 1, flexDirection: "row", alignItems: "center",
-    justifyContent: "center", gap: 12,
+    justifyContent: "center", gap: 8, paddingHorizontal: 6,
   },
   drawPileBtn: { alignItems: "center", justifyContent: "center" },
   drawPileStack: { width: 76, height: 108, position: "relative" },

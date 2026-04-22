@@ -1,0 +1,108 @@
+🔴 MENSAJE FINAL PARA REPLIT — UI GLOBAL (FIX + MEJORAS)
+
+Quiero corregir e implementar exactamente lo siguiente en el juego:
+
+🟡 1. BARRA INFERIOR — BOTONES (CRÍTICO UI)
+
+Botones:
+
+Tienda
+Colección
+Jugar
+Camino
+Perfil
+❌ PROBLEMA:
+Los nombres de los botones NO se ven bien o están cortados
+La barra está mal posicionada o tapando texto
+✔ SOLUCIÓN:
+Los nombres deben verse COMPLETOS y legibles
+Ajustar tamaño de fuente o espacio interno
+La barra NO debe bajar tanto como para tapar nombres o UI superior
+Debe estar bien adaptada al celular (responsive UI)
+🎯 OBJETIVO:
+UI limpia y legible en todos los dispositivos
+🟣 2. COLECCIÓN — NOMBRES DE ÍTEMS (CRÍTICO)
+❌ PROBLEMA:
+Los nombres de los ítems NO se ven correctamente fuera del detalle
+Solo aparecen completos al hacer clic
+✔ SOLUCIÓN:
+Mostrar nombre completo también en vista previa (no solo al presionar)
+Debajo del ítem mostrar:
+Nombre completo
+Tipo (Común, Raro, Épico, etc.)
+No mostrar nombres truncados
+🟣 3. COLECCIÓN — ÍTEMS BLOQUEADOS (CLASH ROYALE STYLE)
+✔ SISTEMA NUEVO:
+
+Cuando un ítem NO esté desbloqueado:
+
+Debe verse en color gris (estilo Clash Royale)
+Debe seguir siendo visible (NO oculto)
+NO mostrar icono de bloqueo encima
+✔ AL DESBLOQUEAR:
+Se ve normal con su color original
+Ya no aparece símbolo de candado
+🎯 OBJETIVO:
+Sistema visual claro como Clash Royale
+Saber qué tienes y qué no sin confusión
+🔴 4. CLASIFICATORIA — MAZO (CRÍTICO)
+❌ PROBLEMA:
+El mazo para robar cartas se ve cortado
+✔ SOLUCIÓN:
+El mazo debe verse COMPLETO
+No debe haber recortes en cartas ni contenedor
+Ajustar escala y posición del deck
+🎯 OBJETIVO:
+Visibilidad total de cartas en partida
+🟢 5. SCROLL DEL MAZO (SISTEMA GLOBAL)
+✔ REQUISITO:
+
+El scroll de clasificatoria está perfecto.
+
+✔ APLICAR EXACTAMENTE IGUAL A:
+Clásico
+Relámpago
+Torneo
+Desafío
+Práctica
+Reto de fichas
+Online
+🎯 OBJETIVO:
+Misma experiencia de scroll en todos los modos
+Sin diferencias visuales ni funcionales
+🟣 6. DISEÑO DE CARTAS / ITEMS (CRÍTICO)
+❌ PROBLEMA:
+Algunos diseños se ven “salidos” o desbordados del contenedor
+✔ SOLUCIÓN:
+Ningún ítem o carta debe salirse de su marco
+Ajustar clipping/scale correctamente
+Mantener proporción sin deformar
+Todo debe estar contenido visualmente
+🟢 7. ANIMACIONES GENERALES (MEJORA UI)
+✔ OBJETIVO:
+Agregar más animaciones suaves en UI
+Mejorar transición de menús
+Hacer el juego más “vivo”
+
+Ejemplos:
+
+Animaciones al abrir tienda
+Hover en ítems
+Transiciones suaves entre menús
+Efectos ligeros en botones
+🔵 8. PANTALLA DE CARGA (CRÍTICO VISUAL)
+✔ MEJORA:
+Fondo de carga debe ser animado (movimiento suave)
+No imagen estática
+✔ ELEMENTOS:
+Fondo con movimiento (parallax o loop suave)
+Íconos animados
+Sensación de carga moderna
+🎯 OBJETIVO FINAL
+UI completamente legible en celular
+Tienda sin errores de texto ni recortes
+Colección clara estilo Clash Royale
+Clasificatoria sin cartas cortadas
+Scroll unificado en todos los modos
+Animaciones más vivas en todo el juego
+Pantalla de carga moderna y dinámica

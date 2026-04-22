@@ -107,6 +107,84 @@ function Particle({ delay }: { delay: number }) {
   );
 }
 
+// Animated floating card suit — slow vertical drift + gentle rotation loop.
+function FloatingSuit({
+  suit, top, left, right, size, color, opacity, delay,
+}: {
+  suit: string;
+  top: any; left?: any; right?: any;
+  size: number; color: string; opacity: number; delay: number;
+}) {
+  const translateY = useRef(new Animated.Value(0)).current;
+  const rotate = useRef(new Animated.Value(0)).current;
+  const fade = useRef(new Animated.Value(0)).current;
+  const nativeDriver = Platform.OS !== "web";
+
+  useEffect(() => {
+    Animated.timing(fade, { toValue: 1, duration: 800, delay, useNativeDriver: nativeDriver }).start();
+    const driftDur = 5500 + Math.random() * 2500;
+    const rotDur = 9000 + Math.random() * 4000;
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(translateY, { toValue: -12, duration: driftDur, useNativeDriver: nativeDriver }),
+        Animated.timing(translateY, { toValue: 12,  duration: driftDur, useNativeDriver: nativeDriver }),
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(rotate, { toValue: 1,  duration: rotDur, useNativeDriver: nativeDriver }),
+        Animated.timing(rotate, { toValue: -1, duration: rotDur, useNativeDriver: nativeDriver }),
+      ])
+    ).start();
+  }, []);
+
+  const rotateInterp = rotate.interpolate({ inputRange: [-1, 1], outputRange: ["-8deg", "8deg"] });
+
+  return (
+    <Animated.Text
+      style={{
+        position: "absolute",
+        top, left, right,
+        fontSize: size,
+        color,
+        opacity: Animated.multiply(fade, opacity),
+        fontFamily: "Nunito_700Bold",
+        transform: [{ translateY }, { rotate: rotateInterp }],
+      }}
+    >
+      {suit}
+    </Animated.Text>
+  );
+}
+
+// Soft pulsing radial vignette to give the loading background life.
+function PulseAura() {
+  const pulse = useRef(new Animated.Value(0)).current;
+  const nativeDriver = Platform.OS !== "web";
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 2400, useNativeDriver: nativeDriver }),
+        Animated.timing(pulse, { toValue: 0, duration: 2400, useNativeDriver: nativeDriver }),
+      ])
+    ).start();
+  }, []);
+  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] });
+  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.18, 0.36] });
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        width: 420, height: 420, borderRadius: 210,
+        backgroundColor: "#D4AF37",
+        opacity,
+        transform: [{ scale }],
+      }}
+    />
+  );
+}
+
 const STUDIO_DURATION = 5000;
 const LOADING_DURATION = 20000;
 
@@ -261,24 +339,23 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
           {/* Casino felt texture overlay */}
           <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(2, 25, 8, 0.6)" }]} />
 
-          {/* Decorative card suits background */}
+          {/* Animated drifting card suits background — slow parallax loop */}
           {SUIT_POSITIONS.map((pos, i) => (
-            <Text
+            <FloatingSuit
               key={i}
-              style={{
-                position: "absolute",
-                top: pos.top as any,
-                left: (pos as any).left,
-                right: (pos as any).right,
-                fontSize: pos.size,
-                color: pos.color,
-                opacity: pos.opacity,
-                fontFamily: "Nunito_700Bold",
-              }}
-            >
-              {CARD_SUITS[i]}
-            </Text>
+              suit={CARD_SUITS[i]}
+              top={pos.top}
+              left={(pos as any).left}
+              right={(pos as any).right}
+              size={pos.size}
+              color={pos.color}
+              opacity={pos.opacity * 1.6}
+              delay={i * 400}
+            />
           ))}
+
+          {/* Pulsing radial vignette behind the card cover */}
+          <PulseAura />
 
           {/* Outer ring decoration */}
           <View style={styles.coverRingOuter} />

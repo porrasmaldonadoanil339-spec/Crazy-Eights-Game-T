@@ -179,19 +179,19 @@ export default function CollectionScreen() {
         style={styles.gridItem}
       >
         <View style={styles.previewSlot}>
-          <ItemPreview item={item} lang={lang} compact />
+          {/* Locked items: dimmed (Clash Royale-style grayed look). No padlock icon. */}
+          <View style={!isOwned ? styles.lockedDim : undefined}>
+            <ItemPreview item={item} lang={lang} compact />
+          </View>
+
+          {/* Subtle gray overlay on locked items to push toward grayscale */}
+          {!isOwned && (
+            <View style={styles.grayscaleTint} pointerEvents="none" />
+          )}
 
           {isEquipped && (
             <View style={[styles.equippedBadgeFloat, { backgroundColor: themeGold }]} pointerEvents="none">
               <Ionicons name="checkmark" size={10} color="#000" />
-            </View>
-          )}
-
-          {!isOwned && (
-            <View style={styles.lockOverlay} pointerEvents="none">
-              <View style={[styles.lockCircle, { backgroundColor: rarityColor + "EE", borderColor: rarityColor }]}>
-                <Ionicons name="lock-closed" size={16} color="#fff" />
-              </View>
             </View>
           )}
         </View>
@@ -199,9 +199,11 @@ export default function CollectionScreen() {
         <Text
           style={[
             styles.itemName,
-            { color: isOwned ? theme.text : theme.textMuted },
+            { color: isOwned ? theme.text : theme.textMuted, opacity: isOwned ? 1 : 0.7 },
           ]}
-          numberOfLines={1}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
         >
           {localized.name}
         </Text>
@@ -368,14 +370,20 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   previewSlot: {
-    minHeight: 86,
+    minHeight: 92,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
     overflow: "visible",
   },
-  itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, textAlign: "center", marginTop: 2 },
+  lockedDim: { opacity: 0.4 },
+  grayscaleTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(120,120,120,0.18)",
+    borderRadius: 8,
+  },
+  itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, textAlign: "center", marginTop: 2, lineHeight: 12, minHeight: 24 },
   rarityChip: {
     paddingHorizontal: 5, paddingVertical: 1, borderRadius: 5, borderWidth: 1,
   },
@@ -389,18 +397,6 @@ const styles = StyleSheet.create({
   },
   equippedTextLine: {
     fontFamily: "Nunito_800ExtraBold", fontSize: 7, letterSpacing: 0.8, marginTop: 1,
-  },
-  lockOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.55)",
-    borderRadius: 10,
-  },
-  lockCircle: {
-    width: 32, height: 32, borderRadius: 16,
-    alignItems: "center", justifyContent: "center",
-    borderWidth: 1.5,
   },
   exclusiveBadge: {
     flexDirection: "row", alignItems: "center", gap: 2,
