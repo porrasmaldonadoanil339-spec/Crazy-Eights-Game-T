@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { StoreItem, localizeItem } from "@/lib/storeItems";
+import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -135,7 +136,7 @@ function AvatarPreview({ item, compact }: { item: StoreItem; compact?: boolean }
   );
 }
 
-function TitlePreview({ item, lang, compact }: { item: StoreItem; lang: "es" | "en" | "pt"; compact?: boolean }) {
+function TitlePreview({ item, lang, compact }: { item: StoreItem; lang: Lang; compact?: boolean }) {
   const color = item.previewColor;
   const localized = localizeItem(item, lang);
   const icon = (item.preview ?? "ribbon") as IconName;
@@ -210,7 +211,7 @@ function EmotePreview({ item, compact }: { item: StoreItem; compact?: boolean })
   );
 }
 
-export function ItemPreview({ item, lang, compact }: { item: StoreItem; lang: "es" | "en" | "pt"; compact?: boolean }) {
+export function ItemPreview({ item, lang, compact }: { item: StoreItem; lang: Lang; compact?: boolean }) {
   switch (item.category) {
     case "card_back":    return <CardBackPreview item={item} compact={compact} />;
     case "card_design":  return <CardDesignPreview item={item} compact={compact} />;

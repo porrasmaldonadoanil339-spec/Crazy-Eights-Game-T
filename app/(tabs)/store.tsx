@@ -10,7 +10,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/context/ProfileContext";
-import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS, EMOTES, localizeItem } from "@/lib/storeItems";
+import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS, EMOTES, localizeItem, pickLocalized } from "@/lib/storeItems";
+import type { Lang } from "@/lib/i18n";
 import { ItemPreview } from "@/components/ItemPreview";
 import { playSound } from "@/lib/sounds";
 import { useT } from "@/hooks/useT";
@@ -186,7 +187,7 @@ function ConfirmModal({
   const T = useT();
   const theme = useTheme();
   const { profile } = useProfile();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
   const rarityLabel = useRarityLabel();
   if (!item) return null;
   const localized = localizeItem(item, lang);
@@ -238,7 +239,7 @@ function InfoModal({
   const T = useT();
   const theme = useTheme();
   const { profile } = useProfile();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
   const rarityLabel = useRarityLabel();
   if (!item) return null;
   const localized = localizeItem(item, lang);
@@ -326,7 +327,7 @@ function EffectCard({ item, owned, isEquipped, isDailyHot, onPress, onEquip, onI
   const T = useT();
   const theme = useTheme();
   const { profile } = useProfile();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
   const localized = localizeItem(item, lang);
   const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
@@ -390,7 +391,7 @@ function StoreItemCard({ item, owned, isEquipped, isDailyHot, onPress, onEquip, 
   const T = useT();
   const theme = useTheme();
   const { profile } = useProfile();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
   const localized = localizeItem(item, lang);
   const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
@@ -552,7 +553,7 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
   const T = useT();
   const theme = useTheme();
   const { profile } = useProfile();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
   const localized = localizeItem(item, lang);
   const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
@@ -646,7 +647,7 @@ export default function StoreScreen() {
   const theme = useTheme();
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
 
   const isDark = profile.darkMode !== false;
   const themeColors = isDark ? Colors : LightColors;
@@ -671,13 +672,10 @@ export default function StoreScreen() {
   const dateKey = useMemo(() => getDailyDateKey(new Date(nowTick)), [nowTick]);
   const ownedIds = profile.ownedItems ?? [];
   const dailyItems = useMemo(
-    () => getDailyShopItems(dateKey, ownedIds).map(i => ({ ...i, ...localizeItem(i, lang) })),
-    [dateKey, lang, ownedIds],
+    () => getDailyShopItems(dateKey, ownedIds),
+    [dateKey, ownedIds],
   );
-  const freeItem = useMemo(() => {
-    const f = getDailyFreeItem(dateKey);
-    return { ...f, ...localizeItem(f, lang) };
-  }, [dateKey, lang]);
+  const freeItem = useMemo(() => getDailyFreeItem(dateKey), [dateKey]);
   const today = dateKey;
   const purchasedToday = profile.lastDailyShopDate === today ? (profile.purchasedDailyShopIds ?? []) : [];
   const freeClaimed = profile.lastDailyShopFreeDate === today;
@@ -709,7 +707,7 @@ export default function StoreScreen() {
     else if (item.category === "title") updateTitle(item.id);
     else if (item.category === "frame") updateFrame(item.id);
     else if (item.category === "effect") updateEffect(item.id);
-    showToast(`${item.name} ${T("equippedItem")}!`);
+    showToast(`${pickLocalized(item.name, lang)} ${T("equippedItem")}!`);
   }
 
   function toggleEmote(item: StoreItem) {
@@ -750,7 +748,7 @@ export default function StoreScreen() {
       if (item.category === "title") updateTitle(item.id);
       if (item.category === "frame") updateFrame(item.id);
       if (item.category === "effect") updateEffect(item.id);
-      showToast(`${item.name} ${T("obtainedItem")}!`);
+      showToast(`${pickLocalized(item.name, lang)} ${T("obtainedItem")}!`);
     } else {
       showToast(T("insufficientCoins"));
     }
@@ -772,12 +770,14 @@ export default function StoreScreen() {
     const ok = buyItem(item);
     if (ok) {
       await playSound("purchase");
-      showToast(`${item.name} ${T("obtainedItem")}!`);
+      showToast(`${pickLocalized(item.name, lang)} ${T("obtainedItem")}!`);
     } else {
       await playSound("error");
       showToast(T("insufficientCoins"));
     }
   };
+
+  const localizedFreeItem = useMemo(() => localizeItem(freeItem, lang), [freeItem, lang]);
 
   const handleClaimFree = async () => {
     if (freeClaimed) return;
@@ -915,7 +915,7 @@ function DailyConfirmModal({
   const T = useT();
   const theme = useTheme();
   const { profile } = useProfile();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
   const rarityLabel = useRarityLabel();
   if (!item) return null;
   const localized = localizeItem(item, lang);
@@ -964,7 +964,7 @@ function DailyShopCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
   const T = useT();
   const theme = useTheme();
   const { profile } = useProfile();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
   const localized = localizeItem(item, lang);
   const rarityLabel = useRarityLabel();
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
@@ -1667,7 +1667,7 @@ function EmoteShopCard({
 }) {
   const T = useT();
   const { profile } = useProfile();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
+  const lang = (profile.language ?? "es") as Lang;
   const localized = localizeItem(item, lang);
   const rarityColor = RARITY_COLORS_MAP[item.rarity] ?? "#95A5A6";
   return (

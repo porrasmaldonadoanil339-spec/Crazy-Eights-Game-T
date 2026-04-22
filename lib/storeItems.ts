@@ -1,11 +1,13 @@
+import type { Lang } from "./i18n";
+
 export type StoreItemId = string;
 export type StoreItemCategory = "card_back" | "avatar" | "effect" | "title" | "frame" | "emote" | "table_design" | "card_design";
 
-export interface StoreItem {
+export type LocalizedText = Partial<Record<Lang, string>>;
+
+interface StoreItemBase {
   id: StoreItemId;
   category: StoreItemCategory;
-  name: string;
-  description: string;
   price: number;
   preview: string;
   previewColor: string;
@@ -17,10 +19,25 @@ export interface StoreItem {
   animated?: boolean;
 }
 
+export interface StoreItem extends StoreItemBase {
+  name: LocalizedText;
+  description: LocalizedText;
+}
+
+export interface StoreItemRaw extends StoreItemBase {
+  name: string;
+  description: string;
+}
+
+export type LocalizedStoreItem = StoreItemBase & {
+  name: string;
+  description: string;
+};
+
 // ═══════════════════════════════════════════════════════════════
 // CARD BACKS — 70 total
 // ═══════════════════════════════════════════════════════════════
-export const CARD_BACKS: StoreItem[] = [
+const CARD_BACKS_RAW: StoreItemRaw[] = [
   // COMMON (15)
   { id: "back_default",   category: "card_back", name: "Clásico Azul",    description: "El dorso clásico del casino.",                    price: 0,   preview: "card", previewColor: "#1A3A6A", rarity: "common",    isDefault: true, backColors: ["#1E4080","#0e2248","#0a1832"], backAccent: "#D4AF37", backPattern: "diamonds" },
   { id: "back_crimson",   category: "card_back", name: "Carmesí",         description: "Rojo profundo. Audaz y dominante.",               price: 60,  preview: "card", previewColor: "#8B0000", rarity: "common",    backColors: ["#8B0000","#C0392B","#6B0000"], backAccent: "#FFD700", backPattern: "diamonds" },
@@ -145,7 +162,7 @@ export const CARD_BACKS: StoreItem[] = [
 // ═══════════════════════════════════════════════════════════════
 // AVATARS — 70 total
 // ═══════════════════════════════════════════════════════════════
-export const AVATARS: StoreItem[] = [
+const AVATARS_RAW: StoreItemRaw[] = [
   // COMMON (15)
   { id: "avatar_knight",    category: "avatar", name: "Caballero",       description: "Valiente guerrero de la mesa.",                  price: 0,   preview: "shield",         previewColor: "#95A5A6", rarity: "common",    isDefault: true },
   { id: "avatar_merchant",  category: "avatar", name: "Mercader",        description: "Siempre con el mejor trato.",                    price: 30,  preview: "bag",            previewColor: "#8B7355", rarity: "common" },
@@ -252,7 +269,7 @@ export const AVATARS: StoreItem[] = [
 // ═══════════════════════════════════════════════════════════════
 // AVATAR FRAMES — 70 total
 // ═══════════════════════════════════════════════════════════════
-export const AVATAR_FRAMES: StoreItem[] = [
+const AVATAR_FRAMES_RAW: StoreItemRaw[] = [
   // COMMON (15)
   { id: "frame_gold",     category: "frame", name: "Marco Dorado",     description: "Brilla como un campeón.",                         price: 0,   preview: "ellipse", previewColor: "#D4AF37", rarity: "common",    isDefault: true, backColors: ["#D4AF37","#B8860B"] },
   { id: "frame_silver",   category: "frame", name: "Marco Plateado",   description: "Elegancia clásica y discreta.",                   price: 40,  preview: "ellipse", previewColor: "#C0C0C0", rarity: "common",    backColors: ["#C0C0C0","#909090"] },
@@ -357,7 +374,7 @@ export const AVATAR_FRAMES: StoreItem[] = [
 // ═══════════════════════════════════════════════════════════════
 // TITLES — 70 total
 // ═══════════════════════════════════════════════════════════════
-export const TITLES: StoreItem[] = [
+const TITLES_RAW: StoreItemRaw[] = [
   // COMMON (15)
   { id: "title_novice",      category: "title", name: "Novato",              description: "El inicio del camino.",                       price: 0,   preview: "person",       previewColor: "#95A5A6", rarity: "common",    isDefault: true },
   { id: "title_rookie",      category: "title", name: "Recién Llegado",      description: "Aún aprendiendo.",                            price: 15,  preview: "walk",         previewColor: "#7F8C8D", rarity: "common" },
@@ -463,7 +480,7 @@ export const TITLES: StoreItem[] = [
 // ═══════════════════════════════════════════════════════════════
 // EFFECTS — 70 total
 // ═══════════════════════════════════════════════════════════════
-export const EFFECTS: StoreItem[] = [
+const EFFECTS_RAW: StoreItemRaw[] = [
   // COMMON (15)
   { id: "effect_none",     category: "effect", name: "Sin Efecto",     description: "Juego limpio sin efectos especiales.",            price: 0,   preview: "close-circle",    previewColor: "#95A5A6", rarity: "common",    isDefault: true },
   { id: "effect_sparkle",  category: "effect", name: "Destellos",      description: "Brillo dorado al jugar tus cartas.",              price: 80,  preview: "sparkles",        previewColor: "#D4AF37", rarity: "common" },
@@ -541,7 +558,7 @@ export const EFFECTS: StoreItem[] = [
 ];
 
 // ─── EMOTES — 70 total ─────────────────────────────────────────────────────────
-export const EMOTES: StoreItem[] = [
+const EMOTES_RAW: StoreItemRaw[] = [
   // Free / default (10)
   { id: "emote_gg",       category: "emote", name: "GG",          description: "Buen juego!",              price: 0,   preview: "thumbs-up",       previewColor: "#27AE60", rarity: "common",    isDefault: true },
   { id: "emote_lol",      category: "emote", name: "LOL",         description: "Qué risa!",                price: 0,   preview: "happy",           previewColor: "#F1C40F", rarity: "common",    isDefault: true },
@@ -609,7 +626,7 @@ export const EMOTES: StoreItem[] = [
   { id: "emote_elfin",    category: "emote", name: "El Fin",      description: "El juego terminó. Yo gané.", price: 400, preview: "infinite",    previewColor: "#2C3E50", rarity: "legendary", animated: true },
 ];
 
-export const TABLE_DESIGNS: StoreItem[] = [
+const TABLE_DESIGNS_RAW: StoreItemRaw[] = [
   { id: "table_casino",   category: "table_design", name: "Mesa Casino Verde", description: "El fieltro clásico del casino.", price: 0, preview: "square", previewColor: "#0B5A3E", rarity: "common", isDefault: true, backColors: ["#0B5A3E", "#1A7A5A"] },
   { id: "table_wood",     category: "table_design", name: "Mesa Madera Elegante", description: "Madera pulida de alta calidad.", price: 100, preview: "square", previewColor: "#4A3010", rarity: "rare", backColors: ["#4A3010", "#6A4A1A"] },
   { id: "table_galaxy",   category: "table_design", name: "Mesa Galaxia Espacial", description: "Juega entre las estrellas.", price: 300, preview: "square", previewColor: "#0A0020", rarity: "legendary", backColors: ["#0A0020", "#2C0066"] },
@@ -706,7 +723,7 @@ export const TABLE_DESIGNS: StoreItem[] = [
 // ═══════════════════════════════════════════════════════════════
 // CARD DESIGNS — 90 total (changes card FACE appearance in game)
 // ═══════════════════════════════════════════════════════════════
-export const CARD_DESIGNS: StoreItem[] = [
+const CARD_DESIGNS_RAW: StoreItemRaw[] = [
   // COMMON (20) — card face background themes
   { id: "face_default",    category: "card_design", name: "Clásico Blanco",     description: "Diseño limpio y clásico.",                price: 0,   preview: "card", previewColor: "#F8F4E8", rarity: "common",    isDefault: true, backColors: ["#F8F4E8", "#1A1A2E", "#D4AF37"], backAccent: "#D4AF37" },
   { id: "face_ivory",      category: "card_design", name: "Marfil Real",        description: "Calidez clásica del marfil.",             price: 40,  preview: "card", previewColor: "#FFFFF0", rarity: "common",    backColors: ["#FFFFF0", "#1A1A2E", "#C8A800"], backAccent: "#C8A800" },
@@ -802,8 +819,6 @@ export const CARD_DESIGNS: StoreItem[] = [
   { id: "face_godlike",    category: "card_design", name: "Divino",             description: "Solo los mejores merecen estas cartas.",  price: 580, preview: "card", previewColor: "#FFFFF8", rarity: "legendary", backColors: ["#1A1800", "#FFFFFF", "#504C00"], backAccent: "#E8CC00" },
   { id: "face_omega",      category: "card_design", name: "Omega",              description: "El diseño final. La perfección suprema.", price: 600, preview: "card", previewColor: "#FAFAFA", rarity: "legendary", backColors: ["#050505", "#FFFFFF", "#111111"], backAccent: "#D4AF37" },
 ];
-
-export const STORE_ITEMS: StoreItem[] = [...CARD_BACKS, ...AVATARS, ...TITLES, ...AVATAR_FRAMES, ...EFFECTS, ...EMOTES, ...TABLE_DESIGNS, ...CARD_DESIGNS];
 
 export function getItemsByCategory(category: StoreItemCategory): StoreItem[] {
   return STORE_ITEMS.filter((i) => i.category === category);
@@ -1240,14 +1255,55 @@ const ITEM_TL: Record<string, TL4> = {
   emote_elfin:       ["The End",        "O Fim",            "The game ended. I won.",                "O jogo terminou. Eu ganhei."            ],
 };
 
-export function localizeItem(item: StoreItem, lang: "es" | "en" | "pt"): StoreItem {
-  if (lang === "es") return item;
-  const tl = ITEM_TL[item.id];
-  if (!tl) return item;
-  const [nameEn, namePt, descEn, descPt] = tl;
+function buildLocalizedFromRaw(raw: StoreItemRaw): StoreItem {
+  const tl = ITEM_TL[raw.id];
+  const name: LocalizedText = { es: raw.name };
+  const description: LocalizedText = { es: raw.description };
+  if (tl) {
+    const [nameEn, namePt, descEn, descPt] = tl;
+    if (nameEn) name.en = nameEn;
+    if (namePt) name.pt = namePt;
+    if (descEn) description.en = descEn;
+    if (descPt) description.pt = descPt;
+  }
+  const { name: _n, description: _d, ...rest } = raw;
+  return { ...rest, name, description };
+}
+
+export const CARD_BACKS: StoreItem[] = CARD_BACKS_RAW.map(buildLocalizedFromRaw);
+export const AVATARS: StoreItem[] = AVATARS_RAW.map(buildLocalizedFromRaw);
+export const AVATAR_FRAMES: StoreItem[] = AVATAR_FRAMES_RAW.map(buildLocalizedFromRaw);
+export const TITLES: StoreItem[] = TITLES_RAW.map(buildLocalizedFromRaw);
+export const EFFECTS: StoreItem[] = EFFECTS_RAW.map(buildLocalizedFromRaw);
+export const EMOTES: StoreItem[] = EMOTES_RAW.map(buildLocalizedFromRaw);
+export const TABLE_DESIGNS: StoreItem[] = TABLE_DESIGNS_RAW.map(buildLocalizedFromRaw);
+export const CARD_DESIGNS: StoreItem[] = CARD_DESIGNS_RAW.map(buildLocalizedFromRaw);
+
+export const STORE_ITEMS: StoreItem[] = [
+  ...CARD_BACKS, ...AVATARS, ...TITLES, ...AVATAR_FRAMES,
+  ...EFFECTS, ...EMOTES, ...TABLE_DESIGNS, ...CARD_DESIGNS,
+];
+
+/**
+ * Resolve a localized field, falling back through:
+ *   requested lang → en → es → first available value → "".
+ */
+export function pickLocalized(text: LocalizedText | undefined, lang: Lang): string {
+  if (!text) return "";
+  return (
+    text[lang] ??
+    text.en ??
+    text.es ??
+    Object.values(text).find((v) => typeof v === "string") ??
+    ""
+  );
+}
+
+export function localizeItem(item: StoreItem, lang: Lang): LocalizedStoreItem {
+  const { name, description, ...rest } = item;
   return {
-    ...item,
-    name: lang === "en" ? nameEn : namePt,
-    description: lang === "en" ? descEn : descPt,
+    ...rest,
+    name: pickLocalized(name, lang),
+    description: pickLocalized(description, lang),
   };
 }

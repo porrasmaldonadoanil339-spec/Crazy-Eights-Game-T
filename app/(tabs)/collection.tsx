@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "@/hooks/useT";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
-import { STORE_ITEMS, StoreItem, StoreItemCategory, localizeItem } from "@/lib/storeItems";
+import { STORE_ITEMS, StoreItem, StoreItemCategory, localizeItem, pickLocalized } from "@/lib/storeItems";
 import { TranslationKey, Lang } from "@/lib/i18n";
 import { getOwnedExclusives, ExclusiveCategory } from "@/lib/battlePass";
 import BouncePressable from "@/components/BouncePressable";
@@ -65,22 +65,19 @@ export default function CollectionScreen() {
     ? ["#061209", "#0a1a0f", "#0d2418"]
     : ["#d8eecc", "#e8f5e2", "#d0e6c6"];
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
-  const fullLang = (profile.language ?? "es") as Lang;
-  // localizeItem / ItemPreview only support es/en/pt; narrow once for those
-  // callers while exclusives use the full Lang for their localized labels.
-  const lang: "es" | "en" | "pt" = fullLang === "en" || fullLang === "pt" ? fullLang : "es";
+  const lang = (profile.language ?? "es") as Lang;
 
   const owned = profile.ownedItems ?? [];
   const items = useMemo<GridItem[]>(() => {
     const base: GridItem[] = STORE_ITEMS.filter((i) => i.category === activeCat);
     if (EXCLUSIVE_CATEGORIES.includes(activeCat)) {
-      const exs = getOwnedExclusives(owned, activeCat as ExclusiveCategory, fullLang);
+      const exs = getOwnedExclusives(owned, activeCat as ExclusiveCategory, lang);
       for (const ex of exs) {
         base.push({
           id: ex.id,
           category: activeCat,
-          name: ex.name,
-          description: "",
+          name: { es: ex.name, en: ex.name, pt: ex.name },
+          description: {},
           price: 0,
           preview: ex.icon,
           previewColor: ex.iconColor,
@@ -94,10 +91,10 @@ export default function CollectionScreen() {
       const ra = RARITY_ORDER[a.rarity] ?? 0;
       const rb = RARITY_ORDER[b.rarity] ?? 0;
       if (ra !== rb) return ra - rb;
-      return a.name.localeCompare(b.name);
+      return pickLocalized(a.name, lang).localeCompare(pickLocalized(b.name, lang));
     });
     return base;
-  }, [activeCat, owned, lang, fullLang]);
+  }, [activeCat, owned, lang]);
 
   const ownedCount = items.filter((i) => owned.includes(i.id) || i.isDefault).length;
 
@@ -157,7 +154,9 @@ export default function CollectionScreen() {
       : equippedId(activeCat) === item.id;
     const isExclusive = !!item.isExclusive;
     const rarityColor = RARITY_COLOR[item.rarity] ?? "#95A5A6";
-    const localized = isExclusive ? { name: item.name, description: "" } : localizeItem(item, lang);
+    const localized = isExclusive
+      ? { name: pickLocalized(item.name, lang), description: "" }
+      : localizeItem(item, lang);
 
     const handlePress = () => {
       if (!isOwned) {

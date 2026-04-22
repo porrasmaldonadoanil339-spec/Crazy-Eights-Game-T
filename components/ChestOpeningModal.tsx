@@ -25,6 +25,9 @@ import Animated, {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { CHEST_CONFIG, ChestType, ChestReward } from "@/lib/chestSystem";
+import { pickLocalized } from "@/lib/storeItems";
+import { useProfile } from "@/context/ProfileContext";
+import type { Lang } from "@/lib/i18n";
 
 const { width: W, height: H } = Dimensions.get("window");
 
@@ -411,6 +414,8 @@ function RewardDisplay({ reward, config, chestType }: {
   config: (typeof CHEST_CONFIG)[ChestType];
   chestType: ChestType;
 }) {
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as Lang;
   return (
     <View style={styles.rewardInner}>
       <Text style={[styles.rewTitle, { color: config.glowColor }]}>¡Recompensas!</Text>
@@ -448,7 +453,7 @@ function RewardDisplay({ reward, config, chestType }: {
               />
             </View>
             <Text style={[styles.rewardValue, { fontSize: 10 }]} numberOfLines={1}>
-              {reward.item.name}
+              {pickLocalized(reward.item.name, lang)}
             </Text>
             <Text style={[styles.rewardLabel, { color: config.glowColor }]}>
               {reward.item.rarity === "legendary" ? "✦ Legendario" :

@@ -14,7 +14,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile, GameRecord } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
-import { STORE_ITEMS, AVATARS, AVATAR_FRAMES } from "@/lib/storeItems";
+import { STORE_ITEMS, AVATARS, AVATAR_FRAMES, pickLocalized } from "@/lib/storeItems";
 import { getXpProgress, getPlayerLevel, BATTLE_PASS_TIERS, getOwnedExclusives, ResolvedExclusive } from "@/lib/battlePass";
 import { getLocalizedRankInfo, RANK_COLORS, RANK_ICONS, RANKS, DIVISIONS } from "@/lib/ranked";
 import { playSound } from "@/lib/sounds";
@@ -177,6 +177,8 @@ function AvatarPickerModal({
   onClose: () => void;
 }) {
   const T = useT();
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as Lang;
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.modalBg} onPress={onClose}>
@@ -219,7 +221,7 @@ function AvatarPickerModal({
                   <View style={[styles.avatarIconWrap, { backgroundColor: item.previewColor + "44" }]}>
                     <Ionicons name={item.preview as any} size={24} color={owned ? item.previewColor : Colors.textDim} />
                   </View>
-                  <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{item.name}</Text>
+                  <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{pickLocalized(item.name, lang)}</Text>
                   {!owned && <Ionicons name="lock-closed" size={12} color={Colors.textDim} style={{ marginTop: 2 }} />}
                 </Pressable>
               );
@@ -260,6 +262,8 @@ function FramePickerModal({
   onSelect: (id: string) => void; onClose: () => void;
 }) {
   const T = useT();
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as Lang;
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.modalBg} onPress={onClose}>
@@ -286,7 +290,7 @@ function FramePickerModal({
                   >
                     <View style={styles.frameInner} />
                   </LinearGradient>
-                  <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{item.name}</Text>
+                  <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{pickLocalized(item.name, lang)}</Text>
                   {!owned && (
                     <View style={styles.priceBadge}>
                       <CoinIcon size={9} color={Colors.gold} />
@@ -575,7 +579,7 @@ export default function ProfileScreen() {
             <Pressable onPress={() => setShowFramePicker(true)} style={styles.frameBadge}>
               <Ionicons name="ellipse" size={10} color={frameItem?.previewColor ?? frameExclusive?.iconColor ?? Colors.gold} />
               <Text style={[styles.frameBadgeText, { color: frameItem?.previewColor ?? frameExclusive?.iconColor ?? Colors.gold }]}>
-                {frameItem?.name ?? frameExclusive?.name ?? T("noFrame")}
+                {frameItem ? pickLocalized(frameItem.name, lang) : (frameExclusive?.name ?? T("noFrame"))}
               </Text>
             </Pressable>
           </View>
@@ -605,7 +609,7 @@ export default function ProfileScreen() {
                 {(titleItem?.preview || titleExclusive?.icon) && (
                   <Ionicons name={(titleItem?.preview ?? titleExclusive?.icon) as any} size={11} color={titleExclusive ? titleExclusive.iconColor : themeGold} />
                 )}
-                <Text style={[styles.titleText, { color: themeGold }]}>{titleItem?.name ?? titleExclusive?.name ?? T("noTitle")}</Text>
+                <Text style={[styles.titleText, { color: themeGold }]}>{titleItem ? pickLocalized(titleItem.name, lang) : (titleExclusive?.name ?? T("noTitle"))}</Text>
                 <Ionicons name="chevron-down" size={12} color={themeGold} />
               </Pressable>
 
@@ -645,7 +649,7 @@ export default function ProfileScreen() {
             <View style={[styles.miniCard, { backgroundColor: cardBackItem?.previewColor ?? cardBackExclusive?.iconColor ?? "#1A3A6A" }]}>
               <Text style={{ color: Colors.gold, fontSize: 10 }}>◆</Text>
             </View>
-            <Text style={[styles.resourceVal, { color: themeGold, fontSize: 12 }]} numberOfLines={1}>{cardBackItem?.name ?? cardBackExclusive?.name ?? T("default")}</Text>
+            <Text style={[styles.resourceVal, { color: themeGold, fontSize: 12 }]} numberOfLines={1}>{cardBackItem ? pickLocalized(cardBackItem.name, lang) : (cardBackExclusive?.name ?? T("default"))}</Text>
             <Text style={[styles.resourceLbl, { color: textMuted }]}>{T("cardBackLabel")}</Text>
           </View>
         </View>
@@ -946,7 +950,7 @@ export default function ProfileScreen() {
                     <View style={[styles.avatarIconWrap, { backgroundColor: item.previewColor + "33" }]}>
                       <Ionicons name={item.preview as any} size={20} color={owned ? item.previewColor : Colors.textDim} />
                     </View>
-                    <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{item.name}</Text>
+                    <Text style={[styles.avatarOptionName, !owned && { color: Colors.textDim }]}>{pickLocalized(item.name, lang)}</Text>
                     {!owned && <View style={styles.priceBadge}><CoinIcon size={9} color={Colors.gold} /><Text style={styles.priceText}>{item.price}</Text></View>}
                   </Pressable>
                 );
