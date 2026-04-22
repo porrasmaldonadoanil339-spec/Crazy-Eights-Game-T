@@ -1521,20 +1521,21 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
       showToast(T("chestNotEnoughFichas"));
       return;
     }
-    if ((profile.chestInventory ?? []).length >= 10) {
-      await playSound("error");
-      showToast(T("chestInventoryFull"));
-      return;
-    }
     if (dailyRemaining <= 0) {
       await playSound("error");
       showToast(T("chestDailyLimitReached"));
       return;
     }
-    const ok = buyChestWithFichas(type);
-    if (ok) {
+    const result = buyChestWithFichas(type);
+    if (result === "ok") {
       await playSound("purchase");
       showToast(T("chestPurchasedToast").replace("{name}", NAMES[type]));
+    } else if (result === "queued") {
+      await playSound("purchase");
+      showToast(T("chestQueuedPurchaseToast" as any));
+    } else if (result === "inventory_full") {
+      await playSound("error");
+      showToast(T("chestInventoryFull"));
     } else {
       await playSound("error");
       showToast(T("chestPurchaseFailed"));

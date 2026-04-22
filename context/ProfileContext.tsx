@@ -279,12 +279,12 @@ interface ProfileContextValue {
   spendCoins: (amount: number) => boolean;
   addFichas: (amount: number) => void;
   spendFichas: (amount: number) => boolean;
-  buyChestWithFichas: (chestType: ChestType) => boolean;
+  buyChestWithFichas: (chestType: ChestType) => "ok" | "queued" | "inventory_full" | "fail";
   buyDailyShopItem: (itemId: string, price: number, currency: "coins" | "fichas") => boolean;
   claimDailyShopFree: (itemId: string) => boolean;
   recordFichasModePlay: () => void;
   fichasModePlaysRemaining: () => number;
-  claimPlayerPathLevel: (level: number) => "ok" | "inventory_full" | "fail";
+  claimPlayerPathLevel: (level: number) => "ok" | "queued" | "inventory_full" | "fail";
   addXp: (amount: number) => void;
   buyItem: (item: StoreItem) => boolean;
   recordGameResult: (params: {
@@ -302,12 +302,12 @@ interface ProfileContextValue {
   }) => void;
   recordEventWin: (eventId: string) => void;
   updateAchievementProgress: (id: AchievementId, amount: number) => void;
-  claimBattlePassTier: (tier: number, track?: "free" | "premium") => "ok" | "inventory_full" | "fail";
+  claimBattlePassTier: (tier: number, track?: "free" | "premium") => "ok" | "queued" | "inventory_full" | "fail";
   isPremiumBattlePassActive: boolean;
-  unlockPremiumBattlePass: () => boolean;
+  unlockPremiumBattlePass: () => { ok: boolean; queuedChests: number; skippedChests: number };
   premiumBattlePassCost: number;
-  claimAchievementReward: (id: AchievementId) => "ok" | "inventory_full" | "fail";
-  claimDailyReward: () => DailyReward | null;
+  claimAchievementReward: (id: AchievementId) => "ok" | "queued" | "inventory_full" | "fail";
+  claimDailyReward: () => { reward: DailyReward; queued: boolean } | null;
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
   updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
@@ -642,57 +642,82 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     magic: 150, giant: 350, event: 280, supreme: 800, fichas: 100,
   };
 
-  const claimPlayerPathLevel = useCallback((level: number): "ok" | "inventory_full" | "fail" => {
-    let result: "ok" | "inventory_full" | "fail" = "fail";
+  const claimPlayerPathLevel = useCallback((level: number): "ok" | "queued" | "inventory_full" | "fail" => {
+    let result: "ok" | "queued" | "inventory_full" | "fail" = "fail";
     update((p) => {
       const claimed = p.claimedPlayerPathLevels ?? [];
       if (claimed.includes(level)) return p;
       const reached = getPlayerPathLevel(p.totalXp);
       if (level > reached || level < 1 || level > MAX_PLAYER_PATH_LEVEL) return p;
       const reward = getPlayerPathReward(level);
-      // Block claim if reward is a chest and inventory is full — keep reward pending.
+      let queueChest = false;
       if (reward.type === "chest") {
         const inv = p.chestInventory ?? [];
+        const ovf = p.chestOverflow ?? [];
         if (inv.length >= CHEST_INVENTORY_LIMIT) {
-          result = "inventory_full";
-          return p;
+          if (ovf.length >= CHEST_OVERFLOW_LIMIT) {
+            result = "inventory_full";
+            return p;
+          }
+          queueChest = true;
         }
       }
-      result = "ok";
+      result = queueChest ? "queued" : "ok";
       let next: PlayerProfile = { ...p, claimedPlayerPathLevels: [...claimed, level] };
       if (reward.type === "coins") next = { ...next, coins: next.coins + reward.amount };
       else if (reward.type === "fichas") next = { ...next, fichas: (next.fichas ?? 0) + reward.amount };
       else if (reward.type === "chest") {
-        const inv = next.chestInventory ?? [];
-        next = { ...next, chestInventory: [...inv, createChest(reward.chestType, "achievement")] };
+        const newChest = createChest(reward.chestType, "achievement");
+        if (queueChest) {
+          const ovf = next.chestOverflow ?? [];
+          next = { ...next, chestOverflow: [...ovf, newChest] };
+        } else {
+          const inv = next.chestInventory ?? [];
+          next = { ...next, chestInventory: [...inv, newChest] };
+        }
       }
       return next;
     });
     return result;
   }, [update]);
 
-  const buyChestWithFichas = useCallback((chestType: ChestType): boolean => {
-    let success = false;
+  const buyChestWithFichas = useCallback((chestType: ChestType): "ok" | "queued" | "inventory_full" | "fail" => {
+    let result: "ok" | "queued" | "inventory_full" | "fail" = "fail";
     const today = new Date().toDateString();
     update((p) => {
       const price = CHEST_FICHA_PRICES[chestType];
       const balance = p.fichas ?? 0;
       const inv = p.chestInventory ?? [];
+      const ovf = p.chestOverflow ?? [];
       if (balance < price) return p;
-      if (inv.length >= CHEST_INVENTORY_LIMIT) return p;
       const sameDay = p.lastChestPurchaseDate === today;
       const purchasesToday = sameDay ? (p.chestPurchasesToday ?? 0) : 0;
       if (purchasesToday >= 3) return p;
-      success = true;
+      const newChest = createChest(chestType, "purchase");
+      if (inv.length < CHEST_INVENTORY_LIMIT) {
+        result = "ok";
+        return {
+          ...p,
+          fichas: balance - price,
+          chestInventory: [...inv, newChest],
+          chestPurchasesToday: purchasesToday + 1,
+          lastChestPurchaseDate: today,
+        };
+      }
+      if (ovf.length >= CHEST_OVERFLOW_LIMIT) {
+        result = "inventory_full";
+        return p;
+      }
+      result = "queued";
       return {
         ...p,
         fichas: balance - price,
-        chestInventory: [...inv, createChest(chestType, "purchase")],
+        chestOverflow: [...ovf, newChest],
         chestPurchasesToday: purchasesToday + 1,
         lastChestPurchaseDate: today,
       };
     });
-    return success;
+    return result;
   }, [update]);
 
   const todayKey = () => {
@@ -808,8 +833,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     });
   }, [update]);
 
-  const claimAchievementReward = useCallback((id: AchievementId): "ok" | "inventory_full" | "fail" => {
-    let result: "ok" | "inventory_full" | "fail" = "fail";
+  const claimAchievementReward = useCallback((id: AchievementId): "ok" | "queued" | "inventory_full" | "fail" => {
+    let result: "ok" | "queued" | "inventory_full" | "fail" = "fail";
     update((p) => {
       const achievement = ACHIEVEMENTS.find((a) => a.id === id);
       const ach = p.achievementProgress.find((a) => a.id === id);
@@ -820,15 +845,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         legendary: "epic",
       };
       const chestType = rarityToChest[achievement.rarity];
-      // Block claim if a chest reward would be lost — keep reward pending.
+      let queueChest = false;
       if (chestType) {
         const inv = p.chestInventory ?? [];
+        const ovf = p.chestOverflow ?? [];
         if (inv.length >= CHEST_INVENTORY_LIMIT) {
-          result = "inventory_full";
-          return p;
+          if (ovf.length >= CHEST_OVERFLOW_LIMIT) {
+            result = "inventory_full";
+            return p;
+          }
+          queueChest = true;
         }
       }
-      result = "ok";
+      result = queueChest ? "queued" : "ok";
       const newProgress = p.achievementProgress.map((ap) =>
         ap.id === id ? { ...ap, claimedReward: true } : ap
       );
@@ -839,16 +868,22 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         achievementProgress: newProgress,
       };
       if (chestType) {
-        const inventory = next.chestInventory ?? [];
-        next = { ...next, chestInventory: [...inventory, createChest(chestType, "achievement")] };
+        const newChest = createChest(chestType, "achievement");
+        if (queueChest) {
+          const ovf = next.chestOverflow ?? [];
+          next = { ...next, chestOverflow: [...ovf, newChest] };
+        } else {
+          const inventory = next.chestInventory ?? [];
+          next = { ...next, chestInventory: [...inventory, newChest] };
+        }
       }
       return next;
     });
     return result;
   }, [update]);
 
-  const claimBattlePassTier = useCallback((tier: number, track: "free" | "premium" = "free"): "ok" | "inventory_full" | "fail" => {
-    let result: "ok" | "inventory_full" | "fail" = "fail";
+  const claimBattlePassTier = useCallback((tier: number, track: "free" | "premium" = "free"): "ok" | "queued" | "inventory_full" | "fail" => {
+    let result: "ok" | "queued" | "inventory_full" | "fail" = "fail";
     update((p) => {
       const seasonTiers = getBattlePassTiers(getCurrentSeason().number);
       const bpTier = seasonTiers.find((t) => t.tier === tier);
@@ -859,22 +894,33 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (track === "free") {
         if (p.claimedBattlePassTiers.includes(tier)) return p;
         const free = getFreeReward(tier);
+        let queueChest = false;
         if (free.type === "chest" && free.chestType) {
           const inv = p.chestInventory ?? [];
+          const ovf = p.chestOverflow ?? [];
           if (inv.length >= CHEST_INVENTORY_LIMIT) {
-            result = "inventory_full";
-            return p;
+            if (ovf.length >= CHEST_OVERFLOW_LIMIT) {
+              result = "inventory_full";
+              return p;
+            }
+            queueChest = true;
           }
         }
-        result = "ok";
+        result = queueChest ? "queued" : "ok";
         let next = {
           ...p,
           claimedBattlePassTiers: [...p.claimedBattlePassTiers, tier],
           coins: p.coins + free.coins,
         };
         if (free.type === "chest" && free.chestType) {
-          const inv = next.chestInventory ?? [];
-          next = { ...next, chestInventory: [...inv, createChest(free.chestType, "mission")] };
+          const newChest = createChest(free.chestType, "mission");
+          if (queueChest) {
+            const ovf = next.chestOverflow ?? [];
+            next = { ...next, chestOverflow: [...ovf, newChest] };
+          } else {
+            const inv = next.chestInventory ?? [];
+            next = { ...next, chestInventory: [...inv, newChest] };
+          }
         }
         return next;
       }
@@ -886,14 +932,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const premiumClaimed = p.claimedBattlePassPremiumTiers ?? [];
       if (premiumClaimed.includes(tier)) return p;
 
+      let queueChest = false;
       if (bpTier.rewardType === "chest") {
         const inv = p.chestInventory ?? [];
+        const ovf = p.chestOverflow ?? [];
         if (inv.length >= CHEST_INVENTORY_LIMIT) {
-          result = "inventory_full";
-          return p;
+          if (ovf.length >= CHEST_OVERFLOW_LIMIT) {
+            result = "inventory_full";
+            return p;
+          }
+          queueChest = true;
         }
       }
-      result = "ok";
+      result = queueChest ? "queued" : "ok";
       let next: PlayerProfile = {
         ...p,
         claimedBattlePassPremiumTiers: [...premiumClaimed, tier],
@@ -909,8 +960,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
       if (bpTier.rewardType === "chest") {
         const chestT = bpTier.rewardValue as ChestType;
-        const inv = next.chestInventory ?? [];
-        next = { ...next, chestInventory: [...inv, createChest(chestT, "mission")] };
+        const newChest = createChest(chestT, "mission");
+        if (queueChest) {
+          const ovf = next.chestOverflow ?? [];
+          next = { ...next, chestOverflow: [...ovf, newChest] };
+        } else {
+          const inv = next.chestInventory ?? [];
+          next = { ...next, chestInventory: [...inv, newChest] };
+        }
       }
       return next;
     });
@@ -920,13 +977,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const PREMIUM_BP_COST = 500;
   const isPremiumBattlePassActive = (profile.premiumBattlePassSeasons ?? []).includes(getCurrentSeason().number);
 
-  const unlockPremiumBattlePass = useCallback((): boolean => {
+  const unlockPremiumBattlePass = useCallback((): { ok: boolean; queuedChests: number; skippedChests: number } => {
     const seasonNum = getCurrentSeason().number;
-    if ((profile.premiumBattlePassSeasons ?? []).includes(seasonNum)) return false;
-    if ((profile.fichas ?? 0) < PREMIUM_BP_COST) return false;
+    if ((profile.premiumBattlePassSeasons ?? []).includes(seasonNum)) return { ok: false, queuedChests: 0, skippedChests: 0 };
+    if ((profile.fichas ?? 0) < PREMIUM_BP_COST) return { ok: false, queuedChests: 0, skippedChests: 0 };
+    let queuedChests = 0;
+    let skippedChests = 0;
+    let unlocked = false;
     update((p) => {
       if ((p.premiumBattlePassSeasons ?? []).includes(seasonNum)) return p;
       if ((p.fichas ?? 0) < PREMIUM_BP_COST) return p;
+      unlocked = true;
+      queuedChests = 0;
+      skippedChests = 0;
       // Clash Royale–style: auto-grant every premium reward already reached by current XP
       const tiers = getBattlePassTiers(seasonNum);
       const reachedPremium = tiers.filter((t) => (p.totalXp ?? 0) >= t.xpRequired);
@@ -939,20 +1002,37 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const newlyClaimed: number[] = [];
       for (const t of reachedPremium) {
         if (alreadyClaimed.has(t.tier)) continue;
-        newlyClaimed.push(t.tier);
         if (t.rewardType === "coins" && typeof t.rewardValue === "number") {
           next = { ...next, coins: next.coins + t.rewardValue };
+          newlyClaimed.push(t.tier);
         } else if (["item", "avatar", "title", "frame", "effect"].includes(t.rewardType)) {
           const itemId = t.rewardValue as string;
           if (!next.ownedItems.includes(itemId)) {
             next = { ...next, ownedItems: [...next.ownedItems, itemId] };
           }
+          newlyClaimed.push(t.tier);
         } else if (t.rewardType === "chest") {
           const chestT = t.rewardValue as ChestType;
+          const newChest = createChest(chestT, "mission");
           const inv = next.chestInventory ?? [];
           if (inv.length < CHEST_INVENTORY_LIMIT) {
-            next = { ...next, chestInventory: [...inv, createChest(chestT, "mission")] };
+            next = { ...next, chestInventory: [...inv, newChest] };
+            newlyClaimed.push(t.tier);
+          } else {
+            const ovf = next.chestOverflow ?? [];
+            if (ovf.length < CHEST_OVERFLOW_LIMIT) {
+              next = { ...next, chestOverflow: [...ovf, newChest] };
+              newlyClaimed.push(t.tier);
+              queuedChests += 1;
+            } else {
+              // Inventory + overflow are full — leave the tier unclaimed so the
+              // player can pick it up later once space frees up. Surface a count
+              // to the caller so a clear notice can be shown.
+              skippedChests += 1;
+            }
           }
+        } else {
+          newlyClaimed.push(t.tier);
         }
       }
       if (newlyClaimed.length > 0) {
@@ -963,24 +1043,33 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
       return next;
     });
-    return true;
+    return { ok: unlocked, queuedChests, skippedChests };
   }, [profile.premiumBattlePassSeasons, profile.fichas, update]);
 
-  const claimDailyReward = useCallback((): DailyReward | null => {
+  const claimDailyReward = useCallback((): { reward: DailyReward; queued: boolean } | null => {
     const today = new Date().toDateString();
     if (profile.lastDailyRewardDate === today) return null;
     const reward = DAILY_REWARDS[profile.dailyRewardIndex % DAILY_REWARDS.length];
     const currentInv = profile.chestInventory ?? [];
+    const currentOvf = profile.chestOverflow ?? [];
+    let willQueue = false;
     if (reward.chestType && currentInv.length >= CHEST_INVENTORY_LIMIT) {
-      return null;
+      if (currentOvf.length >= CHEST_OVERFLOW_LIMIT) {
+        return null;
+      }
+      willQueue = true;
     }
     update((p) => {
       const inv = p.chestInventory ?? [];
-      if (reward.chestType && inv.length >= CHEST_INVENTORY_LIMIT) return p;
+      const ovf = p.chestOverflow ?? [];
+      const goesToOverflow = !!reward.chestType && inv.length >= CHEST_INVENTORY_LIMIT;
+      if (goesToOverflow && ovf.length >= CHEST_OVERFLOW_LIMIT) return p;
       const newInventory = [...inv];
+      const newOverflow = [...ovf];
       if (reward.chestType) {
         const newChest = createChest(reward.chestType, "daily");
-        newInventory.push(newChest);
+        if (goesToOverflow) newOverflow.push(newChest);
+        else newInventory.push(newChest);
       }
       return {
         ...p,
@@ -989,10 +1078,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         lastDailyRewardDate: today,
         dailyRewardIndex: (p.dailyRewardIndex + 1) % DAILY_REWARDS.length,
         chestInventory: newInventory,
+        chestOverflow: newOverflow,
       };
     });
-    return reward;
-  }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, profile.chestInventory, update]);
+    return { reward, queued: willQueue };
+  }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, profile.chestInventory, profile.chestOverflow, update]);
 
   const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
     update((p) => ({ ...p, ...settings }));

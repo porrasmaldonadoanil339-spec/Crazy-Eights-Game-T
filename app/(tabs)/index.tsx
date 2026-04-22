@@ -287,11 +287,12 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
 const CHEST_COLORS: Record<string, string> = { common: "#A0522D", rare: "#4A90E2", epic: "#9B59B6", legendary: "#D4AF37" };
 
 // Daily reward modal
-function DailyRewardModal({ visible, reward, onClaim, inventoryFull, onClose }: {
+function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFull, onClose }: {
   visible: boolean;
   reward: { coins: number; xp: number; label: string; icon: string; iconColor: string; chestType?: string } | null;
   onClaim: () => void;
   inventoryFull?: boolean;
+  overflowFull?: boolean;
   onClose?: () => void;
 }) {
   const T = useT();
@@ -315,7 +316,10 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, onClose }: 
 
   if (!reward) return null;
 
-  const blocked = !!inventoryFull;
+  // Inventory full no longer blocks the claim — the chest goes to the overflow waitlist
+  // unless the waitlist is also full.
+  const blocked = !!inventoryFull && !!overflowFull && !!reward.chestType;
+  const willQueue = !!inventoryFull && !overflowFull && !!reward.chestType;
   const mysteryColor = "#D4AF37";
 
   return (
@@ -332,10 +336,12 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, onClose }: 
             </Animated.View>
             <Text style={[styles.dailyLabel, { color: mysteryColor, fontSize: 15, textAlign: "center", paddingHorizontal: 12 }]}>
               {blocked
-                ? T("dailyChestInventoryFull")
-                : reward.chestType
-                  ? "Se agregará un regalo a tu inventario. Ábrelo cuando quieras."
-                  : "Reclama tu regalo diario."}
+                ? T("chestDailyBlockedAlert" as any)
+                : willQueue
+                  ? T("chestQueuedDailyToast" as any)
+                  : reward.chestType
+                    ? "Se agregará un regalo a tu inventario. Ábrelo cuando quieras."
+                    : "Reclama tu regalo diario."}
             </Text>
             <Pressable onPress={blocked ? (onClose ?? onClaim) : onClaim} style={styles.dailyClaimBtn}>
               <LinearGradient colors={blocked ? ["#5a2a2a", "#3a1818"] : [mysteryColor, "#F5D976"]} style={styles.dailyClaimGrad}>
@@ -386,6 +392,8 @@ export default function PlayScreen() {
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
   const [giftToast, setGiftToast] = useState(false);
+  const [queuedDailyToast, setQueuedDailyToast] = useState(false);
+  const [blockedDailyToast, setBlockedDailyToast] = useState(false);
   const [showModeInfo, setShowModeInfo] = useState(false);
   const [selectedModeForInfo, setSelectedModeForInfo] = useState<GameModeId | null>(null);
   const [showMultiModal, setShowMultiModal] = useState(false);
@@ -613,14 +621,27 @@ export default function PlayScreen() {
   };
 
   const handleClaimDaily = () => {
+    // Capture state before claiming so we can detect a "fully blocked" attempt.
+    const wasInventoryFull = isChestInventoryFull;
+    const wasOverflowFull = chestOverflowCount >= chestOverflowLimit;
+    const rewardHasChest = !!todaysDailyReward.chestType;
     const result = claimDailyReward();
-    if (result === null && todaysDailyReward.chestType && isChestInventoryFull) {
+    if (result === null) {
       setShowDailyModal(false);
+      // Only the inventory+overflow-full case yields null while the daily
+      // reward is still claimable. Surface a clear notice in that case.
+      if (rewardHasChest && wasInventoryFull && wasOverflowFull) {
+        setBlockedDailyToast(true);
+        setTimeout(() => setBlockedDailyToast(false), 3200);
+      }
       return;
     }
     playSound("daily_reward").catch(() => {});
     setShowDailyModal(false);
-    if (result?.chestType) {
+    if (result.queued) {
+      setQueuedDailyToast(true);
+      setTimeout(() => setQueuedDailyToast(false), 2800);
+    } else if (result.reward.chestType) {
       setGiftToast(true);
       setTimeout(() => setGiftToast(false), 2400);
     }
@@ -1226,6 +1247,7 @@ export default function PlayScreen() {
         reward={canClaimDailyReward ? todaysDailyReward : null}
         onClaim={handleClaimDaily}
         inventoryFull={isChestInventoryFull}
+        overflowFull={chestOverflowCount >= chestOverflowLimit}
         onClose={() => setShowDailyModal(false)}
       />
 
@@ -1234,6 +1256,24 @@ export default function PlayScreen() {
           <View style={styles.giftToast}>
             <Ionicons name="gift" size={16} color="#000" />
             <Text style={styles.giftToastText}>Se agregó un regalo a tu inventario</Text>
+          </View>
+        </View>
+      )}
+
+      {queuedDailyToast && (
+        <View pointerEvents="none" style={styles.giftToastWrap}>
+          <View style={styles.giftToast}>
+            <Ionicons name="hourglass" size={16} color="#000" />
+            <Text style={styles.giftToastText}>{T("chestQueuedDailyToast" as any)}</Text>
+          </View>
+        </View>
+      )}
+
+      {blockedDailyToast && (
+        <View pointerEvents="none" style={styles.giftToastWrap}>
+          <View style={styles.giftToast}>
+            <Ionicons name="alert-circle" size={16} color="#000" />
+            <Text style={styles.giftToastText}>{T("chestDailyBlockedAlert" as any)}</Text>
           </View>
         </View>
       )}

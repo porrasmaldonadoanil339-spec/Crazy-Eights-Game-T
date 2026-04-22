@@ -67,7 +67,10 @@ export default function AchievementsScreen() {
       showToast(T("dailyChestInventoryFull"));
       return;
     }
-    if (result !== "ok") return;
+    if (result === "queued") {
+      showToast(T("chestQueuedAchievementToast" as any));
+    }
+    if (result !== "ok" && result !== "queued") return;
     const a = ACHIEVEMENTS.find((ac) => ac.id === id);
     if (a) {
       setRewardPopup({
@@ -100,10 +103,19 @@ export default function AchievementsScreen() {
               showToast("Fichas insuficientes");
               return;
             }
-            const ok = unlockPremiumBattlePass();
-            if (ok) {
+            const res = unlockPremiumBattlePass();
+            if (res.ok) {
               await playSound("purchase");
               showToast("¡Pase Premium comprado con éxito!");
+              if (res.skippedChests > 0) {
+                setTimeout(() => {
+                  showToast(T("chestSkippedPremiumBPToast" as any).replace("{n}", String(res.skippedChests)));
+                }, 1800);
+              } else if (res.queuedChests > 0) {
+                setTimeout(() => {
+                  showToast(T("chestQueuedPremiumBPToast" as any));
+                }, 1800);
+              }
             } else {
               await playSound("error");
             }
@@ -120,7 +132,10 @@ export default function AchievementsScreen() {
       showToast(T("dailyChestInventoryFull"));
       return;
     }
-    if (result !== "ok") return;
+    if (result === "queued") {
+      showToast(T("chestQueuedMissionToast" as any));
+    }
+    if (result !== "ok" && result !== "queued") return;
     const bp = seasonTiers.find((t) => t.tier === tier);
     const free = getFreeReward(tier);
     const isCoins = bp?.rewardType === "coins" && typeof bp.rewardValue === "number";
@@ -836,7 +851,7 @@ function PlayerPathView({
   profile: any;
   themeColors: any;
   themeGold: string;
-  claimPlayerPathLevel: (level: number) => "ok" | "inventory_full" | "fail";
+  claimPlayerPathLevel: (level: number) => "ok" | "queued" | "inventory_full" | "fail";
   T: (k: any) => string;
   claimLabel: string;
   setRewardPopup: (s: any) => void;
@@ -864,7 +879,10 @@ function PlayerPathView({
       showToast(T("dailyChestInventoryFull"));
       return;
     }
-    if (result !== "ok") return;
+    if (result === "queued") {
+      showToast(T("chestQueuedPathToast" as any));
+    }
+    if (result !== "ok" && result !== "queued") return;
     const data = getPlayerPathLevelData(lvl);
     const r = data.reward;
     setRewardPopup({
