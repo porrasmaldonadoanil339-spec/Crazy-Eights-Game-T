@@ -1,0 +1,98 @@
+🟡 TRABAJO PENDIENTE (REDISEÑO / REFACTOR GRANDE)
+
+Estos puntos requieren cambios profundos, por lo que deben hacerse en tareas separadas para evitar errores:
+
+Mover botones del menú abajo tipo Clash Royale
+→ Rediseño completo del layout del home
+Recompensas de clasificatoria más visuales
+→ Nueva animación al subir de rango
+Pase Premium más llamativo
+→ Rediseño visual (dorados, brillos, animaciones)
+Nivel + título estilizados en partida
+→ Refactor del HUD jugador/rival
+Separar login diario vs regalo de tienda
+→ Auditoría del flujo de recompensas
+Cartas (+1, +2, +3) iguales en todos los modos
+→ Bug del motor (comparar clásico vs online vs ranked)
+Emparejamiento por rango
+→ Lógica del matchmaker en clasificatoria
+Efectos visuales de cartas iguales en clasificatoria
+→ Paridad con modo clásico
+Botón "Salir" coherente con botón físico
+→ Handler universal de botón “back”
+🔴 NUEVAS CORRECCIONES IMPORTANTES
+📱 1. BLOQUEAR ROTACIÓN DE PANTALLA
+
+🔴 PROBLEMA:
+El juego se puede girar horizontalmente ❌
+
+✅ SOLUCIÓN:
+
+Bloquear orientación en vertical (portrait only)
+
+📌 Resultado esperado:
+✔ Igual que Clash Royale
+✔ No permitir rotación bajo ningún caso
+
+🔒 2. DESACTIVAR SELECCIÓN DE TEXTO
+
+🔴 PROBLEMA:
+Se puede arrastrar texto (copiar/pegar) ❌
+
+✅ SOLUCIÓN:
+
+Desactivar selección en todos los textos UI
+
+📌 Resultado:
+✔ El texto NO se puede seleccionar
+✔ Experiencia tipo juego móvil profesional
+
+🌐 3. TEXTOS MAL TRADUCIDOS (CRÍTICO)
+
+🔴 PROBLEMA:
+Aparecen textos como:
+
+dailyGift
+dailyGiftClaimed
+dailyGiftSeeInventory
+
+❌ Se ve poco profesional
+
+✅ SOLUCIÓN:
+Reemplazar por textos reales:
+
+dailyGift → "Regalo Diario"
+dailyGiftClaimed → "Ya reclamado"
+dailyGiftSeeInventory → "Ver inventario"
+
+✔ Aplicar en todo el juego
+
+🎨 4. FONDO DEL JUEGO (MÁS VIVO)
+
+🔴 PROBLEMA:
+El fondo se ve plano / sin vida ❌
+
+✅ SOLUCIÓN:
+
+Agregar elementos visuales dinámicos:
+Iconos flotando (cartas, monedas, rayos, etc.)
+Movimiento suave (animación ligera)
+Profundidad visual (capas)
+
+📌 Objetivo:
+✔ Que el fondo se sienta “vivo”
+✔ Más atractivo visualmente
+✔ Igual sensación que juegos como Clash Royale
+
+✅ RESUMEN FINAL COMPLETO
+
+✔ Rediseño UI principal pendiente
+✔ Sistema de recompensas por mejorar
+✔ Motor de cartas necesita corrección global
+✔ Matchmaking por rango
+✔ Efectos visuales consistentes
+✔ Botón salir unificado
+✔ 🔥 NUEVO: bloquear rotación
+✔ 🔥 NUEVO: desactivar selección de texto
+✔ 🔥 NUEVO: corregir textos mal traducidos
+✔ 🔥 NUEVO: fondo más dinámico y vivo
