@@ -1013,7 +1013,7 @@ const styles = StyleSheet.create({
   },
   catCountActive: { backgroundColor: Colors.gold + "33" },
   catCountText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: Colors.textDim },
-  grid: { paddingLeft: 22, paddingRight: 12, flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  grid: { paddingLeft: 30, paddingRight: 12, flexDirection: "row", flexWrap: "wrap", gap: 10 },
   dailyFreeWrap: { paddingHorizontal: 16, marginBottom: 10, marginTop: 4 },
   dailyFreeGrad: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: "#2ECC7166" },
   dailyFreeIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#2ECC7122", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#2ECC7155" },

@@ -1099,7 +1099,13 @@ export default function OnlineGameScreen() {
         setGameState(prev => {
           if (!prev || prev.currentPlayerIndex !== pidx) return prev;
           const acted = prev.currentPlayerIndex;
-          return cpuPlayMulti(prev);
+          // Ranked progressive difficulty: easy for ranks 0-2 (Bronce/Plata),
+          // normal for 3-7, hard for 8+ (Diamante+).
+          const r = profile.rankedProfile?.rank ?? 0;
+          const diff = modeParam === "ranked"
+            ? (r <= 2 ? "easy" : r >= 8 ? "hard" : "normal")
+            : "normal";
+          return cpuPlayMulti(prev, diff);
         });
       }, delay);
       return () => {
@@ -2029,10 +2035,10 @@ const gameStyles = StyleSheet.create({
     justifyContent: "center", gap: 12,
   },
   drawPileBtn: { alignItems: "center", justifyContent: "center" },
-  drawPileStack: { width: 44, height: 60, position: "relative" },
-  drawCardAbs: { position: "absolute", width: 40, height: 56, borderRadius: 6, overflow: "hidden" },
+  drawPileStack: { width: 76, height: 108, position: "relative" },
+  drawCardAbs: { position: "absolute", width: 72, height: 104, borderRadius: 8, overflow: "hidden", borderWidth: 1.5, borderColor: Colors.gold + "66", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowRadius: 4, elevation: 4 },
   drawCardInner: { flex: 1, alignItems: "center", justifyContent: "center" },
-  drawCardDot: { fontSize: 8, color: "#4A90E2", opacity: 0.3 },
+  drawCardDot: { fontSize: 22, color: "#D4AF37", opacity: 0.55 },
   drawLabel: {
     marginTop: 4, paddingHorizontal: 6, paddingVertical: 2,
     borderRadius: 6, alignSelf: "center",

@@ -322,7 +322,9 @@ export function multiChooseSuit(state: MultiGameState, suit: Suit): MultiGameSta
   return ns;
 }
 
-export function cpuPlayMulti(state: MultiGameState): MultiGameState {
+export type CpuDifficulty = "easy" | "normal" | "hard";
+
+export function cpuPlayMulti(state: MultiGameState, difficulty: CpuDifficulty = "normal"): MultiGameState {
   let ns = clone(state);
   ns.turnId = (ns.turnId ?? 0) + 1;
   const pidx = ns.currentPlayerIndex;
@@ -342,7 +344,9 @@ export function cpuPlayMulti(state: MultiGameState): MultiGameState {
       (stackRank === "2" && c.rank === "2") ||
       (stackRank === "3" && c.rank === "3")
     );
-    if (counters.length > 0) {
+    // Easy CPUs frequently fail to counter (player gets a break early in ranked)
+    const counterChance = difficulty === "easy" ? 0.45 : difficulty === "hard" ? 1 : 0.9;
+    if (counters.length > 0 && Math.random() < counterChance) {
       const nonJoker = counters.filter(c => c.rank !== "Joker");
       return multiPlayCard(ns, nonJoker[0] ?? counters[0], undefined);
     }
@@ -352,8 +356,24 @@ export function cpuPlayMulti(state: MultiGameState): MultiGameState {
   const wilds = playable.filter(c => c.rank === "8" || c.rank === "Joker");
   const normal = playable.filter(c => !["8", "Joker"].includes(c.rank));
 
+  // Easy: rarely plays specials/wilds (mostly random normal cards)
+  // Normal: existing balanced behavior
+  // Hard: greedy specials, smart suit play
+  const specialBias = difficulty === "easy" ? 0.85 : difficulty === "hard" ? 0.2 : 0.4;
+
   let chosen: Card;
-  if (specials.length > 0 && Math.random() > 0.4) {
+  if (difficulty === "easy") {
+    // Easy mostly plays a random playable normal card; falls back to specials/wilds only if forced.
+    if (normal.length > 0 && Math.random() > 0.15) {
+      chosen = normal[Math.floor(Math.random() * normal.length)];
+    } else if (specials.length > 0 && Math.random() > specialBias) {
+      chosen = specials[Math.floor(Math.random() * specials.length)];
+    } else if (normal.length > 0) {
+      chosen = normal[Math.floor(Math.random() * normal.length)];
+    } else {
+      chosen = playable[Math.floor(Math.random() * playable.length)];
+    }
+  } else if (specials.length > 0 && Math.random() > specialBias) {
     chosen = specials[Math.floor(Math.random() * specials.length)];
   } else if (normal.length > 0) {
     const counts: Record<Suit, number> = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
@@ -366,7 +386,13 @@ export function cpuPlayMulti(state: MultiGameState): MultiGameState {
 
   let chosenSuit: Suit | undefined;
   if (chosen.rank === "8" || (chosen.rank === "Joker" && ns.pendingDraw === 0)) {
-    chosenSuit = chooseBestSuit(hand, chosen);
+    if (difficulty === "easy") {
+      // Easy CPU picks a random suit instead of the optimal one
+      const suits: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
+      chosenSuit = suits[Math.floor(Math.random() * 4)];
+    } else {
+      chosenSuit = chooseBestSuit(hand, chosen);
+    }
   }
 
   return multiPlayCard(ns, chosen, chosenSuit);

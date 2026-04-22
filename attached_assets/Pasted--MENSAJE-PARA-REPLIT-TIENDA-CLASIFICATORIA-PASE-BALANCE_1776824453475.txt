@@ -1,0 +1,83 @@
+🔴 MENSAJE PARA REPLIT — TIENDA + CLASIFICATORIA + PASE + BALANCE
+
+Quiero corregir e implementar exactamente lo siguiente en el juego:
+
+🟣 1. TIENDA — NOMBRES Y POSICIÓN DE ÍTEMS
+❌ PROBLEMA:
+Los nombres de los ítems aparecen incompletos (truncados)
+Algunos se ven como “A.” o cortados
+✔ SOLUCIÓN:
+Mostrar el NOMBRE COMPLETO de todos los ítems
+No usar abreviaciones ni recortes
+Ajustar texto automáticamente si es largo (sin cortar)
+✔ POSICIÓN (CRÍTICO):
+El PRIMER ítem de cada columna debe moverse UN POQUITO hacia la derecha
+Solo un ajuste leve
+Debe verse completo sin recorte
+
+Aplica a TODAS las columnas:
+
+Cartas
+Dorsos
+Mesas
+Marcos
+Avatares
+Efectos
+Títulos
+🔴 2. CLASIFICATORIA — BUSQUEDA DE JUGADORES (CRÍTICO)
+❌ PROBLEMA:
+No aparece el avatar seleccionado del jugador en la pantalla de “buscando jugadores”
+✔ SOLUCIÓN:
+Mostrar SIEMPRE:
+Avatar seleccionado del jugador
+Nombre del jugador
+🎯 OBJETIVO:
+Dar sensación de matchmaking online real
+Evitar pantalla vacía o bug visual
+🟢 3. CLASIFICATORIA — CARTAS (TAMAÑO)
+❌ PROBLEMA:
+Las cartas del rival y las cartas que se sacan del mazo se ven pequeñas
+✔ SOLUCIÓN:
+Las cartas deben ser MÁS GRANDES
+Deben tener el mismo tamaño que en los modos normales
+No reducir escala en clasificatoria
+🎯 OBJETIVO:
+Mejor visibilidad
+Misma calidad visual que otros modos
+🟣 4. PASE PREMIUM — RECOMPENSAS (MEJORA)
+❌ PROBLEMA:
+Recompensas actuales son muy simples para el precio
+✔ SOLUCIÓN:
+
+Seleccionar buenas recompensas desde mi colección para el pase premium:
+
+Cartas
+Dorsos
+Mesas
+Avatares
+Marcos
+Efectos
+Títulos
+Cofres
+🎯 OBJETIVO:
+Hacer el pase premium más atractivo
+Que valga la pena comprarlo
+Mejor progresión del jugador
+🟡 5. CLASIFICATORIA — BALANCE DE DIFICULTAD
+❌ PROBLEMA:
+La clasificatoria está demasiado difícil para empezar
+✔ SOLUCIÓN:
+Hacer los primeros rangos más fáciles
+Permitir que el jugador gane más fácil al inicio
+Aumentar dificultad progresivamente según nivel
+🎯 OBJETIVO:
+Mejor experiencia inicial
+Menos frustración
+Progresión más suave
+🎯 OBJETIVO FINAL GENERAL
+Tienda sin textos cortados
+UI centrada y limpia
+Clasificatoria más justa y balanceada
+Avatar visible en matchmaking
+Cartas más grandes y claras
+Pase premium más valioso
