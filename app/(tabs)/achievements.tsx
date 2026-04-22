@@ -88,8 +88,8 @@ export default function AchievementsScreen() {
 
   const handleUnlockPremiumBP = () => {
     Alert.alert(
-      T("confirmPremiumTitle" as any) || "Desbloquear Pase Premium",
-      `${T("confirmPremiumBody" as any) || "Vas a gastar"} ${premiumBattlePassCost} ${T("fichas" as any) || "fichas"} ${T("forCurrentSeason" as any) || "para activar el Pase Premium de la temporada actual"}.`,
+      T("confirmPremiumTitle" as any) || "¿Deseas comprar el Pase Premium?",
+      `${premiumBattlePassCost} ${T("fichas" as any) || "fichas"}`,
       [
         { text: T("cancel" as any) || "Cancelar", style: "cancel" },
         {
@@ -97,13 +97,13 @@ export default function AchievementsScreen() {
           onPress: async () => {
             if ((profile.fichas ?? 0) < premiumBattlePassCost) {
               await playSound("error");
-              showToast(T("notEnoughFichas" as any) || "Fichas insuficientes");
+              showToast("Fichas insuficientes");
               return;
             }
             const ok = unlockPremiumBattlePass();
             if (ok) {
               await playSound("purchase");
-              showToast(T("premiumUnlocked" as any) || "¡Pase Premium activo!");
+              showToast("¡Pase Premium comprado con éxito!");
             } else {
               await playSound("error");
             }
@@ -348,11 +348,16 @@ export default function AchievementsScreen() {
                   borderRadius: 14,
                   overflow: "hidden",
                   borderWidth: 2,
-                  borderColor: "#FFD700",
+                  borderColor: "#67E8F9",
+                  shadowColor: "#3B82F6",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.55,
+                  shadowRadius: 10,
+                  elevation: 8,
                 }}
               >
                 <LinearGradient
-                  colors={["#FFB300", "#FF8C00", "#E65100"]}
+                  colors={["#67E8F9", "#3B82F6", "#1E40AF"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{

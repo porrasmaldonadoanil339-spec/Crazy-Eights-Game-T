@@ -1444,8 +1444,8 @@ const styles = StyleSheet.create({
     flex: 0, width: 96, justifyContent: "center",
   },
   emoteGrid: {
-    flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4,
-    paddingLeft: 6,
+    flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4,
+    paddingLeft: 14, paddingRight: 6, justifyContent: "space-between",
   },
   emoteShopCard: {
     width: "32%", padding: 10, borderRadius: 14, borderWidth: 1.5,

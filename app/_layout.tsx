@@ -354,12 +354,7 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
             />
           ))}
 
-          {/* Pulsing radial vignette behind the card cover */}
-          <PulseAura />
-
-          {/* Outer ring decoration */}
-          <View style={styles.coverRingOuter} />
-          <View style={styles.coverRingInner} />
+          {/* Outer ring decoration removed for cleaner loading transition */}
 
           {/* Center content */}
           <Animated.View style={[styles.coverCenter, { transform: [{ scale: titleScale }] }]}>

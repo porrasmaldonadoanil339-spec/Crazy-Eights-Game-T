@@ -178,15 +178,10 @@ export default function CollectionScreen() {
         style={styles.gridItem}
       >
         <View style={styles.previewSlot}>
-          {/* Locked items: dimmed (Clash Royale-style grayed look). No padlock icon. */}
+          {/* Locked items: desaturated (Clash Royale-style grayed look). No overlays, no padlock icon. */}
           <View style={!isOwned ? styles.lockedDim : undefined}>
             <ItemPreview item={item} lang={lang} compact />
           </View>
-
-          {/* Subtle gray overlay on locked items to push toward grayscale */}
-          {!isOwned && (
-            <View style={styles.grayscaleTint} pointerEvents="none" />
-          )}
 
           {isEquipped && (
             <View style={[styles.equippedBadgeFloat, { backgroundColor: themeGold }]} pointerEvents="none">
@@ -364,12 +359,9 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "visible",
   },
-  lockedDim: { opacity: 0.32 },
-  grayscaleTint: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(140,140,140,0.28)",
-    borderRadius: 8,
-  },
+  lockedDim: Platform.OS === "web"
+    ? ({ opacity: 0.55, filter: "grayscale(100%)" } as any)
+    : { opacity: 0.45 },
   rarityChip: {
     paddingHorizontal: 5, paddingVertical: 1, borderRadius: 5, borderWidth: 1,
   },

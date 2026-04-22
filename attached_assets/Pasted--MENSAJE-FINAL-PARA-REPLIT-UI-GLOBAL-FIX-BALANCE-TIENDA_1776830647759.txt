@@ -1,0 +1,93 @@
+🔴 MENSAJE FINAL PARA REPLIT — UI GLOBAL (FIX + BALANCE + TIENDA + COLECCIÓN)
+
+Quiero implementar exactamente lo siguiente en el juego:
+
+🟣 1. TIENDA — EMOTES (CRÍTICO)
+✔ CAMBIOS:
+Los emotes deben estar un poco más centrados hacia la DERECHA
+Mejor distribución visual de los 3 emotes
+Deben ocupar mejor el espacio disponible
+❌ PROBLEMA:
+Los emotes aparecen comprados con MONEDAS
+✔ SOLUCIÓN:
+Los emotes deben comprarse SOLO con FICHAS
+Cambiar sistema de moneda para emotes
+🟣 2. COLECCIÓN — SISTEMA DE BLOQUEO (CLASH ROYALE STYLE)
+✔ SISTEMA VISUAL:
+ÍTEMS BLOQUEADOS:
+Color estilo Clash Royale:
+blanco / negro / gris (desaturado)
+Deben seguir visibles pero sin color normal
+ÍTEMS DESBLOQUEADOS:
+Se ven con su color normal completo
+✔ INTERACCIÓN:
+Al presionar el ítem:
+se ve NORMAL (sin gris)
+muestra información completa correctamente
+🎯 OBJETIVO:
+Diferenciar claramente bloqueado vs desbloqueado como Clash Royale
+🟣 3. COLECCIÓN — OVERLAY (CRÍTICO BUG VISUAL)
+❌ PROBLEMA:
+Hay un óvalo / capa encima de las cartas que las oscurece o tapa
+✔ SOLUCIÓN:
+
+Eliminar completamente:
+
+overlay
+card-overlay
+opacity extra
+background: rgba(...)
+::before / ::after decorativos
+✔ RESULTADO:
+Las cartas deben verse LIMPIAS
+Sin capas encima
+Sin sombras extra que bloqueen visual
+🟣 4. PASE DE BATALLA PREMIUM (MEJORA UX)
+✔ CAMBIO:
+Botón de compra más claro y atractivo
+Mejor texto en botón (más llamativo)
+✔ MENSAJES:
+Al comprar:
+👉 “¿Deseas comprar el Pase Premium?”
+Si no tiene dinero:
+👉 “Fichas insuficientes”
+Si compra:
+👉 Confirmación de compra exitosa
+✔ BALANCE ECONÓMICO:
+Precio actual: 50 fichas
+Puede cambiar dinámicamente a:
+100,000 monedas (cuando cambie temporada/pase)
+🟢 5. BARRA INFERIOR — UI TEXTO
+
+Botones:
+
+Tienda
+Colección
+Jugar
+Camino
+Perfil
+✔ AJUSTE:
+Subir ligeramente visibilidad del texto
+Mejor contraste o tamaño leve
+SOLO mejorar lectura (no mover botones)
+🟢 6. CLASIFICATORIA / CARGA — EFECTOS
+❌ PROBLEMA:
+Hay un círculo o animación molesta en pantalla de carga
+✔ SOLUCIÓN:
+Eliminar círculo innecesario en loading
+Mejorar animación de símbolos
+Hacer transición más limpia y menos invasiva
+🟢 7. UI GENERAL — COLECCIÓN
+✔ REQUISITO FINAL:
+Las cartas deben verse limpias
+Sin overlays ni óvalos
+Sin capas opacas encima
+Diseño intacto pero sin elementos que tapen
+🎯 OBJETIVO FINAL
+Tienda más clara y centrada
+Emotes comprados con fichas (no monedas)
+Colección estilo Clash Royale real
+Ítems bloqueados bien diferenciados
+UI sin overlays molestos
+Mejor legibilidad en botones inferiores
+Experiencia más limpia y profesional
