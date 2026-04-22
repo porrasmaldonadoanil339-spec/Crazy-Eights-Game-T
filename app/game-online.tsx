@@ -768,7 +768,12 @@ export default function OnlineGameScreen() {
   useEffect(() => {
     if (Platform.OS === "web") return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (showExitModal) return false;
+      if (showExitModal) {
+        // Modal already open — close it instead of popping the screen,
+        // so the physical button mirrors the on-screen "No" button.
+        setShowExitModal(false);
+        return true;
+      }
       setShowExitModal(true);
       return true;
     });

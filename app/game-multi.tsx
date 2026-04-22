@@ -317,7 +317,11 @@ export default function MultiGameScreen() {
     if (Platform.OS === "web") return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       if (!gameStarted) return false;
-      if (showExitModal) return false;
+      if (showExitModal) {
+        // Mirror the on-screen "No" button: second back press closes the modal.
+        setShowExitModal(false);
+        return true;
+      }
       setShowExitModal(true);
       return true;
     });
