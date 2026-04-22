@@ -24,6 +24,7 @@ let currentTrack: MusicTrack | null = null;
 let isMusicEnabled = true;
 let isSfxMuted = false;
 let isHapticEnabled = true;
+let isBackgrounded = false;
 let musicVolume = 0.35;
 let sfxVolume = 0.85;
 let isInitialized = false;
@@ -190,12 +191,23 @@ export function getCurrentTrack(): MusicTrack | null {
 
 async function playSfx(key: SoundKey, volume?: number) {
   if (isSfxMuted) return;
+  if (isBackgrounded) return;
   await safe(async () => {
     const player = getOrCreateSfx(key);
     player.volume = volume ?? sfxVolume;
     player.seekTo(0);
     player.play();
   });
+}
+
+export async function setAppBackgrounded(backgrounded: boolean) {
+  isBackgrounded = backgrounded;
+  if (backgrounded) {
+    // Hard-stop every SFX player too so card sounds never bleed into the home screen
+    for (const player of sfxPlayers.values()) {
+      await safe(async () => { player.pause(); });
+    }
+  }
 }
 
 function haptic(fn: () => Promise<void>) {

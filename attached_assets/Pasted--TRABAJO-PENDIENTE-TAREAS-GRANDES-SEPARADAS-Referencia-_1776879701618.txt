@@ -1,0 +1,184 @@
+🟡 TRABAJO PENDIENTE (TAREAS GRANDES SEPARADAS)
+
+Referencia: Clash Royale
+
+Rediseño del menú principal (botones abajo)
+Animación de ascenso de rango
+Rediseño del Pase Premium
+HUD nivel + título estilizado
+Separar login diario vs tienda
+Paridad de cartas (+1, +2, +3) entre modos
+Matchmaking por rango
+VFX de cartas en clasificatoria
+Handler universal botón “atrás”
+🔴 CORRECCIONES ESPECÍFICAS (CLASIFICATORIA + SISTEMA)
+🎵 1. MÚSICA EN CLASIFICATORIA (CRÍTICO)
+
+🔴 PROBLEMA:
+
+Se queda la música del menú ❌
+El audio sigue incluso fuera del juego ❌
+
+✅ SOLUCIÓN COMPLETA:
+
+📌 Flujo correcto:
+
+MENÚ →
+    música_menu
+
+CLICK "JUGAR CLASIFICATORIA" →
+    detener música_menu
+    iniciar música_busqueda
+
+MATCH ENCONTRADO →
+    detener música_busqueda
+    iniciar música_partida
+
+📌 AL SALIR DE LA APP:
+
+onAppPause(true):
+    pausar TODOS los audios
+
+onAppResume:
+    reanudar audio correspondiente
+
+📌 AL SALIR DE PARTIDA:
+
+detener música_partida inmediatamente
+
+✔ Resultado:
+
+Nunca se mezclan audios
+No suena nada fuera del juego
+Igual comportamiento que Clash Royale
+🔇 2. AUDIO DE CARTAS FUERA DE APP (ERROR GRAVE)
+
+🔴 PROBLEMA:
+Se siguen escuchando sonidos de cartas fuera del juego ❌
+
+✅ SOLUCIÓN:
+
+Al minimizar o salir:
+detener SFX
+detener música
+bloquear reproducción en background
+
+✔ NO debe sonar absolutamente nada fuera del juego
+
+🎭 3. EMOTES EN TIENDA (CORRECCIÓN COMPLETA)
+
+🔴 PROBLEMAS:
+
+Aparece nombre del emote ❌
+Hay óvalo horizontal encima ❌
+
+✅ SOLUCIÓN:
+
+✔ ELIMINAR:
+
+Texto del nombre del emote
+Óvalo horizontal (overlay incorrecto)
+
+✔ MANTENER:
+
+Círculo original del emote (forma del icono)
+Rareza (Común, Raro, etc.)
+Precio
+
+📌 Resultado:
+
+Diseño limpio
+Igual a Clash Royale
+🏅 4. RANGOS Y NIVELES (VISUAL)
+
+🔴 PROBLEMA:
+
+No se ve bien el rango o es inconsistente
+
+✅ SOLUCIÓN:
+
+✔ Mostrar SIEMPRE:
+
+[ICONO RANGO] NombreJugador
+Nivel X
+
+✔ En:
+
+Búsqueda de partida
+Partida en vivo
+
+✔ Regla:
+
+Jugadores del mismo rango
+Coherente con nivel
+⚙️ 5. EMOTES EN PARTIDA (CONFIGURACIÓN)
+
+🔴 PROBLEMA:
+
+Emotes del rival bloqueados ❌
+
+✅ SOLUCIÓN:
+
+Activar por defecto:
+emotesRival = ON
+
+✔ El jugador puede ver emotes del rival
+
+⬅️ 6. BOTÓN SALIR (TIPO CLASH ROYALE)
+
+🔴 PROBLEMA:
+No es consistente ❌
+
+✅ SOLUCIÓN:
+
+✔ Tanto botón UI como botón físico:
+
+¿Salir de la partida?
+[SI] [NO]
+
+✔ Mismo comportamiento en ambos casos
+
+📱 7. BLOQUEAR ROTACIÓN
+
+✔ Forzar modo vertical
+✔ No permitir horizontal
+
+🔒 8. DESACTIVAR SELECCIÓN DE TEXTO
+
+✔ Ningún texto debe poder seleccionarse
+✔ Evitar copiar/pegar
+
+🌐 9. TEXTOS INTERNOS (CORREGIR)
+dailyGift → "Regalo Diario"
+dailyGiftClaimed → "Ya reclamado"
+dailyGiftSeeInventory → "Ver inventario"
+
+✔ Aplicar globalmente
+
+🎨 10. FONDO DEL JUEGO (MEJORA VISUAL)
+
+🔴 PROBLEMA:
+Fondo plano ❌
+
+✅ SOLUCIÓN:
+
+Elementos animados:
+Cartas flotando
+Iconos
+Movimiento suave
+
+✔ Fondo más vivo y atractivo
+
+✅ RESUMEN FINAL COMPLETO
+
+✔ Música correcta (menú → búsqueda → partida)
+✔ Audio se detiene fuera de la app
+✔ Emotes sin textos ni óvalos incorrectos
+✔ Rangos visibles y coherentes
+✔ Emotes del rival activados
+✔ Botón salir unificado
+✔ Rotación bloqueada
+✔ Textos no seleccionables
+✔ Traducciones corregidas
+✔ Fondo dinámico
+✔ Sistema consistente tipo Clash Royale
