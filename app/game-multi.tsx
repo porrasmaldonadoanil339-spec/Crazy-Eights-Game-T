@@ -220,8 +220,9 @@ export default function MultiGameScreen() {
     return Array.from({ length: 6 }, (_, i) => `${T("player")} ${i + 1}`);
   }, [T]);
 
-  const { level: playerLevel } = useProfile();
+  const { profile, level: playerLevel, updateAchievementProgress, recordEventWin } = useProfile();
   const activeEventId = React.useMemo(() => getActiveEvent(playerLevel)?.id ?? null, [playerLevel]);
+  const eventResultRecordedRef = useRef(false);
 
   const [gameStarted, setGameStarted] = useState(false);
   const [playerCountSelect, setPlayerCountSelect] = useState(3);
@@ -232,6 +233,29 @@ export default function MultiGameScreen() {
       stopMusic().catch(() => {});
     }
   }, [gameState.phase]);
+
+  // ─── Record event-win achievement progress for pass-and-play wins ────────
+  // In local pass-and-play, the device owner is participating, so a win by
+  // any seat counts toward their event achievements (mirrors single-player
+  // behaviour in app/game.tsx).
+  useEffect(() => {
+    if (gameState.phase !== "game_over") return;
+    if (gameState.winnerIndex === null) return;
+    if (eventResultRecordedRef.current) return;
+    const evId = gameState.eventId ?? null;
+    if (!evId) return;
+    eventResultRecordedRef.current = true;
+    const priorWinsForEvent = (profile.stats.winsByEvent ?? {})[evId] ?? 0;
+    recordEventWin(evId);
+    updateAchievementProgress("event_any_win", 1);
+    if (evId === "speed")    updateAchievementProgress("event_speed_win", 1);
+    if (evId === "random")   updateAchievementProgress("event_random_win", 1);
+    if (evId === "double")   updateAchievementProgress("event_double_win", 1);
+    if (evId === "survival") updateAchievementProgress("event_survival_win", 1);
+    if (priorWinsForEvent === 0) {
+      updateAchievementProgress("event_versatile", 1);
+    }
+  }, [gameState.phase, gameState.winnerIndex, gameState.eventId, recordEventWin, updateAchievementProgress, profile.stats.winsByEvent]);
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);

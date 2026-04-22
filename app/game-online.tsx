@@ -704,7 +704,7 @@ export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
   const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string; skipLobby?: string; names?: string }>();
-  const { profile, level: playerLevel, addXp, updateRanked, recordRankedAbandon, recordGameResult, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
+  const { profile, level: playerLevel, addXp, updateRanked, recordRankedAbandon, recordGameResult, updateAchievementProgress, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
   const T = useT();
 
   const isOnline = !!params.code;
@@ -948,7 +948,19 @@ export default function OnlineGameScreen() {
     const mc = getModeById(mode);
     const xp = isWin ? mc.xpReward : mc.xpLoss;
     const coins = isWin ? mc.coinsReward : mc.coinsLoss;
-    recordGameResult({ won: isWin, mode, difficulty: "normal", coinsEarned: coins, xpEarned: xp, eightsPlayed: 0, cardsDrawn: 0, isPerfect: false, isComeback: false, gameDurationMs: 60000 });
+    const evId = gameState.eventId ?? null;
+    recordGameResult({ won: isWin, mode, difficulty: "normal", coinsEarned: coins, xpEarned: xp, eightsPlayed: 0, cardsDrawn: 0, isPerfect: false, isComeback: false, gameDurationMs: 60000, eventId: evId });
+    if (isWin && evId) {
+      updateAchievementProgress("event_any_win", 1);
+      if (evId === "speed")    updateAchievementProgress("event_speed_win", 1);
+      if (evId === "random")   updateAchievementProgress("event_random_win", 1);
+      if (evId === "double")   updateAchievementProgress("event_double_win", 1);
+      if (evId === "survival") updateAchievementProgress("event_survival_win", 1);
+      const priorWinsForEvent = (profile.stats.winsByEvent ?? {})[evId] ?? 0;
+      if (priorWinsForEvent === 0) {
+        updateAchievementProgress("event_versatile", 1);
+      }
+    }
     if (isWin) {
       const newTotalWins = profile.stats.totalWins + 1;
       let chestType: ChestType | null = null;

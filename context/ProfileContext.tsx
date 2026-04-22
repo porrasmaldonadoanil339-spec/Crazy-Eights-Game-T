@@ -300,6 +300,7 @@ interface ProfileContextValue {
     gameDurationMs?: number;
     eventId?: string | null;
   }) => void;
+  recordEventWin: (eventId: string) => void;
   updateAchievementProgress: (id: AchievementId, amount: number) => void;
   claimBattlePassTier: (tier: number, track?: "free" | "premium") => "ok" | "inventory_full" | "fail";
   isPremiumBattlePassActive: boolean;
@@ -1107,6 +1108,24 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     });
   }, [update]);
 
+  const recordEventWin = useCallback((eventId: string) => {
+    if (!eventId) return;
+    update((p) => ({
+      ...p,
+      stats: {
+        ...p.stats,
+        winsByEvent: {
+          ...(p.stats.winsByEvent ?? {}),
+          [eventId]: ((p.stats.winsByEvent ?? {})[eventId] ?? 0) + 1,
+        },
+        gamesByEvent: {
+          ...(p.stats.gamesByEvent ?? {}),
+          [eventId]: ((p.stats.gamesByEvent ?? {})[eventId] ?? 0) + 1,
+        },
+      },
+    }));
+  }, [update]);
+
   const canClaimDailyReward = useMemo(() => {
     const today = new Date().toDateString();
     return profile.lastDailyRewardDate !== today;
@@ -1230,6 +1249,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         addXp,
         buyItem,
         recordGameResult,
+        recordEventWin,
         updateAchievementProgress,
         claimBattlePassTier,
         isPremiumBattlePassActive,
