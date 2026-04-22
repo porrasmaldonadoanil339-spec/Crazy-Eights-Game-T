@@ -2496,51 +2496,77 @@ export default function GameScreen() {
         {/* Player emote bubble */}
         <EmoteBubble emote={playerEmote} side="player" />
 
-        <ScrollView
-          horizontal showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.handContainer}
-          style={styles.handScroll}
-          decelerationRate="normal"
-          bounces
-          alwaysBounceHorizontal
-          overScrollMode="always"
-          keyboardShouldPersistTaps="always"
-        >
-          {dealAnimationDone && gameState.playerHand.map((card, i) => {
-            const playable = isPlayerTurn && canPlay(card, gameState);
-            const selected = selectedCard?.id === card.id;
-            const handLen = gameState.playerHand.length;
-            // Generous spacing so each card is visible — scroll handles overflow.
-            const overlap = handLen <= 4 ? -6 : handLen <= 7 ? -12 : -18;
-            // Reduce rotation when many cards to avoid blocking horizontal swipe.
-            const maxAngle = handLen <= 7 ? 3 : 1.5;
-            const angle = (i - handLen / 2) * maxAngle;
-            return (
-              <View
-                key={card.id}
-                style={{
-                  marginLeft: i === 0 ? 0 : overlap,
-                  zIndex: selected ? 100 : i,
-                  transform: [{ rotate: `${angle}deg` }, { translateY: selected ? -8 : 0 }],
-                  alignItems: "center",
-                }}
-              >
-                <PlayingCard
-                  card={card}
-                  onPress={() => handleCardPress(card)}
-                  isPlayable={playable}
-                  isSelected={selected}
-                  size="md"
-                  cardColors={cardColors}
-                  backColors={backColors}
-                  backAccent={backAccent}
-                  backPattern={backPattern}
-                />
-                {adviceCardId === card.id && <AdviceBadge card={card} T={T} />}
-              </View>
-            );
-          })}
-        </ScrollView>
+        {/* Arc fan hand — unified scroll system (matches ranked mode) */}
+        {dealAnimationDone && (() => {
+          const N = gameState.playerHand.length;
+          if (N === 0) return null;
+          const CARD_W = 64;
+          const CARD_H = 92;
+          const MAX_ANGLE = N <= 7 ? Math.min(20, N * 2.4) : Math.min(10, N * 1.2);
+          const MAX_ARC = N <= 7 ? 16 : 8;
+          const xStep = N <= 4 ? CARD_W * 0.78 : N <= 7 ? CARD_W * 0.66 : CARD_W * 0.58;
+          const totalWidth = CARD_W + (N - 1) * xStep + 16;
+          const fitsOnScreen = totalWidth <= SW - 16;
+          // Container height accounts for arc lift, selected translateY (-8), advice badge (~22), shadow.
+          const containerH = CARD_H + MAX_ARC + 36;
+
+          const Hand = (
+            <View style={{ height: containerH, width: Math.max(totalWidth, SW), position: "relative" }}>
+              {gameState.playerHand.map((card, i) => {
+                const playable = isPlayerTurn && canPlay(card, gameState);
+                const selected = selectedCard?.id === card.id;
+                const centerI = (N - 1) / 2;
+                const t = N <= 1 ? 0 : (i - centerI) / Math.max(1, centerI);
+                const angle = t * MAX_ANGLE;
+                const arcY = Math.abs(t) * MAX_ARC;
+                const baseStart = fitsOnScreen ? Math.max(8, (SW - totalWidth) / 2) : 8;
+                const x = baseStart + i * xStep;
+                return (
+                  <View
+                    key={card.id}
+                    style={{
+                      position: "absolute",
+                      left: x,
+                      bottom: arcY + 8,
+                      zIndex: selected ? 100 : i + 1,
+                      transform: [{ rotate: `${angle}deg` }, { translateY: selected ? -8 : 0 }],
+                    }}
+                  >
+                    <PlayingCard
+                      card={card}
+                      onPress={() => handleCardPress(card)}
+                      isPlayable={playable}
+                      isSelected={selected}
+                      size="md"
+                      cardColors={cardColors}
+                      backColors={backColors}
+                      backAccent={backAccent}
+                      backPattern={backPattern}
+                    />
+                    {adviceCardId === card.id && <AdviceBadge card={card} T={T} />}
+                  </View>
+                );
+              })}
+            </View>
+          );
+
+          if (fitsOnScreen) return <View style={{ height: containerH }}>{Hand}</View>;
+          return (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              decelerationRate="normal"
+              bounces
+              alwaysBounceHorizontal
+              overScrollMode="always"
+              keyboardShouldPersistTaps="always"
+              style={{ width: "100%", height: containerH }}
+              contentContainerStyle={{ minWidth: SW }}
+            >
+              {Hand}
+            </ScrollView>
+          );
+        })()}
       </View>
 
       {/* Deal animation — only shown after matchmaking */}

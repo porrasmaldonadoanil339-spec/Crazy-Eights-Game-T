@@ -1,0 +1,109 @@
+🔴 MENSAJE FINAL PARA REPLIT — SISTEMA COMPLETO DEL JUEGO
+
+Quiero implementar y corregir exactamente lo siguiente en el juego:
+
+🟢 1. SCROLL DEL MAZO (SISTEMA GLOBAL UNIFICADO)
+
+El scroll actual de clasificatoria está perfecto, no modificar su funcionamiento.
+
+✔ APLICAR EL MISMO SISTEMA A TODOS LOS MODOS:
+
+El mismo scroll horizontal del mazo debe funcionar exactamente igual en:
+
+Clásico
+Relámpago
+Torneo
+Desafío
+Práctica
+Reto de fichas
+Online
+Evento RB
+✔ REQUISITOS DEL SCROLL:
+Scroll horizontal fluido (izquierda / derecha)
+Mostrar TODAS las cartas del mazo
+Sin ocultar cartas
+Sin cambios entre modos
+Misma experiencia en todo el juego
+🔵 2. MODO ONLINE — SCROLL
+
+El modo online debe usar EXACTAMENTE el mismo sistema que clasificatoria:
+
+Misma UI
+Misma fluidez
+Mismo scroll del mazo
+Misma visualización completa de cartas
+🟣 3. TIENDA — EMOTES (CRÍTICO)
+❌ PROBLEMA:
+Emotes aparecen dentro de un óvalo
+✔ SOLUCIÓN:
+Eliminar completamente el óvalo
+Mostrar emote limpio sin máscara circular
+Mantener animación activa
+No recortar imagen
+🟣 4. TIENDA — NOMBRES DE ÍTEMS (CRÍTICO)
+❌ PROBLEMA:
+Los nombres aparecen incompletos o cortados (ej: “A.”)
+✔ SOLUCIÓN:
+Mostrar nombre COMPLETO del ítem
+No usar abreviaciones ni recortes
+Ajustar tamaño o salto de línea si es necesario
+✔ APLICA A TODA LA COLECCIÓN:
+Cartas
+Dorsos
+Mesas
+Marcos
+Avatares
+Efectos
+Títulos
+🟢 5. CLASIFICATORIA — CARTAS (CRÍTICO)
+❌ PROBLEMA:
+Cartas del mazo y selección se ven cortadas
+✔ SOLUCIÓN:
+Cartas deben verse COMPLETAS siempre
+Ajustar escala y contenedor
+Evitar recortes visuales
+Mantener tamaño consistente con otros modos
+🟡 6. TIENDA — PRIMER ÍTEM DE CADA COLUMNA
+✔ AJUSTE:
+El primer ítem de cada columna debe moverse un poco hacia la derecha
+Solo ajuste leve
+Para evitar recorte visual
+
+Aplica a:
+
+Cartas
+Dorsos
+Mesas
+Marcos
+Avatares
+Efectos
+Títulos
+🟢 7. REGALO DIARIO (COFRE)
+✔ FLUJO:
+Reclamar regalo diario
+Se añade al inventario como cofre
+Mensaje:
+👉 “Se agregó un regalo a tu inventario”
+✔ AL ABRIR:
+Animación de cofre
+Sonido
+Da 1 ítem aleatorio de la colección
+Solo 1 por día
+Sin mostrar recompensa antes (sorpresa total)
+🟠 8. MODO EVENTO RB — SCROLL
+
+El modo Evento RB debe tener:
+
+El MISMO scroll del mazo que clasificatoria
+Scroll horizontal fluido
+Mostrar todas las cartas del mazo
+Sin ocultar cartas
+Misma experiencia visual que todos los modos
+🎯 OBJETIVO FINAL
+Scroll unificado en TODOS los modos (incluido online y evento RB)
+Clasificatoria más estable y pulida
+Tienda sin textos cortados ni UI rota
+Emotes sin óvalos y totalmente animados
+Cartas siempre completas y visibles
+Sistema de regalo diario funcional y claro
+Experiencia profesional y consistente en todo el juego

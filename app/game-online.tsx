@@ -1570,7 +1570,8 @@ export default function OnlineGameScreen() {
             const xStep = N <= 4 ? CARD_W * 0.78 : N <= 7 ? CARD_W * 0.66 : CARD_W * 0.58;
             const totalWidth = CARD_W + (N - 1) * xStep + 16;
             const fitsOnScreen = totalWidth <= SW - 16;
-            const containerH = CARD_H + MAX_ARC + 8;
+            // +28 accounts for selected lift (translateY: -8), shadow, and card highlight glow.
+            const containerH = CARD_H + MAX_ARC + 28;
 
             const Hand = (
               <View style={{ height: containerH, width: Math.max(totalWidth, SW), position: "relative" }}>

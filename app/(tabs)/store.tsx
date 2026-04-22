@@ -495,6 +495,14 @@ function StoreItemCard({ item, owned, isEquipped, isDailyHot, onPress, onEquip, 
           </View>
         )}
         <View style={{ flex: 1 }} />
+        <Text
+          style={[styles.itemCardName, { color: theme.text }]}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          {localized.name}
+        </Text>
         <View style={styles.itemFooter}>
           {owned ? (
             <EquipBadge isEquipped={isEquipped} onEquip={onEquip} T={T} />
@@ -1125,6 +1133,10 @@ const styles = StyleSheet.create({
   itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: Colors.text, marginBottom: 3 },
   itemDesc: { fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textMuted, lineHeight: 14, flex: 1 },
   itemFooter: { marginTop: 6 },
+  itemCardName: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 11, textAlign: "center",
+    marginTop: 6, marginHorizontal: 2, minHeight: 26, lineHeight: 13,
+  },
   ownedBadge: { flexDirection: "row", alignItems: "center", gap: 3 },
   ownedText: { fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.success },
   freeText: { fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.textMuted },
