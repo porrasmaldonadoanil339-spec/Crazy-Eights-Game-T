@@ -1009,7 +1009,7 @@ const styles = StyleSheet.create({
   },
   catCountActive: { backgroundColor: Colors.gold + "33" },
   catCountText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: Colors.textDim },
-  grid: { paddingHorizontal: 16, flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  grid: { paddingLeft: 22, paddingRight: 12, flexDirection: "row", flexWrap: "wrap", gap: 10 },
   dailyFreeWrap: { paddingHorizontal: 16, marginBottom: 10, marginTop: 4 },
   dailyFreeGrad: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: "#2ECC7166" },
   dailyFreeIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#2ECC7122", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#2ECC7155" },
@@ -1414,6 +1414,7 @@ const styles = StyleSheet.create({
   },
   emoteGrid: {
     flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4,
+    paddingLeft: 6,
   },
   emoteShopCard: {
     width: "23.6%", padding: 6, borderRadius: 12, borderWidth: 1.5,
@@ -1514,7 +1515,7 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
         <Ionicons name="diamond" size={12} color="#3498DB" />
         <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#3498DB" }}>{profile.fichas ?? 0}</Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 4 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingLeft: 8, paddingRight: 4 }}>
         {(["common", "rare", "epic", "legendary"] as const).map((t) => (
           <BouncePressable
             key={t}

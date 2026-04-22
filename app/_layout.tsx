@@ -2,7 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import { Animated, View, Text, Image, StyleSheet, Platform, Dimensions, TextInput, Pressable, LogBox, AppState } from "react-native";
+import { Animated, View, Text, Image, StyleSheet, Platform, Dimensions, TextInput, Pressable, LogBox, AppState, BackHandler, Alert } from "react-native";
 
 LogBox.ignoreLogs([
   '"shadow*" style props are deprecated',
@@ -624,9 +624,38 @@ function SplashOAuthModal({ provider, onDone, onCancel }: {
   );
 }
 
+function GlobalBackHandler() {
+  const T = useT();
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const onBack = () => {
+      Alert.alert(
+        T("exitGameTitle") || "¿Deseas salir del juego?",
+        "",
+        [
+          { text: T("cancel") || "Cancelar", style: "cancel", onPress: () => {} },
+          {
+            text: T("exit") || "Salir",
+            style: "destructive",
+            onPress: () => {
+              try { BackHandler.exitApp(); } catch {}
+            },
+          },
+        ],
+        { cancelable: true },
+      );
+      return true;
+    };
+    const sub = BackHandler.addEventListener("hardwareBackPress", onBack);
+    return () => sub.remove();
+  }, [T]);
+  return null;
+}
+
 function RootLayoutNav() {
   return (
     <>
+      <GlobalBackHandler />
       <AudioManager />
       <NotificationManager />
       <Stack screenOptions={{ headerShown: false }}>

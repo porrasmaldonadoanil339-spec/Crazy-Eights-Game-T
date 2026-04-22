@@ -37,12 +37,17 @@ export function EmoteBubble({ emote, side, lang = "es", muted = false }: EmoteBu
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.7)).current;
+  const iconScale = useRef(new Animated.Value(1)).current;
+  const iconRot = useRef(new Animated.Value(0)).current;
+  const loopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   useEffect(() => {
     if (!emote) return;
     opacity.setValue(1);
     translateY.setValue(0);
     scale.setValue(0.7);
+    iconScale.setValue(1);
+    iconRot.setValue(0);
 
     Animated.sequence([
       Animated.parallel([
@@ -55,11 +60,32 @@ export function EmoteBubble({ emote, side, lang = "es", muted = false }: EmoteBu
         Animated.timing(translateY, { toValue: side === "player" ? 10 : -10, duration: 400, useNativeDriver: true }),
       ]),
     ]).start();
+
+    loopRef.current?.stop();
+    loopRef.current = Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(iconScale, { toValue: 1.25, duration: 280, useNativeDriver: true }),
+          Animated.timing(iconRot, { toValue: 1, duration: 280, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(iconScale, { toValue: 0.9, duration: 280, useNativeDriver: true }),
+          Animated.timing(iconRot, { toValue: -1, duration: 280, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(iconScale, { toValue: 1, duration: 220, useNativeDriver: true }),
+          Animated.timing(iconRot, { toValue: 0, duration: 220, useNativeDriver: true }),
+        ]),
+      ]),
+    );
+    loopRef.current.start();
+    return () => { loopRef.current?.stop(); };
   }, [emote]);
 
   if (!emote || muted) return null;
 
   const label = emoteLabel(emote.id, lang);
+  const rotate = iconRot.interpolate({ inputRange: [-1, 1], outputRange: ["-15deg", "15deg"] });
 
   return (
     <Animated.View
@@ -69,7 +95,9 @@ export function EmoteBubble({ emote, side, lang = "es", muted = false }: EmoteBu
         { opacity, transform: [{ translateY }, { scale }] },
       ]}
     >
-      <Ionicons name={emote.icon} size={16} color={emote.color} />
+      <Animated.View style={{ transform: [{ scale: iconScale }, { rotate }] }}>
+        <Ionicons name={emote.icon} size={18} color={emote.color} />
+      </Animated.View>
       <Text style={[styles.bubbleText, { color: emote.color }]}>{label}</Text>
     </Animated.View>
   );
