@@ -1504,7 +1504,10 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
     common: "#A0724A", rare: "#1A6FC4", epic: "#7B2FBE", legendary: "#D4AF37",
   };
   const NAMES: Record<ShopChestType, string> = {
-    common: "Común", rare: "Raro", epic: "Épico", legendary: "Legendario",
+    common: T("chestRarityCommon"),
+    rare: T("chestRarityRare"),
+    epic: T("chestRarityEpic"),
+    legendary: T("chestRarityLegendary"),
   };
   const ICONS: Record<ShopChestType, IoniconName> = {
     common: "cube", rare: "cube", epic: "diamond", legendary: "star",
@@ -1516,26 +1519,26 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
     const balance = profile.fichas ?? 0;
     if (balance < PRICES[type]) {
       await playSound("error");
-      showToast(`Fichas insuficientes`);
+      showToast(T("chestNotEnoughFichas"));
       return;
     }
     if ((profile.chestInventory ?? []).length >= 10) {
       await playSound("error");
-      showToast(`Inventario lleno`);
+      showToast(T("chestInventoryFull"));
       return;
     }
     if (dailyRemaining <= 0) {
       await playSound("error");
-      showToast(`Límite diario alcanzado (3/día)`);
+      showToast(T("chestDailyLimitReached"));
       return;
     }
     const ok = buyChestWithFichas(type);
     if (ok) {
       await playSound("purchase");
-      showToast(`¡Cofre ${NAMES[type]} comprado!`);
+      showToast(T("chestPurchasedToast").replace("{name}", NAMES[type]));
     } else {
       await playSound("error");
-      showToast(`No se pudo comprar`);
+      showToast(T("chestPurchaseFailed"));
     }
   };
   const handleBuy = (type: ShopChestType) => {
@@ -1550,7 +1553,7 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
     <View style={styles.chestShopWrap}>
       <View style={styles.chestShopHeader}>
         <Ionicons name="cube" size={14} color={themeGold} />
-        <Text style={[styles.chestShopTitle, { color: themeGold }]}>COFRES (FICHAS) · {dailyRemaining}/3 hoy</Text>
+        <Text style={[styles.chestShopTitle, { color: themeGold }]}>{T("chestShopHeader").replace("{n}", String(dailyRemaining))}</Text>
         <View style={{ flex: 1 }} />
         <Ionicons name="diamond" size={12} color="#3498DB" />
         <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#3498DB" }}>{profile.fichas ?? 0}</Text>
@@ -1611,13 +1614,13 @@ function ChestConfirmModal({
           <View style={[styles.confirmIconWrap, { backgroundColor: color + "33", borderColor: color + "66", borderWidth: 1.5 }]}>
             <Ionicons name={icon} size={32} color={color} />
           </View>
-          <Text style={[styles.confirmName, { color: theme.text }]}>Cofre {name}</Text>
+          <Text style={[styles.confirmName, { color: theme.text }]}>{T("chestNamed").replace("{name}", name)}</Text>
           <Text style={[styles.confirmDesc, { color: theme.textMuted, textAlign: "center" }]}>
-            Compras restantes hoy: {dailyRemaining}/3
+            {T("chestRemainingToday").replace("{n}", String(dailyRemaining))}
           </Text>
           <View style={styles.priceRow}>
             <Ionicons name="diamond" size={18} color="#3498DB" />
-            <Text style={[styles.priceText, { color: "#3498DB" }]}>{price} fichas</Text>
+            <Text style={[styles.priceText, { color: "#3498DB" }]}>{T("chestPriceFichas").replace("{n}", String(price))}</Text>
           </View>
           <View style={styles.confirmBtns}>
             <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
