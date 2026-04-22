@@ -7,6 +7,10 @@ export interface Chest {
   type: ChestType;
   obtainedAt: number;
   source: "win" | "rank_up" | "mission" | "streak" | "achievement" | "daily" | "purchase";
+  // True when this chest entered the inventory by being promoted from the
+  // overflow waitlist (after an open freed a slot). Used by the UI to mark
+  // it as "Nuevo" so the player notices a queued chest just landed.
+  fromOverflow?: boolean;
 }
 
 export interface ChestReward {

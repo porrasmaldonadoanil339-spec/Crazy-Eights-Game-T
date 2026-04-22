@@ -330,6 +330,7 @@ interface ProfileContextValue {
   addChestToInventory: (type: ChestType, source: Chest["source"]) => { added: boolean; queued: boolean };
   isChestInventoryFull: boolean;
   chestInventoryLimit: number;
+  chestOverflowLimit: number;
   openChestFromInventory: (chestId: string) => ChestReward | null;
   chestInventory: Chest[];
   chestOverflow: Chest[];
@@ -1204,7 +1205,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       let newInventory = filtered;
       let newOverflow = overflow;
       if (overflow.length > 0 && filtered.length < CHEST_INVENTORY_LIMIT) {
-        newInventory = [...filtered, overflow[0]];
+        newInventory = [...filtered, { ...overflow[0], fromOverflow: true }];
         newOverflow = overflow.slice(1);
       }
       const newOwnedItems = reward.item ? [...p.ownedItems, reward.item.id] : p.ownedItems;
@@ -1279,6 +1280,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         addChestToInventory,
         isChestInventoryFull: (profile.chestInventory ?? []).length >= CHEST_INVENTORY_LIMIT,
         chestInventoryLimit: CHEST_INVENTORY_LIMIT,
+        chestOverflowLimit: CHEST_OVERFLOW_LIMIT,
         openChestFromInventory,
         chestInventory: profile.chestInventory ?? [],
         chestOverflow: profile.chestOverflow ?? [],

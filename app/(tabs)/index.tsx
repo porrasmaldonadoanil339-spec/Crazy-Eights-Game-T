@@ -380,7 +380,7 @@ function PokerTitle() {
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
-  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory, battlePassTier, recordFichasModePlay, fichasModePlaysRemaining, isChestInventoryFull } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory, battlePassTier, recordFichasModePlay, fichasModePlaysRemaining, isChestInventoryFull, chestOverflowCount, chestOverflowLimit } = useProfile();
   const { setTabBarVisible, splashReady } = useUIState();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
@@ -829,11 +829,28 @@ export default function PlayScreen() {
             <View style={[styles.sectionHeader, { marginBottom: 10, marginTop: 4 }]}>
               <Ionicons name="cube" size={14} color={theme.gold} />
               <Text style={[styles.sectionLabel, { color: theme.gold }]}>Cofres</Text>
-              {chestInventory.length > 0 && (
-                <View style={{ marginLeft: "auto", backgroundColor: theme.gold + "22", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
-                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: theme.gold }}>{chestInventory.length}</Text>
-                </View>
-              )}
+              <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 6 }}>
+                {chestOverflowCount > 0 && (
+                  <Pressable
+                    onPress={() => Alert.alert(
+                      "Lista de espera",
+                      `Tienes ${chestOverflowCount} cofre${chestOverflowCount === 1 ? "" : "s"} en espera (máximo ${chestOverflowLimit}). Entrarán automáticamente a tu inventario al abrir un cofre y liberar espacio.`
+                    )}
+                    style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: theme.textMuted + "22", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}
+                  >
+                    <Ionicons name="hourglass-outline" size={11} color={theme.textMuted} />
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: theme.textMuted }}>
+                      En espera {chestOverflowCount}/{chestOverflowLimit}
+                    </Text>
+                    <Ionicons name="information-circle-outline" size={12} color={theme.textMuted} />
+                  </Pressable>
+                )}
+                {chestInventory.length > 0 && (
+                  <View style={{ backgroundColor: theme.gold + "22", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: theme.gold }}>{chestInventory.length}</Text>
+                  </View>
+                )}
+              </View>
             </View>
             <View style={{
               backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)",
@@ -2019,6 +2036,19 @@ function ChestInventoryItem({ chest, onTap }: { chest: Chest; onTap: () => void 
         <View style={{ backgroundColor: cfg.color + "33", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
           <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: cfg.glowColor }}>Abrir</Text>
         </View>
+        {chest.fromOverflow && (
+          <View style={{
+            position: "absolute", top: -6, right: -6,
+            backgroundColor: "#2ecc71",
+            borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2,
+            flexDirection: "row", alignItems: "center", gap: 2,
+            borderWidth: 1, borderColor: "rgba(0,0,0,0.4)",
+            shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 4,
+          }}>
+            <Ionicons name="hourglass" size={9} color="#fff" />
+            <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: "#fff" }}>Nuevo</Text>
+          </View>
+        )}
       </Animated.View>
     </Pressable>
   );
