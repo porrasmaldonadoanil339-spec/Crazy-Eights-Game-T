@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-  View, Text, StyleSheet, Pressable, Modal, Animated,
+  View, Text, StyleSheet, Pressable, Modal, Animated, Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
@@ -103,6 +103,34 @@ export function EmoteBubble({ emote, side, lang = "es", muted = false }: EmoteBu
   );
 }
 
+function AnimatedPickerIcon({ icon, color, delay }: { icon: keyof typeof Ionicons.glyphMap; color: string; delay: number }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const rot = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.parallel([
+          Animated.timing(scale, { toValue: 1.22, duration: 460, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot, { toValue: 1, duration: 460, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(scale, { toValue: 1, duration: 460, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot, { toValue: 0, duration: 460, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+        ]),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [delay, scale, rot]);
+  const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-12deg", "12deg"] });
+  return (
+    <Animated.View style={{ transform: [{ scale }, { rotate }] }}>
+      <Ionicons name={icon} size={30} color={color} />
+    </Animated.View>
+  );
+}
+
 interface EmotePanelProps {
   onSendEmote: (emote: Emote) => void;
   lastEmoteTime: number;
@@ -136,22 +164,20 @@ export function EmotePanel({ onSendEmote, lastEmoteTime }: EmotePanelProps) {
 
       <Modal transparent animationType="fade" visible={open} onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.modalBg} onPress={() => setOpen(false)}>
-          <View style={styles.panel}>
-            <Text style={styles.panelTitle}>{panelTitle}</Text>
-            <View style={styles.grid}>
-              {EMOTES.map((emote) => (
-                <Pressable
-                  key={emote.id}
-                  onPress={() => handleEmote(emote)}
-                  style={styles.emoteBtn}
-                >
-                  <View style={[styles.emoteIconWrap, { backgroundColor: emote.color + "22" }]}>
-                    <Ionicons name={emote.icon} size={22} color={emote.color} />
-                  </View>
-                  <Text style={styles.emoteLabel}>{emoteLabel(emote.id, lang)}</Text>
-                </Pressable>
-              ))}
-            </View>
+          <View style={styles.panelCR}>
+            {EMOTES.map((emote, idx) => (
+              <Pressable
+                key={emote.id}
+                onPress={() => handleEmote(emote)}
+                style={({ pressed }) => [
+                  styles.emoteBtnCR,
+                  { backgroundColor: emote.color + "22", borderColor: emote.color + "88" },
+                  pressed && { transform: [{ scale: 0.92 }] },
+                ]}
+              >
+                <AnimatedPickerIcon icon={emote.icon} color={emote.color} delay={idx * 90} />
+              </Pressable>
+            ))}
           </View>
         </Pressable>
       </Modal>
@@ -168,14 +194,31 @@ const styles = StyleSheet.create({
   },
   triggerBtnDisabled: { opacity: 0.4 },
   modalBg: {
-    flex: 1, backgroundColor: "#00000066",
-    justifyContent: "flex-end", paddingBottom: 160,
+    flex: 1, backgroundColor: "#00000088",
+    justifyContent: "flex-end", paddingBottom: 140,
     alignItems: "center",
   },
   panel: {
     backgroundColor: Colors.surface,
     borderRadius: 20, padding: 16, width: 280,
     borderWidth: 1, borderColor: Colors.border,
+  },
+  panelCR: {
+    flexDirection: "row", flexWrap: "wrap",
+    justifyContent: "center", alignItems: "center",
+    gap: 12, padding: 18, width: 290,
+    backgroundColor: "rgba(15,15,20,0.78)",
+    borderRadius: 28,
+    borderWidth: 1.5, borderColor: Colors.gold + "44",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.6, shadowRadius: 16, elevation: 14,
+  },
+  emoteBtnCR: {
+    width: 60, height: 60, borderRadius: 30,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 2,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5, shadowRadius: 6, elevation: 6,
   },
   panelTitle: {
     fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textMuted,

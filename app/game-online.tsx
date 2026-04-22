@@ -1456,7 +1456,7 @@ export default function OnlineGameScreen() {
 
             {/* Discard pile */}
             <View style={gameStyles.discardPileWrap}>
-              {topCard && <PlayingCard card={topCard} size="sm" />}
+              {topCard && <PlayingCard card={topCard} size="lg" />}
             </View>
           </View>
         </View>

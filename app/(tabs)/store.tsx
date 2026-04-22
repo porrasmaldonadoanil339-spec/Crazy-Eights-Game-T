@@ -198,13 +198,17 @@ function ConfirmModal({
         <View style={[styles.confirmModal, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <LinearGradient colors={modalGrad} style={StyleSheet.absoluteFill} />
           <View style={[styles.confirmIconWrap, { backgroundColor: item.previewColor + "33", borderColor: rarityColor + "66", borderWidth: 1.5 }]}>
-            <Ionicons name={item.preview as any} size={32} color={item.previewColor} />
+            {item.category === "emote" ? (
+              <AnimatedEmoteIcon icon={item.preview as any} color={item.previewColor} delay={0} size={40} />
+            ) : (
+              <Ionicons name={item.preview as any} size={32} color={item.previewColor} />
+            )}
           </View>
           <View style={[styles.rarityBadge, { backgroundColor: rarityColor + "22" }]}>
             <Text style={[styles.rarityBadgeText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
           </View>
-          <Text style={[styles.confirmName, { color: theme.text }]}>{localized.name}</Text>
-          <Text style={[styles.confirmDesc, { color: theme.textMuted }]}>{localized.description}</Text>
+          <Text style={[styles.confirmName, { color: theme.text }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{localized.name}</Text>
+          <Text style={[styles.confirmDesc, { color: theme.textMuted }]} numberOfLines={3}>{localized.description}</Text>
           <View style={styles.priceRow}>
             <CoinIcon size={18} color={theme.gold} />
             <Text style={[styles.priceText, { color: theme.gold }]}>{item.price} {T("coins")}</Text>
@@ -809,8 +813,8 @@ export default function StoreScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.dailyFreeTitle}>REGALO DIARIO</Text>
-              <Text style={[styles.dailyFreeName, { color: theme.text }]} numberOfLines={1}>{freeItem.name}</Text>
-              <Text style={[styles.dailyFreeDesc, { color: theme.textMuted }]} numberOfLines={1}>{freeItem.description}</Text>
+              <Text style={[styles.dailyFreeName, { color: theme.text }]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>{freeItem.name}</Text>
+              <Text style={[styles.dailyFreeDesc, { color: theme.textMuted }]} numberOfLines={2}>{freeItem.description}</Text>
             </View>
             <BouncePressable
               style={[styles.dailyFreeBtn, freeClaimed && { opacity: 0.5 }]}
@@ -1427,6 +1431,7 @@ const styles = StyleSheet.create({
   },
   emoteShopName: {
     fontFamily: "Nunito_700Bold", fontSize: 10, textAlign: "center",
+    minHeight: 24, lineHeight: 12, paddingHorizontal: 2,
   },
   emoteShopStatus: {
     flexDirection: "row", alignItems: "center", gap: 2,
@@ -1586,7 +1591,7 @@ function EmoteShopCard({
       <View style={styles.emoteShopIcon}>
         <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={40} />
       </View>
-      <Text style={[styles.emoteShopName, { color: themeColors.text }]} numberOfLines={1}>{localized.name}</Text>
+      <Text style={[styles.emoteShopName, { color: themeColors.text }]} numberOfLines={2} ellipsizeMode="clip" adjustsFontSizeToFit minimumFontScale={0.7}>{localized.name}</Text>
       {owned ? (
         isEquipped ? (
           <View style={[styles.emoteShopStatus, { backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "66" }]}>
