@@ -16,7 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
 import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
-import { getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward, getSeasonTheme, getSeasonThemeName, getExclusiveLabel, SeasonExclusive } from "@/lib/battlePass";
+import { getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward, getFreeRewardLabel, getSeasonTheme, getSeasonThemeName, getExclusiveLabel, SeasonExclusive } from "@/lib/battlePass";
 import { getCurrentSeason } from "@/lib/seasons";
 import { playSound } from "@/lib/sounds";
 import { achTitle, achDesc } from "@/lib/achTranslations";
@@ -50,8 +50,8 @@ export default function AchievementsScreen() {
   }>({ visible: false });
   const T = useT();
   const theme = useTheme();
-  const lang = (profile.language ?? "es") as "es" | "en" | "pt";
-  const fullLang = (profile.language ?? "es") as Lang;
+  const lang = (profile.language ?? "es") as Lang;
+  const fullLang = lang;
 
   const topPad = Platform.OS === "web" ? 67 : insets.top + 8;
 
@@ -435,7 +435,7 @@ export default function AchievementsScreen() {
                           <Ionicons name={freeReward.icon as any} size={22} color={reached ? freeReward.iconColor : themeColors.textDim} />
                         )}
                       </View>
-                      <Text style={[styles.bpVColLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={2}>{freeReward.label}</Text>
+                      <Text style={[styles.bpVColLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={2}>{getFreeRewardLabel(freeReward, lang)}</Text>
                       {canClaimFree ? (
                         <BouncePressable
                           onPress={() => handleClaimBP(tier.tier, "free")}

@@ -1,4 +1,3 @@
-import { STORE_ITEMS, localizeItem } from "./storeItems";
 import type { Lang } from "./i18n";
 
 export interface BattlePassTier {
@@ -32,9 +31,13 @@ export interface SeasonTheme {
   exclusives: SeasonExclusive[]; // at least 2 per season, slotted at tiers 27 & 35
 }
 
-// Localized prefix used in front of the exclusive's name. `item` is the
-// card-back category in the SeasonExclusive type system.
-const EXCLUSIVE_PREFIXES: Record<SeasonExclusive["rewardType"], Record<Lang, string>> = {
+// Localized prefix used in front of a reward's name. `item` is the card-back
+// category in the SeasonExclusive type system. Shared by both Battle Pass
+// reward labels and seasonal-exclusive labels.
+export const BP_PREFIXES: Record<
+  "avatar" | "frame" | "title" | "item" | "effect",
+  Record<Lang, string>
+> = {
   avatar: {
     es:"Avatar", en:"Avatar", pt:"Avatar", fr:"Avatar", de:"Avatar", it:"Avatar",
     tr:"Avatar", ru:"Аватар", pl:"Awatar", nl:"Avatar", sv:"Avatar", da:"Avatar",
@@ -59,6 +62,20 @@ const EXCLUSIVE_PREFIXES: Record<SeasonExclusive["rewardType"], Record<Lang, str
     fi:"Tausta", no:"Bakside", zh:"卡背", ja:"カード裏", ko:"카드 뒷면", hi:"पिछला भाग",
     th:"หลังการ์ด", vi:"Mặt sau", id:"Punggung Kartu", ar:"ظهر البطاقة",
   },
+  effect: {
+    es:"Efecto", en:"Effect", pt:"Efeito", fr:"Effet", de:"Effekt", it:"Effetto",
+    tr:"Efekt", ru:"Эффект", pl:"Efekt", nl:"Effect", sv:"Effekt", da:"Effekt",
+    fi:"Tehoste", no:"Effekt", zh:"特效", ja:"エフェクト", ko:"이펙트", hi:"प्रभाव",
+    th:"เอฟเฟกต์", vi:"Hiệu ứng", id:"Efek", ar:"تأثير",
+  },
+};
+
+// Backwards-compat alias used internally for the SeasonExclusive prefixes.
+const EXCLUSIVE_PREFIXES: Record<SeasonExclusive["rewardType"], Record<Lang, string>> = {
+  avatar: BP_PREFIXES.avatar,
+  frame: BP_PREFIXES.frame,
+  title: BP_PREFIXES.title,
+  item: BP_PREFIXES.item,
 };
 
 const ALL_LANGS: Lang[] = [
@@ -499,53 +516,404 @@ export const BATTLE_PASS_TIERS: BattlePassTier[] = [
   { tier: 90, xpRequired: 64800 , rewardType: "chest",   rewardValue: "legendary",          rewardLabel: "¡Cofre Legendario Final!",    icon: "star",             iconColor: "#FFD700" },
 ];
 
-export function getBPRewardLabel(tier: BattlePassTier, lang: "es" | "en" | "pt"): string {
+// ─── BATTLE PASS LABEL LOCALIZATION ─────────────────────────────────────────
+// Localized "Coins" suffix for the "<n> Coins" coin-tier label.
+const BP_COIN_WORD: Record<Lang, string> = {
+  es:"Monedas", en:"Coins", pt:"Moedas", fr:"Pièces", de:"Münzen", it:"Monete",
+  tr:"Altın", ru:"Монет", pl:"Monet", nl:"Munten", sv:"Mynt", da:"Mønter",
+  fi:"Kolikkoa", no:"Mynter", zh:"金币", ja:"コイン", ko:"코인", hi:"सिक्के",
+  th:"เหรียญ", vi:"Xu", id:"Koin", ar:"عملات",
+};
+
+// Localized full names for each chest rarity used as Battle Pass rewards.
+const BP_CHEST_NAMES: Record<"common" | "rare" | "epic" | "legendary", Record<Lang, string>> = {
+  common: {
+    es:"Cofre Común", en:"Common Chest", pt:"Cofre Comum", fr:"Coffre Commun",
+    de:"Gewöhnliche Truhe", it:"Forziere Comune", tr:"Sıradan Sandık", ru:"Обычный Сундук",
+    pl:"Zwykła Skrzynia", nl:"Gewone Kist", sv:"Vanlig Kista", da:"Almindelig Kiste",
+    fi:"Tavallinen Arkku", no:"Vanlig Kiste", zh:"普通宝箱", ja:"ノーマル宝箱",
+    ko:"일반 상자", hi:"साधारण संदूक", th:"หีบธรรมดา", vi:"Rương Thường",
+    id:"Peti Biasa", ar:"صندوق عادي",
+  },
+  rare: {
+    es:"Cofre Raro", en:"Rare Chest", pt:"Cofre Raro", fr:"Coffre Rare",
+    de:"Seltene Truhe", it:"Forziere Raro", tr:"Nadir Sandık", ru:"Редкий Сундук",
+    pl:"Rzadka Skrzynia", nl:"Zeldzame Kist", sv:"Sällsynt Kista", da:"Sjælden Kiste",
+    fi:"Harvinainen Arkku", no:"Sjelden Kiste", zh:"稀有宝箱", ja:"レア宝箱",
+    ko:"희귀 상자", hi:"दुर्लभ संदूक", th:"หีบหายาก", vi:"Rương Hiếm",
+    id:"Peti Langka", ar:"صندوق نادر",
+  },
+  epic: {
+    es:"Cofre Épico", en:"Epic Chest", pt:"Cofre Épico", fr:"Coffre Épique",
+    de:"Epische Truhe", it:"Forziere Epico", tr:"Destansı Sandık", ru:"Эпический Сундук",
+    pl:"Epicka Skrzynia", nl:"Epische Kist", sv:"Episk Kista", da:"Episk Kiste",
+    fi:"Eeppinen Arkku", no:"Episk Kiste", zh:"史诗宝箱", ja:"エピック宝箱",
+    ko:"에픽 상자", hi:"महाकाव्य संदूक", th:"หีบมหากาพย์", vi:"Rương Sử Thi",
+    id:"Peti Epik", ar:"صندوق ملحمي",
+  },
+  legendary: {
+    es:"Cofre Legendario", en:"Legendary Chest", pt:"Cofre Lendário", fr:"Coffre Légendaire",
+    de:"Legendäre Truhe", it:"Forziere Leggendario", tr:"Efsanevi Sandık", ru:"Легендарный Сундук",
+    pl:"Legendarna Skrzynia", nl:"Legendarische Kist", sv:"Legendarisk Kista", da:"Legendarisk Kiste",
+    fi:"Legendaarinen Arkku", no:"Legendarisk Kiste", zh:"传说宝箱", ja:"レジェンド宝箱",
+    ko:"전설 상자", hi:"पौराणिक संदूक", th:"หีบในตำนาน", vi:"Rương Huyền Thoại",
+    id:"Peti Legendaris", ar:"صندوق أسطوري",
+  },
+};
+
+// Localized names for every cosmetic ID used in the Battle Pass tier list.
+// Keyed by reward ID (back_*, avatar_*, title_*, frame_*). The label rendered
+// to the player is `${BP_PREFIXES[type][lang]}: ${BP_ITEM_NAMES[id][lang]}`.
+const BP_ITEM_NAMES: Record<string, Record<Lang, string>> = {
+  // ── Card backs ──────────────────────────────────────────────────────────
+  back_crimson: {
+    es:"Carmesí", en:"Crimson", pt:"Carmesim", fr:"Cramoisi", de:"Karmesin", it:"Cremisi",
+    tr:"Kızıl", ru:"Багровый", pl:"Karmazyn", nl:"Karmozijn", sv:"Karmosin", da:"Karmosin",
+    fi:"Karmiininpunainen", no:"Karmosin", zh:"绯红", ja:"クリムゾン", ko:"크림슨",
+    hi:"क्रिमसन", th:"แดงเข้ม", vi:"Đỏ Thẫm", id:"Merah Tua", ar:"قرمزي",
+  },
+  back_emerald: {
+    es:"Esmeralda", en:"Emerald", pt:"Esmeralda", fr:"Émeraude", de:"Smaragd", it:"Smeraldo",
+    tr:"Zümrüt", ru:"Изумруд", pl:"Szmaragd", nl:"Smaragd", sv:"Smaragd", da:"Smaragd",
+    fi:"Smaragdi", no:"Smaragd", zh:"翡翠", ja:"エメラルド", ko:"에메랄드",
+    hi:"पन्ना", th:"มรกต", vi:"Lục Bảo", id:"Zamrud", ar:"زمرد",
+  },
+  back_gold: {
+    es:"Oro Real", en:"Royal Gold", pt:"Ouro Real", fr:"Or Royal", de:"Königsgold", it:"Oro Reale",
+    tr:"Kraliyet Altını", ru:"Королевское Золото", pl:"Królewskie Złoto", nl:"Koninklijk Goud",
+    sv:"Kungligt Guld", da:"Kongeligt Guld", fi:"Kuninkaallinen Kulta", no:"Kongelig Gull",
+    zh:"皇家黄金", ja:"ロイヤルゴールド", ko:"로열 골드", hi:"शाही सोना",
+    th:"ทองคำหลวง", vi:"Vàng Hoàng Gia", id:"Emas Kerajaan", ar:"ذهب ملكي",
+  },
+  back_midnight: {
+    es:"Medianoche", en:"Midnight", pt:"Meia-noite", fr:"Minuit", de:"Mitternacht", it:"Mezzanotte",
+    tr:"Gece Yarısı", ru:"Полночь", pl:"Północ", nl:"Middernacht", sv:"Midnatt", da:"Midnat",
+    fi:"Keskiyö", no:"Midnatt", zh:"午夜", ja:"ミッドナイト", ko:"미드나잇",
+    hi:"मध्यरात्रि", th:"เที่ยงคืน", vi:"Nửa Đêm", id:"Tengah Malam", ar:"منتصف الليل",
+  },
+  back_ruby: {
+    es:"Rubí", en:"Ruby", pt:"Rubi", fr:"Rubis", de:"Rubin", it:"Rubino",
+    tr:"Yakut", ru:"Рубин", pl:"Rubin", nl:"Robijn", sv:"Rubin", da:"Rubin",
+    fi:"Rubiini", no:"Rubin", zh:"红宝石", ja:"ルビー", ko:"루비",
+    hi:"माणिक", th:"ทับทิม", vi:"Hồng Ngọc", id:"Rubi", ar:"ياقوت",
+  },
+  back_obsidian: {
+    es:"Obsidiana", en:"Obsidian", pt:"Obsidiana", fr:"Obsidienne", de:"Obsidian", it:"Ossidiana",
+    tr:"Obsidiyen", ru:"Обсидиан", pl:"Obsydian", nl:"Obsidiaan", sv:"Obsidian", da:"Obsidian",
+    fi:"Obsidiaani", no:"Obsidian", zh:"黑曜石", ja:"オブシディアン", ko:"흑요석",
+    hi:"ऑब्सीडियन", th:"ออบซิเดียน", vi:"Hắc Diện Thạch", id:"Obsidian", ar:"السبج",
+  },
+  back_arctic: {
+    es:"Ártico", en:"Arctic", pt:"Ártico", fr:"Arctique", de:"Arktis", it:"Artico",
+    tr:"Kutup", ru:"Арктика", pl:"Arktyka", nl:"Arctisch", sv:"Arktisk", da:"Arktisk",
+    fi:"Arktinen", no:"Arktisk", zh:"北极", ja:"アークティック", ko:"북극",
+    hi:"आर्कटिक", th:"อาร์กติก", vi:"Bắc Cực", id:"Arktik", ar:"القطب الشمالي",
+  },
+  back_galaxy: {
+    es:"Galaxia", en:"Galaxy", pt:"Galáxia", fr:"Galaxie", de:"Galaxie", it:"Galassia",
+    tr:"Galaksi", ru:"Галактика", pl:"Galaktyka", nl:"Sterrenstelsel", sv:"Galax", da:"Galakse",
+    fi:"Galaksi", no:"Galakse", zh:"银河", ja:"ギャラクシー", ko:"갤럭시",
+    hi:"आकाशगंगा", th:"กาแล็กซี", vi:"Thiên Hà", id:"Galaksi", ar:"المجرة",
+  },
+  back_inferno: {
+    es:"Infierno", en:"Inferno", pt:"Inferno", fr:"Enfer", de:"Inferno", it:"Inferno",
+    tr:"Cehennem", ru:"Преисподняя", pl:"Piekło", nl:"Inferno", sv:"Inferno", da:"Inferno",
+    fi:"Helvetin Tuli", no:"Inferno", zh:"炼狱", ja:"インフェルノ", ko:"인페르노",
+    hi:"नरकाग्नि", th:"นรก", vi:"Hỏa Ngục", id:"Neraka", ar:"الجحيم",
+  },
+  back_neon: {
+    es:"Neón", en:"Neon", pt:"Néon", fr:"Néon", de:"Neon", it:"Neon",
+    tr:"Neon", ru:"Неон", pl:"Neon", nl:"Neon", sv:"Neon", da:"Neon",
+    fi:"Neon", no:"Neon", zh:"霓虹", ja:"ネオン", ko:"네온",
+    hi:"नियॉन", th:"นีออน", vi:"Đèn Neon", id:"Neon", ar:"نيون",
+  },
+  back_aurora: {
+    es:"Aurora Boreal", en:"Aurora Borealis", pt:"Aurora Boreal", fr:"Aurore Boréale",
+    de:"Polarlicht", it:"Aurora Boreale", tr:"Kuzey Işıkları", ru:"Северное Сияние",
+    pl:"Zorza Polarna", nl:"Noorderlicht", sv:"Norrsken", da:"Nordlys",
+    fi:"Revontulet", no:"Nordlys", zh:"北极光", ja:"オーロラ", ko:"오로라",
+    hi:"उत्तरी ज्योति", th:"แสงเหนือ", vi:"Cực Quang", id:"Aurora", ar:"الشفق القطبي",
+  },
+  back_blood: {
+    es:"Sangre", en:"Blood", pt:"Sangue", fr:"Sang", de:"Blut", it:"Sangue",
+    tr:"Kan", ru:"Кровь", pl:"Krew", nl:"Bloed", sv:"Blod", da:"Blod",
+    fi:"Veri", no:"Blod", zh:"血色", ja:"ブラッド", ko:"블러드",
+    hi:"रक्त", th:"เลือด", vi:"Máu", id:"Darah", ar:"الدم",
+  },
+  // ── Avatars ─────────────────────────────────────────────────────────────
+  avatar_wizard: {
+    es:"Mago", en:"Wizard", pt:"Mago", fr:"Magicien", de:"Magier", it:"Mago",
+    tr:"Büyücü", ru:"Волшебник", pl:"Czarodziej", nl:"Tovenaar", sv:"Trollkarl", da:"Troldmand",
+    fi:"Velho", no:"Trollmann", zh:"巫师", ja:"ウィザード", ko:"위저드",
+    hi:"जादूगर", th:"พ่อมด", vi:"Phù Thủy", id:"Penyihir", ar:"ساحر",
+  },
+  avatar_samurai: {
+    es:"Samurái", en:"Samurai", pt:"Samurai", fr:"Samouraï", de:"Samurai", it:"Samurai",
+    tr:"Samuray", ru:"Самурай", pl:"Samuraj", nl:"Samoerai", sv:"Samuraj", da:"Samurai",
+    fi:"Samurai", no:"Samurai", zh:"武士", ja:"侍", ko:"사무라이",
+    hi:"सामुराई", th:"ซามูไร", vi:"Samurai", id:"Samurai", ar:"ساموراي",
+  },
+  avatar_ninja: {
+    es:"Ninja", en:"Ninja", pt:"Ninja", fr:"Ninja", de:"Ninja", it:"Ninja",
+    tr:"Ninja", ru:"Ниндзя", pl:"Ninja", nl:"Ninja", sv:"Ninja", da:"Ninja",
+    fi:"Ninja", no:"Ninja", zh:"忍者", ja:"忍者", ko:"닌자",
+    hi:"निंजा", th:"นินจา", vi:"Ninja", id:"Ninja", ar:"نينجا",
+  },
+  avatar_dragon: {
+    es:"Dragón", en:"Dragon", pt:"Dragão", fr:"Dragon", de:"Drache", it:"Drago",
+    tr:"Ejderha", ru:"Дракон", pl:"Smok", nl:"Draak", sv:"Drake", da:"Drage",
+    fi:"Lohikäärme", no:"Drage", zh:"龙", ja:"ドラゴン", ko:"드래곤",
+    hi:"ड्रैगन", th:"มังกร", vi:"Rồng", id:"Naga", ar:"تنين",
+  },
+  avatar_pirate: {
+    es:"Pirata", en:"Pirate", pt:"Pirata", fr:"Pirate", de:"Pirat", it:"Pirata",
+    tr:"Korsan", ru:"Пират", pl:"Pirat", nl:"Piraat", sv:"Pirat", da:"Pirat",
+    fi:"Merirosvo", no:"Pirat", zh:"海盗", ja:"パイレーツ", ko:"해적",
+    hi:"समुद्री लुटेरा", th:"โจรสลัด", vi:"Hải Tặc", id:"Bajak Laut", ar:"قرصان",
+  },
+  avatar_gladiator: {
+    es:"Gladiador", en:"Gladiator", pt:"Gladiador", fr:"Gladiateur", de:"Gladiator", it:"Gladiatore",
+    tr:"Gladyatör", ru:"Гладиатор", pl:"Gladiator", nl:"Gladiator", sv:"Gladiator", da:"Gladiator",
+    fi:"Gladiaattori", no:"Gladiator", zh:"角斗士", ja:"剣闘士", ko:"검투사",
+    hi:"ग्लैडिएटर", th:"นักสู้", vi:"Đấu Sĩ", id:"Gladiator", ar:"مصارع",
+  },
+  avatar_cyber: {
+    es:"Cyber", en:"Cyber", pt:"Cyber", fr:"Cyber", de:"Cyber", it:"Cyber",
+    tr:"Siber", ru:"Кибер", pl:"Cyber", nl:"Cyber", sv:"Cyber", da:"Cyber",
+    fi:"Kyber", no:"Cyber", zh:"赛博", ja:"サイバー", ko:"사이버",
+    hi:"साइबर", th:"ไซเบอร์", vi:"Cyber", id:"Cyber", ar:"سايبر",
+  },
+  avatar_phoenix: {
+    es:"Fénix", en:"Phoenix", pt:"Fênix", fr:"Phénix", de:"Phönix", it:"Fenice",
+    tr:"Anka", ru:"Феникс", pl:"Feniks", nl:"Feniks", sv:"Fenix", da:"Føniks",
+    fi:"Feeniks", no:"Føniks", zh:"凤凰", ja:"フェニックス", ko:"피닉스",
+    hi:"फीनिक्स", th:"ฟีนิกซ์", vi:"Phượng Hoàng", id:"Phoenix", ar:"العنقاء",
+  },
+  avatar_reaper: {
+    es:"Segador", en:"Reaper", pt:"Ceifador", fr:"Faucheur", de:"Sensenmann", it:"Mietitore",
+    tr:"Azrail", ru:"Жнец", pl:"Żniwiarz", nl:"Maaier", sv:"Skördemästaren", da:"Høstmand",
+    fi:"Viikatemies", no:"Mannen med Ljåen", zh:"死神", ja:"リーパー", ko:"리퍼",
+    hi:"मृत्यु दूत", th:"ยมทูต", vi:"Tử Thần", id:"Reaper", ar:"الحاصد",
+  },
+  avatar_king: {
+    es:"El Rey", en:"The King", pt:"O Rei", fr:"Le Roi", de:"Der König", it:"Il Re",
+    tr:"Kral", ru:"Король", pl:"Król", nl:"De Koning", sv:"Kungen", da:"Kongen",
+    fi:"Kuningas", no:"Kongen", zh:"国王", ja:"キング", ko:"왕",
+    hi:"राजा", th:"ราชา", vi:"Đức Vua", id:"Sang Raja", ar:"الملك",
+  },
+  avatar_titan: {
+    es:"Titán", en:"Titan", pt:"Titã", fr:"Titan", de:"Titan", it:"Titano",
+    tr:"Titan", ru:"Титан", pl:"Tytan", nl:"Titaan", sv:"Titan", da:"Titan",
+    fi:"Titaani", no:"Titan", zh:"泰坦", ja:"タイタン", ko:"타이탄",
+    hi:"टाइटन", th:"ไททัน", vi:"Titan", id:"Titan", ar:"عملاق",
+  },
+  avatar_oracle: {
+    es:"Oráculo", en:"Oracle", pt:"Oráculo", fr:"Oracle", de:"Orakel", it:"Oracolo",
+    tr:"Kâhin", ru:"Оракул", pl:"Wyrocznia", nl:"Orakel", sv:"Orakel", da:"Orakel",
+    fi:"Oraakkeli", no:"Orakel", zh:"先知", ja:"オラクル", ko:"오라클",
+    hi:"भविष्यवक्ता", th:"ผู้พยากรณ์", vi:"Nhà Tiên Tri", id:"Oracle", ar:"العرّاف",
+  },
+  // ── Titles ──────────────────────────────────────────────────────────────
+  title_novice: {
+    es:"Novato", en:"Novice", pt:"Novato", fr:"Novice", de:"Neuling", it:"Novizio",
+    tr:"Acemi", ru:"Новичок", pl:"Nowicjusz", nl:"Beginner", sv:"Nybörjare", da:"Nybegynder",
+    fi:"Aloittelija", no:"Nybegynner", zh:"新手", ja:"初心者", ko:"초보자",
+    hi:"नौसिखिया", th:"มือใหม่", vi:"Tân Binh", id:"Pemula", ar:"مبتدئ",
+  },
+  title_rookie: {
+    es:"Recién Llegado", en:"Rookie", pt:"Estreante", fr:"Recrue", de:"Anfänger", it:"Recluta",
+    tr:"Çaylak", ru:"Новенький", pl:"Żółtodziób", nl:"Groentje", sv:"Rekryt", da:"Rekrut",
+    fi:"Tulokas", no:"Rookie", zh:"菜鸟", ja:"ルーキー", ko:"루키",
+    hi:"नवागंतुक", th:"หน้าใหม่", vi:"Tân Thủ", id:"Pendatang Baru", ar:"وافد جديد",
+  },
+  title_pro: {
+    es:"Profesional", en:"Pro", pt:"Profissional", fr:"Pro", de:"Profi", it:"Pro",
+    tr:"Profesyonel", ru:"Профи", pl:"Zawodowiec", nl:"Pro", sv:"Proffs", da:"Pro",
+    fi:"Ammattilainen", no:"Proff", zh:"职业玩家", ja:"プロ", ko:"프로",
+    hi:"प्रो", th:"โปร", vi:"Chuyên Nghiệp", id:"Pro", ar:"محترف",
+  },
+  title_strategist: {
+    es:"Estratega", en:"Strategist", pt:"Estrategista", fr:"Stratège", de:"Stratege", it:"Stratega",
+    tr:"Stratejist", ru:"Стратег", pl:"Strateg", nl:"Strateeg", sv:"Strateg", da:"Strateg",
+    fi:"Strategi", no:"Strateg", zh:"战略家", ja:"ストラテジスト", ko:"전략가",
+    hi:"रणनीतिकार", th:"นักวางแผน", vi:"Chiến Lược Gia", id:"Ahli Strategi", ar:"استراتيجي",
+  },
+  title_grandmaster: {
+    es:"Gran Maestro", en:"Grandmaster", pt:"Grão-Mestre", fr:"Grand Maître",
+    de:"Großmeister", it:"Gran Maestro", tr:"Büyük Usta", ru:"Гроссмейстер",
+    pl:"Arcymistrz", nl:"Grootmeester", sv:"Stormästare", da:"Stormester",
+    fi:"Suurmestari", no:"Stormester", zh:"宗师", ja:"グランドマスター",
+    ko:"그랜드마스터", hi:"महागुरु", th:"ปรมาจารย์", vi:"Đại Sư", id:"Maha Guru",
+    ar:"المعلم الأعلى",
+  },
+  title_phantom: {
+    es:"El Fantasma", en:"The Phantom", pt:"O Fantasma", fr:"Le Fantôme", de:"Das Phantom",
+    it:"Il Fantasma", tr:"Hayalet", ru:"Фантом", pl:"Fantom", nl:"Het Fantoom",
+    sv:"Fantomen", da:"Fantomet", fi:"Aave", no:"Fantomet", zh:"幻影",
+    ja:"ファントム", ko:"팬텀", hi:"प्रेत", th:"แฟนทอม", vi:"Bóng Ma",
+    id:"Sang Phantom", ar:"الشبح",
+  },
+  title_ace: {
+    es:"El As", en:"The Ace", pt:"O Ás", fr:"L'As", de:"Das Ass", it:"L'Asso",
+    tr:"As", ru:"Туз", pl:"As", nl:"De Aas", sv:"Esset", da:"Esset",
+    fi:"Ässä", no:"Esset", zh:"王牌", ja:"エース", ko:"에이스",
+    hi:"इक्का", th:"เอซ", vi:"Ách Chủ Bài", id:"Sang As", ar:"الآص",
+  },
+  title_legend: {
+    es:"Leyenda Viviente", en:"Living Legend", pt:"Lenda Viva", fr:"Légende Vivante",
+    de:"Lebende Legende", it:"Leggenda Vivente", tr:"Yaşayan Efsane", ru:"Живая Легенда",
+    pl:"Żywa Legenda", nl:"Levende Legende", sv:"Levande Legend", da:"Levende Legende",
+    fi:"Elävä Legenda", no:"Levende Legende", zh:"活着的传奇", ja:"生ける伝説",
+    ko:"살아있는 전설", hi:"जीवित किंवदंती", th:"ตำนานที่ยังมีชีวิต", vi:"Huyền Thoại Sống",
+    id:"Legenda Hidup", ar:"أسطورة حية",
+  },
+  title_immortal: {
+    es:"Inmortal", en:"Immortal", pt:"Imortal", fr:"Immortel", de:"Unsterblich", it:"Immortale",
+    tr:"Ölümsüz", ru:"Бессмертный", pl:"Nieśmiertelny", nl:"Onsterfelijk", sv:"Odödlig", da:"Udødelig",
+    fi:"Kuolematon", no:"Udødelig", zh:"不朽", ja:"イモータル", ko:"불멸자",
+    hi:"अमर", th:"อมตะ", vi:"Bất Tử", id:"Abadi", ar:"الخالد",
+  },
+  title_god: {
+    es:"El Dios", en:"The God", pt:"O Deus", fr:"Le Dieu", de:"Der Gott", it:"Il Dio",
+    tr:"Tanrı", ru:"Бог", pl:"Bóg", nl:"De God", sv:"Guden", da:"Guden",
+    fi:"Jumala", no:"Guden", zh:"神", ja:"神", ko:"신",
+    hi:"देवता", th:"เทพเจ้า", vi:"Thần Linh", id:"Sang Dewa", ar:"الإله",
+  },
+  title_invincible: {
+    es:"Invencible", en:"Invincible", pt:"Invencível", fr:"Invincible", de:"Unbesiegbar",
+    it:"Invincibile", tr:"Yenilmez", ru:"Непобедимый", pl:"Niezwyciężony", nl:"Onoverwinnelijk",
+    sv:"Oövervinnerlig", da:"Uovervindelig", fi:"Voittamaton", no:"Uovervinnelig",
+    zh:"无敌", ja:"無敵", ko:"무적", hi:"अजेय", th:"ไร้พ่าย", vi:"Bất Bại",
+    id:"Tak Terkalahkan", ar:"الذي لا يُقهر",
+  },
+  // ── Frames ──────────────────────────────────────────────────────────────
+  frame_silver: {
+    es:"Plata", en:"Silver", pt:"Prata", fr:"Argent", de:"Silber", it:"Argento",
+    tr:"Gümüş", ru:"Серебро", pl:"Srebro", nl:"Zilver", sv:"Silver", da:"Sølv",
+    fi:"Hopea", no:"Sølv", zh:"白银", ja:"シルバー", ko:"실버",
+    hi:"चाँदी", th:"เงิน", vi:"Bạc", id:"Perak", ar:"فضي",
+  },
+  frame_gold: {
+    es:"Oro", en:"Gold", pt:"Ouro", fr:"Or", de:"Gold", it:"Oro",
+    tr:"Altın", ru:"Золото", pl:"Złoto", nl:"Goud", sv:"Guld", da:"Guld",
+    fi:"Kulta", no:"Gull", zh:"黄金", ja:"ゴールド", ko:"골드",
+    hi:"सोना", th:"ทอง", vi:"Vàng", id:"Emas", ar:"ذهبي",
+  },
+  frame_neon: {
+    es:"Neón", en:"Neon", pt:"Néon", fr:"Néon", de:"Neon", it:"Neon",
+    tr:"Neon", ru:"Неон", pl:"Neon", nl:"Neon", sv:"Neon", da:"Neon",
+    fi:"Neon", no:"Neon", zh:"霓虹", ja:"ネオン", ko:"네온",
+    hi:"नियॉन", th:"นีออน", vi:"Đèn Neon", id:"Neon", ar:"نيون",
+  },
+  // ── Effects ─────────────────────────────────────────────────────────────
+  effect_sparkle: {
+    es:"Destellos", en:"Sparkles", pt:"Brilhos", fr:"Étincelles", de:"Funkeln", it:"Scintille",
+    tr:"Parıltılar", ru:"Искры", pl:"Iskierki", nl:"Sprankels", sv:"Glitter", da:"Glimt",
+    fi:"Kimallus", no:"Glimt", zh:"闪光", ja:"きらめき", ko:"반짝임",
+    hi:"चमक", th:"ประกาย", vi:"Lấp Lánh", id:"Kilauan", ar:"بريق",
+  },
+  effect_confetti: {
+    es:"Confeti", en:"Confetti", pt:"Confete", fr:"Confettis", de:"Konfetti", it:"Coriandoli",
+    tr:"Konfeti", ru:"Конфетти", pl:"Konfetti", nl:"Confetti", sv:"Konfetti", da:"Konfetti",
+    fi:"Konfetti", no:"Konfetti", zh:"彩纸", ja:"紙吹雪", ko:"색종이",
+    hi:"कन्फेटी", th:"คอนเฟตติ", vi:"Hoa Giấy", id:"Konfeti", ar:"قصاصات ملونة",
+  },
+  effect_fire: {
+    es:"Llamas", en:"Flames", pt:"Chamas", fr:"Flammes", de:"Flammen", it:"Fiamme",
+    tr:"Alevler", ru:"Пламя", pl:"Płomienie", nl:"Vlammen", sv:"Lågor", da:"Flammer",
+    fi:"Liekit", no:"Flammer", zh:"火焰", ja:"炎", ko:"화염",
+    hi:"लपटें", th:"เปลวไฟ", vi:"Ngọn Lửa", id:"Api", ar:"لهب",
+  },
+  effect_electric: {
+    es:"Eléctrico", en:"Electric", pt:"Elétrico", fr:"Électrique", de:"Elektrisch", it:"Elettrico",
+    tr:"Elektrik", ru:"Электричество", pl:"Elektryczny", nl:"Elektrisch", sv:"Elektrisk", da:"Elektrisk",
+    fi:"Sähköinen", no:"Elektrisk", zh:"电光", ja:"エレクトリック", ko:"일렉트릭",
+    hi:"विद्युत", th:"ไฟฟ้า", vi:"Điện Giật", id:"Listrik", ar:"كهربائي",
+  },
+  effect_plasma_r: {
+    es:"Plasma", en:"Plasma", pt:"Plasma", fr:"Plasma", de:"Plasma", it:"Plasma",
+    tr:"Plazma", ru:"Плазма", pl:"Plazma", nl:"Plasma", sv:"Plasma", da:"Plasma",
+    fi:"Plasma", no:"Plasma", zh:"等离子", ja:"プラズマ", ko:"플라즈마",
+    hi:"प्लाज़्मा", th:"พลาสมา", vi:"Plasma", id:"Plasma", ar:"بلازما",
+  },
+  effect_crystal_r: {
+    es:"Cristalino", en:"Crystalline", pt:"Cristalino", fr:"Cristallin", de:"Kristallin", it:"Cristallino",
+    tr:"Kristal", ru:"Кристаллический", pl:"Krystaliczny", nl:"Kristallijn", sv:"Kristallin", da:"Krystallinsk",
+    fi:"Kristallinen", no:"Krystallinsk", zh:"水晶", ja:"クリスタル", ko:"크리스탈",
+    hi:"क्रिस्टलीय", th:"คริสตัล", vi:"Pha Lê", id:"Kristal", ar:"بلوري",
+  },
+  effect_glitch_r: {
+    es:"Glitch", en:"Glitch", pt:"Glitch", fr:"Glitch", de:"Glitch", it:"Glitch",
+    tr:"Glitch", ru:"Глитч", pl:"Glitch", nl:"Glitch", sv:"Glitch", da:"Glitch",
+    fi:"Glitch", no:"Glitch", zh:"故障", ja:"グリッチ", ko:"글리치",
+    hi:"ग्लिच", th:"กลิตช์", vi:"Glitch", id:"Glitch", ar:"خلل",
+  },
+  effect_gold_dust: {
+    es:"Polvo de Oro", en:"Gold Dust", pt:"Pó de Ouro", fr:"Poussière d'Or",
+    de:"Goldstaub", it:"Polvere d'Oro", tr:"Altın Tozu", ru:"Золотая Пыль",
+    pl:"Złoty Pył", nl:"Goudstof", sv:"Guldstoft", da:"Guldstøv",
+    fi:"Kultapöly", no:"Gullstøv", zh:"金粉", ja:"金粉", ko:"황금가루",
+    hi:"स्वर्ण धूल", th:"ผงทอง", vi:"Bụi Vàng", id:"Debu Emas", ar:"غبار الذهب",
+  },
+  effect_cyber_r: {
+    es:"Cyberpuntos", en:"Cyberpoints", pt:"Cyberpontos", fr:"Cyberpoints",
+    de:"Cyberpunkte", it:"Cyberpunti", tr:"Sibernoktalar", ru:"Киберточки",
+    pl:"Cyberpunkty", nl:"Cyberpunten", sv:"Cyberpoäng", da:"Cyberpoint",
+    fi:"Kyberpisteet", no:"Cyberpoeng", zh:"赛博点阵", ja:"サイバーポイント",
+    ko:"사이버포인트", hi:"साइबरपॉइंट्स", th:"ไซเบอร์พอยต์", vi:"Điểm Cyber",
+    id:"Cyberpoin", ar:"نقاط سايبر",
+  },
+};
+
+function localizedItemName(rewardValue: string | number, lang: Lang): string | null {
+  const id = String(rewardValue);
+  const entry = BP_ITEM_NAMES[id];
+  if (!entry) return null;
+  return entry[lang] ?? entry.en ?? entry.es;
+}
+
+function localizedChestName(rewardValue: string | number, lang: Lang): string | null {
+  const v = String(rewardValue) as keyof typeof BP_CHEST_NAMES;
+  const entry = BP_CHEST_NAMES[v];
+  if (!entry) return null;
+  return entry[lang] ?? entry.en ?? entry.es;
+}
+
+function bpPrefix(type: BattlePassTier["rewardType"], lang: Lang): string | null {
+  if (type === "coins" || type === "chest") return null;
+  const entry = BP_PREFIXES[type];
+  return entry[lang] ?? entry.en ?? entry.es;
+}
+
+export function getBPRewardLabel(tier: BattlePassTier, lang: Lang): string {
   if (tier.isExclusive && tier.exclusiveLabel) {
-    return tier.exclusiveLabel[lang] ?? tier.exclusiveLabel.es;
+    return tier.exclusiveLabel[lang] ?? tier.exclusiveLabel.en ?? tier.exclusiveLabel.es;
   }
   if (lang === "es") return tier.rewardLabel;
 
   if (tier.rewardType === "coins") {
-    const n = typeof tier.rewardValue === "number" ? tier.rewardValue.toLocaleString() : tier.rewardValue;
-    const coinWord = lang === "pt" ? "Moedas" : "Coins";
+    const n = typeof tier.rewardValue === "number"
+      ? tier.rewardValue.toLocaleString()
+      : tier.rewardValue;
+    const coinWord = BP_COIN_WORD[lang] ?? BP_COIN_WORD.en;
     const isSpecial = tier.rewardLabel.startsWith("¡");
     return isSpecial ? `${n} ${coinWord}!` : `${n} ${coinWord}`;
   }
 
   if (tier.rewardType === "chest") {
-    const chestNames: Record<string, { en: string; pt: string }> = {
-      common:    { en: "Common Chest",    pt: "Cofre Comum"    },
-      rare:      { en: "Rare Chest",      pt: "Cofre Raro"     },
-      epic:      { en: "Epic Chest",      pt: "Cofre Épico"    },
-      legendary: { en: "Legendary Chest", pt: "Cofre Lendário" },
-    };
-    const v = String(tier.rewardValue);
-    return chestNames[v]?.[lang] ?? tier.rewardLabel;
+    return localizedChestName(tier.rewardValue, lang) ?? tier.rewardLabel;
   }
 
-  const prefixMap: Record<string, { en: string; pt: string }> = {
-    title:  { en: "Title",  pt: "Título"  },
-    item:   { en: "Back",   pt: "Dorso"   },
-    avatar: { en: "Avatar", pt: "Avatar"  },
-    frame:  { en: "Frame",  pt: "Moldura" },
-    effect: { en: "Effect", pt: "Efeito"  },
-  };
-
-  const prefix = prefixMap[tier.rewardType];
+  const prefix = bpPrefix(tier.rewardType, lang);
   if (!prefix) return tier.rewardLabel;
 
+  const namePart = localizedItemName(tier.rewardValue, lang);
+  if (namePart) return `${prefix}: ${namePart}`;
+
+  // Fall back to whatever name appears after the colon in the Spanish label.
   const parts = tier.rewardLabel.split(": ");
-  let namePart = parts.length > 1 ? parts.slice(1).join(": ") : parts[0];
-
-  // If the reward value is an item ID, we can try to localize its name
-  const itemId = String(tier.rewardValue);
-  const foundItem = STORE_ITEMS.find(i => i.id === itemId);
-  if (foundItem) {
-    const localizedItem = localizeItem(foundItem, lang);
-    namePart = localizedItem.name;
-  }
-
-  return `${prefix[lang]}: ${namePart}`;
+  const fallback = parts.length > 1 ? parts.slice(1).join(": ") : parts[0];
+  return `${prefix}: ${fallback}`;
 }
 
 export const XP_FOR_LEVEL = (level: number) => Math.floor(60 * Math.pow(level, 1.5));
@@ -644,6 +1012,18 @@ export interface FreeReward {
   label: string;          // localized in render layer (kept simple here)
   icon: string;
   iconColor: string;
+}
+
+// Localized label for a free-track reward in the requested language.
+// Format: "<Chest Name> + <coins>" for chest milestones, "<coins> <Coins>"
+// for plain coin tiers.
+export function getFreeRewardLabel(reward: FreeReward, lang: Lang): string {
+  if (reward.type === "chest" && reward.chestType) {
+    const chestName = localizedChestName(reward.chestType, lang) ?? reward.label;
+    return `${chestName} + ${reward.coins}`;
+  }
+  const coinWord = BP_COIN_WORD[lang] ?? BP_COIN_WORD.en;
+  return `${reward.coins} ${coinWord}`;
 }
 
 export function getFreeReward(tier: number): FreeReward {
