@@ -768,8 +768,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const buyItem = useCallback((item: StoreItem): boolean => {
     let success = false;
+    const useFichas = item.category === "emote";
     update((p) => {
       if (p.ownedItems.includes(item.id)) return p;
+      if (useFichas) {
+        const fichasBal = p.fichas ?? 0;
+        if (fichasBal < item.price) return p;
+        success = true;
+        return {
+          ...p,
+          fichas: fichasBal - item.price,
+          ownedItems: [...p.ownedItems, item.id],
+        };
+      }
       if (p.coins < item.price) return p;
       success = true;
       return {

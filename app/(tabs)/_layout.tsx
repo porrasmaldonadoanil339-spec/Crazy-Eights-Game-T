@@ -38,8 +38,8 @@ export default function TabLayout() {
           }),
           borderTopWidth: 0,
           elevation: 0,
-          height: 64 + (Platform.OS === "web" ? 34 : insets.bottom),
-          paddingBottom: (Platform.OS === "web" ? 34 : insets.bottom) + 6,
+          height: 70 + (Platform.OS === "web" ? 34 : insets.bottom),
+          paddingBottom: (Platform.OS === "web" ? 34 : insets.bottom) + 8,
           paddingTop: 6,
         } : { display: "none" },
         tabBarItemStyle: {
@@ -51,9 +51,10 @@ export default function TabLayout() {
             <BlurView intensity={80} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
           ) : null,
         tabBarLabelStyle: {
-          fontFamily: "Nunito_700Bold",
-          fontSize: 11,
-          marginTop: 2,
+          fontFamily: "Nunito_800ExtraBold",
+          fontSize: 12,
+          letterSpacing: 0.2,
+          marginTop: 4,
           marginBottom: 0,
           includeFontPadding: false,
         },

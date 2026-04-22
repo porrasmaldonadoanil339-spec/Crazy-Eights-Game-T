@@ -616,8 +616,8 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
               <Text style={styles.freeText}>{T("free")}</Text>
             ) : (
               <View style={styles.priceRowSm}>
-                <CoinIcon size={12} color={Colors.gold} />
-                <Text style={styles.priceSmText}>{item.price}</Text>
+                <Ionicons name="diamond" size={12} color="#3498DB" />
+                <Text style={[styles.priceSmText, { color: "#3498DB" }]}>{item.price}</Text>
               </View>
             )}
           </View>
@@ -762,9 +762,9 @@ export default function StoreScreen() {
       showToast("Ya lo tienes");
       return;
     }
-    if (profile.coins < item.price) {
+    if ((profile.fichas ?? 0) < item.price) {
       await playSound("error");
-      showToast(T("insufficientCoins"));
+      showToast("Fichas insuficientes");
       return;
     }
     const ok = buyItem(item);
@@ -773,7 +773,7 @@ export default function StoreScreen() {
       showToast(`${pickLocalized(item.name, lang)} ${T("obtainedItem")}!`);
     } else {
       await playSound("error");
-      showToast(T("insufficientCoins"));
+      showToast("Fichas insuficientes");
     }
   };
 
@@ -1448,13 +1448,13 @@ const styles = StyleSheet.create({
     paddingLeft: 6,
   },
   emoteShopCard: {
-    width: "23.6%", padding: 6, borderRadius: 12, borderWidth: 1.5,
-    alignItems: "center", gap: 4, minHeight: 96,
+    width: "32%", padding: 10, borderRadius: 14, borderWidth: 1.5,
+    alignItems: "center", gap: 6, minHeight: 130,
     shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.4, shadowRadius: 6, elevation: 5,
   },
   emoteShopIcon: {
-    width: 48, height: 48, alignItems: "center", justifyContent: "center",
+    width: 72, height: 72, alignItems: "center", justifyContent: "center",
   },
   emoteShopName: {
     fontFamily: "Nunito_700Bold", fontSize: 10, textAlign: "center",
@@ -1676,7 +1676,7 @@ function EmoteShopCard({
       { backgroundColor: themeColors.surface, borderColor: isEquipped ? Colors.gold + "AA" : rarityColor + "66" },
     ]}>
       <View style={styles.emoteShopIcon}>
-        <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={40} />
+        <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={60} />
       </View>
       <Text style={[styles.emoteShopName, { color: themeColors.text }]} numberOfLines={2} ellipsizeMode="clip" adjustsFontSizeToFit minimumFontScale={0.7}>{localized.name}</Text>
       {owned ? (
@@ -1695,8 +1695,8 @@ function EmoteShopCard({
         <Text style={styles.emoteShopFree}>{T("free")}</Text>
       ) : (
         <View style={styles.emoteShopBuy}>
-          <CoinIcon size={11} color={Colors.gold} />
-          <Text style={styles.emoteShopBuyPrice}>{item.price}</Text>
+          <Ionicons name="diamond" size={12} color="#3498DB" />
+          <Text style={[styles.emoteShopBuyPrice, { color: "#3498DB" }]}>{item.price}</Text>
         </View>
       )}
     </BouncePressable>
@@ -1728,8 +1728,8 @@ function EmotesSection({
         <Ionicons name="happy" size={14} color={themeGold} />
         <Text style={[styles.chestShopTitle, { color: themeGold }]}>EMOTES · 3 DEL DÍA</Text>
         <View style={{ flex: 1 }} />
-        <CoinIcon size={12} color={themeGold} />
-        <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: themeGold }}>{profile.coins}</Text>
+        <Ionicons name="diamond" size={12} color="#3498DB" />
+        <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#3498DB" }}>{profile.fichas ?? 0}</Text>
       </View>
       <View style={styles.emoteGrid}>
         {ordered.map((item, idx) => {

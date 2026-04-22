@@ -195,18 +195,6 @@ export default function CollectionScreen() {
           )}
         </View>
 
-        <Text
-          style={[
-            styles.itemName,
-            { color: isOwned ? theme.text : theme.textMuted, opacity: isOwned ? 1 : 0.7 },
-          ]}
-          numberOfLines={2}
-          adjustsFontSizeToFit
-          minimumFontScale={0.75}
-        >
-          {localized.name}
-        </Text>
-
         {isExclusive ? (
           <View style={styles.exclusiveBadge}>
             <Ionicons name="star" size={8} color="#000" />
@@ -376,13 +364,12 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "visible",
   },
-  lockedDim: { opacity: 0.4 },
+  lockedDim: { opacity: 0.32 },
   grayscaleTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(120,120,120,0.18)",
+    backgroundColor: "rgba(140,140,140,0.28)",
     borderRadius: 8,
   },
-  itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, textAlign: "center", marginTop: 2, lineHeight: 12, minHeight: 24 },
   rarityChip: {
     paddingHorizontal: 5, paddingVertical: 1, borderRadius: 5, borderWidth: 1,
   },
