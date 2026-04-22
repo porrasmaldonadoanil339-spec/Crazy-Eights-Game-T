@@ -358,12 +358,13 @@ const styles = StyleSheet.create({
     height: 32,
   },
   catLabel: { fontFamily: "Nunito_700Bold", fontSize: 11 },
-  gridContent: { paddingHorizontal: 8, paddingBottom: 100, paddingTop: 6, gap: 14 },
-  colWrapper: { gap: 6, justifyContent: "flex-start" },
+  gridContent: { paddingHorizontal: 6, paddingBottom: 100, paddingTop: 6, gap: 14 },
+  colWrapper: { justifyContent: "space-between" },
   gridItem: {
-    flex: 1, paddingVertical: 4, paddingHorizontal: 2,
+    width: "24%",
+    paddingVertical: 4,
+    paddingHorizontal: 2,
     alignItems: "center",
-    maxWidth: "25%",
     gap: 4,
   },
   previewSlot: {
@@ -372,6 +373,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    overflow: "visible",
   },
   itemName: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, textAlign: "center", marginTop: 2 },
   rarityChip: {
