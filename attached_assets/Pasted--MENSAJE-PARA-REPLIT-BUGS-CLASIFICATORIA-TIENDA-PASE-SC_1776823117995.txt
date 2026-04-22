@@ -1,0 +1,79 @@
+🔴 MENSAJE PARA REPLIT — BUGS + CLASIFICATORIA + TIENDA + PASE + SCROLL
+
+Quiero corregir e implementar exactamente lo siguiente:
+
+🔴 1. CLASIFICATORIA — BUSCANDO JUGADOR (ERROR CRÍTICO)
+❌ PROBLEMA:
+
+Cuando entro a clasificatoria y aparece “buscando jugadores”, no se muestra mi avatar seleccionado.
+
+✔ SOLUCIÓN:
+Debe aparecer SIEMPRE:
+Avatar del jugador seleccionado
+Nombre del jugador
+🎯 OBJETIVO:
+Dar sensación de matchmaking online real
+Evitar que parezca sistema vacío o bug
+🟣 2. TIENDA — NOMBRES DE ÍTEMS (CRÍTICO)
+❌ PROBLEMA:
+Los nombres no se leen completos (aparecen cortados o como “A.”)
+✔ SOLUCIÓN:
+Mostrar nombre COMPLETO del ítem
+Ejemplo: “ACERO SUAVE” debe verse entero
+No usar abreviaciones ni puntos
+Ajustar texto (tamaño o salto de línea si es necesario)
+🔴 3. CLASIFICATORIA — UI CARTAS (AGRANDAR)
+✔ CAMBIO:
+El área donde se muestran cartas del mazo en clasificatoria debe ser MÁS GRANDE
+Las cartas del jugador y del rival deben verse mejor y más visibles
+Usar el mismo tamaño que otros modos o mayor
+🟢 4. COFRES — COMPRA
+✔ CAMBIO OBLIGATORIO:
+
+Al presionar comprar cofre:
+
+Debe aparecer mensaje:
+👉 “¿Deseas comprar?”
+✔ FLUJO:
+Si acepta → compra
+Si no tiene fichas → “Fichas insuficientes”
+No se debe ejecutar compra sin confirmación
+🔶 5. PASE PREMIUM — RECOMPENSAS
+❌ PROBLEMA:
+Recompensas actuales son demasiado simples para el precio
+✔ SOLUCIÓN:
+
+Mejorar recompensas del pase premium usando:
+
+Cartas
+Dorsos
+Mesas
+Avatares
+Marcos
+Efectos
+Títulos
+Cofres
+🎯 OBJETIVO:
+Hacer que el pase se sienta VALIOSO
+Justificar el precio
+Hacerlo atractivo visualmente
+🟢 6. SCROLL DEL MAZO (TODOS LOS MODOS)
+✔ REQUISITO:
+
+El scroll que funciona en clasificatoria debe funcionar IGUAL en todos los modos:
+
+Clasificatoria
+Normal
+Otros modos de partida
+✔ COMPORTAMIENTO:
+Scroll horizontal fluido
+Mostrar todas las cartas del mazo
+Sin ocultar cartas
+Misma experiencia en todos los modos
+🎯 OBJETIVO FINAL
+Clasificatoria sin bugs visuales
+Avatar siempre visible en matchmaking
+Tienda con textos completos
+UI más grande y legible en partidas
+Pase premium más atractivo
+Sistema de scroll unificado en todo el juego

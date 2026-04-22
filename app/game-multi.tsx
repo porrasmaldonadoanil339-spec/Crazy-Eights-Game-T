@@ -548,7 +548,7 @@ export default function MultiGameScreen() {
               const playable = isPlaying && multiCanPlay(card, gameState);
               const selected = selectedCard?.id === card.id;
               const handLen = currentHand.length;
-              const overlap = handLen <= 5 ? -8 : handLen <= 8 ? (cardSz === "sm" ? -16 : -12) : (cardSz === "sm" ? -22 : -18);
+              const overlap = handLen <= 4 ? -6 : handLen <= 7 ? (cardSz === "sm" ? -12 : -10) : (cardSz === "sm" ? -18 : -14);
               return (
                 <View
                   key={card.id}

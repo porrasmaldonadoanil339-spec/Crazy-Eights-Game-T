@@ -2510,8 +2510,8 @@ export default function GameScreen() {
             const playable = isPlayerTurn && canPlay(card, gameState);
             const selected = selectedCard?.id === card.id;
             const handLen = gameState.playerHand.length;
-            // Dynamic spacing: less overlap when fewer cards for easier touch/scroll.
-            const overlap = handLen <= 5 ? -10 : handLen <= 8 ? -16 : -22;
+            // Generous spacing so each card is visible — scroll handles overflow.
+            const overlap = handLen <= 4 ? -6 : handLen <= 7 ? -12 : -18;
             // Reduce rotation when many cards to avoid blocking horizontal swipe.
             const maxAngle = handLen <= 7 ? 3 : 1.5;
             const angle = (i - handLen / 2) * maxAngle;
