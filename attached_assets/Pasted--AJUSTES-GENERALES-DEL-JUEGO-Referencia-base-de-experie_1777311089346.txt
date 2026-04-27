@@ -1,0 +1,254 @@
+🟡 AJUSTES GENERALES DEL JUEGO
+
+Referencia base de experiencia: Clash Royale
+
+🎯 1. MODO DESAFÍO (REDISEÑO DE RETOS)
+
+🔴 PROBLEMA:
+
+Retos basados en colores ❌
+Poca variedad ❌
+
+✅ SOLUCIÓN:
+
+ELIMINAR retos relacionados con colores
+CREAR retos más interesantes:
+
+📌 Ejemplos:
+
+Gana sin usar cierta carta
+Gana en menos de X turnos
+Usa X tipo de cartas
+Remonta una partida
+Gana sin perder vidas
+
+✔ Si no cumples → pierdes el desafío
+
+🔔 2. INDICADOR DE RECOMPENSAS
+
+🔴 PROBLEMA:
+No se muestra lo que tienes por reclamar ❌
+
+✅ SOLUCIÓN:
+
+Agregar notificación tipo badge:
+[SECCIÓN] 🔴 (3)
+
+✔ Mostrar cantidad pendiente en:
+
+Cofres
+Misiones
+Tienda
+📱 3. BLOQUEO DE ROTACIÓN
+
+✔ El juego NO debe rotar
+✔ Forzar modo vertical siempre
+
+🃏 4. CARTA 7 (ERROR CRÍTICO)
+
+🔴 PROBLEMA:
+En clasificatoria y online funciona como +7 ❌
+
+✅ SOLUCIÓN:
+
+Debe comportarse como carta normal
+if carta == 7:
+    comportamiento = normal
+
+✔ Igual en todos los modos
+
+🔄 5. CAMBIO DE PALO (ANIMACIÓN)
+
+🔴 PROBLEMA:
+Dice “cambio de color” ❌
+
+✅ SOLUCIÓN:
+
+Cambiar texto a:
+"CAMBIO DE PALO"
+
+✔ Mostrar símbolo (♠ ♥ ♦ ♣) en animación
+
+🧪 6. MODO PRÁCTICO (BUG)
+
+🔴 PROBLEMAS:
+
+Avatar incorrecto ❌
+Modo falla ❌
+
+✅ SOLUCIÓN:
+
+Corregir avatar de la IA
+Revisar lógica del modo práctico
+🃏 7. ANIMACIÓN DE CARTAS (COLECCIÓN)
+
+🔴 PROBLEMA:
+No destaca la carta seleccionada ❌
+
+✅ SOLUCIÓN:
+
+Mostrar primero la carta equipada del jugador
+Darle más protagonismo visual
+🪙 8. MODO FICHAS (RECOMPENSAS)
+
+🔴 PROBLEMA:
+No recompensa correctamente ❌
+
+✅ SOLUCIÓN:
+
+Cada victoria → cofre de fichas
+
+✔ Contenido:
+
+Fichas
+Posible ítem extra
+📦 9. DISEÑO COFRE DE FICHAS
+
+✅ SOLUCIÓN:
+
+Cofre color azul
+Logo de fichas en el centro
+
+✔ Diferenciarlo de otros cofres
+
+🔢 10. ERRORES EN NÚMEROS (DESAFÍOS)
+
+🔴 PROBLEMA:
+Ejemplo: “Gana 3 partidas” → muestra 0/4 ❌
+
+✅ SOLUCIÓN:
+
+Sincronizar objetivo con contador
+objetivo = 3
+contador_max = 3
+⬅️ 11. BOTÓN ATRÁS (CELULAR)
+
+🔴 PROBLEMA:
+No responde correctamente ❌
+
+✅ SOLUCIÓN:
+
+Debe regresar o mostrar confirmación de salida
+
+✔ Igual que botón dentro del juego
+
+🎭 12. EMOTES (TIENDA)
+
+🔴 PROBLEMAS:
+
+Aparecen números/textos ❌
+Óvalo transparente ❌
+
+✅ SOLUCIÓN:
+
+ELIMINAR:
+Textos/números
+Óvalo horizontal
+
+✔ MANTENER:
+
+Círculo del emote
+Imagen original
+🃏 13. COLECCIÓN (DISEÑO DE CARTAS)
+
+🔴 PROBLEMA:
+Elementos visuales desalineados ❌
+
+✅ SOLUCIÓN:
+
+Ajustar bordes
+Corregir overflow en dorsos
+
+✔ Todo debe verse dentro del marco
+
+↔️ 14. EMOTES (POSICIÓN)
+
+🔴 PROBLEMA:
+Están mal alineados ❌
+
+✅ SOLUCIÓN:
+
+Mover ligeramente a la derecha
+Ajustar al centro visual del espacio
+🎁 15. REGALO DE TIENDA (REDISEÑO)
+
+🔴 PROBLEMA:
+Confusión con recompensas diarias ❌
+
+✅ SOLUCIÓN:
+
+✔ Crear nuevo diseño:
+
+Caja tipo regalo (no cofre)
+Animación de apertura
+
+✔ Contenido:
+
+Ítem aleatorio de tienda
+🎯 16. DESAFÍOS DIARIOS (CORRECCIÓN GLOBAL)
+
+🔴 PROBLEMA:
+Números incorrectos ❌
+
+✅ SOLUCIÓN:
+
+Ajustar todos los desafíos
+
+✔ Ejemplo:
+
+Si dice 3 → mostrar 0/3
+🪙 17. MODO FICHAS (MEJORA COMPLETA)
+
+✔ Cada victoria:
+
+Cofre de fichas
+
+✔ Cofre:
+
+Azul
+Logo de fichas
+Recompensas:
+Fichas
+A veces ítems
+📱 18. BOTONES INFERIORES (UI)
+
+🔴 PROBLEMA:
+Están muy arriba ❌
+
+✅ SOLUCIÓN:
+
+Bajar botones:
+TIENDA
+COLECCIÓN
+JUGAR
+CAMINO
+PERFIL
+
+✔ Adaptar a móvil:
+
+Pegados abajo
+Texto visible
+Espaciado correcto
+🎯 19. MODO DESAFÍO (REGLAS)
+
+✔ NO usar retos de colores
+✔ Crear retos estratégicos
+
+✔ Si no cumples → pierdes
+
+✅ RESUMEN FINAL
+
+✔ Desafíos mejorados y sin colores
+✔ Notificaciones de recompensas
+✔ Rotación bloqueada
+✔ Carta 7 corregida
+✔ Animación “cambio de palo”
+✔ Modo práctico arreglado
+✔ Animación de cartas mejorada
+✔ Cofres de fichas implementados
+✔ Números corregidos
+✔ Botón atrás funcional
+✔ Emotes limpios
+✔ Colección arreglada
+✔ Regalo tienda rediseñado
+✔ UI inferior corregida

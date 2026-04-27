@@ -1260,8 +1260,9 @@ export default function OnlineGameScreen() {
           setShowEffect(true);
         }
         if (card.rank === "2") showFloatLabel("+2", "#E74C3C");
-        else if (card.rank === "7") showFloatLabel("+7", "#E74C3C");
-        else if (card.rank === "A") showFloatLabel("⚡", "#9B59B6");
+        else if (card.rank === "3") showFloatLabel("+3", "#E74C3C");
+        else if (card.rank === "A") showFloatLabel("+1", "#9B59B6");
+        else if (card.rank === "Joker") showFloatLabel("+4", "#9B59B6");
         setSelectedCard(null);
       } else {
         setSelectedCard(card);
@@ -1286,8 +1287,9 @@ export default function OnlineGameScreen() {
       }
       // Special card floating labels (Ocho Locos ranks)
       if (card.rank === "2") showFloatLabel("+2", "#E74C3C");
-      else if (card.rank === "7") showFloatLabel("+7", "#E74C3C");
-      else if (card.rank === "A") showFloatLabel("⚡", "#9B59B6");
+      else if (card.rank === "3") showFloatLabel("+3", "#E74C3C");
+      else if (card.rank === "A") showFloatLabel("+1", "#9B59B6");
+      else if (card.rank === "Joker") showFloatLabel("+4", "#9B59B6");
     } else {
       setSelectedCard(card);
     }
