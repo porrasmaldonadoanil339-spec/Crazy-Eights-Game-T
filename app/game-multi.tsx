@@ -26,6 +26,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS } from "@/lib/storeItems";
 import { EmotePanel, EmoteBubble, type Emote } from "@/components/EmotePanel";
 import { getActiveEvent } from "@/components/EventsCard";
+import { updateChallengeProgress } from "@/lib/challenges";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const PLAYER_COLORS = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
@@ -247,6 +248,11 @@ export default function MultiGameScreen() {
     eventResultRecordedRef.current = true;
     const priorWinsForEvent = (profile.stats.winsByEvent ?? {})[evId] ?? 0;
     recordEventWin(evId);
+    // Daily challenge progress (event-aware) — mirrors single-player
+    // behaviour in app/game.tsx. Pass-and-play has no dedicated mode id, so
+    // mode-filtered challenges are skipped while event-filtered ones still
+    // progress for the active event.
+    updateChallengeProgress("wins", 1, undefined, false, evId);
     updateAchievementProgress("event_any_win", 1);
     if (evId === "speed")    updateAchievementProgress("event_speed_win", 1);
     if (evId === "random")   updateAchievementProgress("event_random_win", 1);

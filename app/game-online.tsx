@@ -38,6 +38,7 @@ import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
 import { addStars, getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
+import { updateChallengeProgress } from "@/lib/challenges";
 
 interface ServerGameState {
   discardTop: Card;
@@ -957,6 +958,12 @@ export default function OnlineGameScreen() {
     const coins = isWin ? mc.coinsReward : mc.coinsLoss;
     const evId = gameState.eventId ?? null;
     recordGameResult({ won: isWin, mode, difficulty: "normal", coinsEarned: coins, xpEarned: xp, eightsPlayed: 0, cardsDrawn: 0, isPerfect: false, isComeback: false, gameDurationMs: 60000, eventId: evId });
+    if (isWin) {
+      // Daily challenge progress (event-aware) — mirrors single-player
+      // behaviour in app/game.tsx so event-specific challenges advance from
+      // online wins as well.
+      updateChallengeProgress("wins", 1, mode, false, evId);
+    }
     if (isWin && evId) {
       updateAchievementProgress("event_any_win", 1);
       if (evId === "speed")    updateAchievementProgress("event_speed_win", 1);
