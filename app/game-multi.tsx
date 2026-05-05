@@ -21,7 +21,7 @@ import {
   suitName, suitSymbol, suitColor, multiGetTopCard,
 } from "@/lib/multiplayerEngine";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc } from "@/lib/eventModes";
-import { playCardFlip, playCardDraw, playButton, stopMusic } from "@/lib/audioManager";
+import { playCardFlip, playCardDraw, playButton, playSpeedTick, stopMusic } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS } from "@/lib/storeItems";
 import { EmotePanel, EmoteBubble, type Emote } from "@/components/EmotePanel";
@@ -295,6 +295,7 @@ export default function MultiGameScreen() {
   // how much time is left.
   const speedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const speedStartRef = useRef<number>(0);
+  const speedLastTickSecRef = useRef<number>(-1);
   const [speedProgress, setSpeedProgress] = useState(1);
   useEffect(() => {
     if (speedIntervalRef.current) {
@@ -304,14 +305,22 @@ export default function MultiGameScreen() {
     const sec = eventConfig?.turnSeconds;
     if (!gameStarted || !sec || gameState.phase !== "playing") {
       setSpeedProgress(1);
+      speedLastTickSecRef.current = -1;
       return;
     }
     speedStartRef.current = Date.now();
+    speedLastTickSecRef.current = -1;
     setSpeedProgress(1);
     speedIntervalRef.current = setInterval(() => {
       const elapsed = (Date.now() - speedStartRef.current) / 1000;
       const prog = Math.max(0, 1 - elapsed / sec);
       setSpeedProgress(prog);
+      const secsLeft = Math.ceil(prog * sec);
+      // Warning tick + haptic on the last 2 seconds (fires once per second).
+      if ((secsLeft === 2 || secsLeft === 1) && secsLeft !== speedLastTickSecRef.current) {
+        speedLastTickSecRef.current = secsLeft;
+        playSpeedTick().catch(() => {});
+      }
       if (prog <= 0) {
         if (speedIntervalRef.current) {
           clearInterval(speedIntervalRef.current);

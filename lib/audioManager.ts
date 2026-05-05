@@ -252,6 +252,11 @@ export async function playButton() {
   haptic(() => Haptics.selectionAsync());
 }
 
+export async function playSpeedTick() {
+  await playSfx("button", sfxVolume * 0.45);
+  haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+}
+
 export async function playError() {
   await playSfx("button", sfxVolume * 0.5);
   haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning));
