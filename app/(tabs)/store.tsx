@@ -583,11 +583,11 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
         >
           <Ionicons name="help-circle-outline" size={18} color={theme.textMuted} />
         </Pressable>
-        <View style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", flexShrink: 0, backgroundColor: item.previewColor + "1F", borderWidth: 1, borderColor: item.previewColor + "55" }}>
+        <View style={{ width: 60, height: 60, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           {item.animated ? (
             <AnimatedEmoteIcon icon={item.preview as any} color={item.previewColor} delay={0} />
           ) : (
-            <Ionicons name={item.preview as any} size={26} color={item.previewColor} />
+            <Ionicons name={item.preview as any} size={36} color={item.previewColor} />
           )}
         </View>
         {item.animated && (
@@ -597,9 +597,6 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
           </View>
         )}
         <View style={{ flex: 1, justifyContent: "center", gap: 6 }}>
-          <View style={[styles.effectRarityBadge, { backgroundColor: rarityColor + "22", alignSelf: "flex-start" }]}>
-            <Text style={[styles.effectRarityText, { color: rarityColor }]}>{rarityLabel(item.rarity)}</Text>
-          </View>
           <View style={styles.effectFooter}>
             {owned ? (
               <Pressable

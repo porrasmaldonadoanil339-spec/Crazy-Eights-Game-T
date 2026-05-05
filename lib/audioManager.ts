@@ -103,20 +103,39 @@ async function applyMusicTransition(track: MusicTrack) {
   if (currentTrack === track && bgPlayer) return;
   if (!isMusicEnabled) return;
 
-  // Fade out the existing track first (if any)
-  if (bgPlayer) {
-    await fadeOutCurrent();
-  }
-  await _stopMusicInternal();
+  // True crossfade: start the new track immediately at volume 0 while the
+  // existing one is still playing, then fade them in/out in parallel so there
+  // is no audible gap between sections (electronic-style mix).
+  const oldPlayer = bgPlayer;
+  let newPlayer: any = null;
   await safe(async () => {
-    bgPlayer = createAudioPlayer(sourceForTrack(track));
-    bgPlayer.volume = 0;
-    bgPlayer.loop = true;
-    bgPlayer.play();
-    currentTrack = track;
+    newPlayer = createAudioPlayer(sourceForTrack(track));
+    newPlayer.volume = 0;
+    newPlayer.loop = true;
+    newPlayer.play();
   });
-  // Fade into the new track
-  await fadeInCurrent();
+  if (newPlayer) {
+    bgPlayer = newPlayer;
+    currentTrack = track;
+  }
+  await Promise.all([
+    oldPlayer ? fadePlayerTo(oldPlayer, 0) : Promise.resolve(),
+    newPlayer ? fadePlayerTo(newPlayer, musicVolume) : Promise.resolve(),
+  ]);
+  if (oldPlayer && oldPlayer !== newPlayer) {
+    await safe(async () => { oldPlayer.pause(); oldPlayer.remove(); });
+  }
+}
+
+async function fadePlayerTo(player: any, targetVol: number) {
+  const startVol = player.volume ?? 0;
+  const stepDur = FADE_MS / FADE_STEPS;
+  for (let i = 1; i <= FADE_STEPS; i++) {
+    const t = i / FADE_STEPS;
+    const v = startVol + (targetVol - startVol) * t;
+    await safe(async () => { player.volume = Math.max(0, Math.min(1, v)); });
+    await new Promise<void>((r) => setTimeout(r, stepDur));
+  }
 }
 
 async function requestMusicTrack(track: MusicTrack) {
