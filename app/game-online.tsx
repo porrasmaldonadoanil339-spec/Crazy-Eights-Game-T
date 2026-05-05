@@ -833,6 +833,7 @@ export default function OnlineGameScreen() {
   const lastActionTime = useRef(Date.now());
   const [showEventBanner, setShowEventBanner] = useState(false);
   const eventBannerShownRef = useRef(false);
+  const [eventShuffleFlash, setEventShuffleFlash] = useState(false);
 
   // ─── Last card banner & floating pendingDraw label ───────────────────────
   useEffect(() => {
@@ -1221,8 +1222,9 @@ export default function OnlineGameScreen() {
     };
   }, [gameState?.currentPlayerIndex, gameState?.phase, lobbyPhase, gameState?.turnId, INACTIVITY_TIMEOUT, INACTIVITY_SHOW_DELAY]);
 
-  // ─── "Cartas Aleatorias" event: shuffle active suit every 4 turns (offline only) ──
-  // Online matches handle this on the server so all clients stay in sync.
+  // ─── "Cartas Aleatorias" event (offline): shuffle active suit every 4 turns ──
+  // Online matches handle this on the server; see the suit-change detector
+  // below for the online flash trigger.
   const lastShuffleTurnRef = useRef<number>(-1);
   useEffect(() => {
     if (isOnline) return;
@@ -1235,7 +1237,38 @@ export default function OnlineGameScreen() {
     if (lastShuffleTurnRef.current === tid) return;
     lastShuffleTurnRef.current = tid;
     setGameState(prev => (prev ? multiApplyRandomShuffle(prev) : prev));
+    setEventShuffleFlash(true);
+    const t = setTimeout(() => setEventShuffleFlash(false), 1200);
+    return () => clearTimeout(t);
   }, [gameState?.turnId, gameState?.phase, gameState?.pendingDraw, gameState?.eventId, isOnline]);
+
+  // ─── "Cartas Aleatorias" event (online): detect server-applied shuffles ────
+  // multiApplyRandomShuffle changes currentSuit WITHOUT advancing turnId,
+  // while every other suit change (8s, jokers, normal plays) bumps turnId.
+  // So a same-turn suit change under the random event is a server shuffle.
+  const prevSuitRef = useRef<Suit | null>(null);
+  const prevTurnIdForSuitRef = useRef<number>(-1);
+  useEffect(() => {
+    if (!gameState) {
+      prevSuitRef.current = null;
+      prevTurnIdForSuitRef.current = -1;
+      return;
+    }
+    const tid = gameState.turnId ?? 0;
+    const suit = gameState.currentSuit;
+    const prevSuit = prevSuitRef.current;
+    const prevTid = prevTurnIdForSuitRef.current;
+    prevSuitRef.current = suit;
+    prevTurnIdForSuitRef.current = tid;
+    if (!isOnline) return;
+    if (gameState.eventId !== "random") return;
+    if (prevSuit === null) return;
+    if (prevSuit === suit) return;
+    if (prevTid !== tid) return;
+    setEventShuffleFlash(true);
+    const t = setTimeout(() => setEventShuffleFlash(false), 1200);
+    return () => clearTimeout(t);
+  }, [gameState?.currentSuit, gameState?.turnId, gameState?.eventId, isOnline]);
 
   // ─── CPU emote timer (random emotes every 20-60s during gameplay) ─────────
   useEffect(() => {
@@ -1510,6 +1543,14 @@ export default function OnlineGameScreen() {
           </Pressable>
         </View>
       </View>
+
+      {/* Random suit shuffle flash */}
+      {eventShuffleFlash && (
+        <Animated.View entering={FadeIn} exiting={FadeOut} style={[gameStyles.shuffleFlashBanner, { pointerEvents: "none" } as any]}>
+          <Ionicons name="shuffle" size={20} color="#9B59B6" />
+          <Text style={gameStyles.shuffleFlashText}>{T("eventRandomShuffleBanner")}</Text>
+        </Animated.View>
+      )}
 
       {/* Event intro banner */}
       {showEventBanner && onlineEventConfig && (
@@ -2095,6 +2136,31 @@ export default function OnlineGameScreen() {
 
 const gameStyles = StyleSheet.create({
   container: { flex: 1 },
+  shuffleFlashBanner: {
+    position: "absolute",
+    top: "40%",
+    left: 20,
+    right: 20,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: "#9B59B6",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    zIndex: 999,
+  },
+  shuffleFlashText: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 15,
+    color: "#fff",
+    textAlign: "center",
+    flex: 1,
+    flexWrap: "wrap",
+  },
   gridOverlay: {
     position: "absolute", inset: 0,
     opacity: 0.03,

@@ -266,6 +266,7 @@ export default function MultiGameScreen() {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showEventBanner, setShowEventBanner] = useState(false);
+  const [eventShuffleFlash, setEventShuffleFlash] = useState(false);
 
   // ─── Live event hooks ─────────────────────────────────────────────────────
   // Always derive from the authoritative game state's eventId so the hooks
@@ -287,6 +288,9 @@ export default function MultiGameScreen() {
     if (lastShuffleTurnRef.current === tid) return;
     lastShuffleTurnRef.current = tid;
     setGameState(prev => multiApplyRandomShuffle(prev));
+    setEventShuffleFlash(true);
+    const t = setTimeout(() => setEventShuffleFlash(false), 1200);
+    return () => clearTimeout(t);
   }, [gameStarted, gameState.turnId, gameState.phase, gameState.pendingDraw, gameState.eventId]);
 
   // "Velocidad Extrema" — auto-draw if the current player takes longer than turnSeconds.
@@ -560,6 +564,14 @@ export default function MultiGameScreen() {
           <Text style={styles.deckCount}>{gameState.drawPile.length}</Text>
         </View>
       </View>
+
+      {/* Random suit shuffle flash */}
+      {eventShuffleFlash && (
+        <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.shuffleFlashBanner, { pointerEvents: "none" } as any]}>
+          <Ionicons name="shuffle" size={20} color="#9B59B6" />
+          <Text style={styles.shuffleFlashText}>{T("eventRandomShuffleBanner")}</Text>
+        </Animated.View>
+      )}
 
       {/* Event intro banner */}
       {showEventBanner && eventConfig && (
@@ -1003,6 +1015,33 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   messageText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textMuted },
+
+  // Random suit shuffle flash
+  shuffleFlashBanner: {
+    position: "absolute",
+    top: "40%",
+    left: 20,
+    right: 20,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: "#9B59B6",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    zIndex: 999,
+  },
+  shuffleFlashText: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 15,
+    color: "#fff",
+    textAlign: "center",
+    flex: 1,
+    flexWrap: "wrap",
+  },
 
   // Suit picker
   suitOverlay: {
