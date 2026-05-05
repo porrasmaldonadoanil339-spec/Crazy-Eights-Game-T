@@ -1,0 +1,101 @@
+Correcciones y mejoras para "Ocho Locos"
+
+1. Sonidos del camino de recompensas
+
+* Agregar sonidos al reclamar recompensas del camino de progreso.
+
+2. Reinicio del Pase de Batalla
+
+* Cuando termine una temporada, reiniciar completamente el pase de batalla.
+* El pase normal y premium deben volver al nivel 1.
+* Agregar nuevas recompensas para cada nueva temporada.
+
+3. Sonidos únicos para cofres
+   Agregar sonido individual al abrir:
+
+* Cofre común
+* Cofre raro
+* Cofre épico
+* Cofre legendario
+* Cofre de evento
+* Cofre de fichas
+
+Objetivo: que abrir cofres se sienta satisfactorio y especial.
+
+4. Desafíos diarios
+
+* Corregir los números y progreso para que funcionen exactamente como deben.
+
+5. Victoria y derrota en clasificatoria
+
+* Cuando pierdes en clasificatoria: reproducir sonido de derrota y animación de derrota.
+* Cuando ganas: mostrar animación y sonido de victoria igual que otros modos.
+
+6. Perfil del jugador en clasificatoria
+
+* Mostrar correctamente mi perfil/avatar actual dentro del modo clasificatoria.
+
+7. Animaciones de cartas especiales
+
+* Mejorar animaciones cuando aparece una carta especial.
+* El número de la carta especial debe verse bien integrado al diseño y efectos visuales.
+
+8. Modo online
+
+* Quitar el texto "+7".
+* Adaptar funciones visuales de cartas especiales igual que en otros modos.
+
+9. Música
+
+* Al cambiar de sección o menú, agregar mezcla/transición de música electrónica.
+
+10. Botones inferiores
+
+* Centrar correctamente todos los botones en la parte inferior.
+* Adaptarlos mejor a pantallas móviles, estilo interfaz moderna.
+
+11. Botón retroceder
+
+* Dentro de partidas, al usar botón de retroceder no debe aparecer automáticamente "¿Desea salir?".
+* El botón debe comportarse correctamente según la pantalla.
+
+12. Emotes de tienda
+
+* Mostrar emotes con su círculo de diseño correctamente.
+* Eliminar texto innecesario debajo.
+* Quitar óvalo transparente que arruina la visual del emoji.
+
+13. Diseño de cofres y dorsos
+
+* Mejorar diseño visual de cofres.
+* Corregir dorsos/cartas que se ven mal alineados o salidos.
+
+14. Problema al presionar botones
+
+* Corregir que al presionar botones no aparezca comportamiento tipo “enlace” o arrastre.
+* Los botones deben responder de forma limpia y directa, sin efectos visuales incorrectos.
+
+15. Pase de batalla – misiones
+
+* Establecer un total de 120 misiones en el Pase de Batalla.
+* Al llegar a la misión 120, otorgar recompensas automáticas en monedas.
+
+16. Recompensas diarias y tutorial
+
+* No mostrar recompensas diarias durante el tutorial inicial.
+* Las recompensas diarias deben aparecer recién después de completar el tutorial.
+* Las recompensas diarias deben ser monedas o fichas.
+* Diferenciar las recompensas diarias de los regalos de la tienda (son sistemas separados).
+
+17. Tutorial – diseño y posición
+
+* Centrar correctamente todos los recuadros del tutorial en pantalla.
+* Al avanzar con "Siguiente", los siguientes recuadros también deben mantenerse centrados.
+* Evitar que los elementos se vean pegados a la izquierda.
+
+18. Música del menú (loop)
+
+* Implementar la música del menú usando el audio proporcionado.
+* Cuando la música termine, debe repetirse automáticamente en loop.
+* El loop debe ser fluido, sin cortes bruscos ni silencios.
+* Mantener volumen equilibrado para uso prolongado en el menú.

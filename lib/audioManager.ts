@@ -405,6 +405,74 @@ export async function playInactivityWarning() {
 
 // ─── New sound events ─────────────────────────────────────────────────────────
 
+// Chest opening sounds — different layered combos so each rarity feels distinct.
+export async function playChestOpen(rarity: "common" | "rare" | "epic" | "legendary" | "event" | "fichas") {
+  if (rarity === "common") {
+    await playSfx("shuffle", sfxVolume * 0.7);
+    setTimeout(() => playSfx("cardDraw", sfxVolume * 0.6).catch(() => {}), 220);
+    haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+    return;
+  }
+  if (rarity === "rare") {
+    await playSfx("shuffle", sfxVolume * 0.8);
+    setTimeout(() => playSfx("wild", sfxVolume * 0.6).catch(() => {}), 200);
+    setTimeout(() => playSfx("win", sfxVolume * 0.5).catch(() => {}), 420);
+    haptic(async () => {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 200);
+    });
+    return;
+  }
+  if (rarity === "epic") {
+    await playSfx("wild", sfxVolume * 0.9);
+    setTimeout(() => playSfx("shuffle", sfxVolume * 0.7).catch(() => {}), 180);
+    setTimeout(() => playSfx("win", sfxVolume * 0.7).catch(() => {}), 420);
+    haptic(async () => {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 250);
+    });
+    return;
+  }
+  if (rarity === "legendary") {
+    await playSfx("wild", sfxVolume);
+    setTimeout(() => playSfx("wild", sfxVolume * 0.8).catch(() => {}), 150);
+    setTimeout(() => playSfx("shuffle", sfxVolume * 0.8).catch(() => {}), 280);
+    setTimeout(() => playSfx("win", sfxVolume).catch(() => {}), 480);
+    setTimeout(() => playSfx("win", sfxVolume * 0.6).catch(() => {}), 720);
+    haptic(async () => {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 200);
+      setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 450);
+    });
+    return;
+  }
+  if (rarity === "event") {
+    await playSfx("wild", sfxVolume * 0.85);
+    setTimeout(() => playSfx("cardDraw", sfxVolume * 0.7).catch(() => {}), 180);
+    setTimeout(() => playSfx("win", sfxVolume * 0.7).catch(() => {}), 380);
+    haptic(async () => {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 220);
+    });
+    return;
+  }
+  // fichas
+  await playSfx("cardDraw", sfxVolume * 0.7);
+  setTimeout(() => playSfx("wild", sfxVolume * 0.5).catch(() => {}), 140);
+  setTimeout(() => playSfx("win", sfxVolume * 0.5).catch(() => {}), 280);
+  haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+}
+
+// Reward claim sound — for path/road/battle-pass tier claims.
+export async function playRewardClaim() {
+  await playSfx("win", sfxVolume * 0.85);
+  setTimeout(() => playSfx("wild", sfxVolume * 0.5).catch(() => {}), 180);
+  haptic(async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 150);
+  });
+}
+
 export async function playLastCard() {
   await playSfx("wild", sfxVolume * 0.95);
   setTimeout(() => playSfx("win", sfxVolume * 0.5).catch(() => {}), 140);

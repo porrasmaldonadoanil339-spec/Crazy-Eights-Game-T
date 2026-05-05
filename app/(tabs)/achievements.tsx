@@ -19,6 +19,7 @@ import { ACHIEVEMENTS, AchievementId } from "@/lib/achievements";
 import { getBattlePassTiers, getXpProgress, getBPRewardLabel, getFreeReward, getFreeRewardLabel, getSeasonTheme, getSeasonThemeName, getExclusiveLabel, SeasonExclusive } from "@/lib/battlePass";
 import { getCurrentSeason } from "@/lib/seasons";
 import { playSound } from "@/lib/sounds";
+import { playRewardClaim, playChestOpen } from "@/lib/audioManager";
 import { achTitle, achDesc } from "@/lib/achTranslations";
 import type { Lang } from "@/lib/i18n";
 import RewardPopup from "@/components/RewardPopup";
@@ -885,6 +886,13 @@ function PlayerPathView({
     if (result !== "ok" && result !== "queued") return;
     const data = getPlayerPathLevelData(lvl);
     const r = data.reward;
+    // Reward sound: chest rewards play their per-rarity open sound,
+    // coin/fichas rewards play the standard claim chime.
+    if (r.type === "chest") {
+      playChestOpen((r.chestType as any) || "common").catch(() => {});
+    } else {
+      playRewardClaim().catch(() => {});
+    }
     setRewardPopup({
       visible: true,
       title: "¡RECOMPENSA OBTENIDA!",

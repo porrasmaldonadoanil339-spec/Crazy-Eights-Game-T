@@ -32,7 +32,7 @@ import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge 
 import { getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
-import { stopMusic, startGameMusic, startMenuMusic, syncSettings, playWin, playLose } from "@/lib/audioManager";
+import { stopMusic, startGameMusic, startMenuMusic, syncSettings, playWin, playLose, playChestOpen } from "@/lib/audioManager";
 import { scheduleReEngagementNotification } from "@/lib/notifications";
 import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
@@ -2673,6 +2673,7 @@ export default function GameScreen() {
             const latestChest = (chestInventory ?? []).slice().reverse().find(c => c.type === pendingChestType);
             if (latestChest) {
               setPendingChestId(latestChest.id);
+              playChestOpen(latestChest.type as any).catch(() => {});
               const rw = openChestFromInventory(latestChest.id);
               setChestModalReward(rw);
               setShowChestModal(true);

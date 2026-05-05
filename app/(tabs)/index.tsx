@@ -18,7 +18,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
-import { playButton, syncSettings } from "@/lib/audioManager";
+import { playButton, syncSettings, playChestOpen } from "@/lib/audioManager";
 import { playSound } from "@/lib/sounds";
 import { useUIState } from "@/context/UIStateContext";
 import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName, diffDesc as getDiffDesc } from "@/lib/achTranslations";
@@ -576,13 +576,16 @@ export default function PlayScreen() {
   }, [isLoaded]);
 
   const dailyModalShown = useRef(false);
-  // Show daily reward once per session, only after profile loaded AND splash dismissed (splashReady is set in _layout after splash overlay exits)
+  // Show daily reward once per session, only after profile loaded AND splash dismissed
+  // AND the player has finished the tutorial (so first-time players see the tutorial first,
+  // not a popup they don't understand yet).
   useEffect(() => {
     if (!isLoaded || !canClaimDailyReward || !splashReady || dailyModalShown.current) return;
+    if (!profile.tutorialSeen) return;
     dailyModalShown.current = true;
     const timer = setTimeout(() => setShowDailyModal(true), 800);
     return () => clearTimeout(timer);
-  }, [isLoaded, canClaimDailyReward, splashReady]);
+  }, [isLoaded, canClaimDailyReward, splashReady, profile.tutorialSeen]);
 
   // Android hardware back button → exit confirmation
   useEffect(() => {
@@ -921,6 +924,7 @@ export default function PlayScreen() {
                     chest={item}
                     onTap={() => {
                       setSelectedChestType(item.type);
+                      playChestOpen(item.type as any).catch(() => {});
                       const rw = openChestFromInventory(item.id);
                       setChestModalReward(rw);
                       setShowChestModal(true);

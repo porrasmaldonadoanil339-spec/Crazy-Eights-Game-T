@@ -22,7 +22,7 @@ import {
 } from "@/lib/multiplayerEngine";
 import { useProfile } from "@/context/ProfileContext";
 import {
-  playCardFlip, playCardDraw, playButton, playWin,
+  playCardFlip, playCardDraw, playButton, playWin, playLose, playChestOpen,
   stopMusic, startGameMusic, syncSettings
 } from "@/lib/audioManager";
 import { CardPlayEffect } from "@/components/CardPlayEffect";
@@ -888,7 +888,10 @@ export default function OnlineGameScreen() {
         if (local.phase === "game_over") {
           setLobbyPhase("result");
           stopMusic().catch(() => {});
-          playWin().catch(() => {});
+          // Player index 0 is always "me" after rotation in buildLocalState.
+          const iWon = local.winnerIndex === 0;
+          if (iWon) playWin().catch(() => {});
+          else playLose().catch(() => {});
         }
       } catch {
       }
@@ -1779,6 +1782,7 @@ export default function OnlineGameScreen() {
           onPress={() => {
             const latestChest = (chestInventory ?? []).slice().reverse().find(c => c.type === pendingChestType);
             if (latestChest) {
+              playChestOpen(latestChest.type as any).catch(() => {});
               const rw = openChestFromInventory(latestChest.id);
               setChestModalReward(rw);
               setShowChestModal(true);
