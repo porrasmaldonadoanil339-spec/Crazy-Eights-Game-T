@@ -1,0 +1,132 @@
+Documento de correcciones y mejoras – "Ocho Locos"
+
+🔧 CORRECCIONES FUNCIONALES
+
+1. Sonidos del camino de recompensas
+
+* Agregar sonidos al reclamar recompensas del progreso.
+
+2. Pase de batalla
+
+* Reiniciar completamente al finalizar temporada.
+* Pase normal y premium vuelven a nivel 1.
+* Agregar nuevas recompensas cada temporada.
+* Total: 120 misiones.
+* Al completar 120 → recompensa automática en monedas.
+
+3. Cofres
+
+* Agregar sonido único al abrir: común, raro, épico, legendario, evento, fichas.
+* Mejorar diseño visual de cofres.
+* Corregir dorsos mal alineados.
+
+4. Desafíos diarios
+
+* Corregir números y progreso.
+* No mostrar durante tutorial.
+* Mostrar solo después del tutorial.
+* Recompensas: monedas o fichas.
+* Separar de recompensas de tienda.
+
+5. Clasificatoria
+
+* Sonido + animación de victoria/derrota.
+* Mostrar perfil del jugador correctamente.
+
+6. Modo online
+
+* Eliminar “+7”.
+* Unificar efectos de cartas con otros modos.
+
+7. Botones y navegación
+
+* Centrar botones inferiores.
+* Adaptar a móviles correctamente.
+* Eliminar efecto tipo “enlace/arrastre” al presionar.
+* Botón atrás no debe forzar mensaje innecesario.
+
+8. Emotes tienda
+
+* Mostrar con círculo correcto.
+* Eliminar textos innecesarios.
+* Quitar óvalo transparente.
+
+9. Tutorial
+
+* Centrar todos los recuadros.
+* Mantener centrado al avanzar.
+* Evitar elementos pegados a la izquierda.
+
+10. Música
+
+* Transiciones entre secciones.
+* Música del menú en loop sin cortes.
+* Al salir del juego: pausar música.
+* Al volver: continuar desde el mismo punto (no reiniciar).
+
+---
+
+🎮 MEJORAS DE CALIDAD (NIVEL PRO)
+
+1. Game Feel
+
+* Vibración en acciones importantes.
+* Sonido inmediato sin delay.
+* Animaciones rápidas (0.2–0.4s).
+* Feedback visual claro (impacto, brillo).
+
+2. Fluidez
+
+* Transiciones < 0.5s.
+* Sin pantallas congeladas.
+* Botones responden al instante.
+
+3. Claridad
+
+* Cartas entendibles en 1 segundo.
+* Estado de partida claro siempre.
+* Efectos visuales distinguibles.
+
+4. UI/UX
+
+* Jerarquía visual clara.
+* Colores consistentes.
+* Botones grandes y cómodos.
+* Nada pegado a bordes.
+
+5. Sonido PRO
+
+* Sonido en botones.
+* Sonido al cambiar de menú.
+* Sonido al ganar recompensas.
+* Capas de audio variadas.
+
+6. Recompensas
+
+* Animaciones al recibir premios.
+* Sonido + brillo + movimiento.
+* Recompensas frecuentes.
+* Bonus sorpresa ocasional.
+
+7. Tutorial
+
+* Interactivo (no solo texto).
+* Rápido (1–2 minutos máximo).
+* Mostrar en lugar de explicar.
+
+8. Identidad del juego
+
+* Definir elemento único de “Ocho Locos”.
+* Diferenciarse de otros juegos.
+
+9. Progresión
+
+* Sistema de rangos claro.
+* Desbloqueo constante de contenido.
+* Sensación de avance continuo.
+
+10. Optimización
+
+* Fluido en gama media.
+* Sin lag ni crasheos.
+* Peso optimizado.

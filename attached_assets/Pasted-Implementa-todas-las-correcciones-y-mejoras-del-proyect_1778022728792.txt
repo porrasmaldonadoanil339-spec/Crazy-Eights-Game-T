@@ -1,0 +1,75 @@
+Implementa todas las correcciones y mejoras del proyecto "Ocho Locos" descritas en este documento.
+
+IMPORTANTE:
+
+* Debes cumplir absolutamente TODOS los puntos indicados.
+* No omitir ningún detalle, incluso los más pequeños.
+* No simplificar ni ignorar funcionalidades.
+* Todo debe quedar completamente funcional y bien integrado.
+
+ORDEN DE IMPLEMENTACIÓN (OBLIGATORIO):
+
+1. Corregir errores funcionales (bugs):
+
+* Desafíos diarios
+* Botones (problemas de arrastre/enlace)
+* Tutorial (posición y comportamiento)
+* Recompensas diarias
+* Modo online (+7)
+* Clasificatoria (victoria/derrota)
+* Emotes tienda
+* Dorsos y cofres mal alineados
+
+2. Sistemas principales:
+
+* Pase de batalla completo (reinicio + 120 misiones + recompensas)
+* Cofres (sonidos + experiencia de apertura)
+* Recompensas del camino
+* Sistema de progreso y ranking
+
+3. Audio (MUY IMPORTANTE):
+
+* Sonidos en botones, recompensas, cofres
+* Música con transiciones entre secciones
+* Música del menú en loop continuo
+* Implementar sistema de pausa y reanudación:
+  • Pausar al salir de la app
+  • Continuar desde el mismo punto al volver
+  • No reiniciar música
+  • Evitar duplicación de audio
+
+4. Animaciones y visual:
+
+* Animaciones de cartas especiales
+* Feedback visual (impacto, brillo, efectos)
+* Animaciones rápidas y fluidas
+* UI centrada, limpia y adaptable
+
+5. Optimización:
+
+* El juego debe ser fluido en dispositivos de gama media
+* Sin lag
+* Sin crasheos
+* Sin pantallas congeladas
+
+REQUISITOS DE CALIDAD:
+
+* Todo debe sentirse rápido, fluido y profesional
+* Sin errores visuales ni bugs
+* Sin retrasos en sonidos o acciones
+* Interfaz clara y fácil de entender
+* Experiencia similar a juegos top de Play Store
+
+VERIFICACIÓN FINAL:
+
+Antes de finalizar:
+
+* Revisar punto por punto del documento original
+* Confirmar que TODO esté implementado
+* Probar navegación completa del juego
+* Probar audio (loop, pausa, resume)
+* Probar rendimiento general
+
+OBJETIVO:
+
+Lograr que "Ocho Locos" tenga una experiencia de usuario fluida, atractiva y de alta calidad, lista para competir en Play Store.

@@ -27,7 +27,7 @@ import {
   Nunito_800ExtraBold as Nunito_800ExtraBold_Asset,
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
-import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded } from "@/lib/audioManager";
+import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded } from "@/lib/audioManager";
 import { markSplashComplete } from "@/lib/splashState";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useProfile } from "@/context/ProfileContext";
@@ -492,11 +492,16 @@ function AudioManager() {
     const sub = AppState.addEventListener("change", (nextState) => {
       if (nextState === "background" || nextState === "inactive") {
         setAppBackgrounded(true).catch(() => {});
-        stopMusic().catch(() => {});
+        // Pause (don't stop) so the track resumes from the same position
+        // when the user comes back to the app.
+        pauseMusic().catch(() => {});
       } else if (nextState === "active") {
         setAppBackgrounded(false).catch(() => {});
-        // Resume whichever track was last playing (preserves matchmaking state)
-        resumeCurrentMusic().catch(() => {});
+        // Try to resume the existing player first; if it was torn down
+        // for any reason, fall back to recreating the last requested track.
+        resumeMusic()
+          .catch(() => {})
+          .then(() => resumeCurrentMusic().catch(() => {}));
       }
     });
     return () => sub.remove();
