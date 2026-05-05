@@ -408,7 +408,7 @@ function PokerTitle() {
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const { startGame } = useGame();
-  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, openChestFromInventory, battlePassTier, recordFichasModePlay, fichasModePlaysRemaining, isChestInventoryFull, chestOverflowCount, chestOverflowLimit } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, chestOverflow, openChestFromInventory, openChestFromOverflow, battlePassTier, recordFichasModePlay, fichasModePlaysRemaining, isChestInventoryFull, chestOverflowCount, chestOverflowLimit } = useProfile();
   const { setTabBarVisible, splashReady } = useUIState();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
@@ -951,6 +951,36 @@ export default function PlayScreen() {
                     ? T("chestEmptyOneMore")
                     : T("chestEmptyManyMore").replace("{n}", String(chestWinsLeft !== CHEST_CYCLE ? chestWinsLeft : CHEST_CYCLE))}
                 </Text>
+              </View>
+            )}
+            {chestOverflow.length > 0 && (
+              <View style={{ marginTop: 12 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <Ionicons name="hourglass-outline" size={12} color={theme.textMuted} />
+                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: theme.textMuted, letterSpacing: 0.5 }}>
+                    {T("chestWaitlistTitle").toUpperCase()}
+                  </Text>
+                </View>
+                <FlatList
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  data={chestOverflow}
+                  keyExtractor={(c) => c.id}
+                  contentContainerStyle={{ gap: 10, paddingRight: 4 }}
+                  renderItem={({ item }) => (
+                    <ChestInventoryItem
+                      chest={item}
+                      onTap={() => {
+                        setSelectedChestType(item.type);
+                        playChestOpen(item.type as any).catch(() => {});
+                        const rw = openChestFromOverflow(item.id);
+                        setChestModalReward(rw);
+                        setShowChestModal(true);
+                        setTabBarVisible(false);
+                      }}
+                    />
+                  )}
+                />
               </View>
             )}
           </View>

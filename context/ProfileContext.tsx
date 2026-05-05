@@ -332,6 +332,7 @@ interface ProfileContextValue {
   chestInventoryLimit: number;
   chestOverflowLimit: number;
   openChestFromInventory: (chestId: string) => ChestReward | null;
+  openChestFromOverflow: (chestId: string) => ChestReward | null;
   chestInventory: Chest[];
   chestOverflow: Chest[];
   chestOverflowCount: number;
@@ -1311,6 +1312,26 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return reward;
   }, [update]);
 
+  const openChestFromOverflow = useCallback((chestId: string): ChestReward | null => {
+    let reward: ChestReward | null = null;
+    update((p) => {
+      const overflow = p.chestOverflow ?? [];
+      const chest = overflow.find((c) => c.id === chestId);
+      if (!chest) return p;
+      reward = openChestReward(chest, p.ownedItems);
+      const newOverflow = overflow.filter((c) => c.id !== chestId);
+      const newOwnedItems = reward.item ? [...p.ownedItems, reward.item.id] : p.ownedItems;
+      return {
+        ...p,
+        coins: p.coins + reward.coins,
+        totalXp: p.totalXp + reward.xp,
+        ownedItems: newOwnedItems,
+        chestOverflow: newOverflow,
+      };
+    });
+    return reward;
+  }, [update]);
+
   return (
     <ProfileContext.Provider
       value={{
@@ -1372,6 +1393,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         chestInventoryLimit: CHEST_INVENTORY_LIMIT,
         chestOverflowLimit: CHEST_OVERFLOW_LIMIT,
         openChestFromInventory,
+        openChestFromOverflow,
         chestInventory: profile.chestInventory ?? [],
         chestOverflow: profile.chestOverflow ?? [],
         chestOverflowCount: (profile.chestOverflow ?? []).length,
