@@ -1,0 +1,98 @@
+Implementa todas las correcciones y mejoras del proyecto "Ocho Locos" descritas en este documento.
+
+IMPORTANTE:
+
+* Debes cumplir absolutamente TODOS los puntos indicados.
+* No omitir ningún detalle, incluso los más pequeños.
+* No simplificar ni ignorar funcionalidades.
+* Todo debe quedar completamente funcional y bien integrado.
+
+AUDIO (CRÍTICO – NO IGNORAR):
+
+* He proporcionado un archivo de música de aproximadamente 2 horas de duración.
+* Debes utilizar EXACTAMENTE ese audio como música del menú.
+* No reemplazarlo por música corta o genérica.
+* No recortar el audio.
+
+Comportamiento obligatorio de la música:
+
+* La música debe reproducirse completa.
+
+* Si termina, debe reiniciarse automáticamente en loop.
+
+* No debe haber cortes ni silencios.
+
+* Al salir del juego (minimizar o cambiar de app):
+  • La música debe pausarse automáticamente.
+  • Guardar el tiempo exacto de reproducción.
+
+* Al volver al juego:
+  • La música debe continuar desde el mismo punto (resume).
+  • NO debe reiniciarse desde el inicio.
+
+* Evitar duplicación de audio (no reproducir dos veces).
+
+* Asegurar funcionamiento correcto en segundo plano.
+
+ORDEN DE IMPLEMENTACIÓN (OBLIGATORIO):
+
+1. Corregir errores funcionales (bugs):
+
+* Desafíos diarios
+* Botones (problemas de arrastre/enlace)
+* Tutorial (posición y comportamiento)
+* Recompensas diarias
+* Modo online (+7)
+* Clasificatoria (victoria/derrota)
+* Emotes tienda
+* Dorsos y cofres mal alineados
+
+2. Sistemas principales:
+
+* Pase de batalla completo (reinicio + 120 misiones + recompensas)
+* Cofres (sonidos + experiencia de apertura)
+* Recompensas del camino
+* Sistema de progreso y ranking
+
+3. Audio:
+
+* Sonidos en botones, recompensas, cofres
+* Transiciones entre secciones
+* Música del menú con el archivo de 2 horas proporcionado
+* Sistema de pausa y reanudación correctamente implementado
+
+4. Animaciones y visual:
+
+* Animaciones de cartas especiales
+* Feedback visual (impacto, brillo, efectos)
+* Animaciones rápidas y fluidas
+* UI centrada, limpia y adaptable
+
+5. Optimización:
+
+* Fluido en dispositivos de gama media
+* Sin lag
+* Sin crasheos
+* Sin pantallas congeladas
+
+REQUISITOS DE CALIDAD:
+
+* Experiencia fluida, rápida y profesional
+* Sin errores visuales ni bugs
+* Sonido sin retrasos ni cortes
+* Interfaz clara y bien diseñada
+* Sensación similar a juegos de alto nivel en Play Store
+
+VERIFICACIÓN FINAL:
+
+Antes de finalizar:
+
+* Revisar todos los puntos del documento original
+* Confirmar que TODO esté implementado
+* Probar audio (loop, pausa, resume)
+* Probar navegación completa del juego
+* Validar rendimiento general
+
+OBJETIVO FINAL:
+
+Lograr que "Ocho Locos" tenga una experiencia de usuario de alta calidad, fluida y profesional, lista para competir en Play Store.
