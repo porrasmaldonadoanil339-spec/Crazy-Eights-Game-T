@@ -32,6 +32,16 @@ import ChestOpeningModal from "@/components/ChestOpeningModal";
 import { ChestType, ChestReward, CHEST_CONFIG, getChestProgress } from "@/lib/chestSystem";
 import type { Chest } from "@/lib/chestSystem";
 import { ModeInfoModal } from "@/components/ModeInfoModal";
+import type { TranslationKey } from "@/lib/i18n";
+
+const CHEST_NAME_KEY: Record<ChestType, TranslationKey> = {
+  common: "chestNameCommon", rare: "chestNameRare", epic: "chestNameEpic", legendary: "chestNameLegendary",
+  magic: "chestNameMagic", giant: "chestNameGiant", event: "chestNameEvent", supreme: "chestNameSupreme", fichas: "chestNameFichas",
+};
+const CHEST_RARITY_KEY: Record<ChestType, TranslationKey> = {
+  common: "chestRarityCommon", rare: "chestRarityRare", epic: "chestRarityEpic", legendary: "chestRarityLegendary",
+  magic: "chestRarityMagic", giant: "chestRarityGiant", event: "chestRarityEvent", supreme: "chestRaritySupreme", fichas: "chestRarityFichas",
+};
 
 const { width: SW } = Dimensions.get("window");
 
@@ -864,19 +874,19 @@ export default function PlayScreen() {
           <View style={{ marginHorizontal: 16, marginBottom: 12 }}>
             <View style={[styles.sectionHeader, { marginBottom: 10, marginTop: 4 }]}>
               <Ionicons name="cube" size={14} color={theme.gold} />
-              <Text style={[styles.sectionLabel, { color: theme.gold }]}>Cofres</Text>
+              <Text style={[styles.sectionLabel, { color: theme.gold }]}>{T("chestSectionLabel")}</Text>
               <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 6 }}>
                 {chestOverflowCount > 0 && (
                   <Pressable
                     onPress={() => Alert.alert(
-                      "Lista de espera",
-                      `Tienes ${chestOverflowCount} cofre${chestOverflowCount === 1 ? "" : "s"} en espera (máximo ${chestOverflowLimit}). Entrarán automáticamente a tu inventario al abrir un cofre y liberar espacio.`
+                      T("chestWaitlistTitle"),
+                      T("chestWaitlistAlert").replace("{n}", String(chestOverflowCount)).replace("{limit}", String(chestOverflowLimit))
                     )}
                     style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: theme.textMuted + "22", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}
                   >
                     <Ionicons name="hourglass-outline" size={11} color={theme.textMuted} />
                     <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: theme.textMuted }}>
-                      En espera {chestOverflowCount}/{chestOverflowLimit}
+                      {T("chestWaitlistBadge").replace("{n}", String(chestOverflowCount)).replace("{limit}", String(chestOverflowLimit))}
                     </Text>
                     <Ionicons name="information-circle-outline" size={12} color={theme.textMuted} />
                   </Pressable>
@@ -899,17 +909,17 @@ export default function PlayScreen() {
                   size={18} color={nextCfg.glowColor}
                 />
                 <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 13, color: nextCfg.glowColor, flex: 1 }}>
-                  {nextCfg.name}
+                  {T(CHEST_NAME_KEY[nextChestType])}
                 </Text>
                 <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 12, color: theme.textMuted }}>
-                  {chestWinsLeft === 1 ? "¡1 victoria más!" : `${chestWinsLeft} victorias más`}
+                  {chestWinsLeft === 1 ? T("chestNextOneMore") : T("chestNextManyMore").replace("{n}", String(chestWinsLeft))}
                 </Text>
               </View>
               <View style={{ height: 6, backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
                 <View style={{ height: 6, borderRadius: 3, width: `${(chestProg / CHEST_CYCLE) * 100}%`, backgroundColor: nextCfg.glowColor }} />
               </View>
               <Text style={{ fontFamily: "Nunito_400Regular", fontSize: 10, color: theme.textMuted, marginTop: 4 }}>
-                {chestProg}/{CHEST_CYCLE} victorias
+                {T("chestProgressLabel").replace("{n}", String(chestProg)).replace("{total}", String(CHEST_CYCLE))}
               </Text>
             </View>
             {chestInventory.length > 0 && (
@@ -938,8 +948,8 @@ export default function PlayScreen() {
               <View style={{ alignItems: "center", paddingVertical: 8 }}>
                 <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 12, color: theme.textMuted }}>
                   {chestWinsLeft === 1
-                    ? "¡Una victoria más para tu cofre!"
-                    : `Te falta${chestWinsLeft !== CHEST_CYCLE ? `n ${chestWinsLeft}` : `n ${CHEST_CYCLE}`} victorias para un cofre`}
+                    ? T("chestEmptyOneMore")
+                    : T("chestEmptyManyMore").replace("{n}", String(chestWinsLeft !== CHEST_CYCLE ? chestWinsLeft : CHEST_CYCLE))}
                 </Text>
               </View>
             )}
@@ -2055,6 +2065,7 @@ const styles = StyleSheet.create({
 
 // ─── Chest Inventory Item ────────────────────────────────────────────────────
 function ChestInventoryItem({ chest, onTap }: { chest: Chest; onTap: () => void }) {
+  const T = useT();
   const cfg = CHEST_CONFIG[chest.type];
   const chestIcon = chest.type === "legendary" ? "star" :
     chest.type === "epic" ? "diamond" :
@@ -2087,10 +2098,10 @@ function ChestInventoryItem({ chest, onTap }: { chest: Chest; onTap: () => void 
           <Ionicons name={chestIcon as any} size={28} color={cfg.glowColor} />
         </Animated.View>
         <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: cfg.glowColor, textAlign: "center" }}>
-          {cfg.name.replace("Cofre ", "")}
+          {T(CHEST_RARITY_KEY[chest.type])}
         </Text>
         <View style={{ backgroundColor: cfg.color + "33", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-          <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: cfg.glowColor }}>Abrir</Text>
+          <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: cfg.glowColor }}>{T("chestOpenBtn")}</Text>
         </View>
         {chest.fromOverflow && (
           <View style={{
@@ -2102,7 +2113,7 @@ function ChestInventoryItem({ chest, onTap }: { chest: Chest; onTap: () => void 
             shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 4,
           }}>
             <Ionicons name="hourglass" size={9} color="#fff" />
-            <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: "#fff" }}>Nuevo</Text>
+            <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: "#fff" }}>{T("chestNewBadge")}</Text>
           </View>
         )}
       </Animated.View>

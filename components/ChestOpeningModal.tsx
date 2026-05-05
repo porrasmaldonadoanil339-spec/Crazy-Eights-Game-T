@@ -27,7 +27,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { CHEST_CONFIG, ChestType, ChestReward } from "@/lib/chestSystem";
 import { pickLocalized } from "@/lib/storeItems";
 import { useProfile } from "@/context/ProfileContext";
-import type { Lang } from "@/lib/i18n";
+import { t as i18nT, type Lang, type TranslationKey } from "@/lib/i18n";
+
+const CHEST_NAME_KEY: Record<ChestType, TranslationKey> = {
+  common: "chestNameCommon", rare: "chestNameRare",
+  epic: "chestNameEpic", legendary: "chestNameLegendary",
+  magic: "chestNameMagic", giant: "chestNameGiant",
+  event: "chestNameEvent", supreme: "chestNameSupreme",
+  fichas: "chestNameFichas",
+};
 
 const { width: W, height: H } = Dimensions.get("window");
 
@@ -70,6 +78,8 @@ type Phase = "idle" | "shaking" | "opening" | "showing" | "done";
 export default function ChestOpeningModal({ visible, chestType, reward, onClose }: Props) {
   const config = CHEST_CONFIG[chestType];
   const rc = RARITY_CONFIG[chestType] ?? RARITY_CONFIG.common;
+  const { profile } = useProfile();
+  const lang = (profile.language ?? "es") as Lang;
   const [phase, setPhase] = useState<Phase>("idle");
   const [flashColor, setFlashColor] = useState("#FFFFFF");
 
@@ -295,7 +305,7 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
 
         <View style={styles.container}>
           <Text style={[styles.chestTitle, { color: config.glowColor }]}>
-            {config.name}
+            {i18nT(CHEST_NAME_KEY[chestType], lang)}
           </Text>
 
           <View style={styles.chestArea}>
@@ -366,11 +376,11 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
           <Animated.View style={[styles.tapHint, tapStyle]}>
             {phase !== "showing" ? (
               <Text style={[styles.tapText, { color: config.glowColor + "CC" }]}>
-                Toca para abrir
+                {i18nT("chestTapToOpen", lang)}
               </Text>
             ) : (
               <Text style={[styles.tapText, { color: config.glowColor + "CC" }]}>
-                Toca para continuar
+                {i18nT("chestTapToContinue", lang)}
               </Text>
             )}
           </Animated.View>
@@ -378,7 +388,7 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
           {phase === "showing" && (
             <Animated.View style={[styles.tapHint, rewardStyle]}>
               <Text style={[styles.tapText, { color: config.glowColor + "CC" }]}>
-                Toca para continuar
+                {i18nT("chestTapToContinue", lang)}
               </Text>
             </Animated.View>
           )}
@@ -416,9 +426,15 @@ function RewardDisplay({ reward, config, chestType }: {
 }) {
   const { profile } = useProfile();
   const lang = (profile.language ?? "es") as Lang;
+  const itemRarityLabel = (rarity: string | undefined) => {
+    if (rarity === "legendary") return "✦ " + i18nT("chestRarityLegendary", lang);
+    if (rarity === "epic") return i18nT("chestRarityEpic", lang);
+    if (rarity === "rare") return i18nT("chestRarityRare", lang);
+    return i18nT("chestRarityCommon", lang);
+  };
   return (
     <View style={styles.rewardInner}>
-      <Text style={[styles.rewTitle, { color: config.glowColor }]}>¡Recompensas!</Text>
+      <Text style={[styles.rewTitle, { color: config.glowColor }]}>{i18nT("chestRewardsTitle", lang)}</Text>
 
       <View style={styles.rewardRow}>
         <View style={styles.rewardItem}>
@@ -426,7 +442,7 @@ function RewardDisplay({ reward, config, chestType }: {
             <CoinIcon size={28} color="#D4AF37" />
           </View>
           <Text style={styles.rewardValue}>+{reward.coins}</Text>
-          <Text style={styles.rewardLabel}>Monedas</Text>
+          <Text style={styles.rewardLabel}>{i18nT("chestRewardCoins", lang)}</Text>
         </View>
 
         <View style={styles.rewardItem}>
@@ -456,9 +472,7 @@ function RewardDisplay({ reward, config, chestType }: {
               {pickLocalized(reward.item.name, lang)}
             </Text>
             <Text style={[styles.rewardLabel, { color: config.glowColor }]}>
-              {reward.item.rarity === "legendary" ? "✦ Legendario" :
-               reward.item.rarity === "epic" ? "Épico" :
-               reward.item.rarity === "rare" ? "Raro" : "Común"}
+              {itemRarityLabel(reward.item.rarity)}
             </Text>
           </View>
         )}
