@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence,
-  withSpring, withDelay, Easing, FadeIn, FadeInDown, SlideInDown,
+  withSpring, withDelay, Easing, FadeIn, FadeOut, FadeInDown, SlideInDown,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
@@ -29,7 +29,7 @@ import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import { getActiveEvent } from "@/components/EventsCard";
 import { multiApplyRandomShuffle } from "@/lib/multiplayerEngine";
-import { getEventConfig } from "@/lib/eventModes";
+import { getEventConfig, getEventName, getEventShortName, getEventDesc } from "@/lib/eventModes";
 import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
 import { getModeById } from "@/lib/gameModes";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
@@ -830,6 +830,8 @@ export default function OnlineGameScreen() {
   const [showInactivityBar, setShowInactivityBar] = useState(false);
   const inactivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastActionTime = useRef(Date.now());
+  const [showEventBanner, setShowEventBanner] = useState(false);
+  const eventBannerShownRef = useRef(false);
 
   // ─── Last card banner & floating pendingDraw label ───────────────────────
   useEffect(() => {
@@ -1144,6 +1146,17 @@ export default function OnlineGameScreen() {
     () => getEventConfig(gameState?.eventId ?? null),
     [gameState?.eventId],
   );
+
+  // Event mode intro banner — show once when the match begins (after dealing)
+  useEffect(() => {
+    if (lobbyPhase !== "game") return;
+    if (!onlineEventConfig) return;
+    if (eventBannerShownRef.current) return;
+    eventBannerShownRef.current = true;
+    setShowEventBanner(true);
+    const t = setTimeout(() => setShowEventBanner(false), 3200);
+    return () => clearTimeout(t);
+  }, [lobbyPhase, onlineEventConfig]);
   const INACTIVITY_TIMEOUT = onlineEventConfig?.turnSeconds ?? 30;
   const INACTIVITY_SHOW_DELAY = onlineEventConfig?.turnSeconds ? 0 : 20;
   useEffect(() => {
@@ -1341,14 +1354,22 @@ export default function OnlineGameScreen() {
     );
     setCurrentCpuProfiles(newProfiles);
     const newNames = [humanName, ...newProfiles.map(c => c.name)];
-    const gs = initMultiGame(newNames, 8, getActiveEvent(playerLevel)?.id ?? null);
+    const newEventId = getActiveEvent(playerLevel)?.id ?? null;
+    const gs = initMultiGame(newNames, 8, newEventId);
     gs.phase = "playing";
     setGameState(gs);
     setSelectedCard(null);
     cpuThinking.current = false;
     rankedUpdatedRef.current = false;
     startGameMusic().catch(() => {});
-  }, [playerCount, humanName, isOnline, modeParam]);
+    // Re-arm the event intro banner so it appears for the new match too.
+    eventBannerShownRef.current = false;
+    if (newEventId) {
+      eventBannerShownRef.current = true;
+      setShowEventBanner(true);
+      setTimeout(() => setShowEventBanner(false), 3200);
+    }
+  }, [playerCount, humanName, isOnline, modeParam, playerLevel, profile.rankedProfile.rank]);
 
   // ─── CPU zones (opponents around table) ──────────────────────────────────
   const cpuZonePositions = React.useMemo(() => {
@@ -1454,6 +1475,14 @@ export default function OnlineGameScreen() {
             <Text style={[gameStyles.onlinePillText, { color: modePillColor }]}>{modePillLabel}</Text>
           </View>
           <Text style={gameStyles.headerTitle}>{playerCount} {T("players")}</Text>
+          {onlineEventConfig && (
+            <View style={[gameStyles.eventPill, { borderColor: onlineEventConfig.color + "66", backgroundColor: onlineEventConfig.color + "18" }]}>
+              <Ionicons name={onlineEventConfig.icon as any} size={10} color={onlineEventConfig.color} />
+              <Text style={[gameStyles.eventPillText, { color: onlineEventConfig.color }]} numberOfLines={1}>
+                {T("eventLabel")} · {getEventShortName(onlineEventConfig.id, T).toUpperCase()}
+              </Text>
+            </View>
+          )}
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <View style={gameStyles.deckBadge}>
@@ -1471,6 +1500,21 @@ export default function OnlineGameScreen() {
           </Pressable>
         </View>
       </View>
+
+      {/* Event intro banner */}
+      {showEventBanner && onlineEventConfig && (
+        <Animated.View entering={FadeIn} exiting={FadeOut} style={[gameStyles.eventBanner, { pointerEvents: "none" } as any]}>
+          <LinearGradient colors={[onlineEventConfig.color, "#000"] as any} style={gameStyles.eventBannerInner}>
+            <View style={gameStyles.eventBannerRow}>
+              <Ionicons name={onlineEventConfig.icon as any} size={18} color="#fff" />
+              <Text style={gameStyles.eventBannerTitle} numberOfLines={1}>
+                {T("eventLabel")} · {getEventName(onlineEventConfig.id, T).toUpperCase()}
+              </Text>
+            </View>
+            <Text style={gameStyles.eventBannerDesc} numberOfLines={2}>{getEventDesc(onlineEventConfig.id, T)}</Text>
+          </LinearGradient>
+        </Animated.View>
+      )}
 
       {/* Game zone */}
       <View style={[gameStyles.gameZone, { height: zoneH, paddingBottom: botPad }]}>
@@ -2070,6 +2114,33 @@ const gameStyles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 3,
   },
   deckCount: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textDim },
+
+  // Live event pill in header
+  eventPill: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    borderRadius: 8, borderWidth: 1,
+    paddingHorizontal: 6, paddingVertical: 2,
+    maxWidth: 150,
+  },
+  eventPillText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 0.5 },
+
+  // Live event intro banner
+  eventBanner: {
+    position: "absolute", top: 60, left: 16, right: 16,
+    alignItems: "center", zIndex: 250,
+  },
+  eventBannerInner: {
+    paddingHorizontal: 18, paddingVertical: 10,
+    borderRadius: 16, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.25)",
+    alignItems: "center", gap: 4,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5, shadowRadius: 8, elevation: 8,
+    maxWidth: 360,
+  },
+  eventBannerRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  eventBannerTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#fff", letterSpacing: 1 },
+  eventBannerDesc: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "rgba(255,255,255,0.9)", textAlign: "center" },
+
   gameZone: { flex: 1, position: "relative" },
 
   // Oval table (colors driven by table design via inline styles)

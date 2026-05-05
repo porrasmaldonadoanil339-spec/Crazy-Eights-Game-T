@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence,
-  withSpring, Easing,
+  withSpring, Easing, FadeIn, FadeOut,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
@@ -20,7 +20,7 @@ import {
   multiApplyRandomShuffle,
   suitName, suitSymbol, suitColor, multiGetTopCard,
 } from "@/lib/multiplayerEngine";
-import { getEventConfig } from "@/lib/eventModes";
+import { getEventConfig, getEventName, getEventShortName, getEventDesc } from "@/lib/eventModes";
 import { playCardFlip, playCardDraw, playButton, stopMusic } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS } from "@/lib/storeItems";
@@ -259,6 +259,7 @@ export default function MultiGameScreen() {
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showEventBanner, setShowEventBanner] = useState(false);
 
   // ─── Live event hooks ─────────────────────────────────────────────────────
   // Always derive from the authoritative game state's eventId so the hooks
@@ -351,6 +352,15 @@ export default function MultiGameScreen() {
     setGameState(initMultiGame(selectedNames, 8, activeEventId));
     setGameStarted(true);
   }, [playerCountSelect, playerNames, activeEventId]);
+
+  // Event mode intro banner (shows for ~3.2s once a match with an active event begins)
+  useEffect(() => {
+    if (!gameStarted) return;
+    if (!gameState.eventId) return;
+    setShowEventBanner(true);
+    const t = setTimeout(() => setShowEventBanner(false), 3200);
+    return () => clearTimeout(t);
+  }, [gameStarted, gameState.eventId]);
 
   const pidx = gameState.currentPlayerIndex;
   const currentHand = gameState.hands[pidx] ?? [];
@@ -521,12 +531,35 @@ export default function MultiGameScreen() {
         <View style={styles.headerMid}>
           <Ionicons name="people" size={12} color={Colors.textMuted} />
           <Text style={styles.headerTitle}>{playerCount} {T("players")} · {T("local")}</Text>
+          {eventConfig && (
+            <View style={[styles.eventPill, { borderColor: eventConfig.color + "66", backgroundColor: eventConfig.color + "18" }]}>
+              <Ionicons name={eventConfig.icon as any} size={10} color={eventConfig.color} />
+              <Text style={[styles.eventPillText, { color: eventConfig.color }]} numberOfLines={1}>
+                {T("eventLabel")} · {getEventShortName(eventConfig.id, T).toUpperCase()}
+              </Text>
+            </View>
+          )}
         </View>
         <View style={styles.deckBadge}>
           <Ionicons name="layers-outline" size={12} color={Colors.textDim} />
           <Text style={styles.deckCount}>{gameState.drawPile.length}</Text>
         </View>
       </View>
+
+      {/* Event intro banner */}
+      {showEventBanner && eventConfig && (
+        <Animated.View entering={FadeIn} exiting={FadeOut} style={[styles.eventBanner, { pointerEvents: "none" } as any]}>
+          <LinearGradient colors={[eventConfig.color, "#000"] as any} style={styles.eventBannerInner}>
+            <View style={styles.eventBannerRow}>
+              <Ionicons name={eventConfig.icon as any} size={18} color="#fff" />
+              <Text style={styles.eventBannerTitle} numberOfLines={1}>
+                {T("eventLabel")} · {getEventName(eventConfig.id, T).toUpperCase()}
+              </Text>
+            </View>
+            <Text style={styles.eventBannerDesc} numberOfLines={2}>{getEventDesc(eventConfig.id, T)}</Text>
+          </LinearGradient>
+        </Animated.View>
+      )}
 
       {/* Game zone */}
       <View style={[styles.gameZone, { height: zoneH, paddingBottom: botPad }]}>
@@ -824,6 +857,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 3,
   },
   deckCount: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textDim },
+
+  // Live event pill in header
+  eventPill: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    borderRadius: 8, borderWidth: 1,
+    paddingHorizontal: 6, paddingVertical: 2, marginLeft: 4,
+    maxWidth: 160,
+  },
+  eventPillText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, letterSpacing: 0.5 },
+
+  // Live event intro banner
+  eventBanner: {
+    position: "absolute", top: 60, left: 16, right: 16,
+    alignItems: "center", zIndex: 250,
+  },
+  eventBannerInner: {
+    paddingHorizontal: 18, paddingVertical: 10,
+    borderRadius: 16, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.25)",
+    alignItems: "center", gap: 4,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5, shadowRadius: 8, elevation: 8,
+    maxWidth: 360,
+  },
+  eventBannerRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  eventBannerTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#fff", letterSpacing: 1 },
+  eventBannerDesc: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "rgba(255,255,255,0.9)", textAlign: "center" },
 
   gameZone: { flex: 1, position: "relative" },
 
