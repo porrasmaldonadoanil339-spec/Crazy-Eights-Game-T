@@ -284,27 +284,43 @@ export default function MultiGameScreen() {
 
   // "Velocidad Extrema" — auto-draw if the current player takes longer than turnSeconds.
   // Reset every time the turn rotates or pass-device → playing transition occurs.
-  const speedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // A visible countdown bar is driven from the same interval so the player can see
+  // how much time is left.
+  const speedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const speedStartRef = useRef<number>(0);
+  const [speedProgress, setSpeedProgress] = useState(1);
   useEffect(() => {
-    if (speedTimerRef.current) {
-      clearTimeout(speedTimerRef.current);
-      speedTimerRef.current = null;
+    if (speedIntervalRef.current) {
+      clearInterval(speedIntervalRef.current);
+      speedIntervalRef.current = null;
     }
-    if (!gameStarted) return;
     const sec = eventConfig?.turnSeconds;
-    if (!sec) return;
-    if (gameState.phase !== "playing") return;
-    speedTimerRef.current = setTimeout(() => {
-      setGameState(prev => {
-        if (prev.phase !== "playing") return prev;
-        return multiDraw(prev);
-      });
-      setSelectedCard(null);
-    }, sec * 1000);
+    if (!gameStarted || !sec || gameState.phase !== "playing") {
+      setSpeedProgress(1);
+      return;
+    }
+    speedStartRef.current = Date.now();
+    setSpeedProgress(1);
+    speedIntervalRef.current = setInterval(() => {
+      const elapsed = (Date.now() - speedStartRef.current) / 1000;
+      const prog = Math.max(0, 1 - elapsed / sec);
+      setSpeedProgress(prog);
+      if (prog <= 0) {
+        if (speedIntervalRef.current) {
+          clearInterval(speedIntervalRef.current);
+          speedIntervalRef.current = null;
+        }
+        setGameState(prev => {
+          if (prev.phase !== "playing") return prev;
+          return multiDraw(prev);
+        });
+        setSelectedCard(null);
+      }
+    }, 100);
     return () => {
-      if (speedTimerRef.current) {
-        clearTimeout(speedTimerRef.current);
-        speedTimerRef.current = null;
+      if (speedIntervalRef.current) {
+        clearInterval(speedIntervalRef.current);
+        speedIntervalRef.current = null;
       }
     };
   }, [gameStarted, eventConfig?.turnSeconds, gameState.phase, gameState.turnId, gameState.currentPlayerIndex]);
@@ -611,6 +627,36 @@ export default function MultiGameScreen() {
               />
             )}
           </View>
+          {/* Speed-event countdown bar — only visible during Velocidad Extrema */}
+          {isPlaying && eventConfig?.turnSeconds ? (
+            <View style={styles.speedBarWrap}>
+              <Ionicons
+                name="flash"
+                size={11}
+                color={speedProgress > 0.5 ? Colors.gold : speedProgress > 0.25 ? "#FF9500" : "#FF3B30"}
+              />
+              <View style={styles.speedBar}>
+                <View
+                  style={[
+                    styles.speedFill,
+                    {
+                      width: `${Math.round(speedProgress * 100)}%` as `${number}%`,
+                      backgroundColor: speedProgress > 0.5
+                        ? Colors.gold
+                        : speedProgress > 0.25
+                        ? "#FF9500"
+                        : "#FF3B30",
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.speedCountdown, {
+                color: speedProgress > 0.5 ? Colors.gold : speedProgress > 0.25 ? "#FF9500" : "#FF3B30",
+              }]}>
+                {Math.ceil(speedProgress * (eventConfig.turnSeconds ?? 0))}s
+              </Text>
+            </View>
+          ) : null}
           {/* Current player emote bubble */}
           <View style={{ alignItems: "center", marginTop: 2 }} pointerEvents="none">
             <EmoteBubble emote={activeEmotes[pidx] ?? null} side="player" />
@@ -855,6 +901,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, borderWidth: 1,
   },
   pendingText: { fontFamily: "Nunito_800ExtraBold", fontSize: 11 },
+
+  // Speed-event countdown bar
+  speedBarWrap: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    paddingHorizontal: 16, marginTop: 2,
+  },
+  speedBar: {
+    flex: 1, height: 4, backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 2, overflow: "hidden",
+  },
+  speedFill: { height: 4, borderRadius: 2 },
+  speedCountdown: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 11, minWidth: 22, textAlign: "right",
+  },
   handContainer: { paddingHorizontal: 12, paddingVertical: 4 },
   selectedHint: {
     fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.gold,
