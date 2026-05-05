@@ -422,6 +422,7 @@ const styles = StyleSheet.create({
   stepCard: {
     flex: 1, marginHorizontal: 20, backgroundColor: Colors.surface,
     borderRadius: 24, padding: 24, alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1, borderColor: Colors.border, gap: 10,
   },
   iconCircle: {
