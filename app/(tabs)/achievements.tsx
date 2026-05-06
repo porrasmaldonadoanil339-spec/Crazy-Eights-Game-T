@@ -1,5 +1,5 @@
 import { CoinIcon } from "@/components/CoinIcon";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Alert,
 } from "react-native";
@@ -178,14 +178,88 @@ export default function AchievementsScreen() {
   const levelLabel = T("level");
   const claimLabel = T("claim");
 
-  // Sort: claimable first, then unlocked+claimed, then locked — within each group preserve natural ACHIEVEMENTS order
-  const sortedAchievements = [...ACHIEVEMENTS].sort((a, b) => {
-    const pa = profile.achievementProgress.find(p => p.id === a.id);
-    const pb = profile.achievementProgress.find(p => p.id === b.id);
-    const scoreA = pa?.unlocked && !pa?.claimedReward ? 0 : pa?.unlocked ? 1 : 2;
-    const scoreB = pb?.unlocked && !pb?.claimedReward ? 0 : pb?.unlocked ? 1 : 2;
-    return scoreA - scoreB;
-  });
+  // Sort: claimable first, then unlocked+claimed, then locked — within each group preserve natural ACHIEVEMENTS order.
+  // Build a progress lookup map once (O(N) instead of O(N²) .find per item).
+  const progressById = useMemo(() => {
+    const m = new Map<string, { unlocked: boolean; claimedReward: boolean; progress: number }>();
+    for (const p of profile.achievementProgress) {
+      m.set(p.id, { unlocked: !!p.unlocked, claimedReward: !!p.claimedReward, progress: p.progress });
+    }
+    return m;
+  }, [profile.achievementProgress]);
+
+  const sortedAchievements = useMemo(() => {
+    return [...ACHIEVEMENTS].sort((a, b) => {
+      const pa = progressById.get(a.id);
+      const pb = progressById.get(b.id);
+      const scoreA = pa?.unlocked && !pa?.claimedReward ? 0 : pa?.unlocked ? 1 : 2;
+      const scoreB = pb?.unlocked && !pb?.claimedReward ? 0 : pb?.unlocked ? 1 : 2;
+      return scoreA - scoreB;
+    });
+  }, [progressById]);
+
+  const renderAchievement = useCallback(({ item: ach }: { item: typeof ACHIEVEMENTS[number] }) => {
+    const prog = progressById.get(ach.id);
+    const pct = prog ? prog.progress / ach.target : 0;
+    const unlocked = prog?.unlocked ?? false;
+    const claimed = prog?.claimedReward ?? false;
+    const rarityColor = RARITY_COLORS_MAP[ach.rarity];
+    const title = achTitle(ach.id, lang) || ach.title;
+    const desc = achDesc(ach.id, lang) || ach.description;
+    return (
+      <View
+        style={[
+          styles.achCard,
+          {
+            backgroundColor: unlocked ? themeColors.card : themeColors.surface,
+            borderColor: unlocked ? rarityColor + "55" : themeColors.border,
+          },
+        ]}
+      >
+        <View style={[styles.achIconWrap, { backgroundColor: unlocked ? ach.iconColor + "33" : themeColors.card }]}>
+          {ach.icon === "cash" ? (
+            <CoinIcon size={22} color={unlocked ? ach.iconColor : themeColors.textDim} />
+          ) : (
+            <Ionicons name={ach.icon as any} size={22} color={unlocked ? ach.iconColor : themeColors.textDim} />
+          )}
+        </View>
+        <View style={styles.achContent}>
+          <View style={styles.achTitleRow}>
+            <Text style={[styles.achTitle, { color: unlocked ? themeColors.text : themeColors.textMuted }]}>{title}</Text>
+            {unlocked && !claimed && <View style={styles.claimDot} />}
+          </View>
+          <Text style={[styles.achDesc, { color: themeColors.textMuted }]}>{desc}</Text>
+          {!unlocked && (
+            <View style={[styles.progressBarBg, { backgroundColor: themeColors.border }]}>
+              <View style={[styles.progressBarFill, { width: `${pct * 100}%`, backgroundColor: rarityColor }]} />
+            </View>
+          )}
+          <View style={styles.achRewardRow}>
+            <CoinIcon size={11} color={themeGold} />
+            <Text style={[styles.achRewardText, { color: themeColors.textMuted }]}>{ach.coinsReward}</Text>
+            <Text style={[styles.achSep, { color: themeColors.textDim }]}>·</Text>
+            <Text style={[styles.achRewardText, { color: themeColors.textMuted }]}>{ach.xpReward} XP</Text>
+            {!unlocked && (
+              <Text style={[styles.progText, { color: themeColors.textDim }]}>{prog?.progress ?? 0}/{ach.target}</Text>
+            )}
+          </View>
+        </View>
+        {unlocked && !claimed && (
+          <BouncePressable
+            onPress={() => handleClaimAchievement(ach.id)}
+            style={[styles.claimBtn, { backgroundColor: themeGold }]}
+          >
+            <Text style={styles.claimText}>{claimLabel}</Text>
+          </BouncePressable>
+        )}
+        {claimed && (
+          <Ionicons name="checkmark-circle" size={22} color={Colors.success} />
+        )}
+      </View>
+    );
+  }, [progressById, themeColors, themeGold, lang, claimLabel]);
+
+  const achKeyExtractor = useCallback((item: typeof ACHIEVEMENTS[number]) => item.id, []);
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
@@ -253,73 +327,23 @@ export default function AchievementsScreen() {
           showToast={showToast}
         />
       )}
-      {activeTab !== "playerpath" && (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {activeTab === "achievements" ? (
-          <>
-            {sortedAchievements.map((ach) => {
-              const prog = profile.achievementProgress.find((p) => p.id === ach.id);
-              const pct = prog ? prog.progress / ach.target : 0;
-              const unlocked = prog?.unlocked ?? false;
-              const claimed = prog?.claimedReward ?? false;
-              const rarityColor = RARITY_COLORS_MAP[ach.rarity];
-              const title = achTitle(ach.id, lang) || ach.title;
-              const desc = achDesc(ach.id, lang) || ach.description;
-              return (
-                <View
-                  key={ach.id}
-                  style={[
-                    styles.achCard,
-                    {
-                      backgroundColor: unlocked ? themeColors.card : themeColors.surface,
-                      borderColor: unlocked ? rarityColor + "55" : themeColors.border,
-                    },
-                  ]}
-                >
-                  <View style={[styles.achIconWrap, { backgroundColor: unlocked ? ach.iconColor + "33" : themeColors.card }]}>
-                    {ach.icon === "cash" ? (
-                      <CoinIcon size={22} color={unlocked ? ach.iconColor : themeColors.textDim} />
-                    ) : (
-                      <Ionicons name={ach.icon as any} size={22} color={unlocked ? ach.iconColor : themeColors.textDim} />
-                    )}
-                  </View>
-                  <View style={styles.achContent}>
-                    <View style={styles.achTitleRow}>
-                      <Text style={[styles.achTitle, { color: unlocked ? themeColors.text : themeColors.textMuted }]}>{title}</Text>
-                      {unlocked && !claimed && <View style={styles.claimDot} />}
-                    </View>
-                    <Text style={[styles.achDesc, { color: themeColors.textMuted }]}>{desc}</Text>
-                    {!unlocked && (
-                      <View style={[styles.progressBarBg, { backgroundColor: themeColors.border }]}>
-                        <View style={[styles.progressBarFill, { width: `${pct * 100}%`, backgroundColor: rarityColor }]} />
-                      </View>
-                    )}
-                    <View style={styles.achRewardRow}>
-                      <CoinIcon size={11} color={themeGold} />
-                      <Text style={[styles.achRewardText, { color: themeColors.textMuted }]}>{ach.coinsReward}</Text>
-                      <Text style={[styles.achSep, { color: themeColors.textDim }]}>·</Text>
-                      <Text style={[styles.achRewardText, { color: themeColors.textMuted }]}>{ach.xpReward} XP</Text>
-                      {!unlocked && (
-                        <Text style={[styles.progText, { color: themeColors.textDim }]}>{prog?.progress ?? 0}/{ach.target}</Text>
-                      )}
-                    </View>
-                  </View>
-                  {unlocked && !claimed && (
-                    <BouncePressable
-                      onPress={() => handleClaimAchievement(ach.id)}
-                      style={[styles.claimBtn, { backgroundColor: themeGold }]}
-                    >
-                      <Text style={styles.claimText}>{claimLabel}</Text>
-                    </BouncePressable>
-                  )}
-                  {claimed && (
-                    <Ionicons name="checkmark-circle" size={22} color={Colors.success} />
-                  )}
-                </View>
-              );
-            })}
-          </>
-        ) : activeTab === "battlepass" ? (
+      {activeTab === "achievements" && (
+        <FlatList
+          data={sortedAchievements}
+          keyExtractor={achKeyExtractor}
+          renderItem={renderAchievement}
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={7}
+          removeClippedSubviews={Platform.OS !== "web"}
+          ListFooterComponent={<View style={{ height: 100 }} />}
+        />
+      )}
+      {activeTab === "battlepass" && (
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} removeClippedSubviews={Platform.OS !== "web"}>
+        {true ? (
           <>
             <View style={styles.bpSeasonHeader}>
               <Ionicons name="sparkles" size={14} color={themeGold} />
@@ -529,6 +553,7 @@ export default function AchievementsScreen() {
         <View style={{ height: 100 }} />
       </ScrollView>
       )}
+      {/* end battlepass */}
 
       {toast && (
         <View style={[styles.toast, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
