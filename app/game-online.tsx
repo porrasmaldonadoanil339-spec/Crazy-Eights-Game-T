@@ -828,6 +828,7 @@ export default function OnlineGameScreen() {
   // single-player session in context/GameContext.tsx.
   const cardsPlayedRef = useRef(0);
   const eightsPlayedRef = useRef(0);
+  const cardsDrawnRef = useRef(0);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const cpuThinking = useRef(false);
   const [showYourTurnFlash, setShowYourTurnFlash] = useState(false);
@@ -966,7 +967,7 @@ export default function OnlineGameScreen() {
     const xp = isWin ? mc.xpReward : mc.xpLoss;
     const coins = isWin ? mc.coinsReward : mc.coinsLoss;
     const evId = gameState.eventId ?? null;
-    recordGameResult({ won: isWin, mode, difficulty: "normal", coinsEarned: coins, xpEarned: xp, eightsPlayed: eightsPlayedRef.current, cardsDrawn: 0, isPerfect: false, isComeback: false, gameDurationMs: 60000, eventId: evId });
+    recordGameResult({ won: isWin, mode, difficulty: "normal", coinsEarned: coins, xpEarned: xp, eightsPlayed: eightsPlayedRef.current, cardsDrawn: cardsDrawnRef.current, isPerfect: false, isComeback: false, gameDurationMs: 60000, eventId: evId });
     // Daily challenge progress (event-aware) — mirrors single-player
     // behaviour in app/game.tsx so daily challenges advance from online
     // matches as well, both on win and loss.
@@ -1392,6 +1393,7 @@ export default function OnlineGameScreen() {
     if (!gameState || !isPlaying) return;
     lastActionTime.current = Date.now();
     playCardDraw().catch(() => {});
+    cardsDrawnRef.current += 1;
     if (isOnline) {
       socketRef.current?.emit("draw_card");
       setSelectedCard(null);
@@ -1427,6 +1429,7 @@ export default function OnlineGameScreen() {
     cpuThinking.current = false;
     cardsPlayedRef.current = 0;
     eightsPlayedRef.current = 0;
+    cardsDrawnRef.current = 0;
     resultRecordedRef.current = false;
     rankedUpdatedRef.current = false;
     startGameMusic().catch(() => {});

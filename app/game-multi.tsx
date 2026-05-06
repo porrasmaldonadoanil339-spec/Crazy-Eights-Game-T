@@ -228,6 +228,7 @@ export default function MultiGameScreen() {
   // every seat, so all card plays count toward their daily challenges.
   const cardsPlayedRef = useRef(0);
   const eightsPlayedRef = useRef(0);
+  const cardsDrawnRef = useRef(0);
   const challengeRecordedRef = useRef(false);
 
   const [gameStarted, setGameStarted] = useState(false);
@@ -394,6 +395,7 @@ export default function MultiGameScreen() {
     setGameStarted(true);
     cardsPlayedRef.current = 0;
     eightsPlayedRef.current = 0;
+    cardsDrawnRef.current = 0;
     challengeRecordedRef.current = false;
     eventResultRecordedRef.current = false;
   }, [playerCountSelect, playerNames, activeEventId]);
@@ -460,6 +462,7 @@ export default function MultiGameScreen() {
   const handleDraw = useCallback(() => {
     if (!isPlaying) return;
     playCardDraw().catch(() => {});
+    cardsDrawnRef.current += 1;
     setGameState(multiDraw(gameState));
     setSelectedCard(null);
   }, [gameState, isPlaying]);
