@@ -1412,7 +1412,9 @@ export default function PlayScreen() {
           theme={theme}
           T={T as any}
           onPress={() => {
-            playSound("mode_select").catch(() => {});
+            // Distinct, premium SFX to set the JUGAR CTA apart from
+            // the generic mode-select tap used by the secondary grid.
+            playSound("level_up").catch(() => {});
             startGame("classic", "normal");
             router.push("/game");
           }}
