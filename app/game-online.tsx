@@ -39,6 +39,7 @@ import { playSound } from "@/lib/sounds";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
 import { addStars, getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
 import { updateChallengeProgress } from "@/lib/challenges";
+import BouncePressable from "@/components/BouncePressable";
 
 interface ServerGameState {
   discardTop: Card;
@@ -1615,7 +1616,7 @@ export default function OnlineGameScreen() {
           <View style={[gameStyles.tableInnerRing, { borderRadius: (tableH - 14) / 2 }]} />
           <View style={gameStyles.tableContent}>
             {/* Draw pile */}
-            <Pressable onPress={handleDraw} disabled={!isPlaying} style={gameStyles.drawPileBtn}>
+            <BouncePressable inline onPress={handleDraw} disabled={!isPlaying} style={gameStyles.drawPileBtn}>
               <View style={gameStyles.drawPileStack}>
                 {[2, 1, 0].map(i => (
                   <View key={i} style={[gameStyles.drawCardAbs, { top: -i * 1.5, left: i * 1.5, zIndex: 3 - i }]}>
@@ -1632,7 +1633,7 @@ export default function OnlineGameScreen() {
                   </Text>
                 </View>
               )}
-            </Pressable>
+            </BouncePressable>
 
             <View style={gameStyles.dirArrowWrap}>
               <DirectionArrow direction={gs.direction} />

@@ -9,6 +9,7 @@ import Animated, {
 interface BouncePressableProps extends PressableProps {
   scaleTo?: number;
   children?: React.ReactNode;
+  inline?: boolean;
 }
 
 export default function BouncePressable({
@@ -18,6 +19,7 @@ export default function BouncePressable({
   onPressOut,
   children,
   disabled,
+  inline = false,
   ...rest
 }: BouncePressableProps) {
   const scale = useSharedValue(1);
@@ -27,7 +29,7 @@ export default function BouncePressable({
   }));
 
   return (
-    <Animated.View style={[aStyle, { alignSelf: "stretch" }]}>
+    <Animated.View style={[aStyle, { alignSelf: inline ? "auto" : "stretch" }]}>
       <Pressable
         {...rest}
         disabled={disabled}

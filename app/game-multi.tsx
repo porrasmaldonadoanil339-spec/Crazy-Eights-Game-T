@@ -27,6 +27,7 @@ import { CARD_BACKS } from "@/lib/storeItems";
 import { EmotePanel, EmoteBubble, type Emote } from "@/components/EmotePanel";
 import { getActiveEvent } from "@/components/EventsCard";
 import { updateChallengeProgress } from "@/lib/challenges";
+import BouncePressable from "@/components/BouncePressable";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const PLAYER_COLORS = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
@@ -640,7 +641,7 @@ export default function MultiGameScreen() {
           {/* Table content */}
           <View style={styles.tableContent}>
             {/* Draw pile */}
-            <Pressable onPress={handleDraw} disabled={!isPlaying} style={styles.drawPileBtn}>
+            <BouncePressable inline onPress={handleDraw} disabled={!isPlaying} style={styles.drawPileBtn}>
               <View style={styles.drawPileStack}>
                 {[2, 1, 0].map(i => (
                   <View key={i} style={[styles.drawCardAbs, { top: -i * 1.5, left: i * 1.5, zIndex: 3 - i }]}>
@@ -657,7 +658,7 @@ export default function MultiGameScreen() {
                   </Text>
                 </View>
               )}
-            </Pressable>
+            </BouncePressable>
 
             {/* Direction arrow */}
             <View style={styles.dirArrowWrap}>

@@ -452,6 +452,32 @@ export function PlayingCard({
           ? <CardBack sobj={sobj} backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
           : <CardFront card={card} sobj={sobj} cardColors={cardColors} showBadge={showEffectBadge} badgeVariant={badgeVariant} />
         }
+        {/* Top-edge highlight for premium glossy feel */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.22)", "rgba(255,255,255,0.06)", "rgba(255,255,255,0)"]}
+          locations={[0, 0.4, 1]}
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: 0, left: 0, right: 0,
+            height: Math.round(sobj.h * 0.32),
+            borderTopLeftRadius: sobj.corner,
+            borderTopRightRadius: sobj.corner,
+          }}
+        />
+        {/* Soft inner bottom shadow for depth */}
+        <LinearGradient
+          colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.22)"]}
+          locations={[0, 0.55, 1]}
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            bottom: 0, left: 0, right: 0,
+            height: Math.round(sobj.h * 0.22),
+            borderBottomLeftRadius: sobj.corner,
+            borderBottomRightRadius: sobj.corner,
+          }}
+        />
       </View>
 
       {isPlayable && !isSelected && (

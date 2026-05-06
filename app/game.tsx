@@ -1,4 +1,5 @@
 import { CoinIcon } from "@/components/CoinIcon";
+import BouncePressable from "@/components/BouncePressable";
 import React, { useEffect, useRef, useState } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions, Image, Alert, BackHandler,
@@ -1492,6 +1493,7 @@ export default function GameScreen() {
   const [specialFlashColor, setSpecialFlashColor] = useState<string>("rgba(255,255,255,0.2)");
   const playRippleAnim = useSharedValue(0);
   const discardBounce = useSharedValue(1);
+  const discardRotate = useSharedValue(0);
   const discardGlowAnim = useSharedValue(0);
   const specialBurstAnim = useSharedValue(0);
 
@@ -1501,7 +1503,10 @@ export default function GameScreen() {
   }));
 
   const discardBounceStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: discardBounce.value }],
+    transform: [
+      { scale: discardBounce.value },
+      { rotate: `${discardRotate.value}deg` },
+    ],
   }));
 
   const discardGlowStyle = useAnimatedStyle(() => ({
@@ -1538,6 +1543,13 @@ export default function GameScreen() {
       discardBounce.value = withSequence(
         withTiming(isSpecial ? 1.32 : 1.18, { duration: 90 }),
         withSpring(1, { damping: 6, stiffness: 180 }),
+      );
+      // Subtle landing rotation: slight overshoot then settle.
+      const rotAmt = isSpecial ? 6 : 3.5;
+      const rotDir = Math.random() > 0.5 ? 1 : -1;
+      discardRotate.value = withSequence(
+        withTiming(rotAmt * rotDir, { duration: 90 }),
+        withSpring(0, { damping: 8, stiffness: 160 }),
       );
       discardGlowAnim.value = withSequence(
         withTiming(isSpecial ? 1 : 0.9, { duration: 80 }),
@@ -2396,7 +2408,9 @@ export default function GameScreen() {
       <View style={styles.tableCenter}>
         {/* Pending draw alert */}
         {gameState.pendingDraw > 0 && isPlayerTurn && (
-          <PendingDrawBanner count={gameState.pendingDraw} type={gameState.pendingDrawType} />
+          <Animated.View entering={FadeIn.duration(180)}>
+            <PendingDrawBanner count={gameState.pendingDraw} type={gameState.pendingDrawType} />
+          </Animated.View>
         )}
 
         {/* Current suit indicator */}
@@ -2422,7 +2436,7 @@ export default function GameScreen() {
         {/* Cards row */}
         <View style={styles.cardsRow}>
           {/* Draw pile */}
-          <Pressable onPress={handleDrawPress} disabled={!isPlayerTurn}>
+          <BouncePressable inline onPress={handleDrawPress} disabled={!isPlayerTurn}>
             <View style={styles.drawPile}>
               {[3,2,1,0].map(i => (
                 <View key={i} style={[styles.deckCardAbs, {
@@ -2445,7 +2459,7 @@ export default function GameScreen() {
                 </LinearGradient>
               )}
             </View>
-          </Pressable>
+          </BouncePressable>
 
           {/* VS divider */}
           <View style={styles.vsDivider}>
