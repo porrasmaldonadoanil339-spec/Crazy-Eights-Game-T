@@ -343,8 +343,6 @@ export default function AchievementsScreen() {
       )}
       {activeTab === "battlepass" && (
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} removeClippedSubviews={Platform.OS !== "web"}>
-        {true ? (
-          <>
             <View style={styles.bpSeasonHeader}>
               <Ionicons name="sparkles" size={14} color={themeGold} />
               <Text style={[styles.bpSeasonText, { color: themeGold }]} numberOfLines={1}>{currentSeason.name.toUpperCase()}</Text>
@@ -548,12 +546,9 @@ export default function AchievementsScreen() {
                 </View>
               );
             })}
-          </>
-        ) : null}
         <View style={{ height: 100 }} />
       </ScrollView>
       )}
-      {/* end battlepass */}
 
       {toast && (
         <View style={[styles.toast, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, memo } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image, ActivityIndicator, Alert, BackHandler,
 } from "react-native";
@@ -355,7 +355,7 @@ function FaceDownMini({ angle = 0, backColors, backAccent }: {
 
 
 // ─── CPU opponent zone ────────────────────────────────────────────────────
-function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSkipped, backColors, backAccent }: {
+const CpuZone = memo(function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSkipped, backColors, backAccent }: {
   handCount: number; profile: CpuProfile; color: string;
   isThinking: boolean; isCurrent: boolean; side?: "left" | "right";
   isSkipped?: boolean;
@@ -425,7 +425,7 @@ function CpuZone({ handCount, profile, color, isThinking, isCurrent, side, isSki
       </View>
     </Animated.View>
   );
-}
+});
 
 // ─── Direction arrow ─────────────────────────────────────────────────────
 function DirectionArrow({ direction }: { direction: 1 | -1 }) {

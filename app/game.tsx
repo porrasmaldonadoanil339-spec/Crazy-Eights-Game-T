@@ -1787,12 +1787,13 @@ export default function GameScreen() {
     }
 
     if (emote) {
-      const timeoutId = setTimeout(() => {
+      const showId = setTimeout(() => {
         setCpuEmote(emote);
-        setTimeout(() => setCpuEmote(null), 2500);
       }, 600);
+      const hideId = setTimeout(() => setCpuEmote(null), 600 + 2500);
       prevPendingDraw.current = pendingDraw;
       prevAiHandCount.current = aiCount;
+      return () => { clearTimeout(showId); clearTimeout(hideId); };
     } else {
       prevPendingDraw.current = pendingDraw;
       prevAiHandCount.current = aiCount;

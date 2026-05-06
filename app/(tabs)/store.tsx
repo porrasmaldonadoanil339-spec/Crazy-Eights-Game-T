@@ -1,5 +1,5 @@
 import { CoinIcon } from "@/components/CoinIcon";
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, { useState, useRef, useMemo, useEffect, memo } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
   Platform, Modal, FlatList, Animated, Easing,
@@ -816,6 +816,7 @@ export default function StoreScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={Platform.OS !== "web"}
         contentContainerStyle={{ paddingBottom: bottomPad + 90, width: "100%", maxWidth: 820, alignSelf: "center" }}
       >
         <ChestShop themeColors={theme} themeGold={themeGold} showToast={showToast} T={T} />
@@ -963,7 +964,7 @@ function DailyConfirmModal({
   );
 }
 
-function DailyShopCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
+const DailyShopCard = memo(function DailyShopCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
   item: DailyShopItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void; onInfo: () => void;
 }) {
   const T = useT();
@@ -1007,7 +1008,7 @@ function DailyShopCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
       </LinearGradient>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -1664,7 +1665,7 @@ function AnimatedEmoteIcon({ icon, color, delay, size = 36 }: { icon: IoniconNam
   );
 }
 
-function EmoteShopCard({
+const EmoteShopCard = memo(function EmoteShopCard({
   item, owned, isEquipped, delay, themeColors, onTap,
 }: {
   item: StoreItem;
@@ -1710,7 +1711,7 @@ function EmoteShopCard({
       )}
     </BouncePressable>
   );
-}
+});
 
 function EmotesSection({
   themeColors, themeGold, equippedEmotes, onBuyTap, onEquipToggle,
