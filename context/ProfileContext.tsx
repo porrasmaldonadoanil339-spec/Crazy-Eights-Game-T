@@ -364,6 +364,40 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(t);
   }, []);
 
+  // Grand-prize auto-claim: when the player crosses the XP threshold for the
+  // final battle-pass tier (120), automatically grant the free-track reward
+  // (a legendary chest) so the user does not have to scroll to the very last
+  // tier and tap claim. Premium-track grand prize remains a manual claim so
+  // it stays a "moment" for the player who paid for premium.
+  useEffect(() => {
+    if (!isLoaded) return;
+    const FINAL_TIER = 120;
+    const finalTierDef = BATTLE_PASS_TIERS.find((t) => t.tier === FINAL_TIER);
+    if (!finalTierDef) return;
+    if ((profile.totalXp ?? 0) < finalTierDef.xpRequired) return;
+    if ((profile.claimedBattlePassTiers ?? []).includes(FINAL_TIER)) return;
+    setProfile((p) => {
+      if ((p.claimedBattlePassTiers ?? []).includes(FINAL_TIER)) return p;
+      const free = getFreeReward(FINAL_TIER);
+      let next: PlayerProfile = {
+        ...p,
+        claimedBattlePassTiers: [...(p.claimedBattlePassTiers ?? []), FINAL_TIER],
+        coins: p.coins + free.coins,
+      };
+      if (free.type === "chest" && free.chestType) {
+        const newChest = createChest(free.chestType, "mission");
+        const inv = next.chestInventory ?? [];
+        const ovf = next.chestOverflow ?? [];
+        if (inv.length < CHEST_INVENTORY_LIMIT) {
+          next = { ...next, chestInventory: [...inv, newChest] };
+        } else if (ovf.length < CHEST_OVERFLOW_LIMIT) {
+          next = { ...next, chestOverflow: [...ovf, newChest] };
+        }
+      }
+      return next;
+    });
+  }, [profile.totalXp, profile.claimedBattlePassTiers, isLoaded]);
+
   useEffect(() => {
     (async () => {
       try {
