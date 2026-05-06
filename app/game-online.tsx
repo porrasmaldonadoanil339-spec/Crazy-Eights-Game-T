@@ -23,7 +23,7 @@ import {
 import { useProfile } from "@/context/ProfileContext";
 import {
   playCardFlip, playCardDraw, playButton, playWin, playLose, playChestOpen,
-  stopMusic, startGameMusic, syncSettings
+  playSpeedTick, stopMusic, startGameMusic, syncSettings
 } from "@/lib/audioManager";
 import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
@@ -1178,16 +1178,19 @@ export default function OnlineGameScreen() {
   }, [lobbyPhase, onlineEventConfig]);
   const INACTIVITY_TIMEOUT = onlineEventConfig?.turnSeconds ?? 30;
   const INACTIVITY_SHOW_DELAY = onlineEventConfig?.turnSeconds ? 0 : 20;
+  const speedLastTickSecRef = useRef<number>(-1);
   useEffect(() => {
     const isActive =
       gameState?.phase === "playing" &&
       gameState?.currentPlayerIndex === 0 &&
       lobbyPhase === "game";
+    const isSpeedEvent = !!onlineEventConfig?.turnSeconds;
 
     if (isActive) {
       lastActionTime.current = Date.now();
       setShowInactivityBar(false);
       setInactivityProgress(1);
+      speedLastTickSecRef.current = -1;
       if (inactivityRef.current) clearInterval(inactivityRef.current);
       inactivityRef.current = setInterval(() => {
         const elapsed = (Date.now() - lastActionTime.current) / 1000;
@@ -1195,6 +1198,13 @@ export default function OnlineGameScreen() {
         setInactivityProgress(prog);
         if (elapsed >= INACTIVITY_SHOW_DELAY) {
           setShowInactivityBar(true);
+        }
+        if (isSpeedEvent) {
+          const secsLeft = Math.ceil(prog * INACTIVITY_TIMEOUT);
+          if ((secsLeft === 2 || secsLeft === 1) && secsLeft !== speedLastTickSecRef.current) {
+            speedLastTickSecRef.current = secsLeft;
+            playSpeedTick().catch(() => {});
+          }
         }
         if (prog <= 0 && inactivityRef.current) {
           clearInterval(inactivityRef.current);
