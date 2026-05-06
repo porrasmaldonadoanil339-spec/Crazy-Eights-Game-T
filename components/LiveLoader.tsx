@@ -11,7 +11,7 @@ const SUIT_COLORS = [Colors.gold, "#E53935", "#E53935", Colors.gold];
 
 const TIP_KEYS = ["liveTip1", "liveTip2", "liveTip3", "liveTip4", "liveTip5", "liveTip6", "liveTip7", "liveTip8"] as const;
 
-function FloatingMiniSuit({ index }: { index: number }) {
+function FloatingMiniCard({ index }: { index: number }) {
   const tx = useRef(new Animated.Value(0)).current;
   const ty = useRef(new Animated.Value(0)).current;
   const rot = useRef(new Animated.Value(0)).current;
@@ -36,26 +36,34 @@ function FloatingMiniSuit({ index }: { index: number }) {
 
   const top = 30 + (index * 71) % 240;
   const left = 20 + (index * 53) % (SW - 60);
-  const size = 22 + (index % 3) * 6;
+  const cardW = 28 + (index % 3) * 6;
+  const cardH = Math.round(cardW * 1.45);
   const suit = SUITS[index % SUITS.length];
   const color = SUIT_COLORS[index % SUIT_COLORS.length];
-  const rotInterp = rot.interpolate({ inputRange: [-1, 1], outputRange: ["-12deg", "12deg"] });
+  const rotInterp = rot.interpolate({ inputRange: [-1, 1], outputRange: ["-14deg", "14deg"] });
 
   return (
-    <Animated.Text
+    <Animated.View
       pointerEvents="none"
       style={{
         position: "absolute",
         top, left,
-        fontSize: size,
-        color,
-        opacity: 0.18,
-        fontFamily: "Nunito_700Bold",
+        width: cardW,
+        height: cardH,
+        borderRadius: 5,
+        backgroundColor: "rgba(255,255,255,0.06)",
+        borderWidth: 1,
+        borderColor: "rgba(212,175,55,0.22)",
+        opacity: 0.22,
+        alignItems: "center",
+        justifyContent: "center",
         transform: [{ translateX: tx }, { translateY: ty }, { rotate: rotInterp }],
       }}
     >
-      {suit}
-    </Animated.Text>
+      <Text style={{ fontSize: cardW * 0.55, color, fontFamily: "Nunito_700Bold", lineHeight: cardW * 0.65 }}>
+        {suit}
+      </Text>
+    </Animated.View>
   );
 }
 
@@ -90,7 +98,7 @@ export function FloatingCardField({ count = 6 }: { count?: number }) {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       {Array.from({ length: count }).map((_, i) => (
-        <FloatingMiniSuit key={i} index={i} />
+        <FloatingMiniCard key={i} index={i} />
       ))}
     </View>
   );

@@ -744,7 +744,7 @@ function TutorialGate() {
     if (profile.tutorialSeen) return;
     if ((profile.showTutorials ?? true) === false) return;
     // Only auto-launch tutorial when user is on the main tabs (not mid-game/login)
-    const inTabs = segments[0] === "(tabs)" as any;
+    const inTabs = segments[0] === "(tabs)";
     if (!inTabs) return;
     firedRef.current = true;
     const t = setTimeout(() => {
