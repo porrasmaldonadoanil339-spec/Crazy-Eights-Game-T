@@ -1321,7 +1321,12 @@ export default function GameScreen() {
   const [cpuEmote, setCpuEmote] = useState<Emote | null>(null);
   const [cpuChatter, setCpuChatter] = useState<string | null>(null);
   const cpuChatterTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cpuChatterShowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastChatterTime = useRef<number>(0);
+  useEffect(() => () => {
+    if (cpuChatterTimer.current) clearTimeout(cpuChatterTimer.current);
+    if (cpuChatterShowTimer.current) clearTimeout(cpuChatterShowTimer.current);
+  }, []);
   const [showLastCardBanner, setShowLastCardBanner] = useState(false);
   const [activeChallenges, setActiveChallenges] = useState<Challenge[]>([]);
   const [showLightningBanner, setShowLightningBanner] = useState(false);
@@ -1773,7 +1778,8 @@ export default function GameScreen() {
       const txt = getCpuPhrase(phraseEvent, lang);
       lastChatterTime.current = Date.now();
       if (cpuChatterTimer.current) clearTimeout(cpuChatterTimer.current);
-      setTimeout(() => {
+      if (cpuChatterShowTimer.current) clearTimeout(cpuChatterShowTimer.current);
+      cpuChatterShowTimer.current = setTimeout(() => {
         setCpuChatter(txt);
         if (sfxEvent && !muteCpuEmotes) playSound(sfxEvent).catch(() => {});
       }, 700);
