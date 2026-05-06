@@ -823,6 +823,11 @@ export default function OnlineGameScreen() {
 
   // Game state
   const [gameState, setGameState] = useState<MultiGameState | null>(null);
+  // Daily-challenge counters scoped to the local player's actions only.
+  // These mirror `cardsPlayedThisGame` / `eightsPlayedThisGame` from the
+  // single-player session in context/GameContext.tsx.
+  const cardsPlayedRef = useRef(0);
+  const eightsPlayedRef = useRef(0);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const cpuThinking = useRef(false);
   const [showYourTurnFlash, setShowYourTurnFlash] = useState(false);
@@ -961,13 +966,16 @@ export default function OnlineGameScreen() {
     const xp = isWin ? mc.xpReward : mc.xpLoss;
     const coins = isWin ? mc.coinsReward : mc.coinsLoss;
     const evId = gameState.eventId ?? null;
-    recordGameResult({ won: isWin, mode, difficulty: "normal", coinsEarned: coins, xpEarned: xp, eightsPlayed: 0, cardsDrawn: 0, isPerfect: false, isComeback: false, gameDurationMs: 60000, eventId: evId });
+    recordGameResult({ won: isWin, mode, difficulty: "normal", coinsEarned: coins, xpEarned: xp, eightsPlayed: eightsPlayedRef.current, cardsDrawn: 0, isPerfect: false, isComeback: false, gameDurationMs: 60000, eventId: evId });
+    // Daily challenge progress (event-aware) — mirrors single-player
+    // behaviour in app/game.tsx so daily challenges advance from online
+    // matches as well, both on win and loss.
     if (isWin) {
-      // Daily challenge progress (event-aware) — mirrors single-player
-      // behaviour in app/game.tsx so event-specific challenges advance from
-      // online wins as well.
       updateChallengeProgress("wins", 1, mode, false, evId);
     }
+    updateChallengeProgress("play_mode", 1, mode, false, evId);
+    updateChallengeProgress("cards_played", cardsPlayedRef.current, mode, false, evId);
+    updateChallengeProgress("specials", eightsPlayedRef.current, mode, false, evId);
     if (isWin && evId) {
       updateAchievementProgress("event_any_win", 1);
       if (evId === "speed")    updateAchievementProgress("event_speed_win", 1);
@@ -1311,6 +1319,8 @@ export default function OnlineGameScreen() {
         lastActionTime.current = Date.now();
         setShowInactivityBar(false);
         playCardFlip().catch(() => {});
+        cardsPlayedRef.current += 1;
+        if (card.rank === "8") eightsPlayedRef.current += 1;
         socketRef.current?.emit("play_card", { card });
         if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
           setShowEffect(true);
@@ -1329,6 +1339,8 @@ export default function OnlineGameScreen() {
       lastActionTime.current = Date.now();
       setShowInactivityBar(false);
       playCardFlip().catch(() => {});
+      cardsPlayedRef.current += 1;
+      if (card.rank === "8") eightsPlayedRef.current += 1;
       if (card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0)) {
         setGameState(multiPlayCard(gameState, card));
         if (profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
@@ -1403,6 +1415,9 @@ export default function OnlineGameScreen() {
     setGameState(gs);
     setSelectedCard(null);
     cpuThinking.current = false;
+    cardsPlayedRef.current = 0;
+    eightsPlayedRef.current = 0;
+    resultRecordedRef.current = false;
     rankedUpdatedRef.current = false;
     startGameMusic().catch(() => {});
     // Re-arm the event intro banner so it appears for the new match too.

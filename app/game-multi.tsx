@@ -224,6 +224,11 @@ export default function MultiGameScreen() {
   const { profile, level: playerLevel, updateAchievementProgress, recordEventWin } = useProfile();
   const activeEventId = React.useMemo(() => getActiveEvent(playerLevel)?.id ?? null, [playerLevel]);
   const eventResultRecordedRef = useRef(false);
+  // Daily-challenge counters. In pass-and-play, the device owner operates
+  // every seat, so all card plays count toward their daily challenges.
+  const cardsPlayedRef = useRef(0);
+  const eightsPlayedRef = useRef(0);
+  const challengeRecordedRef = useRef(false);
 
   const [gameStarted, setGameStarted] = useState(false);
   const [playerCountSelect, setPlayerCountSelect] = useState(3);
@@ -234,6 +239,23 @@ export default function MultiGameScreen() {
       stopMusic().catch(() => {});
     }
   }, [gameState.phase]);
+
+  // ─── Record daily-challenge progress for pass-and-play matches ──────────
+  // Counts every card played on this device (the device owner operates
+  // each seat) so daily challenges like "Play 50 cards" / "Play 10 eights"
+  // / "Play 5 matches today" advance from local pass-and-play too. Mirrors
+  // the win/lose blocks in app/game.tsx around lines 1958-1982.
+  useEffect(() => {
+    if (gameState.phase !== "game_over") return;
+    if (challengeRecordedRef.current) return;
+    challengeRecordedRef.current = true;
+    const evId = gameState.eventId ?? null;
+    // Pass-and-play has no dedicated mode id, so mode-filtered challenges
+    // are skipped while event-filtered ones still progress.
+    updateChallengeProgress("play_mode", 1, undefined, false, evId);
+    updateChallengeProgress("cards_played", cardsPlayedRef.current, undefined, false, evId);
+    updateChallengeProgress("specials", eightsPlayedRef.current, undefined, false, evId);
+  }, [gameState.phase, gameState.eventId]);
 
   // ─── Record event-win achievement progress for pass-and-play wins ────────
   // In local pass-and-play, the device owner is participating, so a win by
@@ -370,6 +392,10 @@ export default function MultiGameScreen() {
     const selectedNames = playerNames.slice(0, playerCountSelect);
     setGameState(initMultiGame(selectedNames, 8, activeEventId));
     setGameStarted(true);
+    cardsPlayedRef.current = 0;
+    eightsPlayedRef.current = 0;
+    challengeRecordedRef.current = false;
+    eventResultRecordedRef.current = false;
   }, [playerCountSelect, playerNames, activeEventId]);
 
   // Event mode intro banner (shows for ~3.2s once a match with an active event begins)
@@ -414,6 +440,7 @@ export default function MultiGameScreen() {
     if (selectedCard?.id === card.id) {
       if (card.rank === "8" || (card.rank === "Joker" && gameState.pendingDraw === 0)) return;
       playCardFlip().catch(() => {});
+      cardsPlayedRef.current += 1;
       setGameState(multiPlayCard(gameState, card));
       setSelectedCard(null);
     } else {
@@ -424,6 +451,8 @@ export default function MultiGameScreen() {
   const handleChooseSuit = useCallback((suit: Suit) => {
     if (!selectedCard) return;
     playCardFlip().catch(() => {});
+    cardsPlayedRef.current += 1;
+    if (selectedCard.rank === "8") eightsPlayedRef.current += 1;
     setGameState(multiPlayCard(gameState, selectedCard, suit));
     setSelectedCard(null);
   }, [gameState, selectedCard]);
