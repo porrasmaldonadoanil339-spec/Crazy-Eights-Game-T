@@ -377,9 +377,47 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFul
   );
 }
 
+function TitleSparkle({ x, y, size, delay }: { x: number; y: number; size: number; delay: number }) {
+  const op = useSharedValue(0);
+  const sc = useSharedValue(0.6);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      op.value = withRepeat(
+        withSequence(
+          withTiming(0.85, { duration: 1100, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.15, { duration: 1100, easing: Easing.inOut(Easing.sin) })
+        ), -1, true
+      );
+      sc.value = withRepeat(
+        withSequence(
+          withTiming(1.1, { duration: 1100, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.7, { duration: 1100, easing: Easing.inOut(Easing.sin) })
+        ), -1, true
+      );
+    }, delay);
+    return () => clearTimeout(t);
+  }, []);
+  const aStyle = useAnimatedStyle(() => ({
+    opacity: op.value,
+    transform: [{ scale: sc.value }],
+  }));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        { position: "absolute", left: "50%", top: "50%", marginLeft: x, marginTop: y },
+        aStyle,
+      ]}
+    >
+      <Ionicons name="sparkles" size={size} color="#F4D03F" />
+    </Animated.View>
+  );
+}
+
 function PokerTitle() {
   const theme = useTheme();
   const glowAnim = useSharedValue(0.6);
+  const haloAnim = useSharedValue(0.25);
   useEffect(() => {
     glowAnim.value = withRepeat(
       withSequence(
@@ -387,8 +425,18 @@ function PokerTitle() {
         withTiming(0.6, { duration: 1800, easing: Easing.inOut(Easing.sin) })
       ), -1
     );
+    haloAnim.value = withRepeat(
+      withSequence(
+        withTiming(0.55, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.2, { duration: 2400, easing: Easing.inOut(Easing.sin) })
+      ), -1, true
+    );
   }, []);
   const glowStyle = useAnimatedStyle(() => ({ opacity: glowAnim.value }));
+  const haloStyle = useAnimatedStyle(() => ({
+    opacity: haloAnim.value,
+    transform: [{ scale: 0.95 + glowAnim.value * 0.1 }],
+  }));
   return (
     <View style={styles.titleWrap}>
       <View style={styles.titleSuits}>
@@ -397,10 +445,281 @@ function PokerTitle() {
         <Text style={styles.suitRed}>♦</Text>
         <Text style={[styles.suitBlack, { color: theme.textMuted }]}>♣</Text>
       </View>
-      <Animated.View style={glowStyle}>
-        <Text style={styles.mainTitle}>OCHO LOCOS</Text>
-      </Animated.View>
+      <View style={styles.titleStage}>
+        <Animated.View pointerEvents="none" style={[styles.titleHalo, haloStyle]} />
+        <TitleSparkle x={-118} y={-4} size={11} delay={0} />
+        <TitleSparkle x={108} y={-8} size={9} delay={420} />
+        <TitleSparkle x={-96} y={26} size={8} delay={1100} />
+        <TitleSparkle x={96} y={30} size={10} delay={1620} />
+        <Animated.View style={glowStyle}>
+          <Text style={styles.mainTitle}>OCHO LOCOS</Text>
+        </Animated.View>
+      </View>
       <Text style={styles.titleTagline}>CRAZY EIGHTS · CASINO EDITION</Text>
+    </View>
+  );
+}
+
+// ─── Per-mode personality ────────────────────────────────────────────────────
+type ModeFlair = "warm" | "lightning" | "tournament" | "challenge" | null;
+const MODE_PERSONALITY: Record<string, { glowIntensity: number; pulseMs: number; flair: ModeFlair }> = {
+  classic:          { glowIntensity: 0.55, pulseMs: 1400, flair: "warm" },
+  lightning:        { glowIntensity: 0.50, pulseMs: 700,  flair: "lightning" },
+  tournament:       { glowIntensity: 0.55, pulseMs: 1800, flair: "tournament" },
+  challenge:        { glowIntensity: 0.45, pulseMs: 1600, flair: "challenge" },
+  practice:         { glowIntensity: 0.22, pulseMs: 2400, flair: null },
+  fichas_challenge: { glowIntensity: 0.35, pulseMs: 1800, flair: null },
+};
+
+function ModeCard({
+  mode, idx, isLastAlone, disabled, onPress, theme, lang,
+}: {
+  mode: any; idx: number; isLastAlone: boolean; disabled: boolean;
+  onPress: () => void; theme: any; lang: Lang;
+}) {
+  const T = useT();
+  const personality = MODE_PERSONALITY[mode.id] ?? { glowIntensity: 0.25, pulseMs: 1800, flair: null };
+  const pulse = useSharedValue(0);
+  const entry = useSharedValue(0);
+
+  useEffect(() => {
+    const startDelay = setTimeout(() => {
+      entry.value = withTiming(1, { duration: 360, easing: Easing.out(Easing.cubic) });
+      pulse.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: personality.pulseMs, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0, { duration: personality.pulseMs, easing: Easing.inOut(Easing.sin) })
+        ), -1, true
+      );
+    }, idx * 55);
+    return () => clearTimeout(startDelay);
+  }, []);
+
+  const entryStyle = useAnimatedStyle(() => ({
+    opacity: entry.value,
+    transform: [{ translateY: (1 - entry.value) * 14 }],
+  }));
+  const wrapGlowStyle = useAnimatedStyle(() => ({
+    shadowColor: mode.color,
+    shadowOpacity: personality.glowIntensity * (0.45 + pulse.value * 0.55),
+    shadowRadius: 6 + pulse.value * 10,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: Math.round(3 + pulse.value * 5),
+  }));
+  const accentStyle = useAnimatedStyle(() => ({
+    opacity: 0.18 + pulse.value * 0.62,
+  }));
+  const tournamentRingStyle = useAnimatedStyle(() => ({
+    opacity: 0.25 + pulse.value * 0.55,
+    transform: [{ scale: 0.98 + pulse.value * 0.04 }],
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        isLastAlone ? styles.modeCardWrapFull : styles.modeCardWrap,
+        entryStyle,
+        wrapGlowStyle,
+      ]}
+    >
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        style={({ pressed }) => [
+          styles.modeCard,
+          isLastAlone && styles.modeCardFull,
+          pressed && styles.modeCardPressed,
+          disabled && { opacity: 0.45 },
+        ]}
+      >
+        <LinearGradient
+          colors={[mode.color + "2E", mode.color + "0A", "transparent"]}
+          style={[styles.modeGrad, { borderColor: mode.color + "55", backgroundColor: theme.surface }]}
+        >
+          {/* Per-mode personality flair (subtle, behind content) */}
+          {personality.flair === "lightning" && !disabled && (
+            <>
+              <Animated.View pointerEvents="none" style={[styles.lightningSpark, { top: 10, right: 10 }, accentStyle]}>
+                <Ionicons name="flash" size={12} color={mode.color} />
+              </Animated.View>
+              <Animated.View pointerEvents="none" style={[styles.lightningSpark, { bottom: 36, left: 10 }, accentStyle]}>
+                <Ionicons name="flash" size={9} color={mode.color} />
+              </Animated.View>
+            </>
+          )}
+          {personality.flair === "tournament" && !disabled && (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.tournamentRing,
+                { borderColor: mode.color },
+                tournamentRingStyle,
+              ]}
+            />
+          )}
+          {personality.flair === "challenge" && !disabled && (
+            <Animated.View pointerEvents="none" style={[styles.challengeAura, accentStyle]}>
+              <LinearGradient
+                colors={[mode.color + "55", mode.color + "00"]}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+              />
+            </Animated.View>
+          )}
+
+          {mode.isNew && (
+            <LinearGradient colors={[Colors.red, "#a01a15"]} style={styles.newBadge}>
+              <Text style={styles.newBadgeText}>{T("newBadge") as string}</Text>
+            </LinearGradient>
+          )}
+          <View style={[styles.modeIconWrap, { backgroundColor: mode.color + "25", borderColor: mode.color + "44", borderWidth: 1 }]}>
+            <Ionicons name={mode.icon as any} size={24} color={mode.color} />
+          </View>
+          <Text style={[styles.modeName, { color: mode.color }]}>
+            {mode.isFichas ? mode.name : (getModeName(mode.id, lang) || mode.name)}
+          </Text>
+          <Text style={[styles.modeDesc, { color: theme.textMuted }]} numberOfLines={2}>
+            {mode.isFichas ? mode.description : (getModeDesc(mode.id, lang) || mode.description)}
+          </Text>
+          <View style={styles.modeFooter}>
+            {mode.isFichas ? (
+              <View style={styles.modeReward}>
+                <Ionicons name="diamond" size={11} color="#3498DB" />
+                <Text style={[styles.modeRewardText, { color: "#3498DB" }]}>{mode.fichasRemaining}/3</Text>
+              </View>
+            ) : (
+              <View style={styles.modeReward}>
+                <CoinIcon size={11} color={Colors.gold} />
+                <Text style={[styles.modeRewardText, { color: theme.gold }]}>{mode.coinsReward}</Text>
+              </View>
+            )}
+            {mode.hasDifficulty && (
+              <Ionicons name="chevron-forward" size={12} color={mode.color + "88"} />
+            )}
+          </View>
+        </LinearGradient>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+function PrimaryPlayCard({ onPress, theme, T }: { onPress: () => void; theme: any; T: (k: any) => string }) {
+  const pulse = useSharedValue(0);
+  const entry = useSharedValue(0);
+  useEffect(() => {
+    entry.value = withTiming(1, { duration: 380, easing: Easing.out(Easing.cubic) });
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 1100, easing: Easing.inOut(Easing.sin) })
+      ), -1, true
+    );
+  }, []);
+  const entryStyle = useAnimatedStyle(() => ({
+    opacity: entry.value,
+    transform: [{ translateY: (1 - entry.value) * 16 }],
+  }));
+  const glowStyle = useAnimatedStyle(() => ({
+    shadowColor: "#D4AF37",
+    shadowOpacity: 0.55 + pulse.value * 0.35,
+    shadowRadius: 12 + pulse.value * 14,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: Math.round(8 + pulse.value * 6),
+  }));
+  const arrowStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: pulse.value * 4 }],
+  }));
+  const playLabel = (T("play") || "JUGAR").toString().toUpperCase();
+  return (
+    <Animated.View style={[styles.primaryPlayWrap, entryStyle, glowStyle]}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.primaryPlayPressable,
+          pressed && { transform: [{ scale: 0.98 }], opacity: 0.92 },
+        ]}
+      >
+        <LinearGradient
+          colors={["#3a1f00", "#5a3000", "#3a1f00"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.primaryPlayGrad}
+        >
+          <LinearGradient
+            colors={["#D4AF3722", "transparent"]}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <View style={styles.primaryPlayIconWrap}>
+            <Ionicons name="play" size={26} color="#1a0a00" />
+          </View>
+          <View style={{ flex: 1, marginLeft: 14 }}>
+            <Text style={styles.primaryPlayLabel}>{playLabel}</Text>
+            <Text style={styles.primaryPlaySub}>{T("classicSubtitle") || "Modo Clásico · Reglas completas"}</Text>
+          </View>
+          <View style={styles.primaryPlayReward}>
+            <CoinIcon size={13} color="#FFE082" />
+            <Text style={styles.primaryPlayRewardText}>+10</Text>
+          </View>
+          <Animated.View style={arrowStyle}>
+            <Ionicons name="chevron-forward" size={22} color="#FFE082" />
+          </Animated.View>
+        </LinearGradient>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+function ModesGridSection({
+  lang, theme, fichasRemaining, onFichasPress, onModePress,
+}: {
+  lang: Lang;
+  theme: any;
+  fichasRemaining: number;
+  onFichasPress: () => void;
+  onModePress: (id: GameModeId) => void;
+}) {
+  const fichasMode: any = {
+    id: "fichas_challenge",
+    name: lang === "en" ? "Gem Challenge" : lang === "pt" ? "Desafio de Fichas" : "Reto de Fichas",
+    description: lang === "en" ? "Win Gems! 3 plays per day." : lang === "pt" ? "Ganhe Fichas! 3 partidas por dia." : "¡Gana Fichas! 3 partidas al día.",
+    icon: "diamond",
+    color: "#3498DB",
+    coinsReward: 0,
+    hasDifficulty: false,
+    isNew: true,
+    isFichas: true,
+    fichasRemaining,
+  };
+  const gridModes: any[] = [...GAME_MODES.filter((m) => m.id !== "classic"), fichasMode];
+  return (
+    <View style={styles.modesGrid}>
+      {gridModes.map((mode, idx, arr) => {
+        const isLastAlone = idx === arr.length - 1 && arr.length % 2 !== 0;
+        const disabled = !!mode.isFichas && fichasRemaining <= 0;
+        const handlePress = () => {
+          if (mode.isFichas) {
+            if (disabled) return;
+            onFichasPress();
+          } else {
+            onModePress(mode.id);
+          }
+        };
+        return (
+          <ModeCard
+            key={mode.id}
+            mode={mode}
+            idx={idx}
+            isLastAlone={isLastAlone}
+            disabled={disabled}
+            onPress={handlePress}
+            theme={theme}
+            lang={lang}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -1088,82 +1407,28 @@ export default function PlayScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>{T("gameModes")}</Text>
         </View>
 
-        <View style={styles.modesGrid}>
-          {(() => {
-            const fichasRemaining = fichasModePlaysRemaining();
-            const fichasMode = {
-              id: "fichas_challenge" as any,
-              name: lang === "en" ? "Gem Challenge" : lang === "pt" ? "Desafio de Fichas" : "Reto de Fichas",
-              description: lang === "en" ? "Win Gems! 3 plays per day." : lang === "pt" ? "Ganhe Fichas! 3 partidas por dia." : "¡Gana Fichas! 3 partidas al día.",
-              icon: "diamond",
-              color: "#3498DB",
-              coinsReward: 0,
-              hasDifficulty: false,
-              isNew: true,
-              isFichas: true,
-              fichasRemaining,
-            };
-            const allModes: any[] = [...GAME_MODES, fichasMode];
-            return allModes.map((mode, idx, arr) => {
-              const isLastAlone = idx === arr.length - 1 && arr.length % 2 !== 0;
-              const disabled = mode.isFichas && fichasRemaining <= 0;
-              const onPress = () => {
-                if (mode.isFichas) {
-                  if (disabled) return;
-                  recordFichasModePlay();
-                  startGame("classic" as any, "normal");
-                  router.push("/game");
-                } else if (mode.id === "classic") {
-                  playSound("mode_select").catch(() => {});
-                  startGame("classic", "normal");
-                  router.push("/game");
-                } else {
-                  handleModePress(mode.id);
-                }
-              };
-              return (
-                <Pressable
-                  key={mode.id}
-                  onPress={onPress}
-                  disabled={disabled}
-                  style={({ pressed }) => [styles.modeCard, isLastAlone && styles.modeCardFull, pressed && styles.modeCardPressed, disabled && { opacity: 0.45 }]}
-                >
-                  <LinearGradient
-                    colors={[mode.color + "28", mode.color + "08", "transparent"]}
-                    style={[styles.modeGrad, { borderColor: mode.color + "50", backgroundColor: theme.surface }]}
-                  >
-                    {mode.isNew && (
-                      <LinearGradient colors={[Colors.red, "#a01a15"]} style={styles.newBadge}>
-                        <Text style={styles.newBadgeText}>{T("newBadge") as string}</Text>
-                      </LinearGradient>
-                    )}
-                    <View style={[styles.modeIconWrap, { backgroundColor: mode.color + "25" }]}>
-                      <Ionicons name={mode.icon as any} size={24} color={mode.color} />
-                    </View>
-                    <Text style={[styles.modeName, { color: mode.color }]}>{mode.isFichas ? mode.name : (getModeName(mode.id, lang) || mode.name)}</Text>
-                    <Text style={[styles.modeDesc, { color: theme.textMuted }]} numberOfLines={2}>{mode.isFichas ? mode.description : (getModeDesc(mode.id, lang) || mode.description)}</Text>
-                    <View style={styles.modeFooter}>
-                      {mode.isFichas ? (
-                        <View style={styles.modeReward}>
-                          <Ionicons name="diamond" size={11} color="#3498DB" />
-                          <Text style={[styles.modeRewardText, { color: "#3498DB" }]}>{fichasRemaining}/3</Text>
-                        </View>
-                      ) : (
-                        <View style={styles.modeReward}>
-                          <CoinIcon size={11} color={Colors.gold} />
-                          <Text style={[styles.modeRewardText, { color: theme.gold }]}>{mode.coinsReward}</Text>
-                        </View>
-                      )}
-                      {mode.hasDifficulty && (
-                        <Ionicons name="chevron-forward" size={12} color={mode.color + "88"} />
-                      )}
-                    </View>
-                  </LinearGradient>
-                </Pressable>
-              );
-            });
-          })()}
-        </View>
+        {/* Premium PLAY card — primary CTA, plays Classic mode directly */}
+        <PrimaryPlayCard
+          theme={theme}
+          T={T as any}
+          onPress={() => {
+            playSound("mode_select").catch(() => {});
+            startGame("classic", "normal");
+            router.push("/game");
+          }}
+        />
+
+        <ModesGridSection
+          lang={lang as Lang}
+          theme={theme}
+          fichasRemaining={fichasModePlaysRemaining()}
+          onFichasPress={() => {
+            recordFichasModePlay();
+            startGame("classic" as any, "normal");
+            router.push("/game");
+          }}
+          onModePress={handleModePress}
+        />
 
         {/* Multiplayer section */}
         <View style={styles.sectionHeader}>
@@ -1647,15 +1912,55 @@ const styles = StyleSheet.create({
   titleSuits: { flexDirection: "row", gap: 12, marginBottom: 4 },
   suitRed: { fontSize: 22, color: "#C0392B", opacity: 0.8 },
   suitBlack: { fontSize: 22, color: Colors.textMuted, opacity: 0.8 },
+  titleStage: { alignItems: "center", justifyContent: "center", position: "relative", paddingHorizontal: 12 },
+  titleHalo: {
+    position: "absolute",
+    width: 280, height: 70, borderRadius: 35,
+    backgroundColor: "rgba(212,175,55,0.20)",
+  },
   mainTitle: {
     fontFamily: "Nunito_800ExtraBold", fontSize: 36, color: Colors.gold,
     letterSpacing: 5,
-    textShadowColor: "rgba(212,175,55,0.5)", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 20,
+    textShadowColor: "rgba(212,175,55,0.65)", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 24,
   },
   titleTagline: {
     fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim,
     letterSpacing: 3, textTransform: "uppercase",
   },
+
+  // Premium PLAY card (primary CTA)
+  primaryPlayWrap: {
+    borderRadius: 18, marginBottom: 14,
+    shadowColor: "#D4AF37",
+    shadowOffset: { width: 0, height: 4 },
+  },
+  primaryPlayPressable: { borderRadius: 18, overflow: "hidden" },
+  primaryPlayGrad: {
+    flexDirection: "row", alignItems: "center",
+    paddingVertical: 18, paddingHorizontal: 18, gap: 4,
+    borderWidth: 1.5, borderColor: "#D4AF3788", borderRadius: 18,
+  },
+  primaryPlayIconWrap: {
+    width: 54, height: 54, borderRadius: 27,
+    backgroundColor: "#D4AF37",
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: "#FFE082",
+  },
+  primaryPlayLabel: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 24, color: "#FFE082",
+    letterSpacing: 4, lineHeight: 28,
+  },
+  primaryPlaySub: {
+    fontFamily: "Nunito_700Bold", fontSize: 11, color: "#D4AF37BB",
+    letterSpacing: 0.4, marginTop: 2,
+  },
+  primaryPlayReward: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    backgroundColor: "rgba(212,175,55,0.18)", borderRadius: 10,
+    paddingHorizontal: 8, paddingVertical: 4, marginRight: 6,
+    borderWidth: 1, borderColor: "#D4AF3744",
+  },
+  primaryPlayRewardText: { fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#FFE082" },
 
   // Divider
   suitDivider: { flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 8 },
@@ -1688,14 +1993,28 @@ const styles = StyleSheet.create({
   // Mode grid — justify-content: space-between guarantees clean 2-column layout
   // on every screen size; the 47.5% width leaves a small gutter without ever
   // overflowing on narrow phones (320pt iPhone SE → 152pt per card).
-  modesGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 10 },
-  modeCard: { width: "48.5%", borderRadius: 16, overflow: "hidden" },
+  modesGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 12 },
+  modeCardWrap: { width: "48.5%", borderRadius: 16, shadowOffset: { width: 0, height: 0 } },
+  modeCardWrapFull: { width: "100%", borderRadius: 16, shadowOffset: { width: 0, height: 0 } },
+  modeCard: { width: "100%", borderRadius: 16, overflow: "hidden" },
   modeCardFull: { width: "100%", alignSelf: "center" },
   modeCardPressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
   modeGrad: {
     padding: 14, minHeight: 150, justifyContent: "space-between", alignItems: "center",
     borderWidth: 1.5, borderRadius: 16,
     backgroundColor: "rgba(255,255,255,0.02)",
+    overflow: "hidden",
+  },
+  // Per-mode personality accents
+  lightningSpark: { position: "absolute" },
+  tournamentRing: {
+    position: "absolute", top: 4, left: 4, right: 4, bottom: 4,
+    borderRadius: 14, borderWidth: 1.5,
+  },
+  challengeAura: {
+    position: "absolute", top: 0, left: 0, right: 0, height: 60,
+    borderTopLeftRadius: 14, borderTopRightRadius: 14,
+    overflow: "hidden",
   },
   newBadge: {
     position: "absolute", top: 8, right: 8,
