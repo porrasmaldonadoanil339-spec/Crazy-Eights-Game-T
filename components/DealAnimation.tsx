@@ -187,14 +187,29 @@ function DealCard({ index, totalCards, target, dealIndex, backColors, backAccent
     const targetX = (index - (totalCards - 1) / 2) * spreadFactor;
     const targetY = target === "player" ? SH * 0.28 : -SH * 0.28;
     const finalRotate = (index - (totalCards - 1) / 2) * 4;
+    // Arc trajectory: lift over a midpoint before settling — gives the card a
+    // sense of weight as if dealt by hand.
+    const arcSign = target === "player" ? -1 : 1;
+    const arcPeak = arcSign * (SH * 0.10 + Math.random() * 18);
+    const flightMs = 360;
 
     setTimeout(() => { playSound("card_deal").catch(() => {}); }, delay);
 
     opacity.value = withDelay(delay, withTiming(1, { duration: 80 }));
     scale.value = withDelay(delay, withSpring(1, { damping: 12, stiffness: 130 }));
     x.value = withDelay(delay, withSpring(targetX, { damping: 15, stiffness: 110 }));
-    y.value = withDelay(delay, withSpring(targetY, { damping: 15, stiffness: 110 }));
-    rotate.value = withDelay(delay, withSpring(finalRotate, { damping: 12 }));
+    // Two-phase Y: rise to arc peak (relative to mid-trajectory), then settle to target.
+    const midY = (targetY + arcPeak) / 2;
+    y.value = withDelay(delay, withSequence(
+      withTiming(midY, { duration: flightMs * 0.55, easing: Easing.out(Easing.quad) }),
+      withSpring(targetY, { damping: 14, stiffness: 130 }),
+    ));
+    // Slight rotational overshoot before settling at finalRotate.
+    const spin = (Math.random() > 0.5 ? 1 : -1) * (12 + Math.random() * 10);
+    rotate.value = withDelay(delay, withSequence(
+      withTiming(spin, { duration: flightMs * 0.6, easing: Easing.out(Easing.quad) }),
+      withSpring(finalRotate, { damping: 12, stiffness: 140 }),
+    ));
   }, []);
 
   const style = useAnimatedStyle(() => ({

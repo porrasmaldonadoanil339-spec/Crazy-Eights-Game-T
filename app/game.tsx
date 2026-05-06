@@ -2337,7 +2337,8 @@ export default function GameScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Pressable
+        <BouncePressable
+          inline
           onPress={() => {
             playSound("button_press").catch(() => {});
             setShowExitConfirm(true);
@@ -2345,7 +2346,7 @@ export default function GameScreen() {
           style={styles.backBtn}
         >
           <Ionicons name="arrow-back" size={20} color={Colors.gold} />
-        </Pressable>
+        </BouncePressable>
         <View style={styles.headerCenter}>
           {currentModeConfig && (
             <View style={[styles.modePill, { borderColor: currentModeConfig.color + "44" }]}>
@@ -2383,9 +2384,9 @@ export default function GameScreen() {
             </Text>
           </View>
           {/* Hamburger menu */}
-          <Pressable onPress={() => { playSound("button_press").catch(() => {}); openGameMenu(); }} style={styles.menuHamburger}>
+          <BouncePressable inline onPress={() => { playSound("button_press").catch(() => {}); openGameMenu(); }} style={styles.menuHamburger}>
             <Ionicons name="menu" size={18} color={Colors.gold} />
-          </Pressable>
+          </BouncePressable>
           <View style={styles.deckInfo}>
             <Ionicons name="layers" size={13} color={Colors.textDim} />
             <Text style={styles.deckCount}>{gameState.drawPile.length}</Text>

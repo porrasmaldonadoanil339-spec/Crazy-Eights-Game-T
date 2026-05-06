@@ -1539,9 +1539,9 @@ export default function OnlineGameScreen() {
 
       {/* Header */}
       <View style={[gameStyles.header, { height: headerH }]}>
-        <Pressable onPress={() => { playButton().catch(() => {}); setShowExitModal(true); }} style={gameStyles.backBtn}>
+        <BouncePressable inline onPress={() => { playButton().catch(() => {}); setShowExitModal(true); }} style={gameStyles.backBtn}>
           <Ionicons name="arrow-back" size={18} color={Colors.gold} />
-        </Pressable>
+        </BouncePressable>
         <View style={gameStyles.headerMid}>
           <View style={[gameStyles.onlinePill, { backgroundColor: modePillColor + "22", borderColor: modePillColor + "44" }]}>
             <View style={[gameStyles.onlinePillDot, { backgroundColor: modePillColor }]} />
@@ -1562,7 +1562,8 @@ export default function OnlineGameScreen() {
             <Ionicons name="layers-outline" size={12} color={Colors.textDim} />
             <Text style={gameStyles.deckCount}>{gs.drawPile.length}</Text>
           </View>
-          <Pressable
+          <BouncePressable
+            inline
             onPress={() => { playButton().catch(() => {}); openGameMenu(); }}
             style={gameStyles.menuHamburger}
             hitSlop={8}
@@ -1570,7 +1571,7 @@ export default function OnlineGameScreen() {
             <View style={gameStyles.hamLine} />
             <View style={[gameStyles.hamLine, { width: 14 }]} />
             <View style={gameStyles.hamLine} />
-          </Pressable>
+          </BouncePressable>
         </View>
       </View>
 

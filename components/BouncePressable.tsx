@@ -1,15 +1,22 @@
 import React from "react";
-import { Pressable, PressableProps } from "react-native";
+import { Pressable, PressableProps, Platform } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 
 interface BouncePressableProps extends PressableProps {
   scaleTo?: number;
   children?: React.ReactNode;
   inline?: boolean;
+  haptic?: boolean;
+}
+
+function tapHaptic() {
+  if (Platform.OS === "web") return;
+  Haptics.selectionAsync().catch(() => {});
 }
 
 export default function BouncePressable({
@@ -20,6 +27,7 @@ export default function BouncePressable({
   children,
   disabled,
   inline = false,
+  haptic = true,
   ...rest
 }: BouncePressableProps) {
   const scale = useSharedValue(1);
@@ -36,6 +44,7 @@ export default function BouncePressable({
         onPressIn={(e) => {
           if (!disabled) {
             scale.value = withSpring(scaleTo, { damping: 15, stiffness: 320, mass: 0.4 });
+            if (haptic) tapHaptic();
           }
           onPressIn?.(e);
         }}

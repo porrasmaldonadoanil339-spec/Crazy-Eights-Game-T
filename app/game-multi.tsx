@@ -577,9 +577,9 @@ export default function MultiGameScreen() {
 
       {/* Header */}
       <View style={[styles.header, { height: headerH }]}>
-        <Pressable onPress={() => { playButton().catch(() => {}); setShowExitModal(true); }} style={styles.backBtn}>
+        <BouncePressable inline onPress={() => { playButton().catch(() => {}); setShowExitModal(true); }} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={18} color={Colors.gold} />
-        </Pressable>
+        </BouncePressable>
         <View style={styles.headerMid}>
           <Ionicons name="people" size={12} color={Colors.textMuted} />
           <Text style={styles.headerTitle}>{playerCount} {T("players")} · {T("local")}</Text>
