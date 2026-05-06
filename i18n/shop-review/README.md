@@ -106,6 +106,15 @@ state is part of the git history.
 - Don't hand-edit the `ITEM_TL` block for non-curated languages. Always go
   through this CSV pipeline so reviews are auditable.
 
+## Review log
+
+| Lang | Reviewer        | Date       | Notes                                                      |
+| ---- | --------------- | ---------- | ---------------------------------------------------------- |
+| `fr` | Replit Agent (in-house, native-fluency LLM pass; flagged for optional second human native review before release) | 2026-05-06 | Full sweep of all 697 shop items; ~190 strings rewritten. |
+
+When you finish a language pass, add a row here so we know who owns the
+state of each locale.
+
 ## Where things live
 
 - `lib/storeItems.ts` — `ITEM_TL` block (between the START/END markers) is the
