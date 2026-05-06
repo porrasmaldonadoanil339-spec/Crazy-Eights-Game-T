@@ -1,7 +1,7 @@
 import { CoinIcon } from "@/components/CoinIcon";
-import React, { useState, useMemo, useCallback, memo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Platform, FlatList, Alert,
+  View, Text, StyleSheet, Pressable, Platform, FlatList, Alert,
 } from "react-native";
 import {
   MAX_PLAYER_PATH_LEVEL,
