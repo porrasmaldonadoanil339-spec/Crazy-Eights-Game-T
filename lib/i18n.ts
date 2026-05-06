@@ -299,6 +299,18 @@ const translations: Record<string, Partial<Entry>> = {
   liveTip6: { es:"Pierde con dignidad: ganas monedas igual.",en:"Lose with dignity — you still earn coins.",pt:"Perca com dignidade — ainda ganha moedas." },
   liveTip7: { es:"Equipa emotes para picar al rival.",en:"Equip emotes to tease your rival.",pt:"Equipe emotes para provocar o rival." },
   liveTip8: { es:"En modo Rápido, cada segundo cuenta.",en:"In Fast mode, every second counts.",pt:"No modo Rápido, cada segundo conta." },
+  skip: { es:"Saltar", en:"Skip", pt:"Pular", fr:"Passer", de:"Überspringen", it:"Salta", tr:"Atla", ru:"Пропустить", pl:"Pomiń", nl:"Overslaan", sv:"Hoppa över", da:"Spring over", fi:"Ohita", no:"Hopp over", zh:"跳过", ja:"スキップ", ko:"건너뛰기", hi:"छोड़ें", th:"ข้าม", vi:"Bỏ qua", id:"Lewati", ar:"تخطي" },
+  startPlaying: { es:"¡A jugar!", en:"Let's play!", pt:"Vamos jogar!", fr:"On joue!", de:"Los geht's!", it:"Si gioca!", tr:"Oynayalım!", ru:"Играть!", pl:"Zagrajmy!", nl:"Spelen!", sv:"Spela!", da:"Spil!", fi:"Pelataan!", no:"Spill!", zh:"开始玩!", ja:"プレイ!", ko:"플레이!", hi:"खेलें!", th:"เล่น!", vi:"Chơi nào!", id:"Main!", ar:"لنلعب!" },
+  tutQuickPlayTitle: { es:"Juega una carta", en:"Play a card", pt:"Jogue uma carta" },
+  tutQuickPlayBody:  { es:"Toca una carta de tu mano que coincida en número o palo con la del centro.", en:"Tap a card in your hand that matches the number or suit of the center card.", pt:"Toque numa carta da sua mão que combine em número ou naipe com a do centro." },
+  tutQuickDrawTitle: { es:"Roba si no puedes", en:"Draw if you can't", pt:"Compre se não puder" },
+  tutQuickDrawBody:  { es:"Si no tienes jugada, toca el mazo para robar una carta y pasar el turno.", en:"If you have no play, tap the deck to draw a card and pass.", pt:"Se não tiver jogada, toque no baralho para comprar e passar." },
+  tutQuickEightTitle:{ es:"El 8 es comodín", en:"The 8 is wild", pt:"O 8 é coringa" },
+  tutQuickEightBody: { es:"Juega un 8 en cualquier momento y elige el palo que más te convenga.", en:"Play an 8 anytime and choose the suit that suits you best.", pt:"Jogue um 8 a qualquer momento e escolha o naipe que quiser." },
+  tutQuickProgTitle: { es:"Sube de nivel", en:"Level up", pt:"Suba de nível" },
+  tutQuickProgBody:  { es:"Cada partida te da monedas y XP. Mira tu progreso desde el icono de trofeo.", en:"Every match earns coins and XP. Track progress from the trophy icon.", pt:"Cada partida dá moedas e XP. Veja o progresso pelo ícone do troféu." },
+  tutQuickShopTitle: { es:"Visita la tienda", en:"Visit the shop", pt:"Visite a loja" },
+  tutQuickShopBody:  { es:"Gasta tus monedas en cartas, avatares y emotes en la tienda.", en:"Spend your coins on card backs, avatars and emotes in the shop.", pt:"Gaste moedas em cartas, avatares e emotes na loja." },
 
   // ─── Graphics ─────────────────────────────────────────────────────────────
   graphics: { es:"GRÁFICOS",en:"GRAPHICS",pt:"GRÁFICOS",fr:"GRAPHIQUES",de:"GRAFIK",it:"GRAFICA",tr:"GRAFİK",ru:"ГРАФИКА",pl:"GRAFIKA",nl:"GRAPHICS",sv:"GRAFIK",da:"GRAFIK",fi:"GRAFIIKKA",no:"GRAFIKK",zh:"图形",ja:"グラフィック",ko:"그래픽",hi:"ग्राफिक्स",th:"กราฟิก",vi:"Đồ họa",id:"Grafis",ar:"الرسومات" },

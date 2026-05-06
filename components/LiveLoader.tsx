@@ -3,13 +3,17 @@ import { View, Text, StyleSheet, Animated, Easing, Dimensions } from "react-nati
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
+import type { TranslationKey } from "@/lib/i18n";
 
 const { width: SW } = Dimensions.get("window");
 
 const SUITS = ["♠", "♥", "♦", "♣"];
 const SUIT_COLORS = [Colors.gold, "#E53935", "#E53935", Colors.gold];
 
-const TIP_KEYS = ["liveTip1", "liveTip2", "liveTip3", "liveTip4", "liveTip5", "liveTip6", "liveTip7", "liveTip8"] as const;
+const TIP_KEYS: readonly TranslationKey[] = [
+  "liveTip1", "liveTip2", "liveTip3", "liveTip4",
+  "liveTip5", "liveTip6", "liveTip7", "liveTip8",
+];
 
 function FloatingMiniCard({ index }: { index: number }) {
   const tx = useRef(new Animated.Value(0)).current;
@@ -82,7 +86,7 @@ export function TipRotator({ intervalMs = 3500 }: { intervalMs?: number }) {
     return () => clearInterval(id);
   }, [intervalMs]);
 
-  const tipText = T(TIP_KEYS[idx] as any) || "";
+  const tipText = T(TIP_KEYS[idx]) || "";
 
   return (
     <View style={styles.tipBox}>
