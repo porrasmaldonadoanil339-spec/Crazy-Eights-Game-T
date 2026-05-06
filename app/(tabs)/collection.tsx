@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { View, Text, StyleSheet, FlatList, Pressable, Platform, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -147,7 +147,8 @@ export default function CollectionScreen() {
     }
   };
 
-  const renderItem = ({ item, index }: { item: GridItem; index: number }) => {
+  const keyExtractorItems = useCallback((i: GridItem) => i.id, []);
+  const renderItem = useCallback(({ item, index }: { item: GridItem; index: number }) => {
     const isOwned = item.isDefault || owned.includes(item.id);
     const isFirstInRow = index % 4 === 0;
     const isEquipped = activeCat === "emote"
@@ -211,7 +212,7 @@ export default function CollectionScreen() {
         )}
       </BouncePressable>
     );
-  };
+  }, [owned, activeCat, isEmoteEquipped, equippedId, lang, themeGold, equip, T, rarityLabel]);
 
   const infoRarityColor = infoItem ? (RARITY_COLOR[infoItem.rarity] ?? "#95A5A6") : "#95A5A6";
   const infoLocalized = infoItem ? localizeItem(infoItem, lang) : null;
@@ -259,12 +260,16 @@ export default function CollectionScreen() {
 
       <FlatList
         data={items}
-        keyExtractor={(i) => i.id}
+        keyExtractor={keyExtractorItems}
         numColumns={4}
         key="grid-4col"
         renderItem={renderItem}
         columnWrapperStyle={styles.colWrapper}
         contentContainerStyle={styles.gridContent}
+        initialNumToRender={20}
+        maxToRenderPerBatch={20}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS !== "web"}
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
             <Ionicons name="albums-outline" size={48} color={theme.textDim} />

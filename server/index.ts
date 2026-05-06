@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 const app = express();
-const log = console.log;
+const log = process.env.NODE_ENV === "production" ? () => {} : console.log;
 
 declare module "http" {
   interface IncomingMessage {
