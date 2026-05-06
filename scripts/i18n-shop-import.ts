@@ -18,15 +18,17 @@
  *   npx tsx scripts/i18n-shop-import.ts --force-unreviewed # also import rows
  *                                                          # not marked reviewed
  */
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ITEM_TL, type ItemTL } from "../lib/storeItems";
 import type { Lang } from "../lib/i18n";
+import { loadReviewState, sourceEsHash } from "./i18n-shop-check";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const REVIEW_DIR = join(ROOT, "i18n", "shop-review");
+const STATE_FILE = join(REVIEW_DIR, ".review-state.json");
 const STORE_FILE = join(ROOT, "lib", "storeItems.ts");
 const START_MARKER = "// ITEM_TL_START";
 const END_MARKER = "// ITEM_TL_END";
@@ -94,7 +96,10 @@ function loadCsvForLang(lang: Lang): { rows: { id: string; name: string; descrip
   return { rows };
 }
 
-function applyCsvs(working: WorkingTL, langs: Lang[], forceUnreviewed: boolean) {
+type AppliedPair = { id: string; lang: Lang };
+
+function applyCsvs(working: WorkingTL, langs: Lang[], forceUnreviewed: boolean): AppliedPair[] {
+  const appliedPairs: AppliedPair[] = [];
   let totalApplied = 0;
   let totalSkipped = 0;
   let totalUnknown = 0;
@@ -115,12 +120,35 @@ function applyCsvs(working: WorkingTL, langs: Lang[], forceUnreviewed: boolean) 
           description: description || working[row.id][lang]?.description || "",
         },
       };
+      appliedPairs.push({ id: row.id, lang });
       applied++;
     }
     console.log(`  ${lang}: applied=${applied} skipped=${skipped} unknown_id=${unknown} (of ${csv.rows.length} rows)`);
     totalApplied += applied; totalSkipped += skipped; totalUnknown += unknown;
   }
   console.log(`Total: applied=${totalApplied} skipped=${totalSkipped} unknown_id=${totalUnknown}`);
+  return appliedPairs;
+}
+
+function updateReviewState(working: WorkingTL, applied: AppliedPair[], dryRun: boolean) {
+  if (applied.length === 0) return;
+  const state = loadReviewState();
+  let written = 0;
+  for (const { id, lang } of applied) {
+    const es = working[id]?.es;
+    if (!es) continue;
+    const hash = sourceEsHash(es.name ?? "", es.description ?? "");
+    if (!state.ids[id]) state.ids[id] = {};
+    state.ids[id][lang] = hash;
+    written++;
+  }
+  if (dryRun) {
+    console.log(`[dry-run] would update ${STATE_FILE} with ${written} (id, lang) hash entr${written === 1 ? "y" : "ies"}`);
+    return;
+  }
+  if (!existsSync(REVIEW_DIR)) mkdirSync(REVIEW_DIR, { recursive: true });
+  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2) + "\n", "utf8");
+  console.log(`Updated ${STATE_FILE} (${written} hash entr${written === 1 ? "y" : "ies"})`);
 }
 
 // ---------- Regenerate the ITEM_TL block ----------
@@ -206,9 +234,10 @@ function main() {
   const working: WorkingTL = {};
   for (const id of Object.keys(ITEM_TL)) working[id] = { ...ITEM_TL[id] };
 
-  applyCsvs(working, langs, forceUnreviewed);
+  const applied = applyCsvs(working, langs, forceUnreviewed);
   const block = renderBlock(working);
   rewriteStoreFile(block, dryRun);
+  updateReviewState(working, applied, dryRun);
 }
 
 main();

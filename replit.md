@@ -10,6 +10,7 @@ Ocho Locos is a mobile card game offering extensive single-player and multiplaye
 *   **Typecheck**: `npx tsc --noEmit`
 *   **i18n Shop Export**: `npx tsx scripts/i18n-shop-export.ts [langs...]`
 *   **i18n Shop Import**: `npx tsx scripts/i18n-shop-import.ts [langs...]`
+*   **i18n Shop Check**: `npx tsx scripts/i18n-shop-check.ts [langs...]` (per-lang coverage + stale flagging; exits 1 on missing/stale)
 *   **Seed Demo Account**: `scripts/seed-demo-account.sh`
 *   **Env Vars**: `NODE_ENV`, `DEV_SEED_ENABLED`, `API_URL`, `AUTH_TOKEN`
 

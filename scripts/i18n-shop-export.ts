@@ -17,6 +17,7 @@ import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ITEM_TL } from "../lib/storeItems";
 import type { Lang } from "../lib/i18n";
+import { loadReviewState, sourceEsHash } from "./i18n-shop-check";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -40,15 +41,21 @@ function toRow(values: string[]): string {
   return values.map(csvEscape).join(",");
 }
 
-function exportLang(lang: Lang): { path: string; rows: number; missing: number } {
-  const header = ["id", "source_es", "source_en", "name", "description", "reviewed"];
+function exportLang(lang: Lang): { path: string; rows: number; missing: number; stale: number } {
+  const state = loadReviewState();
+  const header = ["id", "source_es", "source_en", "name", "description", "reviewed", "stale"];
   const lines: string[] = [toRow(header)];
   let missing = 0;
+  let stale = 0;
   for (const [id, tl] of Object.entries(ITEM_TL)) {
     const es = tl.es;
     const en = tl.en;
     const cur = tl[lang];
-    if (!cur) missing++;
+    if (!cur || (!cur.name && !cur.description)) missing++;
+    const recorded = state.ids[id]?.[lang];
+    const currentHash = es ? sourceEsHash(es.name ?? "", es.description ?? "") : "";
+    const isStale = !!recorded && !!currentHash && recorded !== currentHash;
+    if (isStale) stale++;
     lines.push(toRow([
       id,
       es?.name ? `${es.name} — ${es.description ?? ""}` : "",
@@ -56,13 +63,14 @@ function exportLang(lang: Lang): { path: string; rows: number; missing: number }
       cur?.name ?? "",
       cur?.description ?? "",
       "no",
+      isStale ? "yes" : "",
     ]));
   }
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
   const path = join(OUT_DIR, `${lang}.csv`);
   // Prepend UTF-8 BOM so Excel opens non-Latin scripts correctly.
   writeFileSync(path, "\uFEFF" + lines.join("\n") + "\n", "utf8");
-  return { path, rows: lines.length - 1, missing };
+  return { path, rows: lines.length - 1, missing, stale };
 }
 
 function main() {
@@ -84,8 +92,8 @@ function main() {
   }
   console.log(`Exporting ${langs.length} language(s) to ${OUT_DIR}`);
   for (const lang of langs) {
-    const { path, rows, missing } = exportLang(lang);
-    console.log(`  ${lang}: ${rows} rows (${missing} missing) -> ${path}`);
+    const { path, rows, missing, stale } = exportLang(lang);
+    console.log(`  ${lang}: ${rows} rows (${missing} missing, ${stale} stale) -> ${path}`);
   }
 }
 
