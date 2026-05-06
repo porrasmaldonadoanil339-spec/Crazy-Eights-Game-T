@@ -549,6 +549,51 @@ export async function playTension() {
   haptic(() => Haptics.selectionAsync());
 }
 
+// ─── Personality SFX combos ──────────────────────────────────────────────────
+
+export async function playMockLaugh() {
+  await playSfx("button", sfxVolume * 0.55);
+  setTimeout(() => playSfx("cardFlip", sfxVolume * 0.45).catch(() => {}), 90);
+  setTimeout(() => playSfx("cardFlip", sfxVolume * 0.55).catch(() => {}), 200);
+  setTimeout(() => playSfx("button", sfxVolume * 0.45).catch(() => {}), 330);
+}
+
+export async function playApplause() {
+  await playSfx("shuffle", sfxVolume * 0.6);
+  setTimeout(() => playSfx("shuffle", sfxVolume * 0.55).catch(() => {}), 180);
+  setTimeout(() => playSfx("win", sfxVolume * 0.7).catch(() => {}), 320);
+}
+
+export async function playCrowdGasp() {
+  await playSfx("wild", sfxVolume * 0.45);
+  setTimeout(() => playSfx("cardDraw", sfxVolume * 0.4).catch(() => {}), 130);
+}
+
+export async function playDramaticDrum() {
+  await playSfx("button", sfxVolume * 0.7);
+  setTimeout(() => playSfx("button", sfxVolume * 0.7).catch(() => {}), 280);
+  setTimeout(() => playSfx("button", sfxVolume * 0.85).catch(() => {}), 600);
+  setTimeout(() => playSfx("wild", sfxVolume * 0.6).catch(() => {}), 880);
+}
+
+export async function playBoo() {
+  await playSfx("lose", sfxVolume * 0.55);
+  setTimeout(() => playSfx("button", sfxVolume * 0.4).catch(() => {}), 220);
+}
+
+export async function playCackle() {
+  await playSfx("wild", sfxVolume * 0.5);
+  setTimeout(() => playSfx("cardFlip", sfxVolume * 0.5).catch(() => {}), 90);
+  setTimeout(() => playSfx("cardFlip", sfxVolume * 0.6).catch(() => {}), 180);
+  setTimeout(() => playSfx("cardFlip", sfxVolume * 0.7).catch(() => {}), 280);
+}
+
+export async function playVictoryFanfare() {
+  await playSfx("win", sfxVolume);
+  setTimeout(() => playSfx("wild", sfxVolume * 0.7).catch(() => {}), 220);
+  setTimeout(() => playSfx("win", sfxVolume * 0.8).catch(() => {}), 480);
+}
+
 // ─── Settings ────────────────────────────────────────────────────────────────
 
 export function syncSettings(musicEnabled: boolean, sfxEnabled: boolean, vibrationEnabled?: boolean) {

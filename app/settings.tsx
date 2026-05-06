@@ -354,9 +354,20 @@ export default function SettingsScreen() {
           <SettingRow
             label={T("showTutorials")} sub={T("showTutorialsDesc")}
             icon="help-buoy" iconColor="#4FC3F7" iconBg="#1a2a3a"
-            isDark={isDark} last
+            isDark={isDark}
             right={<Switch value={profile.showTutorials ?? true} onValueChange={v => updateSettings({ showTutorials: v })} {...sw(profile.showTutorials ?? true, "#4FC3F7")} />}
           />
+          <Pressable
+            onPress={() => { playSound("button_press").catch(() => {}); router.push("/tutorial"); }}
+            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          >
+            <SettingRow
+              label={T("replayTutorial")} sub={T("replayTutorialDesc")}
+              icon="play-circle" iconColor="#4FC3F7" iconBg="#1a2a3a"
+              isDark={isDark} last
+              right={<Ionicons name="chevron-forward" size={18} color={subColor} />}
+            />
+          </Pressable>
         </View>
 
         {/* ──── 🎨 GRÁFICOS ──── */}

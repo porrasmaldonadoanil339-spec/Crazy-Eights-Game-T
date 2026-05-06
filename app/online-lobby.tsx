@@ -20,6 +20,7 @@ import { getLocalizedRankInfo } from "@/lib/ranked";
 import { playButton, startMenuMusic, startSearchMusic } from "@/lib/audioManager";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
+import { TipRotator, FloatingCardField } from "@/components/LiveLoader";
 
 const ACCENT = Colors.gold;
 
@@ -498,6 +499,7 @@ export default function OnlineLobbyScreen() {
           </Text>
         </View>
 
+        <FloatingCardField count={6} />
         <View style={styles.matchmakingContent}>
           {!isFound && <SpinnerIcon />}
           {isFound && (
@@ -509,6 +511,7 @@ export default function OnlineLobbyScreen() {
           <Text style={[styles.matchmakingLabel, isFound && { color: "#27AE60" }]}>
             {isFound ? T("rivalFound" as any) : T("waitingPlayers")}
           </Text>
+          {!isFound && <TipRotator />}
 
           <View style={styles.slotsList}>
             {Array.from({ length: playerCount }).map((_, i) => (
@@ -548,10 +551,12 @@ export default function OnlineLobbyScreen() {
           <Text style={styles.headerTitle}>{T("searchingMatch" as any)}</Text>
         </View>
 
+        <FloatingCardField count={6} />
         <View style={styles.matchmakingContent}>
           <SpinnerIcon />
           <Text style={styles.matchmakingLabel}>{T("waitingPlayers")}</Text>
           <Text style={styles.matchmakingSub}>{foundPlayers.length}/{playerCount} {T("foundCount" as any)}</Text>
+          <TipRotator />
 
           <View style={styles.slotsList}>
             {Array.from({ length: playerCount }).map((_, i) => (

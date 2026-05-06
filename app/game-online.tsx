@@ -966,8 +966,10 @@ export default function OnlineGameScreen() {
     const isWin = gameState.winnerIndex === 0;
     const mode = (modeParam || "classic") as any;
     const mc = getModeById(mode);
-    const xp = isWin ? mc.xpReward : mc.xpLoss;
-    const coins = isWin ? mc.coinsReward : mc.coinsLoss;
+    // Loss floor: recordGameResult deducts xpLoss=10 internally for non-practice
+    // losses, so we add +10 above the floor to guarantee net >= 10 XP shown to the player.
+    const xp = isWin ? mc.xpReward : Math.max(mc.xpLoss, 10) + (mode !== "practice" ? 10 : 0);
+    const coins = isWin ? mc.coinsReward : Math.max(mc.coinsLoss, 5);
     const evId = gameState.eventId ?? null;
     recordGameResult({ won: isWin, mode, difficulty: "normal", coinsEarned: coins, xpEarned: xp, eightsPlayed: eightsPlayedRef.current, cardsDrawn: cardsDrawnRef.current, isPerfect: false, isComeback: false, gameDurationMs: 60000, eventId: evId });
     // Daily challenge progress (event-aware) — mirrors single-player

@@ -37,6 +37,7 @@ import { stopMusic, startGameMusic, startMenuMusic, syncSettings, playWin, playL
 import { scheduleReEngagementNotification } from "@/lib/notifications";
 import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
+import { getCpuPhrase, type CpuPhraseEvent } from "@/lib/cpuPhrases";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
 import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc, pickRandomSuit, type EventId } from "@/lib/eventModes";
@@ -1310,6 +1311,9 @@ export default function GameScreen() {
   const [expertTimer, setExpertTimer] = useState(8);
   const [playerEmote, setPlayerEmote] = useState<Emote | null>(null);
   const [cpuEmote, setCpuEmote] = useState<Emote | null>(null);
+  const [cpuChatter, setCpuChatter] = useState<string | null>(null);
+  const cpuChatterTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastChatterTime = useRef<number>(0);
   const [showLastCardBanner, setShowLastCardBanner] = useState(false);
   const [activeChallenges, setActiveChallenges] = useState<Challenge[]>([]);
   const [showLightningBanner, setShowLightningBanner] = useState(false);
@@ -1746,6 +1750,28 @@ export default function GameScreen() {
       emote = EMOTES.find(e => e.id === "luck") ?? null;
     }
 
+    // Personality: trigger funnier CPU phrase + new SFX combo
+    let phraseEvent: CpuPhraseEvent | null = null;
+    let sfxEvent: "mock_laugh" | "cackle" | "boo" | "crowd_gasp" | "dramatic_drum" | null = null;
+    if (pendingDraw > prevPendingDraw.current && gameState.currentPlayer === "player") {
+      phraseEvent = "ai_plays_special"; sfxEvent = "cackle";
+    } else if (aiCount === 1 && prevAiHandCount.current > 1) {
+      phraseEvent = "ai_one_card"; sfxEvent = "dramatic_drum";
+    } else if (aiCount > prevAiHandCount.current + 2) {
+      phraseEvent = "ai_draws"; sfxEvent = "boo";
+    }
+    if (phraseEvent && Date.now() - lastChatterTime.current > 5000) {
+      const lang = (profile.language ?? "es") as any;
+      const txt = getCpuPhrase(phraseEvent, lang);
+      lastChatterTime.current = Date.now();
+      if (cpuChatterTimer.current) clearTimeout(cpuChatterTimer.current);
+      setTimeout(() => {
+        setCpuChatter(txt);
+        if (sfxEvent && !muteCpuEmotes) playSound(sfxEvent).catch(() => {});
+      }, 700);
+      cpuChatterTimer.current = setTimeout(() => setCpuChatter(null), 3500);
+    }
+
     if (emote) {
       const timeoutId = setTimeout(() => {
         setCpuEmote(emote);
@@ -1854,10 +1880,12 @@ export default function GameScreen() {
     const eventXpBonus = isEventWin ? 100 : 0;
     const coins = won
       ? Math.round(modeConfig.coinsReward * diffConfig.coinMultiplier) + eventCoinBonus
-      : modeConfig.coinsLoss;
+      : Math.max(modeConfig.coinsLoss, 5);
+    // Loss floor: recordGameResult deducts xpLoss=10 internally for non-practice
+    // losses, so we add +10 above the floor to guarantee net >= 10 XP shown to the player.
     const xp = won
       ? Math.round(modeConfig.xpReward * (modeConfig.hasDifficulty ? diffConfig.xpMultiplier : 1)) + eventXpBonus
-      : 0;
+      : Math.max(modeConfig.xpLoss, 10) + (modeConfig.id !== "practice" ? 10 : 0);
     const isPerfect = session.cardsDrawnThisGame === 0 && won;
     const isComeback = (gameState?.playerHand?.length ?? 0) >= 10 && won;
 
@@ -2403,6 +2431,11 @@ export default function GameScreen() {
       <View style={styles.aiSectionWrapper}>
         <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={activeCpu} backColors={backColors} backAccent={backAccent} cardColors={cardColors} />
         <EmoteBubble emote={cpuEmote} side="cpu" muted={muteCpuEmotes} />
+        {cpuChatter && !muteCpuEmotes && (
+          <Animated.View entering={FadeIn.duration(220)} exiting={FadeOut.duration(280)} style={styles.cpuChatterBubble}>
+            <Text style={styles.cpuChatterText} numberOfLines={2}>{cpuChatter}</Text>
+          </Animated.View>
+        )}
       </View>
 
       {/* Table center */}
@@ -2929,6 +2962,29 @@ const styles = StyleSheet.create({
   // CPU Profile
   aiSection: { alignItems: "center", paddingBottom: 6, gap: 6 },
   aiSectionWrapper: { position: "relative", alignItems: "center" },
+  cpuChatterBubble: {
+    position: "absolute",
+    top: -2,
+    right: 12,
+    maxWidth: 220,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 14,
+    backgroundColor: "rgba(20,30,20,0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.45)",
+    shadowColor: "#000",
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  cpuChatterText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 12,
+    color: "#F5E6C8",
+    textAlign: "center",
+  },
   cpuProfileRow: {
     flexDirection: "row", alignItems: "center", gap: 8,
     backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 12,

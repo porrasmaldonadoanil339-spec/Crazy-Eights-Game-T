@@ -42,7 +42,14 @@ export type SoundEvent =
   | "invite_accepted"
   | "deal_card"
   | "tension"
-  | "searching";
+  | "searching"
+  | "mock_laugh"
+  | "applause"
+  | "crowd_gasp"
+  | "dramatic_drum"
+  | "boo"
+  | "cackle"
+  | "victory_fanfare";
 
 import {
   playCardFlip,
@@ -78,6 +85,13 @@ import {
   playInviteAccepted,
   playDealCard,
   playTension,
+  playMockLaugh,
+  playApplause,
+  playCrowdGasp,
+  playDramaticDrum,
+  playBoo,
+  playCackle,
+  playVictoryFanfare,
 } from "@/lib/audioManager";
 
 export async function playSound(event: SoundEvent) {
@@ -126,5 +140,12 @@ export async function playSound(event: SoundEvent) {
     case "deal_card":          return playDealCard();
     case "tension":            return playTension();
     case "searching":          return playMenuOpen();
+    case "mock_laugh":         return playMockLaugh();
+    case "applause":           return playApplause();
+    case "crowd_gasp":         return playCrowdGasp();
+    case "dramatic_drum":      return playDramaticDrum();
+    case "boo":                return playBoo();
+    case "cackle":             return playCackle();
+    case "victory_fanfare":    return playVictoryFanfare();
   }
 }

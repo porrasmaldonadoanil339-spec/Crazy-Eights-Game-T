@@ -624,6 +624,13 @@ const EMOTES_RAW: StoreItemRaw[] = [
   { id: "emote_ocholocos",category: "emote", name: "Ocho Locos!", description: "El grito legendario.",    price: 400, preview: "trophy",          previewColor: "#D4AF37", rarity: "legendary", animated: true },
   { id: "emote_legendario",category: "emote", name: "Legendario", description: "Un jugador de leyenda.",  price: 350, preview: "ribbon",          previewColor: "#9B59B6", rarity: "legendary", animated: true },
   { id: "emote_elfin",    category: "emote", name: "El Fin",      description: "El juego terminó. Yo gané.", price: 400, preview: "infinite",    previewColor: "#2C3E50", rarity: "legendary", animated: true },
+  // Memeables (6) — añadidos en Task #67
+  { id: "emote_copium",      category: "emote", name: "Copium",       description: "Solo necesito una buena.",       price: 120, preview: "medkit",         previewColor: "#5DADE2", rarity: "rare" },
+  { id: "emote_clutch",      category: "emote", name: "Clutch!",      description: "Salvado en el ultimo segundo.",  price: 140, preview: "flash",          previewColor: "#F1C40F", rarity: "rare" },
+  { id: "emote_yikes",       category: "emote", name: "Yikes",        description: "Eso fue feo.",                   price: 110, preview: "alert",          previewColor: "#E67E22", rarity: "rare" },
+  { id: "emote_owned",       category: "emote", name: "Owned!",       description: "Te dominé sin esfuerzo.",        price: 150, preview: "thumbs-down",    previewColor: "#C0392B", rarity: "epic" },
+  { id: "emote_hax",         category: "emote", name: "Hax?",         description: "Esto es muy sospechoso.",        price: 140, preview: "bug",            previewColor: "#27AE60", rarity: "rare" },
+  { id: "emote_skillissue",  category: "emote", name: "Skill issue",  description: "Es problema tuyo, no del juego.", price: 160, preview: "construct",     previewColor: "#9B59B6", rarity: "epic" },
 ];
 
 const TABLE_DESIGNS_RAW: StoreItemRaw[] = [
@@ -17578,6 +17585,36 @@ export const ITEM_TL: Record<string, ItemTL> = {
     vi: { name: "Omega", description: "Thiết kế cuối cùng. Sự hoàn hảo tối cao." },
     id: { name: "Omega", description: "Desain akhir. Kesempurnaan tertinggi." },
     ar: { name: "أوميغا", description: "التصميم النهائي. الكمال الأسمى." },
+  },
+  emote_copium: {
+    es: { name: "Copium", description: "Solo necesito una buena." },
+    en: { name: "Copium", description: "Just need one good card." },
+    pt: { name: "Copium", description: "Só preciso de uma boa." },
+  },
+  emote_clutch: {
+    es: { name: "Clutch!", description: "Salvado en el último segundo." },
+    en: { name: "Clutch!", description: "Saved at the last second." },
+    pt: { name: "Clutch!", description: "Salvo no último segundo." },
+  },
+  emote_yikes: {
+    es: { name: "Yikes", description: "Eso fue feo." },
+    en: { name: "Yikes", description: "That was rough." },
+    pt: { name: "Yikes", description: "Isso foi feio." },
+  },
+  emote_owned: {
+    es: { name: "Owned!", description: "Te dominé sin esfuerzo." },
+    en: { name: "Owned!", description: "Dominated you effortlessly." },
+    pt: { name: "Owned!", description: "Te dominei sem esforço." },
+  },
+  emote_hax: {
+    es: { name: "¿Hax?", description: "Esto es muy sospechoso." },
+    en: { name: "Hax?", description: "This is way too sus." },
+    pt: { name: "Hax?", description: "Isso é muito suspeito." },
+  },
+  emote_skillissue: {
+    es: { name: "Skill issue", description: "Es problema tuyo, no del juego." },
+    en: { name: "Skill issue", description: "That's on you, not the game." },
+    pt: { name: "Skill issue", description: "Problema seu, não do jogo." },
   },
 };
 // ITEM_TL_END

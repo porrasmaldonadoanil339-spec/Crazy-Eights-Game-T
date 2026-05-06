@@ -731,12 +731,37 @@ function GlobalBackHandler() {
   return null;
 }
 
+function TutorialGate() {
+  const { profile, isLoaded } = useProfile();
+  const segments = useSegments();
+  const firedRef = useRef(false);
+  useEffect(() => {
+    if (firedRef.current) return;
+    // Wait for persisted profile to hydrate before deciding — otherwise
+    // returning users with tutorialSeen=true may briefly see the default
+    // (false) value and get auto-pushed to /tutorial on every launch.
+    if (!isLoaded) return;
+    if (profile.tutorialSeen) return;
+    if ((profile.showTutorials ?? true) === false) return;
+    // Only auto-launch tutorial when user is on the main tabs (not mid-game/login)
+    const inTabs = segments[0] === "(tabs)" as any;
+    if (!inTabs) return;
+    firedRef.current = true;
+    const t = setTimeout(() => {
+      try { router.push("/tutorial"); } catch {}
+    }, 700);
+    return () => clearTimeout(t);
+  }, [isLoaded, profile.tutorialSeen, profile.showTutorials, segments]);
+  return null;
+}
+
 function RootLayoutNav() {
   return (
     <>
       <GlobalBackHandler />
       <AudioManager />
       <NotificationManager />
+      <TutorialGate />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="game" options={{ animation: "slide_from_bottom" }} />
