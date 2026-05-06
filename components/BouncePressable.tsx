@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, PressableProps, Platform } from "react-native";
+import { Pressable, PressableProps, Platform, ViewStyle, StyleProp } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -12,6 +12,7 @@ interface BouncePressableProps extends PressableProps {
   children?: React.ReactNode;
   inline?: boolean;
   haptic?: boolean;
+  wrapperStyle?: StyleProp<ViewStyle>;
 }
 
 function tapHaptic() {
@@ -28,6 +29,7 @@ export default function BouncePressable({
   disabled,
   inline = false,
   haptic = true,
+  wrapperStyle,
   ...rest
 }: BouncePressableProps) {
   const scale = useSharedValue(1);
@@ -37,7 +39,7 @@ export default function BouncePressable({
   }));
 
   return (
-    <Animated.View style={[aStyle, { alignSelf: inline ? "auto" : "stretch" }]}>
+    <Animated.View style={[aStyle, { alignSelf: inline ? "auto" : "stretch" }, wrapperStyle]}>
       <Pressable
         {...rest}
         disabled={disabled}

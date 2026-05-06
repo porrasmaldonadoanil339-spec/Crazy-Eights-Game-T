@@ -448,10 +448,10 @@ function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
       <Text style={gameStyles.suitTitle}>{T("chooseSuit")}</Text>
       <View style={gameStyles.suitGrid}>
         {SUITS.map(s => (
-          <Pressable key={s} onPress={() => onChoose(s)} style={gameStyles.suitBtn}>
+          <BouncePressable key={s} inline onPress={() => onChoose(s)} style={gameStyles.suitBtn}>
             <Text style={[gameStyles.suitSym, { color: suitColor(s) }]}>{suitSymbol(s)}</Text>
             <Text style={gameStyles.suitLbl}>{suitName(s)}</Text>
-          </Pressable>
+          </BouncePressable>
         ))}
       </View>
     </View>
@@ -549,17 +549,17 @@ function ResultOverlay({ isWin, winnerName, winnerColor, onClose, onPlayAgain }:
         <Text style={[gameStyles.resultSub, { color: winnerColor }]}>{winnerName} {T("wonSuffix")}</Text>
       )}
       <Animated.View style={[{ width: "100%", alignItems: "center", gap: 12 }, btnStyle]}>
-        <Pressable style={gameStyles.resultBtn} onPress={onPlayAgain}>
+        <BouncePressable style={gameStyles.resultBtn} onPress={onPlayAgain}>
           <LinearGradient colors={[Colors.gold, "#A07800"]} style={gameStyles.resultBtnGrad}>
             <Ionicons name="refresh" size={16} color="#1a0a00" />
             <Text style={gameStyles.resultBtnText}>{T("playAgain")}</Text>
           </LinearGradient>
-        </Pressable>
-        <Pressable style={[gameStyles.resultBtn, { marginTop: 0 }]} onPress={onClose}>
+        </BouncePressable>
+        <BouncePressable style={[gameStyles.resultBtn, { marginTop: 0 }]} onPress={onClose}>
           <LinearGradient colors={["#333", "#222"]} style={gameStyles.resultBtnGrad}>
             <Text style={[gameStyles.resultBtnText, { color: "#ccc" }]}>{T("returnMenu")}</Text>
           </LinearGradient>
-        </Pressable>
+        </BouncePressable>
       </Animated.View>
     </View>
   );
@@ -593,15 +593,15 @@ function RivalAbandonedOverlay({ rivalName, onClaim, onPlayAgain }: {
               <Ionicons key={i} name="trophy" size={26} color={Colors.gold} />
             ))}
           </View>
-          <Pressable onPress={onClaim} style={raStyles.claimBtn}>
+          <BouncePressable onPress={onClaim} style={raStyles.claimBtn}>
             <LinearGradient colors={[Colors.gold, "#A07800"]} style={raStyles.claimGrad}>
               <Ionicons name="checkmark-circle" size={18} color="#1a0a00" />
               <Text style={raStyles.claimTxt}>{T("autoVictory")}</Text>
             </LinearGradient>
-          </Pressable>
-          <Pressable onPress={onPlayAgain} style={raStyles.againBtn}>
+          </BouncePressable>
+          <BouncePressable onPress={onPlayAgain} style={raStyles.againBtn}>
             <Text style={raStyles.againTxt}>{T("playAgain")}</Text>
-          </Pressable>
+          </BouncePressable>
         </LinearGradient>
       </Animated.View>
     </View>
@@ -1815,9 +1815,13 @@ export default function OnlineGameScreen() {
         </View>
 
         {/* Message bar — sits above the player hand zone */}
-        <View style={[gameStyles.messageBubble, { bottom: 168 }]}>
+        <Animated.View
+          key={`msg-${gs.message}`}
+          entering={FadeIn.duration(180)}
+          style={[gameStyles.messageBubble, { bottom: 168 }]}
+        >
           <Text style={gameStyles.messageText} numberOfLines={1}>{gs.message}</Text>
-        </View>
+        </Animated.View>
 
         {/* CPU emote bubble — top center */}
         <View style={{ position: "absolute", top: tableCenterY - 110, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
@@ -1857,8 +1861,9 @@ export default function OnlineGameScreen() {
       )}
 
       {pendingChestType && gs?.phase === "game_over" && !showChestModal && (
-        <Pressable
-          style={{ position: "absolute", bottom: 160, alignSelf: "center", zIndex: 200 }}
+        <BouncePressable
+          inline
+          wrapperStyle={{ position: "absolute", bottom: 160, alignSelf: "center", zIndex: 200 }}
           onPress={() => {
             const latestChest = (chestInventory ?? []).slice().reverse().find(c => c.type === pendingChestType);
             if (latestChest) {
@@ -1876,7 +1881,7 @@ export default function OnlineGameScreen() {
             <Ionicons name="gift" size={22} color="#1a0a00" />
             <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#1a0a00", textTransform: "uppercase", letterSpacing: 1 }}>Open Chest</Text>
           </LinearGradient>
-        </Pressable>
+        </BouncePressable>
       )}
 
       <ChestOpeningModal
@@ -1993,7 +1998,7 @@ export default function OnlineGameScreen() {
             </Text>
 
             {/* Emotes toggle */}
-            <Pressable
+            <BouncePressable
               style={gameStyles.gameMenuRow}
               onPress={() => { setMuteCpuEmotes(m => !m); playButton().catch(() => {}); }}
             >
@@ -2006,10 +2011,10 @@ export default function OnlineGameScreen() {
               <View style={[gameStyles.gameMenuToggle, { backgroundColor: muteCpuEmotes ? "#E74C3C" : "#27AE60" }]}>
                 <Text style={gameStyles.gameMenuToggleTxt}>{muteCpuEmotes ? "OFF" : "ON"}</Text>
               </View>
-            </Pressable>
+            </BouncePressable>
 
             {/* SFX toggle */}
-            <Pressable
+            <BouncePressable
               style={gameStyles.gameMenuRow}
               onPress={() => {
                 const next = !inGameSfxEnabled;
@@ -2027,10 +2032,10 @@ export default function OnlineGameScreen() {
               <View style={[gameStyles.gameMenuToggle, { backgroundColor: inGameSfxEnabled ? "#27AE60" : "#E74C3C" }]}>
                 <Text style={gameStyles.gameMenuToggleTxt}>{inGameSfxEnabled ? "ON" : "OFF"}</Text>
               </View>
-            </Pressable>
+            </BouncePressable>
 
             {/* Music toggle */}
-            <Pressable
+            <BouncePressable
               style={gameStyles.gameMenuRow}
               onPress={() => {
                 playButton().catch(() => {});
@@ -2058,12 +2063,12 @@ export default function OnlineGameScreen() {
               <View style={[gameStyles.gameMenuToggle, { backgroundColor: inGameMusicEnabled ? "#27AE60" : "#E74C3C" }]}>
                 <Text style={gameStyles.gameMenuToggleTxt}>{inGameMusicEnabled ? "ON" : "OFF"}</Text>
               </View>
-            </Pressable>
+            </BouncePressable>
 
             <View style={gameStyles.gameMenuDivider} />
 
             {/* Exit game */}
-            <Pressable
+            <BouncePressable
               style={[gameStyles.gameMenuRow, { opacity: 0.85 }]}
               onPress={() => {
                 closeGameMenu();
@@ -2077,17 +2082,17 @@ export default function OnlineGameScreen() {
                   {profile.language === "en" ? "Quit match" : "Salir de la partida"}
                 </Text>
               </View>
-            </Pressable>
+            </BouncePressable>
 
             <View style={gameStyles.gameMenuDivider} />
 
             {/* Back to game */}
-            <Pressable style={gameStyles.gameMenuCloseBtn} onPress={closeGameMenu}>
+            <BouncePressable style={gameStyles.gameMenuCloseBtn} onPress={closeGameMenu}>
               <Ionicons name="play" size={16} color={Colors.gold} />
               <Text style={gameStyles.gameMenuCloseTxt}>
                 {profile.language === "en" ? "Back to game" : "Volver a la partida"}
               </Text>
-            </Pressable>
+            </BouncePressable>
           </Pressable>
         </Pressable>
       )}
@@ -2130,14 +2135,16 @@ export default function OnlineGameScreen() {
             </Text>
             <View style={{ flexDirection: "row", gap: 12 }}>
               <BouncePressable
+                wrapperStyle={{ flex: 1 }}
                 onPress={() => { playButton().catch(() => {}); setShowExitModal(false); }}
-                style={{ flex: 1, backgroundColor: "#1a2a1a", borderRadius: 12, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: "#D4AF3733" }}
+                style={{ backgroundColor: "#1a2a1a", borderRadius: 12, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: "#D4AF3733" }}
               >
                 <Text style={{ color: "#D4AF37", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
                   {T("cancel") || "Cancelar"}
                 </Text>
               </BouncePressable>
               <BouncePressable
+                wrapperStyle={{ flex: 1 }}
                 onPress={() => {
                   playButton().catch(() => {});
                   setShowExitModal(false);
@@ -2159,7 +2166,7 @@ export default function OnlineGameScreen() {
                   }
                   router.back();
                 }}
-                style={{ flex: 1, backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}
+                style={{ backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}
               >
                 <Text style={{ color: "#fff", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
                   {T("exitConfirm" as any) || "Salir"}

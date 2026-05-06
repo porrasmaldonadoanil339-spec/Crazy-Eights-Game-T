@@ -132,10 +132,10 @@ function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
       <Text style={styles.suitTitle}>{T("chooseSuit")}</Text>
       <View style={styles.suitGrid}>
         {SUITS.map(s => (
-          <Pressable key={s} onPress={() => onChoose(s)} style={styles.suitBtn}>
+          <BouncePressable key={s} inline onPress={() => onChoose(s)} style={styles.suitBtn}>
             <Text style={[styles.suitSym, { color: suitColor(s) }]}>{suitSymbol(s)}</Text>
             <Text style={styles.suitLbl}>{suitName(s)}</Text>
-          </Pressable>
+          </BouncePressable>
         ))}
       </View>
     </View>
@@ -168,12 +168,12 @@ function PassDeviceOverlay({ playerName, playerColor, message, onReady }: {
         {message ? <Text style={styles.passMessage} numberOfLines={2}>{message}</Text> : null}
         <Text style={styles.passInstruction}>{T("passDevice")} {playerName}</Text>
         <Animated.View style={btnStyle}>
-          <Pressable style={[styles.passBtn, { borderColor: playerColor }]} onPress={onReady}>
+          <BouncePressable style={[styles.passBtn, { borderColor: playerColor }]} onPress={onReady}>
             <LinearGradient colors={[playerColor + "30", playerColor + "10"]} style={styles.passBtnInner}>
               <Ionicons name="eye-outline" size={20} color={playerColor} />
               <Text style={[styles.passBtnText, { color: playerColor }]}>{T("showMyCards")}</Text>
             </LinearGradient>
-          </Pressable>
+          </BouncePressable>
         </Animated.View>
       </View>
     </View>
@@ -192,11 +192,11 @@ function WinOverlay({ winnerName, winnerColor, onClose }: {
         <Ionicons name="trophy" size={72} color={winnerColor} />
         <Text style={[styles.winSubtitle, { color: winnerColor, opacity: 0.7 }]}>{T("winner")}</Text>
         <Text style={[styles.winName, { color: winnerColor }]} numberOfLines={2}>{winnerName}</Text>
-        <Pressable style={styles.winBtn} onPress={onClose}>
+        <BouncePressable style={styles.winBtn} onPress={onClose}>
           <LinearGradient colors={[Colors.gold, Colors.gold + "bb"]} style={styles.winBtnGrad}>
             <Text style={styles.winBtnText}>{T("returnMenu")}</Text>
           </LinearGradient>
-        </Pressable>
+        </BouncePressable>
       </View>
     </View>
   );
@@ -531,9 +531,9 @@ export default function MultiGameScreen() {
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.header}>
-          <Pressable onPress={() => { playButton().catch(() => {}); router.back(); }} style={styles.backBtn}>
+          <BouncePressable inline onPress={() => { playButton().catch(() => {}); router.back(); }} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={18} color={Colors.gold} />
-          </Pressable>
+          </BouncePressable>
           <Text style={styles.configTitle}>{T("multiplayer")}</Text>
           <View style={{ width: 34 }} />
         </View>
@@ -544,25 +544,26 @@ export default function MultiGameScreen() {
             <Text style={styles.configLabel}>{T("playerCount")}</Text>
             <View style={styles.chipRow}>
               {[2, 3, 4, 6].map(n => (
-                <Pressable
+                <BouncePressable
                   key={n}
+                  inline
                   onPress={() => { playButton().catch(() => {}); setPlayerCountSelect(n); }}
                   style={[styles.chip, playerCountSelect === n && styles.chipActive]}
                 >
                   <Text style={[styles.chipText, playerCountSelect === n && styles.chipTextActive]}>{n}P</Text>
-                </Pressable>
+                </BouncePressable>
               ))}
             </View>
             <Text style={styles.configDesc}>
               {playerCountSelect} {T("players")} {T("local").toLowerCase()}. {T("passDevicePrompt") || "Pasa el dispositivo entre turnos."}
             </Text>
 
-            <Pressable style={styles.startBtn} onPress={handleStartGame}>
+            <BouncePressable style={styles.startBtn} onPress={handleStartGame}>
               <LinearGradient colors={[Colors.gold, "#B8860B"]} style={styles.startBtnGrad}>
                 <Ionicons name="play" size={20} color="#000" />
                 <Text style={styles.startBtnText}>{T("startGame")}</Text>
               </LinearGradient>
-            </Pressable>
+            </BouncePressable>
           </View>
         </View>
       </View>
@@ -837,9 +838,13 @@ export default function MultiGameScreen() {
         </View>
 
         {/* Message bar */}
-        <View style={[styles.messageBubble, { top: tableCenterY + tableH / 2 - 4 }]}>
+        <Animated.View
+          key={`msg-${gameState.message}`}
+          entering={FadeIn.duration(180)}
+          style={[styles.messageBubble, { top: tableCenterY + tableH / 2 - 4 }]}
+        >
           <Text style={styles.messageText} numberOfLines={1}>{gameState.message}</Text>
-        </View>
+        </Animated.View>
 
       </View>
 
@@ -884,16 +889,18 @@ export default function MultiGameScreen() {
             </Text>
             <View style={{ flexDirection: "row", gap: 12 }}>
               <BouncePressable
+                wrapperStyle={{ flex: 1 }}
                 onPress={() => { playButton().catch(() => {}); setShowExitModal(false); }}
-                style={{ flex: 1, backgroundColor: "#1a2a1a", borderRadius: 12, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: "#D4AF3733" }}
+                style={{ backgroundColor: "#1a2a1a", borderRadius: 12, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: "#D4AF3733" }}
               >
                 <Text style={{ color: "#D4AF37", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
                   {T("cancel") || "Cancelar"}
                 </Text>
               </BouncePressable>
               <BouncePressable
+                wrapperStyle={{ flex: 1 }}
                 onPress={() => { playButton().catch(() => {}); setShowExitModal(false); router.back(); }}
-                style={{ flex: 1, backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}
+                style={{ backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}
               >
                 <Text style={{ color: "#fff", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
                   {T("exitConfirm" as any) || "Salir"}

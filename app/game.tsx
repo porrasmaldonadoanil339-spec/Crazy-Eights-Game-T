@@ -351,10 +351,10 @@ function SuitPicker({ visible, onSelect, isJoker }: {
             <Text style={styles.suitSub}>{isJoker ? T("jokerDesc") : T("chooseSuitSub8")}</Text>
             <View style={styles.suitGrid}>
               {SUITS.map((suit) => (
-                <Pressable key={suit} onPress={() => onSelect(suit)} style={({ pressed }) => [styles.suitOption, pressed && styles.suitOptionPressed]}>
+                <BouncePressable key={suit} inline onPress={() => onSelect(suit)} style={({ pressed }) => [styles.suitOption, pressed && styles.suitOptionPressed]}>
                   <Text style={[styles.suitSymLg, { color: suitColor(suit) }]}>{suitSymbol(suit)}</Text>
                   <Text style={styles.suitLbl}>{T(`suit_${suit}` as any)}</Text>
-                </Pressable>
+                </BouncePressable>
               ))}
             </View>
           </LinearGradient>
@@ -450,10 +450,10 @@ function ChallengeRulesModal({ rules, lang, onClose }: {
               </View>
             </View>
           ))}
-          <Pressable onPress={onClose} style={crStyles.btn}>
+          <BouncePressable onPress={onClose} style={crStyles.btn}>
             <Ionicons name="flash" size={16} color="#010804" />
             <Text style={crStyles.btnText}>{acceptLabel}</Text>
-          </Pressable>
+          </BouncePressable>
         </LinearGradient>
       </Animated.View>
     </View>
@@ -600,14 +600,14 @@ function ExitConfirmModal({ visible, isRanked, onCancel, onConfirm }: {
             </View>
           )}
           <View style={ecStyles.btns}>
-            <Pressable onPress={onCancel} style={ecStyles.cancelBtn}>
+            <BouncePressable wrapperStyle={{ flex: 1 }} onPress={onCancel} style={ecStyles.cancelBtn}>
               <Ionicons name="arrow-back" size={16} color="#FFFFFF" />
               <Text style={ecStyles.cancelTxt}>{T("cancel")}</Text>
-            </Pressable>
-            <Pressable onPress={onConfirm} style={ecStyles.exitBtn}>
+            </BouncePressable>
+            <BouncePressable wrapperStyle={{ flex: 1 }} onPress={onConfirm} style={ecStyles.exitBtn}>
               <Ionicons name="exit" size={16} color="#FFFFFF" />
               <Text style={ecStyles.exitTxt}>{T("exitGameBtn")}</Text>
-            </Pressable>
+            </BouncePressable>
           </View>
         </LinearGradient>
       </Animated.View>
@@ -720,15 +720,15 @@ function TournamentModal({ scores, round, onContinue, onQuit, lastRoundWon }: {
           {/* Buttons */}
           <View style={styles.endBtns}>
             {!isOver && (
-              <Pressable onPress={onContinue} style={[styles.btnPrimary, { backgroundColor: accentColor }]}>
+              <BouncePressable onPress={onContinue} style={[styles.btnPrimary, { backgroundColor: accentColor }]}>
                 <Ionicons name={isFinalRound ? "flash" : "arrow-forward"} size={16} color="#1a0a00" />
                 <Text style={styles.btnPrimaryTxt}>{isFinalRound ? "¡Round Final!" : T("continueRound")}</Text>
-              </Pressable>
+              </BouncePressable>
             )}
-            <Pressable onPress={onQuit} style={[styles.btnSecondary, isOver && { flex: 1 }]}>
+            <BouncePressable wrapperStyle={isOver ? { flex: 1 } : undefined} onPress={onQuit} style={styles.btnSecondary}>
               <Ionicons name={isOver ? "home" : "flag"} size={14} color={accentColor} />
               <Text style={[styles.btnSecondaryTxt, { color: accentColor }]}>{isOver ? T("returnMenu") : T("abandon")}</Text>
-            </Pressable>
+            </BouncePressable>
           </View>
 
         </LinearGradient>
@@ -893,7 +893,7 @@ function ChestEarnedBadge({ chestType, onTap }: { chestType: ChestType; onTap: (
     chestType === "epic" ? "diamond" :
     chestType === "rare" ? "cube-outline" : "cube";
   return (
-    <Pressable onPress={onTap}>
+    <BouncePressable inline onPress={onTap}>
       <Animated.View style={[{
         flexDirection: "row", alignItems: "center", gap: 10,
         backgroundColor: config.bgColors[1], borderRadius: 14,
@@ -916,7 +916,7 @@ function ChestEarnedBadge({ chestType, onTap }: { chestType: ChestType; onTap: (
           <Ionicons name="gift" size={20} color={config.glowColor} />
         </View>
       </Animated.View>
-    </Pressable>
+    </BouncePressable>
   );
 }
 
@@ -1080,7 +1080,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
 
           {/* Friend Request Button */}
           {cpuProfile && !isFriend && (
-            <Pressable
+            <BouncePressable
               onPress={handleAddFriend}
               disabled={requestSent}
               style={[
@@ -1097,7 +1097,7 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
               <Text style={[styles.friendAddBtnText, { color: accentColor }]}>
                 {requestSent ? T("requestSent" as any) : `${T("addFriendTo" as any)} ${cpuProfile.name}`}
               </Text>
-            </Pressable>
+            </BouncePressable>
           )}
 
           {/* Divider */}
@@ -1147,20 +1147,20 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
 
           {/* Buttons */}
           <View style={styles.endBtns}>
-            <Pressable
+            <BouncePressable
               onPress={onRestart}
               style={({ pressed }) => [styles.btnPrimary, { backgroundColor: accentColor, opacity: pressed ? 0.85 : 1 }]}
             >
               <Ionicons name="refresh" size={16} color="#1a0a00" />
               <Text style={styles.btnPrimaryTxt}>{T("playAgain")}</Text>
-            </Pressable>
-            <Pressable
+            </BouncePressable>
+            <BouncePressable
               onPress={onHome}
               style={({ pressed }) => [styles.btnSecondary, pressed && { opacity: 0.7 }]}
             >
               <Ionicons name="home" size={14} color={accentColor} />
               <Text style={[styles.btnSecondaryTxt, { color: accentColor }]}>{T("mainMenu")}</Text>
-            </Pressable>
+            </BouncePressable>
           </View>
 
         </LinearGradient>
@@ -2104,9 +2104,9 @@ export default function GameScreen() {
   if (!gameState) {
     return (
       <View style={[styles.container, { paddingTop: topPad }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <BouncePressable inline onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.gold} />
-        </Pressable>
+        </BouncePressable>
       </View>
     );
   }
@@ -2426,7 +2426,11 @@ export default function GameScreen() {
         </View>
 
         {/* Message */}
-        <Animated.View style={[styles.messageBubble, msgStyle]}>
+        <Animated.View
+          key={`msg-${dealAnimationDone ? gameState.message : "dealing"}`}
+          entering={FadeIn.duration(180)}
+          style={[styles.messageBubble, msgStyle]}
+        >
           <Text style={styles.messageText} numberOfLines={2}>
             {session?.mode === "practice" && isPlayerTurn && adviceCardId 
               ? `${T("practiceHint")}: ${suitName(gameState.playerHand.find(c => c.id === adviceCardId)!.suit)} ${gameState.playerHand.find(c => c.id === adviceCardId)!.rank}`
@@ -2774,7 +2778,7 @@ export default function GameScreen() {
             </Text>
 
             {/* Mute emotes */}
-            <Pressable
+            <BouncePressable
               style={styles.gameMenuRow}
               onPress={() => { setMuteCpuEmotes(m => !m); playSound("button_press").catch(() => {}); }}
             >
@@ -2787,10 +2791,10 @@ export default function GameScreen() {
               <View style={[styles.gameMenuToggle, { backgroundColor: muteCpuEmotes ? "#E74C3C" : "#27AE60" }]}>
                 <Text style={styles.gameMenuToggleTxt}>{muteCpuEmotes ? "OFF" : "ON"}</Text>
               </View>
-            </Pressable>
+            </BouncePressable>
 
             {/* SFX toggle */}
-            <Pressable
+            <BouncePressable
               style={styles.gameMenuRow}
               onPress={() => {
                 const next = !inGameSfxEnabled;
@@ -2808,10 +2812,10 @@ export default function GameScreen() {
               <View style={[styles.gameMenuToggle, { backgroundColor: inGameSfxEnabled ? "#27AE60" : "#E74C3C" }]}>
                 <Text style={styles.gameMenuToggleTxt}>{inGameSfxEnabled ? "ON" : "OFF"}</Text>
               </View>
-            </Pressable>
+            </BouncePressable>
 
             {/* Music toggle */}
-            <Pressable
+            <BouncePressable
               style={styles.gameMenuRow}
               onPress={() => {
                 playSound("button_press").catch(() => {});
@@ -2835,18 +2839,18 @@ export default function GameScreen() {
               <View style={[styles.gameMenuToggle, { backgroundColor: inGameMusicEnabled ? "#27AE60" : "#E74C3C" }]}>
                 <Text style={styles.gameMenuToggleTxt}>{inGameMusicEnabled ? "ON" : "OFF"}</Text>
               </View>
-            </Pressable>
+            </BouncePressable>
 
             {/* Divider */}
             <View style={styles.gameMenuDivider} />
 
             {/* Close */}
-            <Pressable style={styles.gameMenuCloseBtn} onPress={closeGameMenu}>
+            <BouncePressable style={styles.gameMenuCloseBtn} onPress={closeGameMenu}>
               <Ionicons name="play" size={16} color={Colors.gold} />
               <Text style={styles.gameMenuCloseTxt}>
                 {profile.language === "en" ? "Back to game" : "Volver a la partida"}
               </Text>
-            </Pressable>
+            </BouncePressable>
           </Pressable>
         </Pressable>
       )}
