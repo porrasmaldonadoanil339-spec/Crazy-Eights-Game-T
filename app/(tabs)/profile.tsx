@@ -776,15 +776,15 @@ export default function ProfileScreen() {
                 <View style={{ flexDirection: "row", gap: 6 }}>
                   <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
                     <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: textColor }}>{games}</Text>
-                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsGames").toUpperCase()}</Text>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: textMuted, marginTop: 2 }}>{T("statsGames").toUpperCase()}</Text>
                   </View>
                   <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
                     <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#27AE60" }}>{wins}</Text>
-                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsWins").toUpperCase()}</Text>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: textMuted, marginTop: 2 }}>{T("statsWins").toUpperCase()}</Text>
                   </View>
                   <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
                     <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: winRate >= 50 ? "#D4AF37" : textMuted }}>{winRate}%</Text>
-                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsWinRate").toUpperCase()}</Text>
+                    <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: textMuted, marginTop: 2 }}>{T("statsWinRate").toUpperCase()}</Text>
                   </View>
                 </View>
               </View>
@@ -828,15 +828,15 @@ export default function ProfileScreen() {
                   <View style={{ flexDirection: "row", gap: 6 }}>
                     <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
                       <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: textColor }}>{games}</Text>
-                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsGames").toUpperCase()}</Text>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: textMuted, marginTop: 2 }}>{T("statsGames").toUpperCase()}</Text>
                     </View>
                     <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
                       <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#27AE60" }}>{wins}</Text>
-                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsWins").toUpperCase()}</Text>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: textMuted, marginTop: 2 }}>{T("statsWins").toUpperCase()}</Text>
                     </View>
                     <View style={{ flex: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", borderRadius: 8, paddingVertical: 6, alignItems: "center" }}>
                       <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: winRateE >= 50 ? "#D4AF37" : textMuted }}>{winRateE}%</Text>
-                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: textMuted, marginTop: 2 }}>{T("statsWinRate").toUpperCase()}</Text>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: textMuted, marginTop: 2 }}>{T("statsWinRate").toUpperCase()}</Text>
                     </View>
                   </View>
                 </View>
@@ -882,7 +882,7 @@ export default function ProfileScreen() {
                   </Text>
                   {isCurrent && (
                     <View style={{ backgroundColor: color, borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1, marginTop: 3 }}>
-                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 7, color: "#000" }}>
+                      <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: "#000" }}>
                         {DIVISIONS[profile.rankedProfile.division]}
                       </Text>
                     </View>
@@ -1021,7 +1021,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card, paddingHorizontal: 7, paddingVertical: 3,
     borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
   },
-  frameBadgeText: { fontFamily: "Nunito_700Bold", fontSize: 9 },
+  frameBadgeText: { fontFamily: "Nunito_700Bold", fontSize: 11 },
   profileDetails: { flex: 1, gap: 6 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   profileName: { fontFamily: "Nunito_800ExtraBold", fontSize: 18, color: Colors.text },
@@ -1130,13 +1130,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#D4AF37", maxWidth: 84,
   },
   exclusiveBadgeText: {
-    fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: "#000",
+    fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: "#000",
     letterSpacing: 0.3,
   },
   avatarIconWrap: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center" },
   avatarOptionName: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.text, textAlign: "center" },
   priceBadge: { flexDirection: "row", alignItems: "center", gap: 2 },
-  priceText: { fontFamily: "Nunito_700Bold", fontSize: 9, color: Colors.gold },
+  priceText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.gold },
   framePreview: {
     width: 44, height: 44, borderRadius: 22,
     alignItems: "center", justifyContent: "center",

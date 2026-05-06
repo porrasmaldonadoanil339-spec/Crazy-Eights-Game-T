@@ -333,7 +333,7 @@ const lobbyStyles = StyleSheet.create({
   teamTag: {
     paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1,
   },
-  teamTagText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, letterSpacing: 1 },
+  teamTagText: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, letterSpacing: 1 },
 });
 
 // ─── Small face-down card ────────────────────────────────────────────────
@@ -2293,7 +2293,7 @@ const gameStyles = StyleSheet.create({
     marginTop: 4, paddingHorizontal: 6, paddingVertical: 2,
     borderRadius: 6, alignSelf: "center",
   },
-  drawLabelText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, color: "#fff" },
+  drawLabelText: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: "#fff" },
   dirArrowWrap: { alignItems: "center", gap: 2 },
   dirArrow: { fontSize: 18, color: "#D4AF37", opacity: 0.7 },
   suitOnTable: { fontSize: 16, fontFamily: "Nunito_800ExtraBold" },
@@ -2311,7 +2311,7 @@ const gameStyles = StyleSheet.create({
   },
   cpuFlag: { fontSize: 16 },
   cpuName: { fontFamily: "Nunito_700Bold", fontSize: 10, maxWidth: 70 },
-  cpuLevel: { fontFamily: "Nunito_400Regular", fontSize: 9, color: Colors.textDim },
+  cpuLevel: { fontFamily: "Nunito_400Regular", fontSize: 11, color: Colors.textDim },
   onlineDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#2ecc71" },
   topCardFan: { flexDirection: "row", alignItems: "flex-end" },
   sideCardFan: { alignItems: "center" },

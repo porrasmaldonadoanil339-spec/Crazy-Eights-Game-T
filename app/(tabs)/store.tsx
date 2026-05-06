@@ -1056,9 +1056,9 @@ const styles = StyleSheet.create({
   dailyStripTimer: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#FF6B6B", fontVariant: ["tabular-nums"] },
   dailyBadge: { position: "absolute", top: 6, left: 6, zIndex: 10 },
   animatedBadge: { position: "absolute", top: 6, right: 36, zIndex: 10, flexDirection: "row", alignItems: "center", gap: 2, backgroundColor: "#9B59B6", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 5, borderWidth: 1, borderColor: "#fff5" },
-  animatedBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 7, color: "#fff", letterSpacing: 0.6 },
+  animatedBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: "#fff", letterSpacing: 0.6 },
   dailyBadgeGrad: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: "#fff5" },
-  dailyBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, color: "#fff", letterSpacing: 0.8 },
+  dailyBadgeText: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: "#fff", letterSpacing: 0.8 },
   listContent: { paddingHorizontal: 16, gap: 10 },
   itemCard: {
     width: "47.5%", borderRadius: 16, overflow: "hidden",
@@ -1188,7 +1188,7 @@ const styles = StyleSheet.create({
   effectTopRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
   effectName: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: Colors.text, flex: 1 },
   effectRarityBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  effectRarityText: { fontFamily: "Nunito_800ExtraBold", fontSize: 8, letterSpacing: 0.5 },
+  effectRarityText: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, letterSpacing: 0.5 },
   effectDesc: { fontFamily: "Nunito_400Regular", fontSize: 12, color: Colors.textMuted, lineHeight: 16 },
   effectFooter: { marginTop: 6 },
   // Modal
@@ -1404,7 +1404,7 @@ const styles = StyleSheet.create({
   },
   featuredHotText: {
     fontFamily: "Nunito_800ExtraBold",
-    fontSize: 8,
+    fontSize: 10,
     color: "#fff",
     letterSpacing: 0.5,
   },
@@ -1470,7 +1470,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4, paddingVertical: 2, borderRadius: 5, borderWidth: 0.8,
   },
   emoteShopStatusText: {
-    fontFamily: "Nunito_800ExtraBold", fontSize: 8, letterSpacing: 0.4,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 10, letterSpacing: 0.4,
   },
   emoteShopFree: {
     fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: "#2ECC71", letterSpacing: 0.4,

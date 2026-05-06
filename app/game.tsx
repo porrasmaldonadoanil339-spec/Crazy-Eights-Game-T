@@ -3056,7 +3056,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(39,174,96,0.2)", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
     borderWidth: 1, borderColor: "#27AE60",
   },
-  jActiveTxt: { fontFamily: "Nunito_700Bold", fontSize: 9, color: "#27AE60" },
+  jActiveTxt: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#27AE60" },
   messageBubble: {
     backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 6,
@@ -3077,7 +3077,7 @@ const styles = StyleSheet.create({
     position: "absolute", bottom: -20, left: 0, right: 0,
     borderRadius: 6, paddingVertical: 3, alignItems: "center",
   },
-  drawLabelText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: "#1a0a00", letterSpacing: 1 },
+  drawLabelText: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#1a0a00", letterSpacing: 1 },
   vsDivider: { alignItems: "center", gap: 5 },
   vsDividerLine: { width: 1, height: 30, backgroundColor: Colors.border },
   vsDividerText: { fontSize: 12, color: Colors.gold + "50" },
@@ -3164,7 +3164,7 @@ const styles = StyleSheet.create({
   endSub: { fontFamily: "Nunito_400Regular", fontSize: 13, color: Colors.textMuted, textAlign: "center", lineHeight: 19 },
   endDivider: { width: "100%", height: 1 },
   rewardSection: { width: "100%", gap: 8 },
-  rewardLabel: { fontFamily: "Nunito_700Bold", fontSize: 9, color: Colors.textDim, letterSpacing: 2, textAlign: "center" },
+  rewardLabel: { fontFamily: "Nunito_700Bold", fontSize: 11, color: Colors.textDim, letterSpacing: 2, textAlign: "center" },
   rewardRow: { flexDirection: "row", gap: 10, justifyContent: "center" },
   rewardChip: {
     flexDirection: "row", alignItems: "center", gap: 5,
@@ -3425,7 +3425,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   pingIndicator: { flexDirection: "row", alignItems: "center", gap: 2 },
-  pingText: { fontFamily: "Nunito_700Bold", fontSize: 9 },
+  pingText: { fontFamily: "Nunito_700Bold", fontSize: 11 },
   menuHamburger: {
     width: 28, height: 28, borderRadius: 8, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(212,175,55,0.12)", borderWidth: 1, borderColor: "rgba(212,175,55,0.3)",

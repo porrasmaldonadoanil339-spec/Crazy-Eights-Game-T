@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   rarityChip: {
     paddingHorizontal: 5, paddingVertical: 1, borderRadius: 5, borderWidth: 1,
   },
-  rarityChipText: { fontFamily: "Nunito_800ExtraBold", fontSize: 7, letterSpacing: 0.4 },
+  rarityChipText: { fontFamily: "Nunito_800ExtraBold", fontSize: 10, letterSpacing: 0.4 },
   equippedBadgeFloat: {
     position: "absolute", top: -2, right: 2,
     width: 18, height: 18, borderRadius: 9,
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   equippedTextLine: {
-    fontFamily: "Nunito_800ExtraBold", fontSize: 7, letterSpacing: 0.8, marginTop: 1,
+    fontFamily: "Nunito_800ExtraBold", fontSize: 10, letterSpacing: 0.8, marginTop: 1,
   },
   exclusiveBadge: {
     flexDirection: "row", alignItems: "center", gap: 2,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
   },
   exclusiveBadgeText: {
-    fontFamily: "Nunito_800ExtraBold", fontSize: 6, color: "#000",
+    fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: "#000",
     letterSpacing: 0.2,
   },
   emptyWrap: { alignItems: "center", padding: 40, gap: 10 },
