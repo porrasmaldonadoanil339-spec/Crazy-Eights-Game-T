@@ -149,6 +149,9 @@ export default function RankedScreen() {
         level: level ?? 1,
         position: MY_POSITION + 1,
         isMe: true,
+        // Real equipped avatar/frame so the row uses AvatarDisplay (matches the
+        // top "Mi rango" card) instead of a generic person silhouette.
+        ...({ myAvatarId: profile.avatarId, myFrameId: profile.selectedFrameId } as any),
       };
     }
     return players;
@@ -236,7 +239,15 @@ export default function RankedScreen() {
         </View>
         
         <View style={[styles.avatarRing, { borderColor: RANK_COLORS[item.rank] }]}>
-          {item.photoUrl ? (
+          {isMe ? (
+            // Real equipped avatar + frame for the player row.
+            <AvatarDisplay
+              avatarId={item.myAvatarId ?? profile.avatarId}
+              frameId={item.myFrameId ?? profile.selectedFrameId}
+              photoUri={item.photoUrl}
+              size={32}
+            />
+          ) : item.photoUrl ? (
             <Image source={{ uri: item.photoUrl }} style={styles.avatarSmallPhoto} />
           ) : (
             <View style={[styles.avatarSmall, { backgroundColor: item.avatarColor }]}>

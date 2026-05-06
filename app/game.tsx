@@ -1324,23 +1324,15 @@ export default function GameScreen() {
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  // Hardware back button (Android) → show "¿Deseas salir?" confirmation modal
+  // Hardware back button (Android) → exit immediately. No modal, no friction.
   useEffect(() => {
     if (Platform.OS === "web" || Platform.OS === "ios") return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      const phase = gameStateRef.current?.phase;
-      const isOver = phase === "player_wins" || phase === "ai_wins" || phase === "draw";
-      if (isOver) { router.back(); return true; }
-      if (showExitConfirm) {
-        // Confirmation already open — close it instead of popping the screen
-        setShowExitConfirm(false);
-        return true;
-      }
-      setShowExitConfirm(true);
+      router.back();
       return true;
     });
     return () => sub.remove();
-  }, [showExitConfirm]);
+  }, []);
   const [showChestReward, setShowChestReward] = useState(false);
   const [pendingChestType, setPendingChestType] = useState<ChestType | null>(null);
   const [pendingChestId, setPendingChestId] = useState<string | null>(null);
@@ -1984,7 +1976,9 @@ export default function GameScreen() {
       const _evId = session.eventId ?? null;
       updateChallengeProgress("wins", won ? 1 : 0, session.mode, false, _evId);
       updateChallengeProgress("play_mode", 1, session.mode, false, _evId);
-      updateChallengeProgress("cards_played", session.cardsPlayedThisGame ?? 0, session.mode, false, _evId);
+      // cards_played is overloaded: covers both played AND drawn (see CHALLENGES_POOL
+      // entries "draw_20_cards" / "c13" which use type cards_played but reward draws).
+      updateChallengeProgress("cards_played", (session.cardsPlayedThisGame ?? 0) + (session.cardsDrawnThisGame ?? 0), session.mode, false, _evId);
       updateChallengeProgress("specials", session.eightsPlayedThisGame, session.mode, false, _evId);
 
       // Event-specific achievement progress
@@ -2005,7 +1999,7 @@ export default function GameScreen() {
       // Even if lost, progress "play_mode" and "cards_played"
       const _evId = session.eventId ?? null;
       updateChallengeProgress("play_mode", 1, session.mode, false, _evId);
-      updateChallengeProgress("cards_played", session.cardsPlayedThisGame ?? 0, session.mode, false, _evId);
+      updateChallengeProgress("cards_played", (session.cardsPlayedThisGame ?? 0) + (session.cardsDrawnThisGame ?? 0), session.mode, false, _evId);
       updateChallengeProgress("specials", session.eightsPlayedThisGame, session.mode, false, _evId);
     }
     if (session.eightsPlayedThisGame > 0) {
@@ -2329,7 +2323,8 @@ export default function GameScreen() {
         <Pressable
           onPress={() => {
             playSound("button_press").catch(() => {});
-            if (isGameOver) { router.back(); } else { setShowExitConfirm(true); }
+            // No friction: back button always exits immediately.
+            router.back();
           }}
           style={styles.backBtn}
         >

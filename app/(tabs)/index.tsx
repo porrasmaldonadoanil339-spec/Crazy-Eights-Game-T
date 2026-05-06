@@ -1685,10 +1685,12 @@ const styles = StyleSheet.create({
   quickPlayLabel: { fontFamily: "Nunito_800ExtraBold", fontSize: 26, color: "#000", letterSpacing: 3, lineHeight: 30 },
   quickPlaySubtitle: { fontFamily: "Nunito_700Bold", fontSize: 12, color: "#00000099", letterSpacing: 1.2, marginTop: 1 },
 
-  // Mode grid
-  modesGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  modeCard: { width: "47.5%", borderRadius: 16, overflow: "hidden" },
-  modeCardFull: { width: "100%" },
+  // Mode grid — justify-content: space-between guarantees clean 2-column layout
+  // on every screen size; the 47.5% width leaves a small gutter without ever
+  // overflowing on narrow phones (320pt iPhone SE → 152pt per card).
+  modesGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 10 },
+  modeCard: { width: "48.5%", borderRadius: 16, overflow: "hidden" },
+  modeCardFull: { width: "100%", alignSelf: "center" },
   modeCardPressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
   modeGrad: {
     padding: 14, minHeight: 150, justifyContent: "space-between", alignItems: "center",
@@ -2118,9 +2120,10 @@ function ChestInventoryItem({ chest, onTap }: { chest: Chest; onTap: () => void 
   return (
     <Pressable onPress={onTap}>
       <Animated.View style={[{
-        width: 80, alignItems: "center", gap: 6,
+        width: 84, height: 116,
+        alignItems: "center", justifyContent: "space-between",
         backgroundColor: cfg.bgColors[1],
-        borderRadius: 12, padding: 12,
+        borderRadius: 12, paddingVertical: 12, paddingHorizontal: 8,
         borderWidth: 1.5, borderColor: cfg.borderColor,
         shadowColor: cfg.glowColor, shadowOffset: { width: 0, height: 0 }, elevation: 6,
       }, glowStyle]}>
