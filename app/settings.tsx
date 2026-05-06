@@ -750,7 +750,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 16 },
+  container: { paddingHorizontal: 16, width: "100%", maxWidth: 720, alignSelf: "center" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
   backBtn: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", borderWidth: 1 },
   title: { fontFamily: "Nunito_800ExtraBold", fontSize: 22, letterSpacing: 1 },

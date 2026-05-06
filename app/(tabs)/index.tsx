@@ -1852,7 +1852,7 @@ export default function PlayScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#041008" },
-  scroll: { paddingHorizontal: 16 },
+  scroll: { paddingHorizontal: 16, width: "100%", maxWidth: 820, alignSelf: "center" },
 
   feltTextureH1: { position: "absolute", left: 0, right: 0, top: "30%", height: 1, backgroundColor: "rgba(255,255,255,0.02)" },
   feltTextureH2: { position: "absolute", left: 0, right: 0, top: "65%", height: 1, backgroundColor: "rgba(255,255,255,0.02)" },

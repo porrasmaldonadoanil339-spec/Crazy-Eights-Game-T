@@ -986,7 +986,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingHorizontal: 16, paddingBottom: 24 },
+  scroll: { paddingHorizontal: 16, paddingBottom: 24, width: "100%", maxWidth: 720, alignSelf: "center" },
   screenTitle: {
     fontFamily: "Nunito_800ExtraBold", fontSize: 22, color: Colors.gold,
     letterSpacing: 4, marginBottom: 12,

@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.35)",
     textAlign: "center", marginTop: 6,
   },
-  roomContent: { paddingHorizontal: 20, paddingTop: 24, gap: 16 },
+  roomContent: { paddingHorizontal: 20, paddingTop: 24, gap: 16, width: "100%", maxWidth: 720, alignSelf: "center" },
   joinContent: {
     flex: 1, alignItems: "center", paddingHorizontal: 24, paddingTop: 32, gap: 16,
   },

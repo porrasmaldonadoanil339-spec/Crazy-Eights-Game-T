@@ -816,7 +816,7 @@ export default function StoreScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: bottomPad + 90 }}
+        contentContainerStyle={{ paddingBottom: bottomPad + 90, width: "100%", maxWidth: 820, alignSelf: "center" }}
       >
         <ChestShop themeColors={theme} themeGold={themeGold} showToast={showToast} T={T} />
         <EmotesSection

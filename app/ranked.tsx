@@ -397,7 +397,7 @@ export default function RankedScreen() {
         data={visiblePlayers}
         renderItem={renderItem}
         keyExtractor={item => item.id}
-        contentContainerStyle={{ paddingTop: topPad + 10, paddingBottom: botPad + 100 }}
+        contentContainerStyle={{ paddingTop: topPad + 10, paddingBottom: botPad + 100, width: "100%", maxWidth: 720, alignSelf: "center" }}
         showsVerticalScrollIndicator={false}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
