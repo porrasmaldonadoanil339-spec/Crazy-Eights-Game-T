@@ -40,6 +40,7 @@ import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
 import { addStars, getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
 import { updateChallengeProgress } from "@/lib/challenges";
 import BouncePressable from "@/components/BouncePressable";
+import DiscardBouncer from "@/components/DiscardBouncer";
 
 interface ServerGameState {
   discardTop: Card;
@@ -1643,7 +1644,14 @@ export default function OnlineGameScreen() {
 
             {/* Discard pile */}
             <View style={gameStyles.discardPileWrap}>
-              {topCard && <PlayingCard card={topCard} size="lg" />}
+              {topCard && (
+                <DiscardBouncer
+                  cardId={topCard.id}
+                  isSpecial={["8","Joker","7","2","10","J"].includes(topCard.rank)}
+                >
+                  <PlayingCard card={topCard} size="lg" />
+                </DiscardBouncer>
+              )}
             </View>
           </View>
         </View>
@@ -2121,15 +2129,15 @@ export default function OnlineGameScreen() {
                 : (T("exitGameSub" as any) || "¿Estás seguro de que deseas salir? Tu progreso se perderá.")}
             </Text>
             <View style={{ flexDirection: "row", gap: 12 }}>
-              <Pressable
+              <BouncePressable
                 onPress={() => { playButton().catch(() => {}); setShowExitModal(false); }}
                 style={{ flex: 1, backgroundColor: "#1a2a1a", borderRadius: 12, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: "#D4AF3733" }}
               >
                 <Text style={{ color: "#D4AF37", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
                   {T("cancel") || "Cancelar"}
                 </Text>
-              </Pressable>
-              <Pressable
+              </BouncePressable>
+              <BouncePressable
                 onPress={() => {
                   playButton().catch(() => {});
                   setShowExitModal(false);
@@ -2156,7 +2164,7 @@ export default function OnlineGameScreen() {
                 <Text style={{ color: "#fff", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
                   {T("exitConfirm" as any) || "Salir"}
                 </Text>
-              </Pressable>
+              </BouncePressable>
             </View>
           </View>
         </View>

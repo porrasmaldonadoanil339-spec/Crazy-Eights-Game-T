@@ -28,6 +28,7 @@ import { EmotePanel, EmoteBubble, type Emote } from "@/components/EmotePanel";
 import { getActiveEvent } from "@/components/EventsCard";
 import { updateChallengeProgress } from "@/lib/challenges";
 import BouncePressable from "@/components/BouncePressable";
+import DiscardBouncer from "@/components/DiscardBouncer";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const PLAYER_COLORS = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
@@ -668,7 +669,14 @@ export default function MultiGameScreen() {
 
             {/* Discard pile */}
             <View style={styles.discardPileWrap}>
-              {topCard && <PlayingCard card={topCard} size="sm" />}
+              {topCard && (
+                <DiscardBouncer
+                  cardId={topCard.id}
+                  isSpecial={["8","Joker","7","2","10","J"].includes(topCard.rank)}
+                >
+                  <PlayingCard card={topCard} size="sm" />
+                </DiscardBouncer>
+              )}
             </View>
           </View>
         </View>
@@ -875,22 +883,22 @@ export default function MultiGameScreen() {
               {T("exitGameSub" as any) || "¿Estás seguro de que deseas salir? Tu progreso se perderá."}
             </Text>
             <View style={{ flexDirection: "row", gap: 12 }}>
-              <Pressable
+              <BouncePressable
                 onPress={() => { playButton().catch(() => {}); setShowExitModal(false); }}
                 style={{ flex: 1, backgroundColor: "#1a2a1a", borderRadius: 12, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: "#D4AF3733" }}
               >
                 <Text style={{ color: "#D4AF37", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
                   {T("cancel") || "Cancelar"}
                 </Text>
-              </Pressable>
-              <Pressable
+              </BouncePressable>
+              <BouncePressable
                 onPress={() => { playButton().catch(() => {}); setShowExitModal(false); router.back(); }}
                 style={{ flex: 1, backgroundColor: "#E74C3C", borderRadius: 12, paddingVertical: 14, alignItems: "center" }}
               >
                 <Text style={{ color: "#fff", fontFamily: "Nunito_700Bold", fontSize: 14 }}>
                   {T("exitConfirm" as any) || "Salir"}
                 </Text>
-              </Pressable>
+              </BouncePressable>
             </View>
           </View>
         </View>
