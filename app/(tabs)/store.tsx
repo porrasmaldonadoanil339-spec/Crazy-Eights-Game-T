@@ -1,5 +1,5 @@
 import { CoinIcon } from "@/components/CoinIcon";
-import React, { useState, useRef, useMemo, useEffect, memo } from "react";
+import React, { useState, useRef, useMemo, useEffect, memo, useCallback } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
   Platform, Modal, FlatList, Animated, Easing,
@@ -876,9 +876,9 @@ export default function StoreScreen() {
                 item={item}
                 owned={owned}
                 isEquipped={equippedId === item.id}
-                onPress={() => { if (!owned) setConfirmItem(item); }}
-                onEquip={() => equipItem(item)}
-                onInfo={() => { setInfoItem(item); playSound("tab").catch(() => {}); }}
+                onConfirm={setConfirmItem}
+                onEquip={equipItem}
+                onInfo={setInfoItem}
               />
             );
           })}
@@ -964,9 +964,15 @@ function DailyConfirmModal({
   );
 }
 
-const DailyShopCard = memo(function DailyShopCard({ item, owned, isEquipped, onPress, onEquip, onInfo }: {
-  item: DailyShopItem; owned: boolean; isEquipped: boolean; onPress: () => void; onEquip: () => void; onInfo: () => void;
+const DailyShopCard = memo(function DailyShopCard({ item, owned, isEquipped, onConfirm, onEquip, onInfo }: {
+  item: DailyShopItem; owned: boolean; isEquipped: boolean;
+  onConfirm: (item: DailyShopItem) => void;
+  onEquip: (item: DailyShopItem) => void;
+  onInfo: (item: DailyShopItem) => void;
 }) {
+  const handlePress = useCallback(() => { if (!owned) onConfirm(item); }, [owned, onConfirm, item]);
+  const handleEquip = useCallback(() => onEquip(item), [onEquip, item]);
+  const handleInfo = useCallback(() => { onInfo(item); playSound("tab").catch(() => {}); }, [onInfo, item]);
   const T = useT();
   const theme = useTheme();
   const { profile } = useProfile();
@@ -977,7 +983,7 @@ const DailyShopCard = memo(function DailyShopCard({ item, owned, isEquipped, onP
   const isFichas = item.payCurrency === "fichas";
   return (
     <Pressable
-      onPress={owned ? undefined : onPress}
+      onPress={owned ? undefined : handlePress}
       style={({ pressed }) => [
         styles.itemCard,
         { borderColor: isEquipped ? Colors.gold + "88" : rarityColor + "55", backgroundColor: theme.surface },
@@ -986,7 +992,7 @@ const DailyShopCard = memo(function DailyShopCard({ item, owned, isEquipped, onP
       ]}
     >
       <LinearGradient colors={[rarityColor + "18", "transparent"]} style={styles.itemGrad}>
-        <Pressable onPress={(e) => { e.stopPropagation(); onInfo(); }} style={styles.infoBtn}>
+        <Pressable onPress={(e) => { e.stopPropagation(); handleInfo(); }} style={styles.infoBtn}>
           <Ionicons name="help-circle-outline" size={16} color={theme.textMuted} />
         </Pressable>
         <View style={[styles.rarityBadgeSmall, { backgroundColor: rarityColor + "22", borderColor: rarityColor + "66" }]}>
@@ -997,7 +1003,7 @@ const DailyShopCard = memo(function DailyShopCard({ item, owned, isEquipped, onP
         </View>
         <View style={styles.itemFooter}>
           {owned ? (
-            <EquipBadge isEquipped={isEquipped} onEquip={onEquip} T={T} />
+            <EquipBadge isEquipped={isEquipped} onEquip={handleEquip} T={T} />
           ) : (
             <View style={styles.priceRowSm}>
               {isFichas ? <Ionicons name="diamond" size={12} color="#3498DB" /> : <CoinIcon size={12} color={Colors.gold} />}

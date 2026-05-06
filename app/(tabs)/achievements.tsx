@@ -261,6 +261,100 @@ export default function AchievementsScreen() {
 
   const achKeyExtractor = useCallback((item: typeof ACHIEVEMENTS[number]) => item.id, []);
 
+  const bpKeyExtractor = useCallback((tier: typeof seasonTiers[number]) => String(tier.tier), []);
+  const renderBpTier = useCallback(({ item: tier }: { item: typeof seasonTiers[number] }) => {
+    const reached = profile.totalXp >= tier.xpRequired;
+    const claimedFree = profile.claimedBattlePassTiers.includes(tier.tier);
+    const claimedPremium = (profile.claimedBattlePassPremiumTiers ?? []).includes(tier.tier);
+    const canClaimFree = reached && !claimedFree;
+    const canClaimPremium = reached && !claimedPremium;
+    const freeReward = getFreeReward(tier.tier);
+    const isPremiumTrack = ["item","avatar","frame","effect","chest","title"].includes(tier.rewardType) || (tier.rewardType === "coins" && Number(tier.rewardValue) >= 200);
+    const premiumLabel = getBPRewardLabel(tier, lang);
+    return (
+      <View
+        style={[
+          styles.bpBlock,
+          { backgroundColor: themeColors.surface, borderColor: themeColors.border, paddingVertical: 10 },
+          reached && !claimedFree && { borderColor: themeGold + "88" },
+          claimedFree && claimedPremium && styles.bpTierClaimed,
+          claimedFree && !canClaimPremium && !isPremiumBattlePassActive && styles.bpTierClaimed,
+        ]}
+      >
+        <View style={styles.bpVerticalRow}>
+          <View style={styles.bpVCol}>
+            <View style={[styles.bpIconWrap, { backgroundColor: freeReward.iconColor + "22", width: 44, height: 44, borderRadius: 22 }]}>
+              {freeReward.icon === "cash" ? (
+                <CoinIcon size={22} color={reached ? freeReward.iconColor : themeColors.textDim} />
+              ) : (
+                <Ionicons name={freeReward.icon as any} size={22} color={reached ? freeReward.iconColor : themeColors.textDim} />
+              )}
+            </View>
+            <Text style={[styles.bpVColLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={2}>{getFreeRewardLabel(freeReward, lang)}</Text>
+            {canClaimFree ? (
+              <BouncePressable
+                onPress={() => handleClaimBP(tier.tier, "free")}
+                style={[styles.bpClaimBtn, { backgroundColor: themeGold, marginTop: 4 }]}
+              >
+                <Text style={styles.bpClaimText}>{claimLabel}</Text>
+              </BouncePressable>
+            ) : claimedFree ? (
+              <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+            ) : null}
+          </View>
+          <View style={styles.bpVDividerCol}>
+            <View style={[styles.bpVDivider, { backgroundColor: themeColors.border }]} />
+            <View style={[styles.bpTierNum, { backgroundColor: reached ? themeGold + "33" : themeColors.card, borderWidth: 2, borderColor: reached ? themeGold : themeColors.border }]}>
+              <Text style={[styles.bpTierNumText, { color: reached ? themeGold : themeColors.textDim }]}>{tier.tier}</Text>
+            </View>
+            <View style={[styles.bpVDivider, { backgroundColor: themeColors.border }]} />
+          </View>
+          <View style={styles.bpVCol}>
+            <View style={[styles.bpIconWrap, { backgroundColor: tier.iconColor + "22", width: 44, height: 44, borderRadius: 22, opacity: isPremiumTrack ? 1 : 0.4 }]}>
+              {tier.icon === "cash" ? (
+                <CoinIcon size={22} color={reached ? tier.iconColor : themeColors.textDim} />
+              ) : (
+                <Ionicons name={tier.icon as any} size={22} color={reached ? tier.iconColor : themeColors.textDim} />
+              )}
+            </View>
+            <Text style={[styles.bpVColLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={2}>{premiumLabel}</Text>
+            {tier.isExclusive && (
+              <View style={[styles.bpExclusiveBadge, { backgroundColor: tier.iconColor + "22", borderColor: tier.iconColor + "88" }]}>
+                <Ionicons name="sparkles" size={9} color={tier.iconColor} />
+                <Text style={[styles.bpExclusiveText, { color: tier.iconColor }]} numberOfLines={1}>{T("limitedEdition") as string}</Text>
+              </View>
+            )}
+            {isPremiumBattlePassActive ? (
+              canClaimPremium ? (
+                <BouncePressable
+                  onPress={() => handleClaimBP(tier.tier, "premium")}
+                  style={[styles.bpClaimBtn, { backgroundColor: themeGold, marginTop: 4 }]}
+                >
+                  <Text style={styles.bpClaimText}>{claimLabel}</Text>
+                </BouncePressable>
+              ) : claimedPremium ? (
+                <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+              ) : (
+                <Ionicons name="lock-closed" size={14} color={themeColors.textDim} style={{ marginTop: 2 }} />
+              )
+            ) : (
+              <Pressable
+                onPress={handleUnlockPremiumBP}
+                style={{ marginTop: 4, flexDirection: "row", alignItems: "center", gap: 3 }}
+              >
+                <Ionicons name="lock-closed" size={12} color={themeGold} />
+                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: themeGold, letterSpacing: 0.3 }} numberOfLines={1}>
+                  {T("premiumLocked" as any) || "PREMIUM"}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+        <Text style={[styles.bpTierXp, { color: themeColors.textDim, textAlign: "center", marginTop: 4 }]}>{tier.xpRequired} {xpRequiredLabel}</Text>
+      </View>
+    );
+  }, [profile.totalXp, profile.claimedBattlePassTiers, profile.claimedBattlePassPremiumTiers, themeColors, themeGold, lang, T, claimLabel, isPremiumBattlePassActive, handleClaimBP, handleUnlockPremiumBP, xpRequiredLabel]);
+
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
       <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
@@ -342,7 +436,19 @@ export default function AchievementsScreen() {
         />
       )}
       {activeTab === "battlepass" && (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} removeClippedSubviews={Platform.OS !== "web"}>
+      <FlatList
+        data={seasonTiers}
+        keyExtractor={bpKeyExtractor}
+        renderItem={renderBpTier}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS !== "web"}
+        ListFooterComponent={<View style={{ height: 100 }} />}
+        ListHeaderComponent={
+          <>
             <View style={styles.bpSeasonHeader}>
               <Ionicons name="sparkles" size={14} color={themeGold} />
               <Text style={[styles.bpSeasonText, { color: themeGold }]} numberOfLines={1}>{currentSeason.name.toUpperCase()}</Text>
@@ -447,109 +553,10 @@ export default function AchievementsScreen() {
               </View>
             </View>
 
-            {seasonTiers.map((tier) => {
-              const reached = profile.totalXp >= tier.xpRequired;
-              const claimedFree = profile.claimedBattlePassTiers.includes(tier.tier);
-              const claimedPremium = (profile.claimedBattlePassPremiumTiers ?? []).includes(tier.tier);
-              const canClaimFree = reached && !claimedFree;
-              const canClaimPremium = reached && !claimedPremium;
-              // Free reward = varies by tier (coins, plus chests at milestones every 5/10/25/50)
-              const freeReward = getFreeReward(tier.tier);
-              const isPremiumTrack = ["item","avatar","frame","effect","chest","title"].includes(tier.rewardType) || (tier.rewardType === "coins" && Number(tier.rewardValue) >= 200);
-              const premiumLabel = getBPRewardLabel(tier, lang);
-              return (
-                <View
-                  key={tier.tier}
-                  style={[
-                    styles.bpBlock,
-                    { backgroundColor: themeColors.surface, borderColor: themeColors.border, paddingVertical: 10 },
-                    reached && !claimedFree && { borderColor: themeGold + "88" },
-                    claimedFree && claimedPremium && styles.bpTierClaimed,
-                    claimedFree && !canClaimPremium && !isPremiumBattlePassActive && styles.bpTierClaimed,
-                  ]}
-                >
-                  <View style={styles.bpVerticalRow}>
-                    {/* FREE column */}
-                    <View style={styles.bpVCol}>
-                      <View style={[styles.bpIconWrap, { backgroundColor: freeReward.iconColor + "22", width: 44, height: 44, borderRadius: 22 }]}>
-                        {freeReward.icon === "cash" ? (
-                          <CoinIcon size={22} color={reached ? freeReward.iconColor : themeColors.textDim} />
-                        ) : (
-                          <Ionicons name={freeReward.icon as any} size={22} color={reached ? freeReward.iconColor : themeColors.textDim} />
-                        )}
-                      </View>
-                      <Text style={[styles.bpVColLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={2}>{getFreeRewardLabel(freeReward, lang)}</Text>
-                      {canClaimFree ? (
-                        <BouncePressable
-                          onPress={() => handleClaimBP(tier.tier, "free")}
-                          style={[styles.bpClaimBtn, { backgroundColor: themeGold, marginTop: 4 }]}
-                        >
-                          <Text style={styles.bpClaimText}>{claimLabel}</Text>
-                        </BouncePressable>
-                      ) : claimedFree ? (
-                        <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
-                      ) : null}
-                    </View>
-
-                    {/* Center divider with tier number */}
-                    <View style={styles.bpVDividerCol}>
-                      <View style={[styles.bpVDivider, { backgroundColor: themeColors.border }]} />
-                      <View style={[styles.bpTierNum, { backgroundColor: reached ? themeGold + "33" : themeColors.card, borderWidth: 2, borderColor: reached ? themeGold : themeColors.border }]}>
-                        <Text style={[styles.bpTierNumText, { color: reached ? themeGold : themeColors.textDim }]}>{tier.tier}</Text>
-                      </View>
-                      <View style={[styles.bpVDivider, { backgroundColor: themeColors.border }]} />
-                    </View>
-
-                    {/* PREMIUM column */}
-                    <View style={styles.bpVCol}>
-                      <View style={[styles.bpIconWrap, { backgroundColor: tier.iconColor + "22", width: 44, height: 44, borderRadius: 22, opacity: isPremiumTrack ? 1 : 0.4 }]}>
-                        {tier.icon === "cash" ? (
-                          <CoinIcon size={22} color={reached ? tier.iconColor : themeColors.textDim} />
-                        ) : (
-                          <Ionicons name={tier.icon as any} size={22} color={reached ? tier.iconColor : themeColors.textDim} />
-                        )}
-                      </View>
-                      <Text style={[styles.bpVColLabel, { color: reached ? themeColors.text : themeColors.textDim }]} numberOfLines={2}>{premiumLabel}</Text>
-                      {tier.isExclusive && (
-                        <View style={[styles.bpExclusiveBadge, { backgroundColor: tier.iconColor + "22", borderColor: tier.iconColor + "88" }]}>
-                          <Ionicons name="sparkles" size={9} color={tier.iconColor} />
-                          <Text style={[styles.bpExclusiveText, { color: tier.iconColor }]} numberOfLines={1}>{T("limitedEdition") as string}</Text>
-                        </View>
-                      )}
-                      {isPremiumBattlePassActive ? (
-                        canClaimPremium ? (
-                          <BouncePressable
-                            onPress={() => handleClaimBP(tier.tier, "premium")}
-                            style={[styles.bpClaimBtn, { backgroundColor: themeGold, marginTop: 4 }]}
-                          >
-                            <Text style={styles.bpClaimText}>{claimLabel}</Text>
-                          </BouncePressable>
-                        ) : claimedPremium ? (
-                          <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
-                        ) : (
-                          <Ionicons name="lock-closed" size={14} color={themeColors.textDim} style={{ marginTop: 2 }} />
-                        )
-                      ) : (
-                        <Pressable
-                          onPress={handleUnlockPremiumBP}
-                          style={{ marginTop: 4, flexDirection: "row", alignItems: "center", gap: 3 }}
-                        >
-                          <Ionicons name="lock-closed" size={12} color={themeGold} />
-                          <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: themeGold, letterSpacing: 0.3 }} numberOfLines={1}>
-                            {T("premiumLocked" as any) || "PREMIUM"}
-                          </Text>
-                        </Pressable>
-                      )}
-                    </View>
-                  </View>
-                  <Text style={[styles.bpTierXp, { color: themeColors.textDim, textAlign: "center", marginTop: 4 }]}>{tier.xpRequired} {xpRequiredLabel}</Text>
-                </View>
-              );
-            })}
-        <View style={{ height: 100 }} />
-      </ScrollView>
+          </>
+        }
+      />
       )}
-
       {toast && (
         <View style={[styles.toast, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
           <Ionicons name="star" size={14} color={themeGold} />

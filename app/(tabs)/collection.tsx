@@ -137,7 +137,7 @@ export default function CollectionScreen() {
     }
   };
 
-  const rarityLabel = (r: string) => {
+  const rarityLabel = useCallback((r: string) => {
     switch (r) {
       case "rare":      return T("rarityRare");
       case "epic":      return T("rarityEpic");
@@ -145,7 +145,7 @@ export default function CollectionScreen() {
       case "legendary": return T("rarityLegendary");
       default:          return T("rarityCommon");
     }
-  };
+  }, [T]);
 
   const keyExtractorItems = useCallback((i: GridItem) => i.id, []);
   const renderItem = useCallback(({ item, index }: { item: GridItem; index: number }) => {

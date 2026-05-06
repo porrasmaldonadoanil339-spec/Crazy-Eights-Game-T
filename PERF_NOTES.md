@@ -41,6 +41,11 @@ build, which is out of scope.
 - `DailyShopCard` and `EmoteShopCard` wrapped in `React.memo` so item
   rows skip re-render when only parent state (toasts, modals,
   currency badges, timer countdown) changes.
+- `DailyShopCard` API refactored: parent now passes stable
+  `onConfirm/onEquip/onInfo` setters instead of inline closures
+  re-created on every render. Internal `handlePress/handleEquip/
+  handleInfo` are wrapped in `useCallback`, so `React.memo` actually
+  bails out instead of always re-rendering on prop identity churn.
 - Main store ScrollView: added `removeClippedSubviews` (native).
 
 ### `app/game.tsx` (in-match hot path)
@@ -66,8 +71,12 @@ build, which is out of scope.
 
 - **Other big lists** (`ranking`, `ranked`, `online-lobby` search,
   index grid) already use `FlatList`.
-- **BP tier list** (~124 tiers) — small enough to leave in
-  ScrollView with `removeClippedSubviews`.
+- **BP tier list** (800 tiers) — now virtualized with `FlatList`
+  (`initialNumToRender=8`, `maxToRenderPerBatch=8`, `windowSize=5`,
+  `removeClippedSubviews` on native). Header content moved into
+  `ListHeaderComponent`. `renderBpTier` and `bpKeyExtractor` are
+  memoized via `useCallback` so row identity is stable across
+  unrelated parent re-renders (toasts, reward popups, tab switch).
 - **Timers** — every `setInterval` in `game.tsx` and
   `game-online.tsx` is held in a ref and cleared on unmount or
   effect re-run. Only the one nested `setTimeout` above was orphaned.
