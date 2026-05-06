@@ -1769,7 +1769,7 @@ export default function GameScreen() {
       phraseEvent = "ai_draws"; sfxEvent = "boo";
     }
     if (phraseEvent && Date.now() - lastChatterTime.current > 5000) {
-      const lang = (profile.language ?? "es") as any;
+      const lang: string = profile.language ?? "es";
       const txt = getCpuPhrase(phraseEvent, lang);
       lastChatterTime.current = Date.now();
       if (cpuChatterTimer.current) clearTimeout(cpuChatterTimer.current);
