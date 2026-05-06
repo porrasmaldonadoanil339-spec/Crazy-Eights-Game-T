@@ -10,6 +10,7 @@ import type { CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { startSearchMusic } from "@/lib/audioManager";
 import { useT } from "@/hooks/useT";
+import { FloatingCardField, TipRotator } from "@/components/LiveLoader";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -170,6 +171,9 @@ export function MatchmakingScreen({
         style={StyleSheet.absoluteFill}
       />
 
+      {/* Live floating-suit ambiance behind everything */}
+      <FloatingCardField count={10} />
+
       {/* Glow table */}
       <View style={styles.tableGlow} />
 
@@ -283,6 +287,9 @@ export function MatchmakingScreen({
             {[0, 1, 2].map(i => (
               <View key={i} style={[styles.dot, { opacity: 0.3 + i * 0.3 }]} />
             ))}
+          </View>
+          <View style={{ marginTop: 18, width: "92%" }}>
+            <TipRotator />
           </View>
         </View>
       )}

@@ -999,8 +999,16 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
     titleY.value = withDelay(200, withSpring(0, { damping: 14 }));
     titleOp.value = withDelay(200, withTiming(1, { duration: 400 }));
     stopMusic().catch(() => {});
-    if (isWin) playWin().catch(() => {});
-    else playLose().catch(() => {});
+    if (isWin) {
+      playWin().catch(() => {});
+      // Personality SFX: victory fanfare + crowd applause stacked on win
+      setTimeout(() => playSound("victory_fanfare").catch(() => {}), 200);
+      setTimeout(() => playSound("applause").catch(() => {}), 700);
+    } else {
+      playLose().catch(() => {});
+      // Personality SFX: a tongue-in-cheek boo on loss to soften the sting
+      setTimeout(() => playSound("boo").catch(() => {}), 250);
+    }
   }, []);
 
   const cardStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
@@ -2199,15 +2207,23 @@ export default function GameScreen() {
       
       if (needsSuitPick) {
         await playSound("card_wild").catch(() => {});
+        // Personality SFX: layer the cackle on top of the wild "8" play
+        setTimeout(() => playSound("cackle").catch(() => {}), 120);
         if (willHaveLastCard) {
           setTimeout(() => playSound("last_card").catch(() => {}), 350);
+          setTimeout(() => playSound("crowd_gasp").catch(() => {}), 500);
         }
         setSuitPickerVisible(true);
       } else {
         await playSound("card_play").catch(() => {});
+        // Personality SFX: dramatic drum on Joker (-4 to opponent)
+        if (card.rank === "Joker") {
+          setTimeout(() => playSound("dramatic_drum").catch(() => {}), 100);
+        }
         handlePlayCard(card);
         if (willHaveLastCard) {
           setTimeout(() => playSound("last_card").catch(() => {}), 350);
+          setTimeout(() => playSound("crowd_gasp").catch(() => {}), 500);
         }
         if ((profile.specialEffectsEnabled !== false) && profile.selectedEffect && profile.selectedEffect !== "effect_none" && profile.selectedEffect !== "none") {
           setShowEffect(true);
