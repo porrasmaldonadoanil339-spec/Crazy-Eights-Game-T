@@ -1492,9 +1492,11 @@ export default function GameScreen() {
   }, [gameState?.playerHand?.length]);
 
   const [lastPlayedCardId, setLastPlayedCardId] = useState<string | null>(null);
+  const [specialFlashColor, setSpecialFlashColor] = useState<string>("rgba(255,255,255,0.2)");
   const playRippleAnim = useSharedValue(0);
   const discardBounce = useSharedValue(1);
   const discardGlowAnim = useSharedValue(0);
+  const specialBurstAnim = useSharedValue(0);
 
   const playRippleStyle = useAnimatedStyle(() => ({
     opacity: playRippleAnim.value,
@@ -1510,21 +1512,46 @@ export default function GameScreen() {
     transform: [{ scale: 1 + discardGlowAnim.value * 0.3 }],
   }));
 
+  // Extra burst layer used only when a special card lands — bigger, brighter,
+  // and color-coded so the player feels the impact (Clash-style hit feedback).
+  const specialBurstStyle = useAnimatedStyle(() => ({
+    opacity: specialBurstAnim.value,
+    transform: [{ scale: 0.3 + specialBurstAnim.value * 2.4 }],
+  }));
+
   useEffect(() => {
     if (gameState?.lastPlayedCard && gameState.lastPlayedCard.id !== lastPlayedCardId) {
       setLastPlayedCardId(gameState.lastPlayedCard.id);
+      const card = gameState.lastPlayedCard;
+      // Special-card detection — same set the engine treats as power cards.
+      const SPECIAL_COLORS: Record<string, string> = {
+        "8": "rgba(212,175,55,0.55)",     // gold (wild / suit picker)
+        "Joker": "rgba(155,89,182,0.55)", // purple (wild / steal)
+        "7": "rgba(231,76,60,0.55)",      // red (skip)
+        "2": "rgba(46,134,222,0.55)",     // blue (+2 stack)
+        "10": "rgba(0,255,255,0.55)",     // cyan (reverse)
+        "J": "rgba(241,196,15,0.55)",     // yellow (jump)
+      };
+      const isSpecial = card.rank in SPECIAL_COLORS;
+      setSpecialFlashColor(isSpecial ? SPECIAL_COLORS[card.rank] : "rgba(255,255,255,0.2)");
       playRippleAnim.value = withSequence(
         withTiming(1, { duration: 150 }),
         withTiming(0, { duration: 150 })
       );
       discardBounce.value = withSequence(
-        withTiming(1.18, { duration: 90 }),
+        withTiming(isSpecial ? 1.32 : 1.18, { duration: 90 }),
         withSpring(1, { damping: 6, stiffness: 180 }),
       );
       discardGlowAnim.value = withSequence(
-        withTiming(0.9, { duration: 80 }),
-        withTiming(0, { duration: 350 }),
+        withTiming(isSpecial ? 1 : 0.9, { duration: 80 }),
+        withTiming(0, { duration: isSpecial ? 500 : 350 }),
       );
+      if (isSpecial) {
+        specialBurstAnim.value = withSequence(
+          withTiming(1, { duration: 120 }),
+          withTiming(0, { duration: 420 })
+        );
+      }
     }
   }, [gameState?.lastPlayedCard]);
   const [muteCpuEmotes, setMuteCpuEmotes] = useState(() => profile.muteEmotes ?? false);
@@ -2203,8 +2230,21 @@ export default function GameScreen() {
       <AnimatedBackground />
       <View style={styles.tableGlowBorder} />
 
-      {/* Ripple effect on play */}
-      <Animated.View style={[styles.playRipple, playRippleStyle, { pointerEvents: "none" }]} />
+      {/* Ripple effect on play — color-coded for special cards */}
+      <Animated.View style={[styles.playRipple, playRippleStyle, { backgroundColor: specialFlashColor, pointerEvents: "none" }]} />
+      {/* Larger burst layer that only fires on special cards (8/Joker/7/2/10/J) */}
+      <Animated.View
+        style={[
+          styles.playRipple,
+          specialBurstStyle,
+          {
+            backgroundColor: "transparent",
+            borderWidth: 4,
+            borderColor: specialFlashColor,
+            pointerEvents: "none",
+          },
+        ]}
+      />
 
       {/* Last Card Banner */}
       <Animated.View style={[styles.lastCardBanner, lastCardBannerStyle, { pointerEvents: "none" }]}>
