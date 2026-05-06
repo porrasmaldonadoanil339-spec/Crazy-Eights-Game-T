@@ -1,0 +1,51 @@
+1. En los desafíos diarios el contador debe ser coherente con el objetivo del desafío.
+   Ejemplo: si el desafío dice “Juega 10 partidas de Ocho Locos”, el contador debe iniciar en 0/10 e ir aumentando correctamente hasta 10/10.
+   Corregir el error donde aparece 6/22 ya que no coincide con el desafío mostrado.
+
+2. La música no debe reiniciarse cuando entro o salgo de una partida.
+   La música debe continuar desde el mismo punto donde se quedó para que la experiencia sea más fluida y profesional.
+
+3. En Clasificatoria no debe aparecer el efecto doble.
+   Ese efecto debe ser exclusivo únicamente para el modo Evento.
+
+4. Corregir completamente la sección de emotes/emojis del juego:
+
+* Quitar las letras/textos que aparecen debajo de los emotes.
+* Eliminar símbolos innecesarios.
+* Hacer que todos los emotes se vean más limpios, modernos y alineados correctamente.
+* En los 3 emotes que aparecen en la tienda, dejar solamente el óvalo horizontal/circular del mismo diseño del emoji.
+* Eliminar el óvalo vertical porque rompe el diseño visual de la interfaz.
+* Mejorar el diseño visual de esos 3 emotes para que se vean más profesionales y modernos.
+
+5. Corregir el botón de retroceso/salida del celular.
+   Cuando el jugador esté dentro de cualquier partida o modo y presione el botón de retroceder del teléfono, debe aparecer el mensaje:
+   “¿Deseas salir de la partida?”
+   Esto debe funcionar en TODOS los modos del juego.
+
+6. Corregir el error de robo de cartas.
+   Cuando un jugador debe robar 20 cartas, actualmente solo roba 4.
+   Este problema también ocurre en Clasificatoria y otros modos, por lo que debe corregirse globalmente en todo el juego.
+
+7. En Clasificatoria no se está mostrando correctamente la foto de perfil personalizada del jugador.
+   La foto que el usuario coloca en su perfil debe aparecer correctamente durante las partidas clasificatorias y en la sala de búsqueda.
+
+8. En Clasificatoria y otros modos, mientras aparece la pantalla de “Buscando jugadores”, debe reproducirse la música adaptada del juego.
+   Actualmente esa pantalla se siente vacía/sin ambiente, por lo que agregar la música hará que la experiencia sea más dinámica y profesional.
+
+9. Adaptar correctamente los botones inferiores de navegación del juego:
+
+* Los botones de “Tienda”, “Colección”, “Jugar”, “Camino” y “Perfil” actualmente están demasiado arriba en pantalla en algunos celulares.
+* Ajustar correctamente su posición para dispositivos móviles.
+* Deben estar más abajo y bien centrados en la parte inferior de la pantalla.
+* Mejorar el responsive/adaptación UI para que los botones importantes no se vean mal posicionados dependiendo del tamaño del celular.
+
+10. Mejorar la sensación general del juego con:
+
+* Animaciones más fluidas al tirar cartas
+* Sonidos más pulidos
+* Efectos visuales en jugadas importantes
+* Mejor sincronización online
+* Recompensas y progresión para enganchar más jugadores
+* Eventos especiales exclusivos
+* Interfaz más limpia y moderna
+* Mejor optimización y estabilidad general

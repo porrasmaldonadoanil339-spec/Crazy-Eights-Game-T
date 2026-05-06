@@ -166,7 +166,7 @@ export const CHALLENGES_POOL: Omit<Challenge, "progress" | "completed" | "claime
   { id: "ev_survival_win", title: "Superviviente", titleEn: "Survivor", titlePt: "Sobrevivente", description: "Gana 1 evento Supervivencia", descriptionEn: "Win 1 Survival event", descriptionPt: "Vença 1 evento Sobrevivência", icon: "shield", target: 1, type: "wins", eventFilter: "survival", coinReward: 250, xpReward: 500 },
 ];
 
-const STORAGE_KEY = "ocho_challenges_v1";
+const STORAGE_KEY = "ocho_challenges_v2";
 
 export async function getDailyChallenges(level: number): Promise<Challenge[]> {
   try {
@@ -194,13 +194,16 @@ export async function getDailyChallenges(level: number): Promise<Challenge[]> {
     for (let i = 0; i < 3; i++) {
       const index = (seed + i * 7) % pool.length;
       const base = pool.splice(index, 1)[0];
-      
-      // Scale difficulty/rewards based on level (basic scaling)
+
+      // Rewards scale with level so high-level players still get meaningful payouts.
+      // IMPORTANT: target is NEVER scaled — the displayed description (e.g. "Juega 10 ochos")
+      // must match the actual target. Scaling targets caused mismatches like "6/22" for a
+      // challenge that explicitly says "Play 10".
       const scale = 1 + Math.floor(level / 10) * 0.2;
-      
+
       selected.push({
         ...base,
-        target: Math.round(base.target * scale),
+        target: base.target,
         coinReward: Math.round(base.coinReward * scale),
         xpReward: Math.round(base.xpReward * scale),
         progress: 0,

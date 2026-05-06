@@ -20,6 +20,10 @@ type MusicTrack = "menu" | "search" | "game";
 
 let bgPlayer: AudioPlayer | null = null;
 let sfxPlayers: Map<SoundKey, AudioPlayer> = new Map();
+// Per-track persistent players. Once created, a track player is kept alive so
+// its playback position is preserved across menu↔game transitions — switching
+// resumes from where the user left off instead of restarting from 0.
+const trackPlayers: Map<MusicTrack, AudioPlayer> = new Map();
 let currentTrack: MusicTrack | null = null;
 let isMusicEnabled = true;
 let isSfxMuted = false;
@@ -99,31 +103,41 @@ function sourceForTrack(track: MusicTrack) {
   return SOUNDS.gameMusic;
 }
 
+function getOrCreateTrackPlayer(track: MusicTrack): AudioPlayer | null {
+  let p = trackPlayers.get(track) ?? null;
+  if (p) return p;
+  try {
+    p = createAudioPlayer(sourceForTrack(track));
+    p.volume = 0;
+    p.loop = true;
+    trackPlayers.set(track, p);
+  } catch { p = null; }
+  return p;
+}
+
 async function applyMusicTransition(track: MusicTrack) {
   if (currentTrack === track && bgPlayer) return;
   if (!isMusicEnabled) return;
 
-  // True crossfade: start the new track immediately at volume 0 while the
-  // existing one is still playing, then fade them in/out in parallel so there
-  // is no audible gap between sections (electronic-style mix).
+  // True crossfade between persistent per-track players. Old player is paused
+  // (NOT destroyed) so its position is preserved; next time we switch back to
+  // it, playback resumes seamlessly from where it left off.
   const oldPlayer = bgPlayer;
-  let newPlayer: any = null;
-  await safe(async () => {
-    newPlayer = createAudioPlayer(sourceForTrack(track));
-    newPlayer.volume = 0;
-    newPlayer.loop = true;
-    newPlayer.play();
-  });
+  const newPlayer = getOrCreateTrackPlayer(track);
   if (newPlayer) {
+    await safe(async () => {
+      newPlayer.volume = 0;
+      newPlayer.play();
+    });
     bgPlayer = newPlayer;
     currentTrack = track;
   }
   await Promise.all([
-    oldPlayer ? fadePlayerTo(oldPlayer, 0) : Promise.resolve(),
+    oldPlayer && oldPlayer !== newPlayer ? fadePlayerTo(oldPlayer, 0) : Promise.resolve(),
     newPlayer ? fadePlayerTo(newPlayer, musicVolume) : Promise.resolve(),
   ]);
   if (oldPlayer && oldPlayer !== newPlayer) {
-    await safe(async () => { oldPlayer.pause(); oldPlayer.remove(); });
+    await safe(async () => { oldPlayer.pause(); });
   }
 }
 
@@ -176,10 +190,9 @@ async function _stopMusicInternal() {
   bgPlayer = null;
   currentTrack = null;
   if (!player) return;
-  await safe(async () => {
-    player.pause();
-    player.remove();
-  });
+  // Pause but DO NOT remove — we want to preserve playback position so
+  // resuming the track later continues from the same point.
+  await safe(async () => { player.pause(); });
 }
 
 export async function stopMusic() {
@@ -567,4 +580,8 @@ export async function cleanupAudio() {
     try { player.remove(); } catch {}
   }
   sfxPlayers.clear();
+  for (const player of trackPlayers.values()) {
+    try { player.pause(); player.remove(); } catch {}
+  }
+  trackPlayers.clear();
 }

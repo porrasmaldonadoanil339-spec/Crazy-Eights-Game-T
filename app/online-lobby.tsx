@@ -17,7 +17,7 @@ import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
 import { getLocalizedRankInfo } from "@/lib/ranked";
-import { playButton, startMenuMusic } from "@/lib/audioManager";
+import { playButton, startMenuMusic, startSearchMusic } from "@/lib/audioManager";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 
@@ -134,7 +134,11 @@ function PreMatchTeamCard({ players, teamName, isMyTeam }: { players: PlayerInfo
       {players.map((p, i) => (
         <View key={i} style={styles.preMatchSlot}>
           <View style={[styles.preMatchAvatar, { borderColor: p.avatarColor }]}>
-            <Ionicons name={p.avatarIcon as any} size={18} color={p.avatarColor} />
+            {p.photoUrl ? (
+              <Image source={{ uri: p.photoUrl }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+            ) : (
+              <Ionicons name={p.avatarIcon as any} size={18} color={p.avatarColor} />
+            )}
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.preMatchName} numberOfLines={1}>{p.name}</Text>
@@ -166,6 +170,7 @@ export default function OnlineLobbyScreen() {
     playerIndex: 0,
     avatarColor: rankInfo.color,
     avatarIcon: "person",
+    photoUrl: profile.photoUri,
     level: level,
     rankColor: rankInfo.color,
     rankIcon: rankInfo.icon,
@@ -231,6 +236,7 @@ export default function OnlineLobbyScreen() {
     const needed = playerCount - 1; // fake players needed
     const timers: ReturnType<typeof setTimeout>[] = [];
     playSound("searching").catch(() => {});
+    startSearchMusic().catch(() => {});
 
     // Add fake players one by one with staggered delays (~10s total search)
     for (let i = 0; i < needed; i++) {

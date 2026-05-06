@@ -1687,25 +1687,25 @@ function EmoteShopCard({
       <View style={styles.emoteShopIcon}>
         <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={60} />
       </View>
-      <Text style={[styles.emoteShopName, { color: themeColors.text }]} numberOfLines={2} ellipsizeMode="clip" adjustsFontSizeToFit minimumFontScale={0.7}>{localized.name}</Text>
       {owned ? (
-        isEquipped ? (
-          <View style={[styles.emoteShopStatus, { backgroundColor: Colors.gold + "22", borderColor: Colors.gold + "66" }]}>
-            <Ionicons name="checkmark-circle" size={10} color={Colors.gold} />
-            <Text style={[styles.emoteShopStatusText, { color: Colors.gold }]}>{T("inUse")}</Text>
-          </View>
-        ) : (
-          <View style={[styles.emoteShopStatus, { backgroundColor: "#2ECC7122", borderColor: "#2ECC7166" }]}>
-            <Ionicons name="bag-handle" size={10} color="#2ECC71" />
-            <Text style={[styles.emoteShopStatusText, { color: "#2ECC71" }]}>Inventario</Text>
-          </View>
-        )
+        <View style={[styles.emoteShopStatus, {
+          backgroundColor: isEquipped ? Colors.gold + "22" : "#2ECC7122",
+          borderColor: isEquipped ? Colors.gold + "66" : "#2ECC7166",
+        }]}>
+          <Ionicons
+            name={isEquipped ? "checkmark-circle" : "bag-handle"}
+            size={12}
+            color={isEquipped ? Colors.gold : "#2ECC71"}
+          />
+        </View>
       ) : item.isDefault || item.price === 0 ? (
-        <Text style={styles.emoteShopFree}>{T("free")}</Text>
+        <View style={[styles.emoteShopStatus, { backgroundColor: "#2ECC7122", borderColor: "#2ECC7166" }]}>
+          <Ionicons name="gift" size={12} color="#2ECC71" />
+        </View>
       ) : (
-        <View style={styles.emoteShopBuy}>
-          <Ionicons name="diamond" size={12} color="#3498DB" />
-          <Text style={[styles.emoteShopBuyPrice, { color: "#3498DB" }]}>{item.price}</Text>
+        <View style={[styles.emoteShopStatus, { backgroundColor: "#3498DB22", borderColor: "#3498DB66" }]}>
+          <Ionicons name="diamond" size={11} color="#3498DB" />
+          <Text style={[styles.emoteShopStatusText, { color: "#3498DB" }]}>{item.price}</Text>
         </View>
       )}
     </BouncePressable>

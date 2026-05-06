@@ -38,12 +38,12 @@ export default function TabLayout() {
           }),
           borderTopWidth: 0,
           elevation: 0,
-          height: 70 + (Platform.OS === "web" ? 34 : insets.bottom),
-          paddingBottom: (Platform.OS === "web" ? 34 : insets.bottom) + 8,
-          paddingTop: 6,
+          height: 78 + (Platform.OS === "web" ? 34 : insets.bottom),
+          paddingBottom: (Platform.OS === "web" ? 34 : Math.max(insets.bottom, 12)) + 14,
+          paddingTop: 4,
         } : { display: "none" },
         tabBarItemStyle: {
-          paddingTop: 2,
+          paddingTop: 0,
           paddingHorizontal: 0,
         },
         tabBarBackground: () =>

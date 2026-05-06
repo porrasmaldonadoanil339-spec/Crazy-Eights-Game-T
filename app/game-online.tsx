@@ -931,7 +931,7 @@ export default function OnlineGameScreen() {
   // ─── Skip-lobby: initialize game immediately for ranked (pre-lobbied) games ──
   useEffect(() => {
     if (!skipLobby) return;
-    const gs = initMultiGame(allNames, 8, getActiveEvent(playerLevel)?.id ?? null);
+    const gs = initMultiGame(allNames, 8, modeParam === "ranked" ? null : (getActiveEvent(playerLevel)?.id ?? null));
     gs.phase = "playing";
     setGameState(gs);
   }, [skipLobby]);
@@ -1043,7 +1043,7 @@ export default function OnlineGameScreen() {
     }
 
     timers.push(setTimeout(() => {
-      const gs = initMultiGame(allNames, 8, getActiveEvent(playerLevel)?.id ?? null);
+      const gs = initMultiGame(allNames, 8, modeParam === "ranked" ? null : (getActiveEvent(playerLevel)?.id ?? null));
       gs.phase = "playing"; // Online starts directly, no pass_device for human
       setGameState(gs);
       setLobbyPhase("dealing");
@@ -1421,7 +1421,8 @@ export default function OnlineGameScreen() {
     );
     setCurrentCpuProfiles(newProfiles);
     const newNames = [humanName, ...newProfiles.map(c => c.name)];
-    const newEventId = getActiveEvent(playerLevel)?.id ?? null;
+    // Clasificatoria is event-free: events are competitive distortions.
+    const newEventId = modeParam === "ranked" ? null : (getActiveEvent(playerLevel)?.id ?? null);
     const gs = initMultiGame(newNames, 8, newEventId);
     gs.phase = "playing";
     setGameState(gs);

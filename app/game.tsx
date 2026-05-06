@@ -1324,15 +1324,20 @@ export default function GameScreen() {
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  // Hardware back button (Android) → exit immediately. No modal, no friction.
+  // Hardware back button (Android) → confirm before leaving the match.
   useEffect(() => {
     if (Platform.OS === "web" || Platform.OS === "ios") return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      router.back();
+      if (showExitConfirm) {
+        // Mirror on-screen "No": second back press dismisses the modal.
+        setShowExitConfirm(false);
+        return true;
+      }
+      setShowExitConfirm(true);
       return true;
     });
     return () => sub.remove();
-  }, []);
+  }, [showExitConfirm]);
   const [showChestReward, setShowChestReward] = useState(false);
   const [pendingChestType, setPendingChestType] = useState<ChestType | null>(null);
   const [pendingChestId, setPendingChestId] = useState<string | null>(null);
@@ -2323,8 +2328,7 @@ export default function GameScreen() {
         <Pressable
           onPress={() => {
             playSound("button_press").catch(() => {});
-            // No friction: back button always exits immediately.
-            router.back();
+            setShowExitConfirm(true);
           }}
           style={styles.backBtn}
         >
