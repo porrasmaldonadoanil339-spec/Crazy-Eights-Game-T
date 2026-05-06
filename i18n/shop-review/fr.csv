@@ -1,0 +1,698 @@
+﻿id,source_es,source_en,name,description,reviewed
+back_default,Clásico Azul — El dorso clásico del casino.,Classic Blue — The classic casino back.,Bleu classique,Le dos classique du casino.,no
+back_crimson,Carmesí — Rojo profundo. Audaz y dominante.,Crimson — Deep red. Bold and dominant.,Pourpre,Rouge profond. Audacieux et dominant.,no
+back_emerald,Esmeralda — Verde intenso del jugador natural.,Emerald — Deep green of a natural player.,Émeraude,Vert profond d'un joueur naturel.,no
+back_copper,Cobre — Cálido y terroso. Clásico de las plazas.,Copper — Warm and earthy. A timeless classic.,Cuivre,Chaleureux et terreux. Un classique intemporel.,no
+back_forest,Bosque — Naturaleza salvaje en cada carta.,Forest — Wild nature on every card.,Forêt,La nature sauvage sur chaque carte.,no
+back_sunset,Atardecer — Naranja y rosa del crepúsculo.,Sunset — Orange and pink of dusk.,Coucher de soleil,Orange et rose du crépuscule.,no
+back_vintage,Vintage — Sepia antiguo. Aspecto de época.,Vintage — Sepia antique. A period look.,Vintage,Sépia antique. Look d'époque.,no
+back_sand,Arena — Dunas desérticas bajo el sol.,Sand — Desert dunes under the sun.,Sable,Dunes du désert sous le soleil.,no
+back_navy,Armada — Azul marino profundo y disciplinado.,Navy — Deep and disciplined navy blue.,Marine,Bleu marine profond et discipliné.,no
+back_charcoal,"Carbón — Gris oscuro, casi negro.","Charcoal — Dark grey, almost black.",Charbon de bois,"Gris foncé, presque noir.",no
+back_olive,Oliva — Tono militar clásico.,Olive — Classic military tone.,Olivier,Ton militaire classique.,no
+back_berry,Baya — Dulce y vibrante tono púrpura.,Berry — Sweet and vibrant purple.,Baie,Violet doux et vibrant.,no
+back_slate,Pizarra — Frío y sólido como la roca.,Slate — Cold and solid as rock.,Ardoise,Froid et solide comme le roc.,no
+back_tan,Canela — Cálido y acogedor.,Tan — Warm and welcoming.,Bronzage,Chaleureux et accueillant.,no
+back_moss,Musgo — Verde terroso del bosque profundo.,Moss — Earthy green of deep forest.,Mousse,Vert terreux de forêt profonde.,no
+back_gold,Oro Real — Dorado brillante. Solo para élites.,Royal Gold — Bright gold. Elites only.,Or Royal,Or brillant. Élites uniquement.,no
+back_midnight,Medianoche — Negro absoluto con destellos plateados.,Midnight — Absolute black with silver flashes.,Minuit,Noir absolu avec des reflets argentés.,no
+back_ocean,Océano — Profundidades marinas con olas de luz.,Ocean — Marine depths with waves of light.,Océan,Profondeurs marines avec vagues de lumière.,no
+back_arctic,Ártico — Blanco glacial. Frío como el hielo.,Arctic — Glacial white. Cold as ice.,Arctique,Blanc glacial. Froid comme la glace.,no
+back_amethyst,Amatista — Violeta gemológico. Misterioso y profundo.,Amethyst — Gem violet. Mysterious and deep.,Améthyste,Violette gemme. Mystérieux et profond.,no
+back_sakura,Sakura — Rosa suave de flor de cerezo japonesa.,Sakura — Soft pink of Japanese cherry blossoms.,Sakura,Rose tendre des fleurs de cerisier japonais.,no
+back_thunder,Trueno — Amarillo eléctrico que sacude la mesa.,Thunder — Electric yellow that shakes the table.,Tonnerre,Un jaune électrique qui fait trembler la table.,no
+back_toxic,Tóxico — Verde veneno. Para los más peligrosos.,Toxic — Poison green. For the most dangerous.,Toxique,Vert poison. Pour les plus dangereux.,no
+back_digital,Digital — Matrix de píxeles. Estilo hacker total.,Digital — Matrix of pixels. Total hacker style.,Numérique,Matrice de pixels. Style hacker total.,no
+back_bronze,Bronce — Metal antiguo. Resistente como el jugador.,Bronze — Ancient metal. Tough as the player.,Bronze,Métal ancien. Dur comme joueur.,no
+back_silver_rare,Plata Pura — Elegancia metálica refinada.,Pure Silver — Refined metallic elegance.,Argent pur,Élégance métallique raffinée.,no
+back_rose_gold,Oro Rosa — Lujo moderno y sofisticado.,Rose Gold — Modern and sophisticated luxury.,Or Rose,Luxe moderne et sophistiqué.,no
+back_platinum,"Platino — Más fuerte que el acero, más brillante.","Platinum — Stronger than steel, brighter too.",Platine,"Plus résistant que l'acier, plus brillant aussi.",no
+back_lava,Lava — Roca fundida que quema la mesa.,Lava — Molten rock burning the table.,Lave,Roche en fusion brûlant la table.,no
+back_glacier,Glaciar — Hielo milenario de color turquesa.,Glacier — Millennial ice in turquoise.,Glacier,Glace millénaire en turquoise.,no
+back_carbon,Fibra de Carbón — Alta tecnología y resistencia.,Carbon Fiber — High tech and resistant.,Fibre de carbone,Haute technologie et résistant.,no
+back_nebula,Nebulosa — Nubes de gas estelar coloridas.,Nebula — Colorful stellar gas clouds.,Nébuleuse,Nuages de gaz stellaires colorés.,no
+back_sandstone,Arenisca — Textura desértica natural.,Sandstone — Natural desert texture.,Grès,Texture naturelle du désert.,no
+back_cobalt,Cobalto — Azul profundo y energético.,Cobalt — Deep and energetic blue.,Cobalt,Bleu profond et énergique.,no
+back_citrine,Citrino — Energía solar en tus manos.,Citrine — Solar energy in your hands.,Citrine,L'énergie solaire entre vos mains.,no
+back_pearl,Perla — Brillo iridiscente suave.,Pearl — Soft iridescent glow.,Perle,Douce lueur irisée.,no
+back_onyx_rare,Ónice — Piedra negra pulida con clase.,Onyx — Polished black stone with class.,Onyx,Pierre noire polie avec classe.,no
+back_teal,Cerceta — Equilibrio entre azul y verde.,Teal — Balance between blue and green.,Sarcelle,Équilibre entre le bleu et le vert.,no
+back_wine,Vino — Elegancia clásica en color borgoña.,Wine — Classic elegance in burgundy.,Vin,Élégance classique en bordeaux.,no
+back_ivory,Marfil — Noble y antiguo.,Ivory — Noble and ancient.,Ivoire,Noble et ancien.,no
+back_ruby,Rubí — La gema más codiciada en la mesa.,Ruby — The most coveted gem at the table.,Rubis,Le joyau le plus convoité à table.,no
+back_obsidian,Obsidiana — Piedra volcánica. Fría y amenazante.,Obsidian — Volcanic stone. Cold and menacing.,Obsidienne,Pierre volcanique. Froid et menaçant.,no
+back_neon,Neón — Luces de la ciudad de noche. Brillante.,Neon — City lights at night. Bright.,Néon,Lumières de la ville la nuit. Brillant.,no
+back_aurora,Aurora Boreal — Luces del norte bailando en tus cartas.,Northern Lights — Northern lights dancing on your cards.,Aurores boréales,Des aurores boréales dansant sur vos cartes.,no
+back_blood,Sangre — Profundo rojo carmín. Para los valientes.,Blood — Deep crimson. For the brave.,Du sang,Pourpre profond. Pour les courageux.,no
+back_void,El Vacío — Oscuridad absoluta. Nada lo puede detener.,The Void — Absolute darkness. Nothing stops it.,Le vide,L'obscurité absolue. Rien ne l'arrête.,no
+back_hurricane,Huracán — Vórtice de poder azul-gris devastador.,Hurricane — Devastating blue-grey vortex.,Ouragan,Vortex bleu-gris dévastateur.,no
+back_plasma,Plasma — Energía pura concentrada en tus manos.,Plasma — Pure energy concentrated in hands.,Plasma,Énergie pure concentrée dans les mains.,no
+back_supernova,Supernova — Explosión estelar cegadora.,Supernova — Blinding stellar explosion.,Supernova,Explosion stellaire aveuglante.,no
+back_abyss,Abismo — Lo que acecha en lo más profundo.,Abyss — What lurks in the deepest depths.,Abîme,Ce qui se cache au plus profond des profondeurs.,no
+back_celestial_epic,Celestial — Inspirado en los cielos antiguos.,Celestial — Inspired by ancient skies.,Céleste,Inspiré des cieux anciens.,no
+back_magma,Magma — Poder de la tierra en fusión.,Magma — Power of the earth in fusion.,Magma,Puissance de la terre en fusion.,no
+back_quasar,Cuásar — La luz más brillante del universo.,Quasar — The brightest light in the universe.,Quasar,La lumière la plus brillante de l'univers.,no
+back_emerald_eye,Ojo Esmeralda — Una mirada que lo ve todo.,Emerald Eye — A gaze that sees everything.,Oeil d'émeraude,Un regard qui voit tout.,no
+back_phoenix_feather,Pluma de Fénix — Renacimiento en cada carta.,Phoenix Feather — Rebirth in every card.,Plume de Phénix,La renaissance dans chaque carte.,no
+back_storm,Tempestad — Vientos y truenos indomables.,Storm — Untameable winds and thunder.,Tempête,Vents indomptables et tonnerre.,no
+back_poison,Veneno Real — Peligroso y elegante al mismo tiempo.,Royal Poison — Dangerous and elegant at once.,Poison Royal,Dangereux et élégant à la fois.,no
+back_titanium,Titanio — Indestructible y moderno.,Titanium — Indestructible and modern.,Titane,Indestructible et moderne.,no
+back_spectral,Espectral — Aparición fantasmal en la mesa.,Spectral — Ghostly apparition at the table.,Spectral,Apparition fantomatique à table.,no
+back_gold_leaf,Pan de Oro — Recubrimiento de lujo absoluto.,Gold Leaf — Absolute luxury coating.,Feuille d'or,Revêtement de luxe absolu.,no
+back_crystal,Cristal — Holográfico. Reflejos de todos los colores.,Crystal — Holographic. All-color reflections.,Cristal,Holographique. Des reflets tout en couleurs.,no
+back_galaxy,Galaxia — El universo entero en tus manos.,Galaxy — The entire universe in your hands.,Galaxie,L'univers entier entre vos mains.,no
+back_inferno,Infierno — Solo para los que no le temen al fuego.,Inferno — Only for those who don't fear fire.,Enfer,Seulement pour ceux qui n'ont pas peur du feu.,no
+back_prism,Prisma — Arcoíris fraccionado. Único e irrepetible.,Prism — Fractured rainbow. Unique.,Prisme,Arc-en-ciel fracturé. Unique.,no
+back_shadow,Sombra — La oscuridad que consume todo a su paso.,Shadow — Darkness that consumes everything.,Ombre,Des ténèbres qui consument tout.,no
+back_divine,Divino — Toca lo sagrado. Nadie más puede igualarlo.,Divine — Touches the sacred. None can match it.,Divin,Touche le sacré. Aucun ne peut l'égaler.,no
+back_black_hole,Agujero Negro — Donde la suerte desaparece.,Black Hole — Where luck disappears.,Trou noir,Où la chance disparaît.,no
+back_eternity,Eternidad — Más allá del tiempo y el espacio.,Eternity — Beyond time and space.,L'éternité,Au-delà du temps et de l'espace.,no
+back_cosmic,Origen Cósmico — La primera luz del universo.,Cosmic Origin — The first light of the universe.,Origine cosmique,La première lumière de l'univers.,no
+back_zenith,Cénit — La máxima expresión del juego.,Zenith — The ultimate expression of the game.,Zénith,L'expression ultime du jeu.,no
+back_starlight,Starlight — Starlight as a card back.,Starlight — Starlight as a card back.,Lumière des étoiles,Starlight comme dos de carte.,no
+back_celestial,Celestial — From another plane of existence.,Celestial — From another plane of existence.,Céleste,D'un autre plan d'existence.,no
+back_nebula_back,Nebula — Primordial cosmic nebula.,Nebula — Primordial cosmic nebula.,Nébuleuse,Nébuleuse cosmique primordiale.,no
+avatar_knight,Caballero — Valiente guerrero de la mesa.,Knight — Brave warrior of the table.,Chevalier,Brave guerrier de la table.,no
+avatar_merchant,Mercader — Siempre con el mejor trato.,Merchant — Always the best deal.,Marchand,Toujours la meilleure offre.,no
+avatar_scholar,Erudito — Conoce cada regla de memoria.,Scholar — Knows every rule by heart.,Érudit,Connaît chaque règle par cœur.,no
+avatar_explorer,Explorador — Aventurero sin fronteras.,Explorer — Adventurer without borders.,Explorateur,Aventurier sans frontières.,no
+avatar_chef,Chef — Mezcla los ingredientes perfectos.,Chef — Mixes the perfect ingredients.,Cuisinier,Mélange les ingrédients parfaits.,no
+avatar_athlete,Atleta — Siempre en la cima de su juego.,Athlete — Always at the top of the game.,Athlète,Toujours au top du jeu.,no
+avatar_pilot,Piloto — Controla el rumbo con precisión.,Pilot — Controls the course with precision.,Pilote,Contrôle le parcours avec précision.,no
+avatar_farmer,Granjero — Cosecha victorias con paciencia.,Farmer — Harvests wins with patience.,Agriculteur,Les récoltes gagnent avec patience.,no
+avatar_smith,Herrero — Forja su propio destino.,Blacksmith — Forges their own destiny.,Forgeron,Forge leur propre destin.,no
+avatar_guard,Guardia — Firme ante cualquier ataque.,Guard — Firm against any attack.,Garde,Ferme contre toute attaque.,no
+avatar_scout,Explorador — Rápido y observador.,Scout — Fast and observant.,Éclaireur,Rapide et attentif.,no
+avatar_monk,Monje — Mantiene la calma en la tormenta.,Monk — Keeps calm in the storm.,Moine,Reste calme dans la tempête.,no
+avatar_sailor,Marinero — Navega por las mesas con facilidad.,Sailor — Navigates tables with ease.,Marin,Navigue facilement dans les tableaux.,no
+avatar_miner,Minero — Encuentra oro donde otros no ven nada.,Miner — Finds gold where others see nothing.,Mineur,Trouve de l'or là où les autres ne voient rien.,no
+avatar_artist,Artista — Cada jugada es una obra maestra.,Artist — Every move is a masterpiece.,Artiste,Chaque mouvement est un chef-d'œuvre.,no
+avatar_wizard,Mago — Maestro de la magia de cartas.,Wizard — Master of card magic.,Assistant,Maître de la magie des cartes.,no
+avatar_samurai,Samurái — Honor y disciplina ante todo.,Samurai — Honor and discipline above all.,Samouraï,Honneur et discipline avant tout.,no
+avatar_pirate,Pirata — El riesgo es su apellido.,Pirate — Risk is his last name.,Pirate,Le risque est son nom de famille.,no
+avatar_detective,Detective — Siempre un paso adelante.,Detective — Always one step ahead.,Détective,Toujours une longueur d'avance.,no
+avatar_bard,Bardo — Las canciones inspiran a todos.,Bard — Songs inspire everyone.,Barde,Les chansons inspirent tout le monde.,no
+avatar_ranger,Guardabosques — Preciso como una flecha.,Ranger — Precise as an arrow.,Ranger,Précis comme une flèche.,no
+avatar_paladin,Paladín — Fe y acero en partes iguales.,Paladin — Faith and steel in equal parts.,Paladin,Foi et acier à parts égales.,no
+avatar_alchemist,Alquimista — Transforma la derrota en victoria.,Alchemist — Transforms defeat into victory.,Alchimiste,Transforme la défaite en victoire.,no
+avatar_bounty,Cazarrecompensas — Siempre consigue su objetivo.,Bounty Hunter — Always gets their target.,Chasseur de primes,Obtient toujours sa cible.,no
+avatar_spy,Espía — Nadie sabe quién es realmente.,Spy — Nobody knows who they really are.,Espion,Personne ne sait qui ils sont vraiment.,no
+avatar_vampire,Vampiro — Inmortal y sediento de victorias.,Vampire — Immortal and thirsty for wins.,Vampire,Immortel et assoiffé de victoires.,no
+avatar_werewolf,"Hombre Lobo — Luna llena o no, siempre gana.","Werewolf — Full moon or not, always wins.",Loup-garou,"Pleine lune ou pas, c'est toujours la victoire.",no
+avatar_trickster,Embaucador — Sonríe aunque esté perdiendo.,Trickster — Smiles even while losing.,Filou,Sourit même en perdant.,no
+avatar_shaman,Chamán — En contacto con fuerzas más allá.,Shaman — In contact with greater forces.,Chaman,En contact avec des forces plus grandes.,no
+avatar_rogue,"Pícaro — Ágil, astuto e impredecible.","Rogue — Agile, cunning and unpredictable.",Voleur,"Agile, rusé et imprévisible.",no
+avatar_gladiator_rare,Gladiador Retador — Lucha por la gloria eterna.,Challenger Gladiator — Fights for eternal glory.,Gladiateur challenger,Se bat pour la gloire éternelle.,no
+avatar_druid,Druida — Protector del equilibrio natural.,Druid — Protector of natural balance.,Druide,Protecteur de l’équilibre naturel.,no
+avatar_necromancer,Nigromante — La muerte es solo el comienzo.,Necromancer — Death is only the beginning.,Nécromancien,La mort n'est que le début.,no
+avatar_valkyrie,Valquiria — Elige quién ganará en la mesa.,Valkyrie — Chooses who wins at the table.,Valkyrie,Choisit qui gagne à la table.,no
+avatar_engineer,Ingeniero — Maquinando la victoria perfecta.,Engineer — Plotting the perfect victory.,Ingénieur,Tracer la victoire parfaite.,no
+avatar_corsair,Corsario — Terror de los siete mares.,Corsair — Terror of the seven seas.,Corsaire,Terreur des sept mers.,no
+avatar_astrologer,Astrólogo — Lee su destino en las estrellas.,Astrologer — Reads destiny in the stars.,Astrologue,Lit le destin dans les étoiles.,no
+avatar_beastmaster,Domador — Controla el caos animal.,Beastmaster — Controls animal chaos.,Maître des bêtes,Contrôle le chaos animal.,no
+avatar_mystic,Místico — Sus jugadas son un enigma.,Mystic — Their moves are an enigma.,Mystique,Leurs mouvements sont une énigme.,no
+avatar_jester,Bufón — Se ríe del destino.,Jester — Laughs at destiny.,Bouffon,Se moque du destin.,no
+avatar_ninja,Ninja — Silencioso y letal. Te sorprende.,Ninja — Silent and lethal. Surprises you.,Ninja,Silencieux et mortel. Vous surprend.,no
+avatar_dragon,Dragón — Poder y fuego indomable.,Dragon — Untameable power and fire.,Dragon,Puissance et feu indomptables.,no
+avatar_gladiator,Gladiador — Nació para el combate.,Gladiator — Born for combat.,Gladiateur,Né pour le combat.,no
+avatar_cyber,Cyber — Inteligencia artificial al servicio del juego.,Cyber — AI in service of the game.,Cyber,L'IA au service du jeu.,no
+avatar_titan,Titán — Colosal. Aplasta la competencia.,Titan — Colossal. Crushes the competition.,Titane,Colossal. Écrase la concurrence.,no
+avatar_oracle,Oráculo — Ve el futuro antes de que suceda.,Oracle — Sees the future before it happens.,Oracle,Voit l’avenir avant qu’il n’arrive.,no
+avatar_berserker,"Berserker — Cuando pierde el control, arrasa todo.","Berserker — When losing control, destroys all.",Berserker,"En perdant le contrôle, détruit tout.",no
+avatar_sorcerer,Hechicero — Controla el tiempo y el destino.,Sorcerer — Controls time and destiny.,Sorcier,Contrôle le temps et le destin.,no
+avatar_warlord,Señor de la Guerra — Comanda ejércitos de cartas.,Warlord — Commands armies of cards.,Seigneur de guerre,Commande des armées de cartes.,no
+avatar_assassin,"Asesino — Una jugada, una victoria.","Assassin — One move, one victory.",Assassin,"Un geste, une victoire.",no
+avatar_guardian,Guardián — Protege su mano hasta el final.,Guardian — Protects their hand to the end.,Gardien,Protège leur main jusqu'au bout.,no
+avatar_sharpshooter,Francotirador — Preciso. Calculador. Letal.,Sharpshooter — Precise. Calculated. Lethal.,Tireur d'élite,Précis. Calculé. Mortel.,no
+avatar_vanguard,Vanguardia — El primero en la línea de fuego.,Vanguard — First on the front line.,Avant-garde,D’abord en première ligne.,no
+avatar_wraith,Espectro — Una presencia que hiela la sangre.,Wraith — A presence that chills the blood.,Spectre,Une présence qui glace le sang.,no
+avatar_sentinel,Centinela — Vigilancia eterna sobre la mesa.,Sentinel — Eternal vigilance at the table.,Sentinelle,Une vigilance éternelle à table.,no
+avatar_overlord_av,Soberano — Su voluntad es ley absoluta.,Sovereign — Their will is absolute law.,Souverain,Leur volonté est une loi absolue.,no
+avatar_conqueror,Conquistador — No deja mesa sin dominar.,Conqueror — Leaves no table undominated.,Conquérant,Ne laisse aucune table sans domination.,no
+avatar_archmage,Archimago — Poder arcano sin límites.,Archmage — Arcane power without limits.,Archimage,Pouvoir arcanique sans limites.,no
+avatar_templar,Templario — Cruzado del juego limpio y duro.,Templar — Crusader of clean and hard play.,Templier,Croisé du jeu propre et dur.,no
+avatar_harbinger,Heraldo — Portador de la derrota ajena.,Harbinger — Bearer of the enemy's defeat.,Présage,Porteur de la défaite de l'ennemi.,no
+avatar_phoenix,Fénix — Renace más fuerte con cada derrota.,Phoenix — Reborn stronger after every defeat.,Phénix,Renaître plus fort après chaque défaite.,no
+avatar_reaper,Segador — La muerte misma en la mesa.,Reaper — Death itself at the table.,Faucheuse,La mort elle-même à table.,no
+avatar_king,El Rey — Por encima de todos. Sin discusión.,The King — Above everyone. No discussion.,Le roi,Au-dessus de tout le monde. Aucune discussion.,no
+avatar_god_cards,Dios de las Cartas — Trasciende el juego. Es el juego.,God of Cards — Transcends the game. IS the game.,Dieu des cartes,Transcende le jeu. C'est le jeu.,no
+avatar_celestial,Celestial — De otro plano de existencia.,Celestial — From another plane of existence.,Céleste,D'un autre plan d'existence.,no
+avatar_chaos,El Caos — Impredecible. Imposible de parar.,Chaos — Unpredictable. Impossible to stop.,Chaos,Imprévisible. Impossible de s'arrêter.,no
+avatar_emperor,Emperador — Gobernante supremo del azar.,Emperor — Supreme ruler of chance.,Empereur,Maître suprême du hasard.,no
+avatar_demigod,"Semidiós — Casi un mito, totalmente letal.","Demigod — Almost a myth, totally lethal.",Demi-dieu,"Presque un mythe, totalement mortel.",no
+avatar_entity,La Entidad — Nadie sabe de dónde vino.,The Entity — Nobody knows where it came from.,L'entité,Personne ne sait d'où cela vient.,no
+avatar_titan_god,Titán Divino — La fuerza de un dios en la mesa.,Divine Titan — The strength of a god at the table.,Titan divin,La force d'un dieu à table.,no
+frame_gold,Marco Dorado — Brilla como un campeón.,Gold Frame — Shines like a champion.,Cadre doré,Brille comme un champion.,no
+frame_silver,Marco Plateado — Elegancia clásica y discreta.,Silver Frame — Classic and discreet elegance.,Cadre argenté,Élégance classique et discrète.,no
+frame_copper,Marco Cobre — Cálido y brillante.,Copper Frame — Warm and bright.,Cadre en cuivre,Chaleureux et lumineux.,no
+frame_bronze,Marco Bronce — Metal antiguo del coliseo.,Bronze Frame — Ancient metal of the coliseum.,Cadre en bronze,Métal ancien du Colisée.,no
+frame_wood,Marco Madera — Rústico y natural.,Wood Frame — Rustic and natural.,Cadre en bois,Rustique et naturel.,no
+frame_stone,Marco Piedra — Sólido como una roca.,Stone Frame — Solid as a rock.,Cadre en pierre,Solide comme un roc.,no
+frame_iron,Marco Hierro — Resistente y austero.,Iron Frame — Resistant and austere.,Cadre en fer,Résistant et austère.,no
+frame_clay,Marco Arcilla — Moldeado a mano.,Clay Frame — Hand-molded.,Cadre en argile,Moulé à la main.,no
+frame_leaf,Marco Hojas — Fresco y orgánico.,Leaf Frame — Fresh and organic.,Cadre de feuille,Frais et biologique.,no
+frame_coal,Marco Carbón — Oscuro y mate.,Coal Frame — Dark and matte.,Cadre de charbon,Sombre et mat.,no
+frame_sand,Marco Arena — Suave y cálido.,Sand Frame — Soft and warm.,Cadre de sable,Doux et chaud.,no
+frame_bamboo,Marco Bambú — Ligero y flexible.,Bamboo Frame — Light and flexible.,Cadre en bambou,Léger et flexible.,no
+frame_rope,Marco Cuerda — Para los lobos de mar.,Rope Frame — For sea wolves.,Cadre de corde,Pour les loups de mer.,no
+frame_glass,Marco Vidrio — Frágil pero cortante.,Glass Frame — Fragile but cutting.,Cadre en verre,Fragile mais coupant.,no
+frame_paper,Marco Papel — Simple y efímero.,Paper Frame — Simple and ephemeral.,Cadre en papier,Simple et éphémère.,no
+frame_emerald,Marco Esmeralda — Verde brillante del jugador natural.,Emerald Frame — Bright green of the natural player.,Cadre émeraude,Vert vif du joueur naturel.,no
+frame_crimson,Marco Carmesí — Rojo ardiente. Señal de peligro.,Crimson Frame — Burning red. A danger sign.,Cadre cramoisi,Rouge brûlant. Un signe de danger.,no
+frame_ocean,Marco Océano — Profundo y misterioso como el mar.,Ocean Frame — Deep and mysterious as the sea.,Cadre océanique,Profond et mystérieux comme la mer.,no
+frame_neon,Marco Neón — Ilumina la mesa entera.,Neon Frame — Lights up the whole table.,Cadre Néon,Illumine toute la table.,no
+frame_sakura,Marco Sakura — Delicado como pétalos de cerezo.,Sakura Frame — Delicate as cherry blossom petals.,Cadre Sakura,Délicat comme des pétales de fleurs de cerisier.,no
+frame_thunder,Marco Trueno — Eléctrico y poderoso.,Thunder Frame — Electric and powerful.,Cadre de tonnerre,Électrique et puissant.,no
+frame_toxic,Marco Tóxico — Verde veneno. Aviso de peligro.,Toxic Frame — Poison green. Danger warning.,Cadre toxique,Vert poison. Avertissement de danger.,no
+frame_marble,Marco Mármol — Piedra blanca pulida. Sofisticado.,Marble Frame — Polished white stone. Sophisticated.,Cadre en marbre,Pierre blanche polie. Sophistiqué.,no
+frame_obsidian_r,Marco Obsidiana — Elegancia volcánica oscura.,Obsidian Frame — Dark volcanic elegance.,Cadre en obsidienne,Élégance volcanique sombre.,no
+frame_ruby_r,Marco Rubí — Pasión y lujo metálico.,Ruby Frame — Passion and metallic luxury.,Cadre Rubis,Passion et luxe métallique.,no
+frame_sapphire_r,Marco Zafiro — Sabiduría azul cristalina.,Sapphire Frame — Crystalline blue wisdom.,Monture Saphir,Sagesse bleue cristalline.,no
+frame_topaz_r,Marco Topacio — Claridad dorada y brillante.,Topaz Frame — Golden clarity and brightness.,Cadre Topaze,Clarté et luminosité dorées.,no
+frame_amethyst_r,Marco Amatista — Místico y regio.,Amethyst Frame — Mystical and regal.,Cadre Améthyste,Mystique et royal.,no
+frame_onyx_r,Marco Ónice — Piedra preciosa negra pulida.,Onyx Frame — Polished precious black stone.,Cadre en onyx,Pierre noire précieuse polie.,no
+frame_pearl_r,Marco Perla — Brillo oceánico refinado.,Pearl Frame — Refined ocean glow.,Cadre Perle,Lueur océanique raffinée.,no
+frame_quartz_r,Marco Cuarzo — Claridad y energía pura.,Quartz Frame — Clarity and pure energy.,Cadre à Quartz,Clarté et énergie pure.,no
+frame_coral_r,Marco Coral — Vibrante y lleno de vida.,Coral Frame — Vibrant and full of life.,Cadre Corail,Vibrant et plein de vie.,no
+frame_amber_r,Marco Ámbar — Resina antigua atrapada en el tiempo.,Amber Frame — Ancient resin trapped in time.,Cadre Ambre,Résine ancienne emprisonnée dans le temps.,no
+frame_jade_r,Marco Jade — Suerte y armonía oriental.,Jade Frame — Eastern luck and harmony.,Cadre Jade,Chance et harmonie orientales.,no
+frame_citrine_r,Marco Citrino — Calidez solar en tu perfil.,Citrine Frame — Solar warmth in your profile.,Cadre citrine,Chaleur solaire dans votre profil.,no
+frame_granite_r,Marco Granito — Resistencia inquebrantable.,Granite Frame — Unbreakable resistance.,Cadre en granit,Résistance incassable.,no
+frame_bone_r,Marco Hueso — Reliquia de batallas pasadas.,Bone Frame — Relic of past battles.,Cadre en os,Relique des batailles passées.,no
+frame_steel_r,"Marco Acero — Moderno, pulido e industrial.","Steel Frame — Modern, polished and industrial.",Cadre en acier,"Moderne, raffiné et industriel.",no
+frame_brass_r,Marco Latón — Estilo steampunk clásico.,Brass Frame — Classic steampunk style.,Cadre en laiton,Style steampunk classique.,no
+frame_velvet_r,Marco Terciopelo — Suavidad y elegancia pura.,Velvet Frame — Softness and pure elegance.,Cadre en velours,Douceur et élégance pure.,no
+frame_fire,Marco Fuego — Ardiente y dominante.,Fire Frame — Burning and dominant.,Cadre de feu,Brûlant et dominant.,no
+frame_galaxy,Marco Galaxia — El cosmos en tu avatar.,Galaxy Frame — The cosmos in your avatar.,Cadre Galaxie,Le cosmos dans votre avatar.,no
+frame_void,Marco Vacío — Oscuridad que lo rodea todo.,Void Frame — Darkness surrounds everything.,Cadre vide,L'obscurité entoure tout.,no
+frame_aurora,Marco Aurora — Luces boreales eternamente bailando.,Aurora Frame — Northern lights eternally dancing.,Cadre Aurore,Les aurores boréales dansent éternellement.,no
+frame_crystal2,Marco Cristal — Transparente y brillante como diamante.,Crystal Frame — Transparent and bright as diamond.,Cadre en cristal,Transparent et brillant comme un diamant.,no
+frame_magma_e,Marco Magma — Poder volcánico fluyendo.,Magma Frame — Volcanic power flowing.,Cadre magmatique,La puissance volcanique circule.,no
+frame_plasma_e,Marco Plasma — Energía pura concentrada.,Plasma Frame — Pure concentrated energy.,Cadre plasma,Énergie pure concentrée.,no
+frame_neutron_e,Marco Neutrón — Densidad estelar extrema.,Neutron Frame — Extreme stellar density.,Cadre Neutron,Densité stellaire extrême.,no
+frame_spectrum_e,Marco Espectro — Todos los colores en armonía.,Spectrum Frame — All colors in harmony.,Cadre de spectre,Toutes les couleurs en harmonie.,no
+frame_nebula_e,Marco Nebulosa — Nube de gas estelar.,Nebula Frame — Stellar gas cloud.,Cadre nébuleuse,Nuage de gaz stellaire.,no
+frame_solar_e,Marco Solar — Brillo de una estrella joven.,Solar Frame — Brightness of a young star.,Cadre solaire,Luminosité d'une jeune étoile.,no
+frame_frozen_e,Marco Escarcha — Hielo eterno que nunca se derrite.,Frost Frame — Eternal ice that never melts.,Cadre de givre,Glace éternelle qui ne fond jamais.,no
+frame_shadow_e,Marco Sombra — Acechando desde la oscuridad.,Shadow Frame — Lurking from the darkness.,Cadre d'ombre,Caché dans les ténèbres.,no
+frame_divine_e,Marco Sagrado — Luz celestial purificadora.,Holy Frame — Purifying celestial light.,Cadre sacré,Lumière céleste purificatrice.,no
+frame_ancient_e,Marco Antiguo — Reliquia de una civilización perdida.,Ancient Frame — Relic of a lost civilization.,Cadre ancien,Relique d'une civilisation perdue.,no
+frame_modern_e,Marco Moderno — Diseño minimalista y futurista.,Modern Frame — Minimalist and futuristic design.,Cadre moderne,Design minimaliste et futuriste.,no
+frame_glitch_e,Marco Glitch — Error en la realidad.,Glitch Frame — Error in reality.,Cadre de pépin,Erreur en réalité.,no
+frame_pulse_e,Marco Pulso — Latido constante de energía.,Pulse Frame — Constant energy heartbeat.,Cadre d'impulsion,Battement de coeur à énergie constante.,no
+frame_radiant_e,Marco Radiante — Brillo insoportable para los débiles.,Radiant Frame — Unbearable glow for the weak.,Cadre Radiant,Lueur insupportable pour les faibles.,no
+frame_phantom_e,Marco Fantasma — Apenas presente en este plano.,Phantom Frame — Barely present in this plane.,Cadre fantôme,A peine présent dans cet avion.,no
+frame_diamond,Marco Diamante — El más raro y brillante de todos.,Diamond Frame — The rarest and brightest of all.,Cadre Diamant,Le plus rare et le plus brillant de tous.,no
+frame_chaos,Marco Caos — Cambia de color. Nunca el mismo dos veces.,Chaos Frame — Changes color. Never the same.,Cadre du chaos,Change de couleur. Jamais pareil.,no
+frame_divine,Marco Divino — Para el jugador que trasciende el juego.,Divine Frame — For the player who transcends.,Cadre divin,Pour le joueur qui transcende.,no
+frame_infinity,Marco Infinito — Sin principio ni fin.,Infinity Frame — Without beginning or end.,Cadre infini,Sans début ni fin.,no
+frame_supernova_l,"Marco Supernova — La muerte de una estrella, el nacimiento de un dios.","Supernova Frame — Death of a star, birth of a god.",Cadre Supernova,"Mort d'une étoile, naissance d'un dieu.",no
+frame_black_hole_l,Marco Agujero Negro — Nada escapa a su gravedad.,Black Hole Frame — Nothing escapes its gravity.,Cadre de trou noir,Rien n'échappe à sa gravité.,no
+frame_cosmic_l,Marco Cósmico — El tejido mismo del espacio-tiempo.,Cosmic Frame — The very fabric of space-time.,Cadre cosmique,Le tissu même de l’espace-temps.,no
+frame_eternal_l,Marco Eterno — Inmutable ante el paso de los siglos.,Eternal Frame — Immutable before centuries pass.,Cadre éternel,Immuable avant que les siècles ne passent.,no
+frame_alpha_l,Marco Alfa — El primero de su clase.,Alpha Frame — The first of its class.,Cadre Alpha,Le premier de sa catégorie.,no
+frame_omega_l,Marco Omega — El final de todo camino.,Omega Frame — The end of every path.,Cadre Oméga,La fin de chaque chemin.,no
+title_novice,Novato — El inicio del camino.,Novice — The beginning of the journey.,Débutant,Le début du voyage.,no
+title_rookie,Recién Llegado — Aún aprendiendo.,Newcomer — Still learning.,Nouveau venu,J'apprends toujours.,no
+title_regular,Jugador Regular — Ya conoces el terreno.,Regular Player — You know the terrain.,Joueur régulier,Vous connaissez le terrain.,no
+title_wanderer,Vagabundo — Juega donde lo llevan las cartas.,Wanderer — Plays where the cards take them.,Vagabond,Joue là où les cartes les mènent.,no
+title_veteran,Veterano — Muchas batallas en la espalda.,Veteran — Many battles on their back.,Vétéran,De nombreuses batailles sur le dos.,no
+title_survivor,Superviviente — Cae pero siempre se levanta.,Survivor — Falls but always gets back up.,Survivant,Tombe mais se relève toujours.,no
+title_drifter,"Trotamundos — De mesa en mesa, ganando siempre.","Globe-Trotter — Table to table, always winning.",Globe-trotter,"De table en table, toujours gagnant.",no
+title_gambler,Apostador — Todo o nada en cada jugada.,Gambler — All or nothing in every play.,Joueur,Tout ou rien dans chaque pièce.,no
+title_casual,"Casual — Juega por diversión, no por ganar.","Casual — Plays for fun, not to win.",Décontracté,"On joue pour s'amuser, pas pour gagner.",no
+title_apprentice,Aprendiz — Siguiendo los pasos de los grandes.,Apprentice — Following in the footsteps of greats.,Apprenti,Sur les traces des grands.,no
+title_traveler,Viajero — Explorando nuevos horizontes.,Traveler — Exploring new horizons.,Voyageur,Explorer de nouveaux horizons.,no
+title_competitor,Competidor — Nadie dijo que sería fácil.,Competitor — Nobody said it would be easy.,Concurrent,Personne n’a dit que ce serait facile.,no
+title_dreamer,Soñador — Buscando la jugada perfecta.,Dreamer — Seeking the perfect play.,Rêveur,À la recherche du jeu parfait.,no
+title_believer,Creyente — Confía en el corazón de las cartas.,Believer — Trusts in the heart of the cards.,Croyant,Des confiances au cœur des cartes.,no
+title_observer,Observador — Analizando cada movimiento.,Observer — Analyzing every move.,Observateur,Analyser chaque mouvement.,no
+title_pro,Profesional — Dominas las cartas.,Professional — You dominate the cards.,Professionnel,Vous dominez les cartes.,no
+title_strategist,Estratega — Cada jugada es calculada.,Strategist — Every play is calculated.,Stratège,Chaque jeu est calculé.,no
+title_shark,Tiburón — Hambriento de victorias.,Shark — Hungry for victories.,Requin,Avide de victoires.,no
+title_hustler,Buscavidas — Siempre encuentra la jugada.,Hustler — Always finds the play.,Arnaqueur,Trouve toujours le jeu.,no
+title_fox,El Zorro — Astuto e impredecible.,The Fox — Cunning and unpredictable.,Le Renard,Rusé et imprévisible.,no
+title_predator,Depredador — Acecha antes de atacar.,Predator — Stalks before striking.,Prédateur,Tiges avant de frapper.,no
+title_trickster,El Tramposo — Tiene un as en la manga siempre.,The Cheat — Always has an ace up their sleeve.,La triche,Il a toujours un atout dans sa manche.,no
+title_renegade,Renegado — No sigue reglas. Las reescribe.,Renegade — Doesn't follow rules. Rewrites them.,Renégat,Ne suit pas les règles. Les réécrit.,no
+title_maverick,Maverick — Independiente. A su propio ritmo.,Maverick — Independent. At their own pace.,Non-conformiste,Indépendant. À leur rythme.,no
+title_outlaw,Forajido — Juega fuera de los límites.,Outlaw — Plays outside the limits.,Hors-la-loi,Joue en dehors des limites.,no
+title_shadow2,La Sombra — Invisible hasta el golpe final.,The Shadow — Invisible until the final blow.,L'Ombre,Invisible jusqu'au coup final.,no
+title_comeback,El Comeback — Nunca lo cuentes fuera.,The Comeback — Never count them out.,Le retour,Ne les comptez jamais.,no
+title_expert,Experto — Años de práctica dan sus frutos.,Expert — Years of practice paying off.,Expert,Des années de pratique qui portent leurs fruits.,no
+title_challenger,Desafiante — Buscando al mejor para superarlo.,Challenger — Looking for the best to surpass.,Challenger,À la recherche du meilleur pour se surpasser.,no
+title_mastermind,Mente Maestra — Todo sucede según su plan.,Mastermind — Everything happens according to plan.,Cerveau,Tout se passe comme prévu.,no
+title_warrior,Guerrero — Lucha hasta el último suspiro.,Warrior — Fights until the last breath.,Guerrier,Se bat jusqu'au dernier souffle.,no
+title_hunter,Cazador — Rastreando la victoria.,Hunter — Tracking the victory.,Chasseur,Suivi de la victoire.,no
+title_joker_t,Comodín — La pieza que falta en el rompecabezas.,Wildcard — The piece missing in the puzzle.,Caractère générique,La pièce manquante au puzzle.,no
+title_collector,Coleccionista — Atesora triunfos y cartas.,Collector — Treasures triumphs and cards.,Collectionneur,Trésors triomphes et cartes.,no
+title_scholar_t,Sabio — El conocimiento es poder en la mesa.,Sage — Knowledge is power at the table.,Sauge,"La connaissance, c'est le pouvoir à la table.",no
+title_phantom_t,Fantasmagoría — Un espejismo de victoria.,Phantasmagoria — A mirage of victory.,Fantasmagorie,Un mirage de victoire.,no
+title_rogue_t,Pícaro Astuto — Nadie vio venir esa jugada.,Cunning Rogue — Nobody saw that play coming.,Voleur rusé,Personne n’a vu venir cette pièce.,no
+title_noble,Noble — Jugando con honor y distinción.,Noble — Playing with honor and distinction.,Noble,Jouer avec honneur et distinction.,no
+title_guardian_t,Guardián de la Mesa — Protegiendo su racha de victorias.,Table Guardian — Protecting their win streak.,Gardien de table,Protéger leur séquence de victoires.,no
+title_vanguard_t,Vanguardista — Abriendo camino a nuevas estrategias.,Avant-Garde — Opening paths to new strategies.,Avant-Garde,Ouvrir la voie à de nouvelles stratégies.,no
+title_grandmaster,Gran Maestro — Temido en toda la mesa.,Grand Master — Feared across every table.,Grand Maître,Craint sur toutes les tables.,no
+title_phantom,El Fantasma — Nadie sabe cómo gana.,The Phantom — Nobody knows how they win.,Le Fantôme,Personne ne sait comment ils gagnent.,no
+title_ace,El As — El rey de todas las cartas.,The Ace — The king of all cards.,L'As,Le roi de toutes les cartes.,no
+title_overlord,El Señor — Todos le obedecen en la mesa.,The Overlord — Everyone obeys at the table.,Le suzerain,Tout le monde obéit à table.,no
+title_invincible,Invencible — No ha perdido todavía. ¿Puedes vencerlo?,Invincible — Not lost yet. Can you beat them?,Invincible,Pas encore perdu. Pouvez-vous les battre ?,no
+title_dark_lord,Señor Oscuro — La oscuridad le favorece siempre.,Dark Lord — Darkness always favors them.,Seigneur des Ténèbres,L'obscurité les favorise toujours.,no
+title_immortal,Inmortal — No hay quien lo derrote.,Immortal — Death is an inconvenience.,Immortel,La mort est un inconvénient.,no
+title_god,El Dios — Trasciende el juego mismo.,The God — Touches the divine in every play.,Le Dieu,Touche le divin dans chaque pièce.,no
+title_absolute,El Absoluto — No hay comparación. Es único.,The Absolute — Beyond any limit.,L'Absolu,Au-delà de toute limite.,no
+title_legend,Leyenda Viviente — Los demás te temen.,Living Legend — Stories are told of this player.,Légende vivante,On raconte des histoires sur ce joueur.,no
+title_alpha,El Alfa — El primero. El último. El único.,The Alpha — The one who begins everything.,L'Alpha,Celui qui commence tout.,no
+title_eternal,Eterno — Jugará para siempre. Y siempre ganará.,Eternal — Immutable across centuries.,Éternel,Immuable à travers les siècles.,no
+title_omega,El Omega — El fin de todo desafío.,The Omega — The one who ends everything.,L'Oméga,Celui qui met fin à tout.,no
+title_transcendent,Transcendent — Beyond the material world.,Transcendent — Beyond the material world.,Transcendant,Au-delà du monde matériel.,no
+title_ocho_locos_king,Crazy Eights King — The king of Crazy Eights.,Crazy Eights King — The king of Crazy Eights.,Roi des huit fous,Le roi des Crazy Eights.,no
+effect_none,Sin Efecto — Juego limpio sin efectos especiales.,No Effect — Fair play without special effects.,Aucun effet,Fair-play sans effets spéciaux.,no
+effect_sparkle,Destellos — Brillo dorado al jugar tus cartas.,Sparkles — Golden shine when playing your cards.,Paillettes,Brillance dorée lorsque vous jouez vos cartes.,no
+effect_bubbles,Burbujas — Efecto acuático refrescante.,Bubbles — Refreshing aquatic effect.,Bulles,Effet aquatique rafraîchissant.,no
+effect_leaves,Hojas — Hojas que caen suavemente.,Leaves — Leaves falling gently.,Feuilles,Les feuilles tombent doucement.,no
+effect_dust,Polvo — Partículas de tierra al mover cartas.,Dust — Dirt particles when moving cards.,Poussière,Particules de saleté lors du déplacement des cartes.,no
+effect_snow_c,Nieve — Copos blancos de invierno.,Snow — Winter white snowflakes.,Neige,Flocons de neige blancs d'hiver.,no
+effect_confetti,Confeti — Pequeña fiesta en cada jugada.,Confetti — Little party on every play.,Confettis,Petite fête à chaque pièce.,no
+effect_stars_c,Estrellitas — Pequeños puntos de luz nocturna.,Stars — Small points of night light.,Étoiles,Petits points de veilleuse.,no
+effect_rain,Lluvia — Gotas que mojan la mesa.,Rain — Raindrops on the table.,Pluie,Gouttes de pluie sur la table.,no
+effect_petals,Pétalos — Suavidad floral en tus manos.,Petals — Floral softness in your hands.,Pétales,Douceur florale dans vos mains.,no
+effect_sand_c,Arena — Granos de desierto volando.,Sand — Desert grains flying.,Sable,Les grains du désert volent.,no
+effect_wind,Viento — Ráfagas que agitan las cartas.,Wind — Gusts shaking the cards.,Vent,Des rafales secouent les cartes.,no
+effect_feathers,Plumas — Ligereza al jugar.,Feathers — Lightness when playing.,Plumes,Légèreté en jouant.,no
+effect_ink,Tinta — Manchas de caligrafía antigua.,Ink — Old calligraphy stains.,Encre,Taches de calligraphie anciennes.,no
+effect_steam,Vapor — Calidez que emana del tablero.,Steam — Warmth emanating from the board.,Vapeur,Chaleur émanant du tableau.,no
+effect_fire,Llamas — Fuego ardiente en cada jugada.,Flames — Burning fire in every play.,Flammes,Un feu brûlant dans chaque pièce.,no
+effect_ice,Hielo — Cristales de hielo que congelan el ambiente.,Ice — Ice crystals that freeze the air.,Glace,Cristaux de glace qui gèlent l'air.,no
+effect_ghostly,Fantasmal — Ecos de jugadas pasadas.,Ghostly — Echoes of past plays.,Fantomatique,Échos de pièces passées.,no
+effect_electric,Eléctrico — Chispas de estática.,Electric — Static sparks.,Électrique,Des étincelles statiques.,no
+effect_shadow_r,Sombras — Rastros de oscuridad.,Shadows — Trails of darkness.,Ombres,Des sentiers d'obscurité.,no
+effect_toxic_r,Tóxico — Nubes de veneno verde.,Toxic — Green poison clouds.,Toxique,Nuages de poison verts.,no
+effect_plasma_r,Plasma — Energía ionizada.,Plasma — Ionized energy.,Plasma,Énergie ionisée.,no
+effect_magnetic,Magnético — Atracción irresistible de cartas.,Magnetic — Irresistible card attraction.,Magnétique,Attraction irrésistible des cartes.,no
+effect_sonar,Sonar — Ondas de sonido expansivas.,Sonar — Expansive sound waves.,Sonar,Ondes sonores expansives.,no
+effect_glitch_r,Glitch — Distorsión digital leve.,Glitch — Slight digital distortion.,Problème,Légère distorsion numérique.,no
+effect_cyber_r,Cyberpuntos — Conexiones de red en la mesa.,Cyberpoints — Network connections on the table.,Cyberpoints,Connexions réseau sur la table.,no
+effect_crystal_r,Cristalino — Fragmentos de cuarzo.,Crystalline — Quartz fragments.,Cristallin,Fragments de quartz.,no
+effect_gold_dust,Polvo de Oro — Riqueza volátil.,Gold Dust — Volatile wealth.,Poussière d'or,Une richesse volatile.,no
+effect_nature_r,Naturaleza — Crecimiento instantáneo.,Nature — Instant growth.,Nature,Croissance instantanée.,no
+effect_water_r,Oleaje — Marea baja en la mesa.,Swell — Low tide on the table.,Houle,Marée basse sur la table.,no
+effect_wind_r,Tornado — Vórtice de cartas.,Tornado — Card vortex.,Tornade,Vortex de cartes.,no
+effect_rock_r,Desprendimiento — Impactos de piedra pesada.,Landslide — Heavy stone impacts.,Glissement de terrain,Forts impacts de pierres.,no
+effect_light_r,Destello Solar — Luz cegadora momentánea.,Solar Flare — Momentary blinding light.,Éruption solaire,Lumière aveuglante momentanée.,no
+effect_dark_r,Eclipse — Oscuridad que oculta el juego.,Eclipse — Darkness that hides the game.,Éclipse,L'obscurité qui cache le jeu.,no
+effect_acid_r,Ácido — Corrosión visual.,Acid — Visual corrosion.,Acide,Corrosion visuelle.,no
+effect_lava_r,Magma — Fuego líquido denso.,Magma — Dense liquid fire.,Magma,Feu liquide dense.,no
+effect_echo_r,Eco — Repetición visual de jugadas.,Echo — Visual repetition of plays.,Écho,Répétition visuelle de pièces de théâtre.,no
+effect_prism_r,Prismático — Refracción de luz.,Prismatic — Light refraction.,Prismatique,Réfraction de la lumière.,no
+effect_bloom_r,Florecer — Crecimiento de flores rápidas.,Bloom — Fast flower growth.,Floraison,Croissance rapide des fleurs.,no
+effect_pulse_r,Pulso Arcano — Ondas de magia pura.,Arcane Pulse — Pure magic waves.,Impulsion arcanique,Des vagues magiques pures.,no
+effect_thunder,Rayos — Electricidad pura al cambiar de turno.,Lightning — Pure electricity when turn ends.,Foudre,De l'électricité pure à la fin du tour.,no
+effect_smoke,Humo — Misteriosa nube de humo en tus jugadas.,Smoke — Mysterious smoke cloud in plays.,Fumée,Nuage de fumée mystérieux dans les pièces de théâtre.,no
+effect_supernova,Supernova — Explosión estelar al ganar.,Supernova — Stellar explosion when winning.,Supernova,Explosion stellaire en cas de victoire.,no
+effect_vortex,Vórtice — Agujero de gusano en la mesa.,Vortex — Wormhole on the table.,Vortex,Trou de ver sur la table.,no
+effect_meteor,Meteoro — Impacto del espacio exterior.,Meteor — Impact from outer space.,Météore,Impact de l’espace.,no
+effect_aurora_e,Aurora — Cortinas de luz celestial.,Aurora — Celestial light curtains.,Aurore,Rideaux lumineux célestes.,no
+effect_quantum,Cuántico — Estar en varios lugares a la vez.,Quantum — Being in several places at once.,Quantique,Être à plusieurs endroits à la fois.,no
+effect_hellfire,Fuego Infernal — Llamas que consumen la suerte.,Hellfire — Flames that consume luck.,Feu de l'enfer,Des flammes qui consument la chance.,no
+effect_blizzard,Ventisca — Tormenta de nieve cegadora.,Blizzard — Blinding snowstorm.,Blizzard,Tempête de neige aveuglante.,no
+effect_tsunami,Tsunami — Ola gigante que barre las cartas.,Tsunami — Giant wave that sweeps cards.,Tsunami,Vague géante qui balaie les cartes.,no
+effect_hurricane_e,Huracán — Viento devastador.,Hurricane — Devastating wind.,Ouragan,Vent dévastateur.,no
+effect_solar_flare,Llamarada — Explosión de energía solar.,Flare — Solar energy explosion.,Flamme,Explosion d'énergie solaire.,no
+effect_void_e,El Vacío — Absorción total de luz.,The Void — Total light absorption.,Le vide,Absorption totale de la lumière.,no
+effect_radiance,Radiancia — Brillo sagrado cegador.,Radiance — Holy blinding shine.,Éclat,Saint éclat aveuglant.,no
+effect_shatter,Fragmentación — La realidad se rompe en pedazos.,Shatter — Reality breaks into pieces.,Briser,La réalité se brise en morceaux.,no
+effect_spirit,Espíritu Animado — Espectros que juegan contigo.,Animated Spirit — Specters that play with you.,Esprit animé,Des spectres qui jouent avec vous.,no
+effect_corrosion,Corrosión — Desgaste instantáneo de la mesa.,Corrosion — Instant table decay.,Corrosion,Dégradation instantanée de la table.,no
+effect_hyperdrive,Hiperespacio — Velocidad luz en tus jugadas.,Hyperdrive — Light speed in your plays.,Hyperpropulsion,Vitesse de la lumière dans vos jeux.,no
+effect_implosion,Implosión — Colapso de energía interna.,Implosion — Internal energy collapse.,Implosion,Effondrement de l’énergie interne.,no
+effect_explosion,Explosión — Caos total al jugar.,Explosion — Total chaos when playing.,Explosion,Chaos total en jouant.,no
+effect_galaxy,Galaxia — Partículas del cosmos brillan al jugar.,Galaxy — Cosmic particles shine when playing.,Galaxie,Les particules cosmiques brillent en jouant.,no
+effect_rainbow,Arcoíris — Colores explosivos en cada carta jugada.,Rainbow — Explosive colors on each card played.,Arc-en-ciel,Des couleurs explosives sur chaque carte jouée.,no
+effect_singularity,Singularidad — Donde las leyes del juego no existen.,Singularity — Where game laws don't exist.,Singularité,Là où les lois sur le jeu n'existent pas.,no
+effect_genesis,Génesis — La creación de un nuevo universo.,Genesis — The creation of a new universe.,Genèse,La création d'un nouvel univers.,no
+effect_apocalypse,Apocalipsis — El fin de toda esperanza para tu rival.,Apocalypse — The end of all hope for your rival.,Apocalypse,La fin de tout espoir pour votre rival.,no
+effect_eternity_e,Eternidad — Tiempo congelado en victoria.,Eternity — Time frozen in victory.,L'éternité,Le temps figé dans la victoire.,no
+effect_chaos_e,Caos Absoluto — Desorden total y divino.,Absolute Chaos — Total and divine disorder.,Chaos absolu,Désordre total et divin.,no
+effect_divine_e_v,Juicio Divino — Luz de justicia sobre la mesa.,Divine Judgment — Justice light over the table.,Jugement Divin,La lumière de la justice sur la table.,no
+effect_nebula_l,Nebulosa Primordial — El origen de todas las jugadas.,Primordial Nebula — The origin of all plays.,Nébuleuse Primordiale,L'origine de toutes les pièces de théâtre.,no
+effect_black_hole_e,Agujero Negro — Succión infinita de suerte.,Black Hole — Infinite luck suction.,Trou noir,Aspiration de chance infinie.,no
+emote_gg,GG — Buen juego!,GG — Good game!,GG,Bon jeu !,no
+emote_lol,LOL — Qué risa!,LOL — So funny!,Mdr,Tellement drôle !,no
+emote_luck,Suerte! — Que tengas suerte!,Good luck! — Wishing you luck!,Bonne chance!,Je vous souhaite bonne chance !,no
+emote_ocho,Ocho! — El grito de la victoria.,Ocho! — The victory cry!,Ocho!,Le cri de victoire !,no
+emote_omg,OMG! — No puede ser!,OMG! — Can't believe it!,OH MON DIEU!,Je ne peux pas y croire !,no
+emote_si,Sí! — Celebrando el momento.,Yes! — Celebrating the moment!,Oui!,Célébrons le moment !,no
+emote_jaja,Jaja — Qué gracioso!,Haha — So funny!,Haha,Tellement drôle !,no
+emote_bravo,Bravo! — Aplausos!,Bravo! — Applause!,Bravo!,Applaudissements!,no
+emote_no,Noooo! — Imposible!,Noooo! — Impossible!,Nooon !,Impossible!,no
+emote_bien,Bien jugado — Un movimiento brillante.,Well played — A brilliant move!,Bien joué,Un geste brillant !,no
+emote_nice,Nice! — Qué buena jugada!,Nice! — What a great play!,Bon!,Quelle belle pièce !,no
+emote_mala,Mala suerte — La suerte no estuvo.,Bad luck — Luck wasn't there.,Pas de chance,La chance n'était pas là.,no
+emote_ay,Ay! — Eso dolió!,Ouch! — That hurt!,Aie!,Ça fait mal !,no
+emote_tremendo,Tremendo — Qué tremenda jugada!,Tremendous! — What a tremendous play!,Formidable!,Quelle pièce formidable !,no
+emote_uf,Uf! — Qué complicado!,Ugh! — So complicated!,Pouah!,Tellement compliqué !,no
+emote_wow,Wow! — Qué impresionante!,Wow! — What an amazing move!,Ouah!,Quelle démarche incroyable !,no
+emote_vamos,Vamos! — Arriba el equipo!,Let's go! — Come on team!,Allons-y!,Venez en équipe !,no
+emote_como,Como así? — Qué acaba de pasar?,What?! — What just happened?,Quoi?!,Que vient-il de se passer ?,no
+emote_aguante,Aguante! — Resistiendo todo!,Hang in! — Resisting everything!,Accrochez-vous !,Résister à tout !,no
+emote_juego,Al juego! — Concentración total.,Game on! — Total concentration.,Jouez !,Concentration totale.,no
+emote_rapido,Rápido! — Sin tiempo que perder!,Hurry up! — No time to waste!,Dépêche-toi!,Pas de temps à perdre !,no
+emote_trampa,Trampa! — Eso no puede ser legal.,Cheater! — That can't be legal.,Tricheur!,Cela ne peut pas être légal.,no
+emote_genio,Genio! — Movida de genio.,Genius! — A genius move.,Génie!,Un geste de génie.,no
+emote_malo,Malo! — Esa carta era horrible.,Bad! — What a terrible card.,Mauvais!,Quelle terrible carte.,no
+emote_control,Control — Yo controlo el juego.,In control — I control this game.,En contrôle,Je contrôle ce jeu.,no
+emote_espera,Espera... — Pensando bien...,Wait... — Thinking carefully...,Attends...,En réfléchissant bien...,no
+emote_concentra,Concentrado — En modo estrategia.,Focused — In strategy mode.,Concentré,En mode stratégie.,no
+emote_suave,"Suave! — Calma, calma...",Easy now! — Take it easy...,Facile maintenant !,Allez-y doucement...,no
+emote_mierda,Eso! — Exactamente lo que quería.,Yes! — Exactly what I wanted.,Oui !,Exactement ce que je voulais.,no
+emote_junto,A por ellos — Vamos a ganar esto!,Let's get them! — Let's win this!,Allons les chercher !,Gagnons ça !,no
+emote_imparable,Imparable! — Nadie puede detenerme.,Unstoppable! — Nobody can stop me.,Inarrêtable !,Personne ne peut m'arrêter.,no
+emote_domino,Domino — Control absoluto.,Dominating — Absolute control.,Dominant,Contrôle absolu.,no
+emote_fuego,Fuego! — Estoy en llamas!,On fire! — I'm on fire!,En feu!,Je suis en feu !,no
+emote_maestro,Maestro — Soy el maestro de esto.,Master — I am the master of this.,Maître,Je suis le maître de cela.,no
+emote_locura,Qué locura! — Esto está loco!,Madness! — This is insane!,Folie!,C'est fou !,no
+emote_increible,Increíble! — No lo puedo creer!,Incredible! — I can't believe it!,Incroyable!,Je n'arrive pas à y croire !,no
+emote_facil,Fácil! — Para mí es muy simple.,Easy! — That's very simple for me.,Facile!,C'est très simple pour moi.,no
+emote_sinpiedad,Sin piedad — No muestro clemencia.,No mercy — I show no mercy.,Pas de pitié,Je ne montre aucune pitié.,no
+emote_perfecto,Perfecto! — Exactamente como planeé.,Perfect! — Exactly as planned.,Parfait!,Exactement comme prévu.,no
+emote_golpe,Qué golpe! — Esa carta fue un golpe.,What a hit! — That card was a knockout.,Quel succès !,Cette carte était un KO.,no
+emote_sigue,Sigue así! — Mantén ese ritmo.,Keep it up! — Keep that rhythm.,Continuez comme ça!,Gardez ce rythme.,no
+emote_tiburon,Tiburón — Depredador del juego.,Shark — Predator of the game.,Requin,Prédateur du jeu.,no
+emote_estratega,Estratega — Calculé todo esto.,Strategist — I calculated all of this.,Stratège,J'ai calculé tout ça.,no
+emote_victoire,Victoria! — La victoria es mía!,Victory! — Victory is mine!,Victoire!,La victoire est à moi !,no
+emote_shadow,En las sombras — Nadie me ve venir.,In the shadows — Nobody sees me coming.,Dans l'ombre,Personne ne me voit venir.,no
+emote_inalcanzable,Inalcanzable — Estoy más allá.,Unreachable — I'm beyond reach.,Injoignable,Je suis hors de portée.,no
+emote_elrey,El Rey — El rey del tablero.,The King — The king of the table.,Le roi,Le roi de la table.,no
+emote_lareina,La Reina — La reina gobierna.,The Queen — The queen reigns.,La Reine,La reine règne.,no
+emote_bestia,Bestia! — Soy una bestia jugando.,Beast! — I'm a beast at playing.,Bête!,Je suis une bête pour jouer.,no
+emote_fenomeno,Fenómeno — Un fenómeno del juego.,Phenomenon — A phenomenon of the game.,Phénomène,Un phénomène du jeu.,no
+emote_demoledor,Demoledor — Demoliendo todo.,Demolishing — Demolishing everything.,Démolition,Tout démolir.,no
+emote_superior,Superior — Soy superior en todo.,Superior — I'm superior in every way.,Supérieure,Je suis supérieur à tous points de vue.,no
+emote_brillante,Brillante — Una mente brillante.,Brilliant — A brilliant mind.,Brillant,Un esprit brillant.,no
+emote_espectacular,Espectacular — Fue espectacular.,Spectacular — That was spectacular.,Spectaculaire,C'était spectaculaire.,no
+emote_indetenible,Indetenible — Nada me detiene.,Unstoppable — Nothing stops me.,Inarrêtable,Rien ne m'arrête.,no
+emote_eldios,El Dios — El dios del Ocho Locos.,The God — The god of Ocho Locos.,Le Dieu,Le dieu d'Ocho Locos.,no
+emote_locogod,El Locos — Solo un verdadero loco gana así.,Loco God — Only a true crazy wins like this.,Dieu fou,Seul un vrai fou gagne ainsi.,no
+emote_ocholocos,Ocho Locos! — El grito legendario.,Ocho Locos! — The legendary battle cry.,Ocho Locos!,Le cri de guerre légendaire.,no
+emote_legendario,Legendario — Un jugador de leyenda.,Legendary — A legendary player.,Légendaire,Un joueur légendaire.,no
+emote_elfin,El Fin — El juego terminó. Yo gané.,The End — The game ended. I won.,La fin,Le jeu s'est terminé. J'ai gagné.,no
+back_dusk,Crepúsculo — El cielo entre el día y la noche.,Twilight — The sky between day and night.,Crépuscule,Le ciel entre le jour et la nuit.,no
+back_ash,Ceniza — Restos del fuego que quemó.,Ash — Remains of the fire that burned.,Frêne,Restes du feu qui a brûlé.,no
+back_maple,Arce — Hojas otoñales de color cálido.,Maple — Warm colored autumn leaves.,Érable,Feuilles d'automne aux couleurs chaudes.,no
+back_pearl2,Nácar — Suave como la concha del mar.,Mother of pearl — Soft like the shell of the sea.,Nacre,Doux comme la coquille de la mer.,no
+back_pine,Pino — Verde profundo de montaña.,Pine — Deep mountain green.,Pin,Vert montagne profond.,no
+back_coral,Coral — Vivo y brillante como el arrecife.,Coral — Vivid and bright like the reef.,Corail,Vif et lumineux comme le récif.,no
+back_eclipse,Eclipse — El sol bloqueado por la luna.,Eclipse — The sun blocked by the moon.,Éclipse,Le soleil bloqué par la lune.,no
+back_jade,Jade — Piedra de la suerte oriental.,Jade — Eastern lucky stone.,Jade,Pierre porte-bonheur orientale.,no
+back_topaz,Topacio — Claridad dorada pura.,Topaz — Pure golden clarity.,Topaze,Clarté dorée pure.,no
+back_sapphire,Zafiro — Azul profundo real.,Sapphire — Royal deep blue.,Saphir,Bleu royal profond.,no
+back_amber,Ámbar — Resina que atrapa el tiempo.,Amber — Resin that traps time.,Ambre,Une résine qui emprisonne le temps.,no
+back_hazel,Avellana — Calidez natural y terrosa.,Hazelnut — Natural and earthy warmth.,Noisette,Chaleur naturelle et terreuse.,no
+back_solar,Solar — Poder de la estrella más cercana.,Solar — Power of the nearest star.,Solaire,Puissance de l'étoile la plus proche.,no
+back_mirage,Espejismo — Ilusión óptica en la mesa.,Mirage — Optical illusion on the table.,Mirages,Illusion d'optique sur la table.,no
+back_neon_future,Neón Futurista — Tecnología de punta en tus manos.,Futuristic Neon — Cutting-edge technology in your hands.,Néon futuriste,Une technologie de pointe entre vos mains.,no
+back_space_galaxy,Galaxia Espacial — Nebulosa morada y azul profundo.,Space Galaxy — Purple and deep blue nebula.,Galaxie spatiale,Nébuleuse violette et bleu profond.,no
+back_fire_lava,Fuego y Lava — Rojos y naranjas intensos fundidos.,Fire and Lava — Intense reds and oranges melted.,Feu et lave,Des rouges intenses et des oranges fondues.,no
+back_ice_glacial,Hielo Glacial — Azules claros y blancos gélidos.,Glacial Ice — Light blues and icy whites.,Glace glaciaire,Bleus clairs et blancs glacés.,no
+back_cyberpunk,Cyberpunk — Negro y amarillo neón de ciudad futura.,Cyberpunk — Black and neon yellow of future city.,Cyberpunk,Noir et jaune fluo de la future ville.,no
+back_medieval,Medieval — Café oscuro y dorado antiguo.,Medieval — Dark brown and antique gold.,Médiéval,Brun foncé et or antique.,no
+back_magic_crystal,Cristal Mágico — Azul translúcido y plateado.,Magic Crystal — Translucent blue and silver.,Cristal magique,Bleu translucide et argent.,no
+back_retro_90s,"Retro 90s — Colores vivos magenta, cyan y amarillo.","Retro 90s — Bright magenta, cyan and yellow colors.",Rétro années 90,"Couleurs magenta, cyan et jaune vif.",no
+back_tropical_jungle,Selva Tropical — Verde intenso y amarillo vibrante.,Tropical Rainforest — Intense green and vibrant yellow.,Forêt tropicale humide,Vert intense et jaune vibrant.,no
+back_neon_night,Mesa Nocturna Neon — Negro con verde fosforescente.,Neon Night Table — Black with fluorescent green.,Table de nuit néon,Noir avec vert fluo.,no
+back_deep_space,Espacio Profundo — El vacío de las estrellas.,Deep Space — The emptiness of the stars.,Espace profond,Le vide des étoiles.,no
+back_borealis,Aurora Boreal — Luces danzantes del norte.,Aurora Borealis — Dancing lights of the north.,Aurores boréales,Lumières dansantes du nord.,no
+back_volcano,Volcán — La furia de la tierra fundida.,Volcano — The fury of the molten earth.,Volcan,La fureur de la terre en fusion.,no
+back_storm_night,Tormenta Nocturna — Rayos en el cielo oscuro.,Night Storm — Lightning in the dark sky.,Tempête nocturne,Des éclairs dans le ciel sombre.,no
+back_ocean_deep,Océano Profundo — Donde no llega la luz del sol.,Deep Ocean — Where the sunlight does not reach.,Océan profond,Là où la lumière du soleil n’atteint pas.,no
+back_golden_empire,Imperio Dorado — Riqueza de civilizaciones perdidas.,Golden Empire — Wealth of lost civilizations.,Empire d'Or,Richesse des civilisations perdues.,no
+back_dark_nebula,Nebulosa Oscura — Gases espaciales inquietantes.,Dark Nebula — Disturbing space gases.,Nébuleuse sombre,Gaz spatiaux perturbateurs.,no
+back_emerald_forest,Bosque Esmeralda — El corazón de la naturaleza.,Emerald Forest — The heart of nature.,Forêt d'émeraude,Le cœur de la nature.,no
+back_silver_storm,Tormenta de Plata — Destellos metálicos constantes.,Silver Storm — Constant metallic flashes.,Tempête d'argent,Des éclairs métalliques constants.,no
+back_royal_purple,Púrpura Real — La nobleza en tus cartas.,Royal Purple — The nobility in your letters.,Violet Royal,La noblesse dans vos lettres.,no
+back_iron_epic,Hierro Forjado — Metal templado en batalla.,Wrought Iron — Battle-tempered metal.,Fer Forgé,Métal trempé au combat.,no
+back_orchid,Orquídea — Rareza floral de otro nivel.,Orchid — Next level floral rarity.,Orchidée,Rareté florale de niveau supérieur.,no
+back_thunder2,"Tormenta Épica — Más que relámpagos, la furia del cielo.","Epic Storm — More than lightning, the fury of the sky.",Tempête épique,"Plus que l'éclair, la fureur du ciel.",no
+back_titan,Titán — Colosal. Nadie puede pararlo.,Titan — Colossal. Nobody can stop it.,Titane,Colossal. Personne ne peut l'arrêter.,no
+back_omen,Presagio — Un augurio oscuro en la baraja.,Omen — A dark omen in the deck.,Présage,Un sombre présage dans le deck.,no
+back_radiant,Resplandor — Luz pura que ciega a la competencia.,Glow — Pure light that blinds the competition.,Lueur,Une lumière pure qui aveugle la concurrence.,no
+avatar_fisherman,Pescador — Paciencia para pescar la carta perfecta.,Fisherman — Patience to fish for the perfect card.,Pêcheur,Patience pour pêcher la carte parfaite.,no
+avatar_baker,Panadero — Amasa victorias con sus propias manos.,Baker — Amass victories with your own hands.,Boulanger,Accumulez des victoires de vos propres mains.,no
+avatar_mechanic,Mecánico — Arregla cualquier situación difícil.,Mechanic — Fix any difficult situation.,Mécanicien,Résolvez toute situation difficile.,no
+avatar_teacher,Maestro — Enseña lecciones dolorosas.,Master — Teaches painful lessons.,Maître,Enseigne des leçons douloureuses.,no
+avatar_doctor,Doctor — Cura sus errores antes que los del rival.,Doctor — He cures his mistakes before those of his rival.,Docteur,Il guérit ses erreurs avant celles de son rival.,no
+avatar_gladiator2,"Luchador — Arena, sangre y gloria en cada carta.","Fighter — Sand, blood and glory on every card.",Combattant,"Du sable, du sang et de la gloire sur chaque carte.",no
+avatar_pirate2,Filibustero — Roba más rápido que nadie.,Filibuster — Steal faster than anyone.,Obstruction systématique,Volez plus vite que quiconque.,no
+avatar_ninja2,Shinobi — Invisible hasta el golpe final.,Shinobi — Invisible until the final blow.,Shinobi,Invisible jusqu'au coup final.,no
+avatar_mage2,Archihechicero — Controla el mazo con magia antigua.,Archsorcerer — Control the deck with ancient magic.,Archorcier,Contrôlez le deck avec la magie ancienne.,no
+avatar_knight2,Cruzado — Fe inquebrantable en sus cartas.,Crossed — Unbreakable faith in his letters.,Traversé,Une foi inébranlable dans ses lettres.,no
+avatar_dragon2,Dragón Antiguo — El más viejo y sabio de los dragones.,Ancient Dragon — The oldest and wisest of the dragons.,Dragon ancien,Le plus ancien et le plus sage des dragons.,no
+avatar_demon,Demonio — Viene del infierno a quemar la mesa.,Demon — He comes from hell to burn the table.,Démon,Il vient de l'enfer pour brûler la table.,no
+avatar_angel,Ángel — Alas de luz que guían al ganador.,Angel — Wings of light that guide the winner.,Ange,Des ailes de lumière qui guident le vainqueur.,no
+avatar_wizard2,Mago Supremo — El hechizo perfecto en cada turno.,Supreme Wizard — The perfect spell every turn.,Sorcier suprême,Le sort parfait à chaque tour.,no
+avatar_specter,"Espectro Real — Ni vivo ni muerto, solo ganador.","Royal Spectrum — Neither alive nor dead, just winner.",Spectre Royal,"Ni vivant ni mort, juste vainqueur.",no
+avatar_titan2,Colosus — Montaña de músculo y astucia.,Colossus — Mountain of muscle and cunning.,Colosse,Montagne de muscles et de ruse.,no
+avatar_trickster2,Ilusionista — Hace aparecer victorias de la nada.,Illusionist — It makes victories appear out of nowhere.,Illusionniste,Cela fait surgir des victoires de nulle part.,no
+avatar_odin,Odín — El padre de todos los guerreros de cartas.,Odin — The father of all card warriors.,Odin,Le père de tous les guerriers de cartes.,no
+avatar_thoth,Thoth — Dios del conocimiento y del destino.,Thoth — God of knowledge and destiny.,Thot,Dieu de la connaissance et du destin.,no
+avatar_ares,Ares — El dios de la guerra en la mesa.,Ares — The god of war on the table.,Arès,Le dieu de la guerre sur la table.,no
+avatar_developer,Desarrollador — El creador del juego.,Developer — The creator of the game.,Développeur,Le créateur du jeu.,no
+frame_sky,Marco Cielo — Azul despejado de un día perfecto.,Sky Frame — Clear blue of a perfect day.,Cadre du ciel,Bleu clair d’une journée parfaite.,no
+frame_rust,Marco Óxido — Hierro que el tiempo ha marcado.,Rust Frame — Iron that time has marked.,Cadre Rouille,Un fer que le temps a marqué.,no
+frame_chalk,Marco Tiza — Simple y efectivo como el jugador.,Chalk Frame — Simple and effective like the player.,Cadre à craie,Simple et efficace à l'image du joueur.,no
+frame_moss2,Marco Musgo — Verde natural del bosque profundo.,Moss Frame — Natural deep forest green.,Cadre en mousse,Vert forêt profond naturel.,no
+frame_ink,Marco Tinta — Negro profundo de caligrafía.,Ink Frame — Calligraphy deep black.,Cadre d'encre,Calligraphie d'un noir profond.,no
+frame_lava2,Marco Lava — Roca fundida que rodea tu avatar.,Marco Lava — Molten rock surrounding your avatar.,Marco Lava,Roche en fusion entourant votre avatar.,no
+frame_jade2,Marco Jade — Suerte verde en tu perfil.,Marco Jade — Green luck on your profile.,Marco Jade,Chance verte sur votre profil.,no
+frame_rose,Marco Rosa Dorado — Elegancia moderna de lujo.,Golden Rose Frame — Modern luxury elegance.,Cadre Rose Doré,Élégance de luxe moderne.,no
+frame_arctic,Marco Ártico — Frío extremo que congela el juego.,Arctic Frame — Extreme cold that freezes the game.,Cadre arctique,Un froid extrême qui fige le jeu.,no
+frame_galaxy2,Marco Espiral — Galaxia en espiral alrededor de tu avatar.,Spiral Frame — Spiral galaxy around your avatar.,Cadre en spirale,Galaxie spirale autour de votre avatar.,no
+frame_thunder2,Marco Rayo — Descarga eléctrica alrededor de ti.,Lightning Marco — Electric shock around you.,Foudre Marco,Choc électrique autour de vous.,no
+frame_storm2,Marco Tormenta — Nubes y rayos que te envuelven.,Storm Frame — Clouds and rays that surround you.,Cadre de tempête,Nuages et rayons qui vous entourent.,no
+frame_acid,Marco Ácido — Corrosión que disuelve a tus rivales.,Acid Framework — Corrosion that dissolves your rivals.,Cadre acide,Une corrosion qui dissout vos rivaux.,no
+frame_blood2,Marco Sangre — Carmesí que intimida antes de jugar.,Marco Blood — Crimson that intimidates before playing.,Marco Sang,Pourpre qui intimide avant de jouer.,no
+frame_prism2,Marco Prisma — Arcoíris fraccionado que hipnotiza.,Prism Frame — Fractional rainbow that hypnotizes.,Cadre prisme,Arc-en-ciel fractionné qui hypnotise.,no
+frame_mirage,Marco Espejismo — Cambia de forma según quien lo mire.,Mirage Frame — It changes shape depending on who looks at it.,Cadre Mirage,Il change de forme selon qui le regarde.,no
+frame_rune,Marco Runas — Símbolos antiguos de poder puro.,Runes Frame — Ancient symbols of pure power.,Cadre de runes,Symboles anciens de pouvoir pur.,no
+frame_titan_l,Marco Titán — Solo para el más colosal de todos.,Titan Frame — Only for the most colossal of all.,Cadre Titane,Seulement pour les plus colossaux de tous.,no
+frame_holy_l,Marco Sagrado — La luz divina que protege al campeón.,Sacred Frame — The divine light that protects the champion.,Cadre sacré,La lumière divine qui protège le champion.,no
+frame_nexus_l,Marco Nexo — Punto de unión entre mundos.,Nexus Frame — Union point between worlds.,Cadre Nexus,Point d'union entre les mondes.,no
+title_slayer,El Exterminador — Sin piedad. Sin derrota.,The Exterminator — Without mercy. No defeat.,L'exterminateur,Sans pitié. Aucune défaite.,no
+title_dominator,Dominador — Controla la mesa desde el primer turno.,Dominator — Control the table from the first turn.,Dominateur,Contrôlez la table dès le premier tour.,no
+title_conqueror_t,Conquistador Supremo — No hay mesa que no haya rendido.,Supreme Conqueror — There is no table that has not performed.,Conquérant suprême,Il n'y a pas de table qui n'ait pas été performante.,no
+title_warlord_t,Señor de la Guerra — Comandando cada fase del juego.,Warlord — Commanding each phase of the game.,Seigneur de guerre,Commander chaque phase du jeu.,no
+title_emperor_t,Emperador del Azar — El destino se inclina ante él.,Emperor of Chance — Fate bows before him.,Empereur du hasard,Le destin s'incline devant lui.,no
+title_oracle_t,Oráculo Sagrado — Anticipando la victoria final.,Sacred Oracle — Anticipating the final victory.,Oracle sacré,En prévision de la victoire finale.,no
+title_titan_t,Titán de las Cartas — Una fuerza imparable en el tablero.,Titan of Cards — An unstoppable force on the board.,Titan des cartes,Une force imparable sur le plateau.,no
+title_reaper_t,Segador de Almas — Cobrando la apuesta final.,Soul Reaper — Collecting the final bet.,Faucheur d'âme,Récupérer la mise finale.,no
+title_phoenix_t,Fénix Eterno — Surgiendo de las cenizas de la derrota.,Eternal Phoenix — Rising from the ashes of defeat.,Phénix éternel,Renaître des cendres de la défaite.,no
+title_celestial_t,Ser Celestial — Jugando en un plano superior.,Celestial Being — Playing on a higher plane.,Être céleste,Jouer sur un plan supérieur.,no
+title_abyssal_t,Señor del Abismo — La suerte se hunde en su oscuridad.,Lord of the Abyss — Luck sinks into its darkness.,Seigneur des Abysses,La chance s'enfonce dans ses ténèbres.,no
+title_radiant_t,Luz Radiante — Cegando a sus oponentes con genialidad.,Radiant Light — Blinding his opponents with genius.,Lumière rayonnante,Aveugler ses adversaires avec génie.,no
+title_spectral_t,Soberano Espectral — Una victoria que trasciende la realidad.,Spectral Sovereign — A victory that transcends reality.,Souverain spectral,Une victoire qui transcende la réalité.,no
+title_storm_t,Señor de la Tormenta — Arrasando con la competencia.,Storm Lord — Destroying the competition.,Seigneur des tempêtes,Détruire la concurrence.,no
+title_creator,El Creador — Quien dicta las reglas del destino.,The Creator — Who dictates the rules of destiny.,Le Créateur,Qui dicte les règles du destin.,no
+title_void_walker,Caminante del Vacío — Nada puede detener su avance.,Voidwalker — Nothing can stop its progress.,Marcheur du Vide,Rien ne peut arrêter sa progression.,no
+title_zenith_t,Cénit del Juego — La perfección hecha jugador.,Peak of the Game — Perfection made player.,Sommet du jeu,La perfection fait joueur.,no
+title_scout,Explorador — Siempre buscando la siguiente victoria.,Explorer — Always looking for the next victory.,Explorateur,Toujours à la recherche de la prochaine victoire.,no
+title_jokester,Bromista — La risa es su mejor arma.,Joker — Laughter is your best weapon.,Farceur,Le rire est votre meilleure arme.,no
+title_silent,El Silencioso — Sus cartas hablan solas.,The Silent — His letters speak for themselves.,Le silencieux,Ses lettres parlent d'elles-mêmes.,no
+title_rookie2,"Principiante — Apenas empieza, pero ya promete.","Beginner — It's just beginning, but it's already promising.",Débutant,"Cela ne fait que commencer, mais c'est déjà prometteur.",no
+title_hunter_c,Cazador Novato — Siempre va por las cartas más peligrosas.,Novice Hunter — He always goes for the most dangerous cards.,Chasseur débutant,Il choisit toujours les cartes les plus dangereuses.,no
+title_challenger_2,Retador — Nunca baja la guardia.,Challenger — He never lets his guard down.,Challenger,Il ne baisse jamais sa garde.,no
+title_guardian,Guardián — Protege su mano como un tesoro.,Guardian — Protect your hand like a treasure.,Gardien,Protégez votre main comme un trésor.,no
+title_maverick_2,Inconformista — Juega a su manera. Y gana.,Nonconformist — Play your way. And win.,Non-conformiste,Jouez à votre façon. Et gagner.,no
+title_outlaw_2,Fuera de la Ley — Las reglas son para los demás.,Outside the Law — The rules are for others.,Hors-la-loi,Les règles sont pour les autres.,no
+title_renegade_2,Disidente — Lucha contra todos. Siempre solo.,Dissident — Fight against everyone. Always alone.,Dissident,Combattez contre tout le monde. Toujours seul.,no
+title_predator_e,Gran Depredador — Nadie escapa de su estrategia.,Great Predator — No one escapes his strategy.,Grand prédateur,Personne n'échappe à sa stratégie.,no
+title_shadow_e,Sombra Oscura — Opera desde la oscuridad.,Dark Shadow — Operate from the darkness.,Ombre sombre,Opérez dans l’obscurité.,no
+title_comeback_e,El Renacimiento — Cae y vuelve más fuerte.,The Renaissance — Fall and come back stronger.,La Renaissance,Tombez et revenez plus fort.,no
+title_collector_e,Gran Colector — Lo quiere todo en su colección.,Great Collector — He wants it all in his collection.,Grand collectionneur,Il veut tout dans sa collection.,no
+title_mastermind_e,La Mente Maestra — Cada movimiento ya estaba calculado.,The Master Mind — Every move was already calculated.,L'esprit maître,Chaque mouvement était déjà calculé.,no
+title_noble_e,El Noble — Elegante hasta en la derrota.,The Noble — Elegant even in defeat.,Le Noble,Élégant même dans la défaite.,no
+title_vanguard_e,Vanguardia — Siempre el primero en la línea.,Avant-garde — Always the first in line.,Avant-gardiste,Toujours le premier en ligne.,no
+title_joker_l,"El Joker — Impredecible, letal y siempre sonriendo.","The Joker — Unpredictable, lethal and always smiling.",Le Joker,"Imprévisible, mortel et toujours souriant.",no
+title_trickster_l,El Embustero — La mejor mentira es la victoria.,The Liar — The best lie is victory.,Le menteur,Le meilleur mensonge est la victoire.,no
+title_rogue_l,"El Pícaro — Rápido, astuto, imposible de atrapar.","The Rogue — Fast, cunning, impossible to catch.",Le voyou,"Rapide, rusé, impossible à attraper.",no
+title_observer2,"El Observador — Todo lo ve, nada se le escapa.","The Observer — He sees everything, nothing escapes him.",L'observateur,"Il voit tout, rien ne lui échappe.",no
+table_casino,Mesa Casino Verde — El fieltro clásico del casino.,Green Casino Table — The classic casino felt.,Table de casino verte,Le casino classique ressenti.,no
+table_wood,Mesa Madera Elegante — Madera pulida de alta calidad.,Elegant Wooden Table — High quality polished wood.,Table en bois élégante,Bois poli de haute qualité.,no
+table_galaxy,Mesa Galaxia Espacial — Juega entre las estrellas.,Space Galaxy Table — Play among the stars.,Tableau de la galaxie spatiale,Jouez parmi les étoiles.,no
+table_lava,Mesa Lava Volcánica — Sentirás el calor del juego.,Volcanic Lava Table — You will feel the heat of the game.,Table de lave volcanique,Vous ressentirez la chaleur du jeu.,no
+table_arctic,Mesa Hielo Ártico — Fría y precisa como un glaciar.,Arctic Ice Table — Cold and precise as a glacier.,Table des glaces arctiques,Froid et précis comme un glacier.,no
+table_cyber,Mesa Cyberpunk — Luces neón y circuitos futuristas.,Cyberpunk table — Neon lights and futuristic circuits.,Tableau cyberpunk,Néons et circuits futuristes.,no
+table_royal,Mesa Real Púrpura — Digna de la realeza del juego.,Purple Royal Table — Worthy of gaming royalty.,Tableau Royal Violet,Digne de la royauté du jeu.,no
+table_sunset,Mesa Atardecer — Colores cálidos del crepúsculo.,Sunset Table — Warm colors of twilight.,Tableau du coucher du soleil,Couleurs chaudes du crépuscule.,no
+table_midnight,Mesa Medianoche — Oscuridad profunda y elegante.,Midnight Table — Deep and elegant darkness.,Table de Minuit,Une obscurité profonde et élégante.,no
+table_ocean,Mesa Océano — Profundidades marinas en tu mesa.,Ocean Table — Marine depths on your table.,Table Océan,Les profondeurs marines sur votre table.,no
+table_forest,Mesa Bosque — Naturaleza salvaje y calmada.,Forest Table — Wild and calm nature.,Tableau Forêt,Nature sauvage et calme.,no
+table_neon_green,Mesa Neón Verde — Energía pura fluorescente.,Neon Green Table — Pure fluorescent energy.,Table Vert Néon,Énergie fluorescente pure.,no
+table_crimson,Mesa Carmesí — Rojo intenso y dominante.,Crimson Table — Intense and dominant red.,Tableau cramoisi,Rouge intense et dominant.,no
+table_gold,Mesa Oro Real — Lujo absoluto en cada mano.,Royal Gold Table — Absolute luxury in every hand.,Table Royale en Or,Le luxe absolu dans toutes les mains.,no
+table_obsidian,Mesa Obsidiana — Piedra volcánica negra pulida.,Obsidian Table — Polished black volcanic stone.,Tableau d'obsidienne,Pierre volcanique noire polie.,no
+table_rainbow,Mesa Prisma — Todos los colores del espectro.,Prism Table — All colors of the spectrum.,Table prisme,Toutes les couleurs du spectre.,no
+table_sand,Mesa Arena — Calidez del desierto infinito.,Sand Table — Infinite desert warmth.,Table de sable,Chaleur infinie du désert.,no
+table_slate,Mesa Pizarra — Fría y sólida como la roca.,Slate Table — Cold and solid as rock.,Table en ardoise,Froid et solide comme le roc.,no
+table_carbon,Mesa Fibra de Carbón — Alta tecnología resistente.,Carbon Fiber Table — Resistant high technology.,Table en fibre de carbone,Haute technologie résistante.,no
+table_nebula,Mesa Nebulosa — Nubes de gas estelar coloridas.,Nebula Table — Colorful stellar gas clouds.,Tableau Nébuleuse,Nuages de gaz stellaires colorés.,no
+table_diamond,Mesa Diamante — Brillante como el diamante más puro.,Diamond Table — Brilliant like the purest diamond.,Table Diamant,Brillant comme le diamant le plus pur.,no
+table_platinum,Mesa Platino — El metal más valioso bajo tus cartas.,Platinum Table — The most valuable metal under your cards.,Table Platine,Le métal le plus précieux sous vos cartes.,no
+table_emerald,Mesa Esmeralda — Verde brillante de piedra preciosa.,Emerald Table — Bright green gemstone.,Tableau Émeraude,Pierre précieuse vert vif.,no
+table_sapphire,Mesa Zafiro — Azul intenso de gema real.,Sapphire Table — Intense blue of royal gem.,Table Saphir,Bleu intense de gemme royale.,no
+table_ruby,Mesa Rubí — Rojo ardiente de piedra preciosa.,Ruby Table — Fiery red gemstone.,Tableau Rubis,Pierre précieuse rouge feu.,no
+table_bamboo,Mesa Bambú — Naturaleza zen y armonía oriental.,Bamboo Table — Zen nature and oriental harmony.,Table en Bambou,Nature zen et harmonie orientale.,no
+table_japanese,Mesa Arte Japonés — Estética del sol naciente.,Japanese Art Table — Aesthetics of the rising sun.,Tableau d'art japonais,Esthétique du soleil levant.,no
+table_circuit,Mesa Circuitos — Tecnología de punta en cada mano.,Circuits Table — Cutting-edge technology in each hand.,Tableau des circuits,Une technologie de pointe dans chaque main.,no
+table_volcano,Mesa Volcán — Fuego y lava bajo tus pies.,Volcano Table — Fire and lava under your feet.,Tableau des volcans,Feu et lave sous vos pieds.,no
+table_storm,Mesa Tormenta — Rayos y truenos en el horizonte.,Storm Table — Lightning and thunder on the horizon.,Tableau des tempêtes,Des éclairs et du tonnerre à l’horizon.,no
+table_aurora,Mesa Aurora Boreal — Luces del norte en colores vibrantes.,Aurora Borealis Table — Northern lights in vibrant colors.,Tableau Aurores Boréales,Aurores boréales aux couleurs vibrantes.,no
+table_seabed,Mesa Fondo Marino — Profundidades del océano inexplorado.,Seabed Table — Depths of the unexplored ocean.,Tableau des fonds marins,Profondeurs de l'océan inexploré.,no
+table_pyramid,Mesa Pirámide Dorada — Misterios del antiguo Egipto.,Golden Pyramid Table — Mysteries of ancient Egypt.,Table Pyramide Dorée,Mystères de l'Egypte ancienne.,no
+table_marblenoir,Mesa Mármol Negro — Elegancia oscura y sofisticada.,Black Marble Table — Dark and sophisticated elegance.,Table en marbre noir,Une élégance sombre et sophistiquée.,no
+table_stadium,Mesa Estadio — El rugido de la multitud te impulsa.,Stadium Table — The roar of the crowd drives you.,Table de stade,Le rugissement de la foule vous anime.,no
+table_desert,Mesa Desierto — Calor de las dunas infinitas.,Desert Table — Heat of the infinite dunes.,Table du désert,Chaleur des dunes infinies.,no
+table_ninja,Mesa Ninja — Sigilo y velocidad en cada movimiento.,Ninja table — Stealth and speed in every movement.,Tableau des ninjas,Furtivité et vitesse dans chaque mouvement.,no
+table_samurai,Mesa Samurai — Honor y disciplina del guerrero.,Samurai Table — Honor and discipline of the warrior.,Tableau Samouraï,Honneur et discipline du guerrier.,no
+table_dragon,Mesa Dragón — El fuego del dragón eterno.,Dragon Table — The eternal dragon fire.,Tableau des Dragons,Le feu éternel du dragon.,no
+table_bonsai,Mesa Bonsai — Paciencia y arte de la naturaleza.,Bonsai Table — Patience and art of nature.,Tableau Bonsaï,Patience et art de la nature.,no
+table_cosmos,Mesa Cosmos — Todo el universo en una mesa.,Cosmos table — The entire universe on one table.,Tableau Cosmos,L'univers entier sur une seule table.,no
+table_tokyo,Mesa Tokio — La ciudad más moderna del mundo.,Tokyo table — The most modern city in the world.,Tableau de Tokyo,La ville la plus moderne du monde.,no
+table_rome,Mesa Roma — Grandeza del Imperio Romano.,Rome table — Greatness of the Roman Empire.,Tableau romain,Grandeur de l'Empire romain.,no
+table_arctic2,Mesa Tundra Ártica — Hielo eterno bajo cero grados.,Arctic Tundra Table — Eternal ice below zero degrees.,Tableau de la toundra arctique,Glace éternelle en dessous de zéro degré.,no
+table_moss2,Mesa Musgo — Vida que crece en silencio.,Moss Table — Life that grows in silence.,Table de mousse,La vie qui grandit en silence.,no
+table_amber,Mesa Ámbar — Resina fósil atrapada en el tiempo.,Amber Table — Fossil resin trapped in time.,Tableau Ambre,Résine fossile piégée dans le temps.,no
+table_rose,Mesa Rosal — Delicadeza y pasión entrelazadas.,Rosal Table — Delicacy and passion intertwined.,Table Rosale,Délicatesse et passion mêlées.,no
+table_turquoise,Mesa Turquesa — El color del cielo y el mar juntos.,Turquoise Table — The color of the sky and the sea together.,Tableau Turquoise,La couleur du ciel et de la mer ensemble.,no
+table_jade,Mesa Jade — Piedra sagrada del lejano oriente.,Jade Table — Sacred stone from the Far East.,Table de Jade,Pierre sacrée d'Extrême-Orient.,no
+table_bronze,Mesa Bronce — Antigüedad y gloria de metal.,Bronze Table — Antiquity and glory of metal.,Tableau En Bronze,Antiquité et gloire du métal.,no
+table_silver,Mesa Plata — Elegancia metálica plateada.,Silver Table — Silver metallic elegance.,Tableau Argent,Élégance métallique argentée.,no
+table_indigo,Mesa Índigo — Profundidad del color más misterioso.,Indigo Table — Depth of the most mysterious color.,Tableau Indigo,Profondeur de la couleur la plus mystérieuse.,no
+table_limegreen,Mesa Lima — Frescura y energía vegetal.,Lima Table — Freshness and plant energy.,Tableau Lima,Fraîcheur et énergie végétale.,no
+table_magenta,Mesa Magenta — Color vibrante y atrevido.,Magenta Table — Vibrant and bold color.,Tableau magenta,Couleur vibrante et audacieuse.,no
+table_periwinkle,Mesa Periwinkel — Azul lavanda suave y relajante.,Periwinkel table — Soft and relaxing lavender blue.,Table de pervenche,Bleu lavande doux et relaxant.,no
+table_maroon,Mesa Granate — Rojo oscuro vino de calidad.,Garnet Table — Dark red quality wine.,Tableau Grenat,Vin de qualité rouge foncé.,no
+table_teal,Mesa Verde Azulado — Mezcla perfecta de mar y bosque.,Teal Table — Perfect mix of sea and forest.,Table bleu sarcelle,Mélange parfait de mer et de forêt.,no
+table_opal,Mesa Ópalo — Iridiscencia mágica de piedra única.,Opal Table — Unique stone magical iridescence.,Table Opale,Irisation magique de pierre unique.,no
+table_copper,Mesa Cobre — Calidez metálica rojiza.,Copper Table — Reddish metallic warmth.,Table en cuivre,Chaleur métallique rougeâtre.,no
+table_midnight2,Mesa Noche Eterna — Oscuridad absoluta sin fin.,Eternal Night Table — Endless absolute darkness.,Table de nuit éternelle,Une obscurité absolue sans fin.,no
+table_lapis,Mesa Lapislázuli — Azul profundo del Renacimiento.,Lapis lazuli table — Deep Renaissance blue.,Tableau en lapis-lazuli,Bleu Renaissance profond.,no
+table_obsidian2,Mesa Volcánica — Lava solidificada bajo los astros.,Volcanic Table — Lava solidified under the stars.,Tableau volcanique,La lave s'est solidifiée sous les étoiles.,no
+table_pearl,Mesa Perla — Suavidad y pureza del nácar marino.,Pearl Table — Softness and purity of marine mother-of-pearl.,Tableau Perle,Douceur et pureté de la nacre marine.,no
+table_coral,Mesa Coral — Vida submarina vibrante y colorida.,Coral Table — Vibrant and colorful underwater life.,Table Corail,Une vie sous-marine vibrante et colorée.,no
+table_onyx,"Mesa Ónix — Negro puro, perfección absoluta.","Onyx Table — Pure black, absolute perfection.",Tableau Onyx,"Noir pur, perfection absolue.",no
+table_chartreuse,Mesa Chartreuse — Verde amarillento radiactivo.,Chartreuse table — Radioactive yellowish green.,Table Chartreuse,Vert jaunâtre radioactif.,no
+table_vermilion,Mesa Bermellón — Rojo intenso de la China imperial.,Vermillion Table — Intense red of imperial China.,Table Vermillon,Rouge intense de la Chine impériale.,no
+table_viridian,Mesa Viridiana — Verde azulado de artista.,Viridian Table — Artist's teal.,Table viridienne,Sarcelle d'artiste.,no
+table_puce,Mesa Malva Rosa — Rosa oscuro misterioso.,Pink Mauve Table — Mysterious dark pink.,Tableau Mauve Rose,Rose foncé mystérieux.,no
+table_umber,Mesa Sombra — Tierra oscura de la campiña.,Shadow Table — Dark countryside land.,Table d'ombre,Terre de campagne sombre.,no
+table_cobalt,Mesa Cobalto — Azul industrial potente.,Cobalt Table — Powerful industrial blue.,Tableau Cobalt,Bleu industriel puissant.,no
+table_sangria,Mesa Sangría — Rojo vino festivo y cálido.,Sangria Table — Festive and warm wine red.,Table de sangria,Vin rouge festif et chaleureux.,no
+table_ecru,Mesa Crema — Suavidad de la crema y el marfil.,Cream Table — Softness of cream and ivory.,Tableau Crème,Douceur de crème et d'ivoire.,no
+table_wisteria,Mesa Glicinia — Malva floral de primavera eterna.,Wisteria Table — Eternal spring floral mauve.,Tableau Glycine,Mauve floral du printemps éternel.,no
+table_iceblue,Mesa Hielo Glacial — Frío extremo del polo norte.,Glacial Ice Table — Extreme cold of the north pole.,Table de glace glaciaire,Froid extrême du pôle nord.,no
+table_khaki,Mesa Caqui — Camuflaje de jungla tropical.,Khaki Table — Tropical jungle camouflage.,Tableau Kaki,Camouflage de la jungle tropicale.,no
+table_oxblood,Mesa Sangre de Buey — Rojo oscuro profundo y majestuoso.,Ox Blood Table — Deep and majestic dark red.,Table de sang de bœuf,Rouge foncé profond et majestueux.,no
+table_seafoam,Mesa Espuma Marina — Verde pálido del litoral suave.,Marine Foam Table — Pale green of the soft coastline.,Table en mousse marine,Vert pâle du doux littoral.,no
+table_mulberry,Mesa Mora — Morado oscuro de fruto silvestre.,Mora Table — Dark purple of wild fruit.,Tableau Mora,Pourpre foncé de fruits sauvages.,no
+table_asphalt,Mesa Asfalto — Gris oscuro urbano.,Asphalt Table — Urban dark grey.,Table d'asphalte,Gris foncé urbain.,no
+table_ultraviolet,Mesa Ultravioleta — Energía invisible y poderosa.,Ultraviolet Table — Invisible and powerful energy.,Tableau ultraviolet,Énergie invisible et puissante.,no
+table_firebrick,Mesa Ladrillo Rojo — Solidez y fuerza del adobe.,Red Brick Table — Solidity and strength of adobe.,Table en brique rouge,Solidité et force de l'adobe.,no
+table_evergreen,Mesa Pino Eterno — Verde profundo del bosque inmortal.,Eternal Pine Table — Deep green of the immortal forest.,Table en pin éternel,Vert profond de la forêt immortelle.,no
+table_nightsky,Mesa Cielo Nocturno — Estrellas y luna llena te guían.,Night Sky Table — Stars and full moon guide you.,Tableau du ciel nocturne,Les étoiles et la pleine lune vous guident.,no
+table_ochre,Mesa Ocre — Tierra amarillenta de las cavernas.,Ocher Table — Yellowish cave earth.,Table Ocre,Terre de grotte jaunâtre.,no
+table_ultramarine,Mesa Ultramar — Azul intenso más allá del horizonte.,Ultramar Table — Intense blue beyond the horizon.,Tableau Ultramar,Un bleu intense au-delà de l'horizon.,no
+table_mahogany,Mesa Caoba — Madera noble de árbol centenario.,Mahogany Table — Hardwood from a century-old tree.,Table en acajou,Bois dur issu d'un arbre centenaire.,no
+table_pewter,Mesa Peltre — Metal gris azulado antiguo.,Pewter Table — Antique blue-gray metal.,Table en étain,Métal bleu-gris antique.,no
+table_carnelian,Mesa Cornalina — Piedra rojo anaranjada ardiente.,Carnelian Table — Fiery red-orange stone.,Table de cornaline,Pierre rouge-orange ardente.,no
+table_dusk,Mesa Crepúsculo — El momento mágico entre día y noche.,Twilight Table — The magical moment between day and night.,Table crépusculaire,Le moment magique entre le jour et la nuit.,no
+face_default,Clásico Blanco — Diseño limpio y clásico.,Classic White — Clean and classic design.,Blanc classique,Design épuré et classique.,no
+face_ivory,Marfil Real — Calidez clásica del marfil.,Royal Ivory — Classic ivory warmth.,Ivoire Royal,Chaleur ivoire classique.,no
+face_cream,Crema Suave — Suavidad natural y relajante.,Soft Cream — Natural and relaxing softness.,Crème Douce,Douceur naturelle et relaxante.,no
+face_mint,Menta Fresca — Frescura verde y limpia.,Fresh Mint — Green and clean freshness.,Menthe fraîche,Fraîcheur verte et propre.,no
+face_sky,Cielo Claro — Azul cielo despejado.,Clear Sky — Clear sky blue.,Ciel clair,Bleu ciel clair.,no
+face_rose,Rosa Suave — Tono rosado elegante y delicado.,Soft Pink — Elegant and delicate pink tone.,Rose tendre,Ton rose élégant et délicat.,no
+face_lavender,Lavanda — Malva suave y relajante.,Lavender — Soft and relaxing mauve.,Lavande,Mauve doux et relaxant.,no
+face_peach,Durazno — Cálido y vibrante color durazno.,Peach — Warm and vibrant peach color.,Pêche,Couleur pêche chaude et vibrante.,no
+face_sand,Arena Cálida — Calidez del desierto en tus manos.,Warm Sand — Desert warmth in your hands.,Sable chaud,La chaleur du désert dans vos mains.,no
+face_steel,Acero Suave — Gris metálico moderno.,Mild Steel — Modern metallic grey.,Acier doux,Gris métallisé moderne.,no
+face_linen,Lino Natural — Textura natural de tejido de lino.,Natural Linen — Natural linen fabric texture.,Lin naturel,Texture de tissu en lin naturel.,no
+face_paper,Papel Antiguo — Textura de papel envejecido.,Old Paper — Aged paper texture.,Vieux papier,Texture du papier vieilli.,no
+face_snow,Nieve Pura — Blanco inmaculado como la nieve.,Pure Snow — Immaculate white as snow.,Neige pure,Blanc immaculé comme neige.,no
+face_ash,Gris Ceniza — Gris tenue y minimalista.,Ash Gray — Soft and minimalist gray.,Gris cendré,Gris doux et minimaliste.,no
+face_sepia,Sepia Retro — Tono fotográfico vintage.,Retro Sepia — Vintage photo tone.,Sépia rétro,Ton photo vintage.,no
+face_champagne,Champán — Brillo dorado de celebración.,Champagne — Celebratory golden glitter.,Champagne,Paillettes dorées festives.,no
+face_blush,Rubor — Rosa pálido elegante.,Blush — Elegant pale pink.,Rougir,Rose pâle élégant.,no
+face_fog,Neblina — Gris azulado como la niebla.,Fog — Blue-gray like fog.,Brouillard,Bleu-gris comme du brouillard.,no
+face_sage,Salvia Herbal — Verde grisáceo herbal.,Herbal Sage — Herbal grayish green.,Sauge aux herbes,Vert grisâtre herbacé.,no
+face_buff,Ante Claro — Amarillo suave cálido.,Light Suede — Warm soft yellow.,Daim clair,Jaune doux et chaud.,no
+face_casino_red,Casino Rojo — Estilo de los grandes casinos.,Red Casino — Big casino style.,Casino rouge,Style grand casino.,no
+face_navy_gold,Azul Marino Dorado — Elegancia náutica de alta clase.,Golden Navy Blue — High class nautical elegance.,Bleu Marine Doré,Élégance nautique de grande classe.,no
+face_emerald,Esmeralda Casino — Verde rico de casino de lujo.,Emerald Casino — Rich luxury casino green.,Casino Émeraude,Vert de casino de luxe riche.,no
+face_crimson,Carmesí Elegante — Rojo profundo y dominante.,Elegant Crimson — Deep and dominant red.,Pourpre élégant,Rouge profond et dominant.,no
+face_cobalt,Cobalto Profundo — Azul cobalto de artista.,Deep Cobalt — Artist's cobalt blue.,Cobalt profond,Bleu cobalt de l'artiste.,no
+face_forest,Bosque Oscuro — Verde intenso del bosque profundo.,Dark Forest — Intense green of the deep forest.,Forêt sombre,Vert intense de la forêt profonde.,no
+face_sunset2,Atardecer — Mezcla cálida de naranja y rosa.,Sunset — Warm mix of orange and pink.,Coucher de soleil,Mélange chaleureux d'orange et de rose.,no
+face_midnight,Medianoche — Azul oscuro de la noche profunda.,Midnight — Dark blue of the deep night.,Minuit,Bleu foncé de la nuit profonde.,no
+face_autumn,Otoño Dorado — Colores cálidos de la temporada.,Golden Autumn — Warm colors of the season.,Automne doré,Couleurs chaudes de la saison.,no
+face_winter,Invierno Frío — Tonos fríos del invierno.,Cold Winter — Cold winter tones.,Hiver froid,Tons froids de l'hiver.,no
+face_spring,Primavera — Flores y vida del renacer.,Spring — Flowers and life of rebirth.,Printemps,Fleurs et vie de renaissance.,no
+face_summer,Verano Brillante — Calor y colores vivos del verano.,Bright Summer — Heat and bright colors of summer.,Été lumineux,Chaleur et couleurs vives de l’été.,no
+face_royal_blue,Azul Real — Dignidad real del tono azul.,Royal Blue — Royal dignity of the blue tone.,Bleu roi,Dignité royale du ton bleu.,no
+face_burgundy,Borgoña — Rojo vino sofisticado.,Burgundy — Sophisticated wine red.,Bourgogne,Vin rouge sophistiqué.,no
+face_teal,Verde Azulado — Frescura del mar tropical.,Teal Green — Freshness of the tropical sea.,Vert sarcelle,Fraîcheur de la mer tropicale.,no
+face_terracotta,Terracota — Calidez de la arcilla cocida.,Terracotta — Warmth of fired clay.,Terre cuite,Chaleur de l'argile cuite.,no
+face_slate,Pizarra — Gris azulado moderno y formal.,Blackboard — Modern and formal blue gray.,Tableau noir,Gris bleu moderne et formel.,no
+face_olive,Oliva — Verde militar clásico.,Olive — Classic military green.,Olivier,Vert militaire classique.,no
+face_plum,Ciruela — Morado oscuro intenso.,Plum — Intense dark purple.,Prune,Pourpre foncé intense.,no
+face_sienna,Siena — Marrón rojizo de tierra italiana.,Sienna — Reddish brown from Italian soil.,Sienne,Brun rougeâtre du sol italien.,no
+face_denim,Mezclilla — Azul jeans atemporal y casual.,Denim — Timeless and casual blue jeans.,Jean,Un jean bleu intemporel et décontracté.,no
+face_jade,Jade Sagrado — Verde jade del lejano oriente.,Sacred Jade — Jade green from the Far East.,Jade sacré,Vert jade d'Extrême-Orient.,no
+face_amber,Ámbar — Dorado cálido de resina fósil.,Amber — Fossil resin warm gold.,Ambre,Or chaud en résine fossile.,no
+face_charcoal,Carbón — Gris oscuro con elegancia sobria.,Coal — Dark gray with understated elegance.,Charbon,Gris foncé avec une élégance discrète.,no
+face_ocean,Océano — Azul profundo del mar abierto.,Ocean — Deep blue of the open sea.,Océan,Bleu profond du large.,no
+face_rose_gold,Oro Rosa — Elegancia de oro rosado.,Rose Gold — Rose gold elegance.,Or Rose,L'élégance de l'or rose.,no
+face_arctic,Ártico — Frío y cristalino como el hielo.,Arctic — Cold and crystalline like ice.,Arctique,Froid et cristallin comme la glace.,no
+face_parchment,Pergamino — Histórico pergamino medieval.,Parchment — Historic medieval parchment.,Parchemin,Parchemin médiéval historique.,no
+face_steel_blue,Acero Azul — Azul metálico industrial.,Blue Steel — Industrial metallic blue.,Acier bleu,Bleu métallisé industriel.,no
+face_copper,Cobre Bruñido — Calidez oxidada del metal cobre.,Burnished Copper — Oxidized warmth of copper metal.,Cuivre bruni,Chaleur oxydée du métal cuivré.,no
+face_neon_blue,Neón Azul — Luz azul neón eléctrica.,Neon Blue — Electric neon blue light.,Bleu Néon,Lumière bleue néon électrique.,no
+face_neon_green,Neón Verde — Verde fluorescente electrizante.,Neon Green — Electrifying fluorescent green.,Vert Néon,Vert fluorescent électrisant.,no
+face_neon_red,Neón Rojo — Rojo ardiente hipnótico.,Neon Red — Hypnotic fiery red.,Rouge Néon,Rouge ardent hypnotique.,no
+face_galaxy,Galaxia — El universo en cada carta.,Galaxy — The universe in each card.,Galaxie,L'univers dans chaque carte.,no
+face_cyberpunk,Cyberpunk — Futuro distópico neón.,Cyberpunk — Neon dystopian future.,Cyberpunk,Un avenir dystopique au néon.,no
+face_lava,Lava Volcánica — Fuego y destrucción a tu favor.,Volcanic Lava — Fire and destruction in your favor.,Lave volcanique,Feu et destruction en votre faveur.,no
+face_toxic,Tóxico — Venenoso y peligroso.,Toxic — Poisonous and dangerous.,Toxique,Toxique et dangereux.,no
+face_shadow,Sombra Oscura — Oscuridad que inspira temor.,Dark Shadow — Darkness that inspires fear.,Ombre sombre,Des ténèbres qui inspirent la peur.,no
+face_amethyst,Amatista — Gema violeta misteriosa y profunda.,Amethyst — Mysterious and deep violet gem.,Améthyste,Gemme mystérieuse et violette profonde.,no
+face_sapphire,Zafiro Oscuro — Azul zafiro de joya real.,Dark Sapphire — Royal jewel sapphire blue.,Saphir foncé,Bijou royal bleu saphir.,no
+face_ruby,Rubí — Rojo rubí de piedra preciosa.,Ruby — Ruby red gemstone.,Rubis,Pierre précieuse rouge rubis.,no
+face_jade_dark,Jade Imperial — Jade oscuro del palacio imperial.,Imperial Jade — Dark jade from the imperial palace.,Jade Impérial,Jade foncé du palais impérial.,no
+face_aurora,Aurora Boreal — Luces polares iridiscentes.,Aurora Borealis — Iridescent polar lights.,Aurores boréales,Aurores polaires irisées.,no
+face_plasma,Plasma — Estado de la materia incandescente.,Plasma — State of incandescent matter.,Plasma,État de matière incandescente.,no
+face_abyss,Abismo — Profundidad oscura sin fondo.,Abyss — Bottomless dark depth.,Abîme,Une profondeur sombre sans fond.,no
+face_sunset_epic,Atardecer Épico — El atardecer más intenso jamás visto.,Epic Sunset — The most intense sunset ever seen.,Coucher de soleil épique,Le coucher de soleil le plus intense jamais vu.,no
+face_storm,Tormenta Eléctrica — Rayos y poder en cada naipe.,Electrical Storm — Lightning and power in each card.,Tempête électrique,Foudre et puissance dans chaque carte.,no
+face_ice_fire,Fuego y Hielo — La dualidad de dos extremos.,Fire and Ice — The duality of two extremes.,Feu et glace,La dualité de deux extrêmes.,no
+face_matrix,Matriz Digital — Código binario en cada carta.,Digital Matrix — Binary code on each card.,Matrice numérique,Code binaire sur chaque carte.,no
+face_obsidian,Obsidiana — Vidrio volcánico negro perfecto.,Obsidian — Perfect black volcanic glass.,Obsidienne,Verre volcanique noir parfait.,no
+face_deep_space,Espacio Profundo — El vacío eterno entre estrellas.,Deep Space — The eternal void between stars.,Espace profond,Le vide éternel entre les étoiles.,no
+face_neon_gold,Oro Neón — Dorado brillante bajo luz neón.,Neon Gold — Shiny gold under neon light.,Néon Or,Or brillant sous la lumière du néon.,no
+face_vortex,Vórtice — Espiral de energía hipnótica.,Vortex — Hypnotic energy spiral.,Vortex,Spirale énergétique hypnotique.,no
+face_blaze,Llamas — Fuego ardiente y consumidor.,Flames — Burning and consuming fire.,Flammes,Feu brûlant et dévorant.,no
+face_prism,Prisma — Espectro completo de color.,Prism — Full color spectrum.,Prisme,Spectre de couleurs complet.,no
+face_royal_gold,Oro Real — Lujo absoluto de los reyes.,Royal Gold — Absolute luxury of kings.,Or Royal,Luxe absolu des rois.,no
+face_blood_moon,Luna de Sangre — Eclipse total de poder oscuro.,Blood Moon — Total eclipse of dark power.,Lune de sang,Éclipse totale du pouvoir obscur.,no
+face_nether,Inframundo — Oscuridad infernal más allá del velo.,Underworld — Infernal darkness beyond the veil.,Monde souterrain,Ténèbres infernales au-delà du voile.,no
+face_void,El Vacío — La nada absoluta del cosmos.,The Void — The absolute nothingness of the cosmos.,Le vide,Le néant absolu du cosmos.,no
+face_singularity,Singularidad — El punto de no retorno del universo.,Singularity — The point of no return of the universe.,Singularité,Le point de non-retour de l'univers.,no
+face_celestial,Celestial — Luz divina de los cielos.,Heavenly — Divine light of the heavens.,Céleste,Lumière divine des cieux.,no
+face_hellfire,Fuego del Averno — Las llamas eternas del infierno.,Fire of Hell — The eternal flames of hell.,Feu de l'enfer,Les flammes éternelles de l'enfer.,no
+face_nirvana,Nirvana — Paz absoluta e iluminación total.,Nirvana — Absolute peace and total enlightenment.,Nirvana,Paix absolue et illumination totale.,no
+face_titan,Titán — El poder de los titanes ancestrales.,Titan — The power of the ancient titans.,Titane,Le pouvoir des anciens titans.,no
+face_supernova,Supernova — Explosión estelar de energía pura.,Supernova — Stellar explosion of pure energy.,Supernova,Explosion stellaire d'énergie pure.,no
+face_myth,Mitología — Cartas de los dioses y héroes.,Mythology — Letters from the gods and heroes.,Mythologie,Lettres des dieux et des héros.,no
+face_arcane,Arcano — Magia prohibida en cada carta.,Arcane — Forbidden magic in each card.,Arcane,Magie interdite dans chaque carte.,no
+face_eternal,Eterno — Trasciende el tiempo y el espacio.,Eternal — Transcends time and space.,Éternel,Transcend le temps et l’espace.,no
+face_godlike,Divino — Solo los mejores merecen estas cartas.,Divine — Only the best deserve these cards.,Divin,Seuls les meilleurs méritent ces cartes.,no
+face_omega,Omega — El diseño final. La perfección suprema.,Omega — The final design. The supreme perfection.,Oméga,La conception finale. La perfection suprême.,no

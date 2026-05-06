@@ -846,8 +846,11 @@ export function getCardDesignById(id: string): StoreItem {
 // other languages machine-translated from EN (where curated EN exists)
 // or from ES (for items added without an existing translation table).
 // ═══════════════════════════════════════════════════════════════
-type ItemTL = Partial<Record<Lang, { name: string; description: string }>>;
-const ITEM_TL: Record<string, ItemTL> = {
+export type ItemTL = Partial<Record<Lang, { name: string; description: string }>>;
+// ITEM_TL_START — regenerate via `scripts/i18n-shop-import.ts`. Do not hand-edit
+// non-Spanish/English/Portuguese rows; instead update the per-language CSVs in
+// `i18n/shop-review/` and run the import script.
+export const ITEM_TL: Record<string, ItemTL> = {
   back_default: {
     es: { name: "Clásico Azul", description: "El dorso clásico del casino." },
     en: { name: "Classic Blue", description: "The classic casino back." },
@@ -17577,6 +17580,7 @@ const ITEM_TL: Record<string, ItemTL> = {
     ar: { name: "أوميغا", description: "التصميم النهائي. الكمال الأسمى." },
   },
 };
+// ITEM_TL_END
 
 function buildLocalizedFromRaw(raw: StoreItemRaw): StoreItem {
   const tl = ITEM_TL[raw.id];
