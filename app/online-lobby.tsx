@@ -307,6 +307,7 @@ export default function OnlineLobbyScreen() {
   function handleQuickMatch() {
     playButton().catch(() => {});
     playSound("searching").catch(() => {});
+    startSearchMusic().catch(() => {});
     const s = connectSocket();
     if (!s) return;
     setPhase("matchmaking");
