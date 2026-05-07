@@ -17,7 +17,16 @@ import { playSound } from "@/lib/sounds";
 import { useT } from "@/hooks/useT";
 import { router } from "expo-router";
 import BouncePressable from "@/components/BouncePressable";
+import Reanimated from "react-native-reanimated";
+import { useEntryAnimation } from "@/hooks/useEntryAnimation";
 import { getDailyShopItems, getDailyFreeItem, getDailyDateKey, getDailyEmotes, DailyShopItem } from "@/lib/dailyShop";
+
+// Tiny wrapper so we can call the entry-animation hook per item inside a
+// map without violating the rules of hooks (Task #75).
+function EntryWrap({ delay = 0, children, style }: { delay?: number; children: React.ReactNode; style?: any }) {
+  const animStyle = useEntryAnimation({ delay, fromTranslateY: 10, fromScale: 0.94, duration: 320 });
+  return <Reanimated.View style={[animStyle, style]}>{children}</Reanimated.View>;
+}
 
 const RARITY_COLORS_MAP: Record<string, string> = {
   common: "#95A5A6",
@@ -1565,21 +1574,22 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
         <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#3498DB" }}>{profile.fichas ?? 0}</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingLeft: 8, paddingRight: 4 }}>
-        {(["common", "rare", "epic", "legendary"] as const).map((t) => (
-          <BouncePressable
-            key={t}
-            onPress={() => handleBuy(t)}
-            style={[styles.chestCard, styles.chestCardScroll, { backgroundColor: themeColors.surface, borderColor: COLORS[t] + "88" }]}
-            sound
-            glowColor={COLORS[t] + "55"}
-          >
-            <Ionicons name={ICONS[t]} size={28} color={COLORS[t]} />
-            <Text style={[styles.chestName, { color: COLORS[t] }]}>{NAMES[t]}</Text>
-            <View style={styles.chestPriceRow}>
-              <Ionicons name="diamond" size={11} color="#3498DB" />
-              <Text style={[styles.chestPriceText, { color: "#3498DB" }]}>{PRICES[t]}</Text>
-            </View>
-          </BouncePressable>
+        {(["common", "rare", "epic", "legendary"] as const).map((t, i) => (
+          <EntryWrap key={t} delay={i * 60}>
+            <BouncePressable
+              onPress={() => handleBuy(t)}
+              style={[styles.chestCard, styles.chestCardScroll, { backgroundColor: themeColors.surface, borderColor: COLORS[t] + "88" }]}
+              sound
+              glowColor={COLORS[t] + "55"}
+            >
+              <Ionicons name={ICONS[t]} size={28} color={COLORS[t]} />
+              <Text style={[styles.chestName, { color: COLORS[t] }]}>{NAMES[t]}</Text>
+              <View style={styles.chestPriceRow}>
+                <Ionicons name="diamond" size={11} color="#3498DB" />
+                <Text style={[styles.chestPriceText, { color: "#3498DB" }]}>{PRICES[t]}</Text>
+              </View>
+            </BouncePressable>
+          </EntryWrap>
         ))}
       </ScrollView>
       <ChestConfirmModal

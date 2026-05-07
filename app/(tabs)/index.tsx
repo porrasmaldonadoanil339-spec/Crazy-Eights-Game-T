@@ -26,6 +26,7 @@ import BouncePressable from "@/components/BouncePressable";
 import { usePressFeedback } from "@/hooks/usePressFeedback";
 import { ModalBackdrop } from "@/components/ModalBackdrop";
 import { Particles } from "@/components/Particles";
+import { useEntryAnimation } from "@/hooks/useEntryAnimation";
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
@@ -508,25 +509,17 @@ function ModeCard({
   const T = useT();
   const personality = MODE_PERSONALITY[mode.id] ?? { glowIntensity: 0.25, pulseMs: 1800, flair: null };
   const pulse = useSharedValue(0);
-  const entry = useSharedValue(0);
+  // Reusable entry microanimation — staggered per card index (Task #75).
+  const entryStyle = useEntryAnimation({ delay: idx * 55, duration: 360, fromTranslateY: 14, fromScale: 0.94 });
 
   useEffect(() => {
-    const startDelay = setTimeout(() => {
-      entry.value = withTiming(1, { duration: 360, easing: Easing.out(Easing.cubic) });
-      pulse.value = withRepeat(
-        withSequence(
-          withTiming(1, { duration: personality.pulseMs, easing: Easing.inOut(Easing.sin) }),
-          withTiming(0, { duration: personality.pulseMs, easing: Easing.inOut(Easing.sin) })
-        ), -1, true
-      );
-    }, idx * 55);
-    return () => clearTimeout(startDelay);
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: personality.pulseMs, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: personality.pulseMs, easing: Easing.inOut(Easing.sin) })
+      ), -1, true
+    );
   }, []);
-
-  const entryStyle = useAnimatedStyle(() => ({
-    opacity: entry.value,
-    transform: [{ translateY: (1 - entry.value) * 14 }],
-  }));
   const wrapGlowStyle = useAnimatedStyle(() => ({
     shadowColor: mode.color,
     shadowOpacity: personality.glowIntensity * (0.45 + pulse.value * 0.55),
@@ -634,9 +627,9 @@ function ModeCard({
 
 function PrimaryPlayCard({ onPress, theme, T }: { onPress: () => void; theme: any; T: (k: any) => string }) {
   const pulse = useSharedValue(0);
-  const entry = useSharedValue(0);
+  // Reusable entry microanimation (Task #75) — fade + scale + lift on mount.
+  const entryStyle = useEntryAnimation({ duration: 380, fromTranslateY: 16, fromScale: 0.96 });
   useEffect(() => {
-    entry.value = withTiming(1, { duration: 380, easing: Easing.out(Easing.cubic) });
     pulse.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.sin) }),
@@ -644,10 +637,6 @@ function PrimaryPlayCard({ onPress, theme, T }: { onPress: () => void; theme: an
       ), -1, true
     );
   }, []);
-  const entryStyle = useAnimatedStyle(() => ({
-    opacity: entry.value,
-    transform: [{ translateY: (1 - entry.value) * 16 }],
-  }));
   const glowStyle = useAnimatedStyle(() => ({
     shadowColor: "#D4AF37",
     shadowOpacity: 0.55 + pulse.value * 0.35,
@@ -1438,10 +1427,12 @@ export default function PlayScreen() {
           <View style={[styles.dividerLine, { backgroundColor: theme.gold + "40" }]} />
         </View>
 
+        <Animated.View style={useEntryAnimation({ delay: 80, fromTranslateY: 12 })}>
         <BouncePressable
           onPress={() => router.push("/(tabs)/achievements")}
           style={styles.bpShortcut}
           sound
+          glowColor="rgba(168,85,247,0.35)"
         >
           <LinearGradient
             colors={["#7B2FBE", "#A855F7", "#7B2FBE"]}
@@ -1456,6 +1447,7 @@ export default function PlayScreen() {
             <Ionicons name="chevron-forward" size={18} color="#FFD700" />
           </LinearGradient>
         </BouncePressable>
+        </Animated.View>
 
         <View style={styles.sectionHeader}>
           <Ionicons name="game-controller" size={14} color={theme.textMuted} />
