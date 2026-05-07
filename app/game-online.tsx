@@ -441,14 +441,72 @@ function DirectionArrow({ direction }: { direction: 1 | -1 }) {
 }
 
 // ─── Suit picker ──────────────────────────────────────────────────────────
+// Visible 5-second countdown for competitive matches (ranked + online).
+// On expiry, a random suit is auto-selected so the match never stalls.
 function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
   const T = useT();
+  const [countdown, setCountdown] = useState(5);
+  const cdAnim = useSharedValue(1);
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    setCountdown(5);
+    cdAnim.value = 1;
+    firedRef.current = false;
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        const next = prev - 1;
+        cdAnim.value = withSequence(
+          withTiming(1.4, { duration: 120 }),
+          withTiming(1, { duration: 200 }),
+        );
+        if (next <= 0) {
+          clearInterval(interval);
+          if (!firedRef.current) {
+            firedRef.current = true;
+            const randomSuit = SUITS[Math.floor(Math.random() * SUITS.length)];
+            onChoose(randomSuit);
+          }
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const cdStyle = useAnimatedStyle(() => ({ transform: [{ scale: cdAnim.value }] }));
+  const cdColor = countdown <= 2 ? "#E74C3C" : countdown <= 3 ? "#F39C12" : "#27AE60";
+
+  const handlePick = (s: Suit) => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    onChoose(s);
+  };
+
   return (
     <View style={gameStyles.suitOverlay}>
-      <Text style={gameStyles.suitTitle}>{T("chooseSuit")}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 }}>
+        <Text style={gameStyles.suitTitle}>{T("chooseSuit")}</Text>
+        <Animated.Text
+          style={[
+            {
+              fontFamily: "Nunito_800ExtraBold",
+              fontSize: 26,
+              minWidth: 28,
+              textAlign: "center",
+              color: cdColor,
+              fontVariant: ["tabular-nums" as any],
+            },
+            cdStyle,
+          ]}
+        >
+          {countdown}
+        </Animated.Text>
+      </View>
       <View style={gameStyles.suitGrid}>
         {SUITS.map(s => (
-          <BouncePressable key={s} inline onPress={() => onChoose(s)} style={gameStyles.suitBtn}>
+          <BouncePressable key={s} inline onPress={() => handlePick(s)} style={gameStyles.suitBtn}>
             <Text style={[gameStyles.suitSym, { color: suitColor(s) }]}>{suitSymbol(s)}</Text>
             <Text style={gameStyles.suitLbl}>{suitName(s)}</Text>
           </BouncePressable>
@@ -931,8 +989,12 @@ export default function OnlineGameScreen() {
   }, [isOnline]);
 
   // ─── Skip-lobby: initialize game immediately for ranked (pre-lobbied) games ──
+  // Stop any lingering menu/search music from the previous screen so the
+  // transition into the match is clean. Game music starts once dealing finishes
+  // (handleDealingComplete), matching the local-game audio flow.
   useEffect(() => {
     if (!skipLobby) return;
+    stopMusic().catch(() => {});
     const gs = initMultiGame(allNames, 8, modeParam === "ranked" ? null : (getActiveEvent(playerLevel)?.id ?? null));
     gs.phase = "playing";
     setGameState(gs);
