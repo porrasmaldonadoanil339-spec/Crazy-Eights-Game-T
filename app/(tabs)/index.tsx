@@ -23,6 +23,7 @@ import { playSound } from "@/lib/sounds";
 import { useUIState } from "@/context/UIStateContext";
 import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName, diffDesc as getDiffDesc } from "@/lib/achTranslations";
 import BouncePressable from "@/components/BouncePressable";
+import { usePressFeedback } from "@/hooks/usePressFeedback";
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
@@ -631,10 +632,13 @@ function PrimaryPlayCard({ onPress, theme, T }: { onPress: () => void; theme: an
     transform: [{ translateX: pulse.value * 4 }],
   }));
   const playLabel = (T("play") || "JUGAR").toString().toUpperCase();
+  // Task #74 — premium feedback (click + haptic + microglow) on the main JUGAR button.
+  const premium = usePressFeedback({ intensity: "premium" });
   return (
     <Animated.View style={[styles.primaryPlayWrap, entryStyle, glowStyle]}>
       <Pressable
         onPress={onPress}
+        onPressIn={() => premium.trigger()}
         style={({ pressed }) => [
           styles.primaryPlayPressable,
           pressed && { transform: [{ scale: 0.98 }], opacity: 0.92 },
@@ -666,6 +670,14 @@ function PrimaryPlayCard({ onPress, theme, T }: { onPress: () => void; theme: an
           <Animated.View style={arrowStyle}>
             <Ionicons name="chevron-forward" size={22} color="#FFE082" />
           </Animated.View>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFillObject,
+              { backgroundColor: "rgba(255, 215, 0, 0.28)", borderRadius: 18 },
+              premium.glowStyle,
+            ]}
+          />
         </LinearGradient>
       </Pressable>
     </Animated.View>

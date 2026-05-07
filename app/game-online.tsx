@@ -22,7 +22,7 @@ import {
 } from "@/lib/multiplayerEngine";
 import { useProfile } from "@/context/ProfileContext";
 import {
-  playCardFlip, playCardDraw, playButton, playWin, playLose, playChestOpen, playOchoLocosVoice,
+  playCardFlip, playCardDraw, playButton, playWin, playLose, playChestOpen,
   playSpeedTick, stopMusic, startGameMusic, syncSettings
 } from "@/lib/audioManager";
 import { CardPlayEffect } from "@/components/CardPlayEffect";
@@ -1039,12 +1039,9 @@ export default function OnlineGameScreen() {
     const isWin = gameState.winnerIndex === 0;
     updateRanked(isWin ? 1 : -1);
     setRankedPromotion(isWin ? "promotion" : "demotion");
-    // Task #74 — synthesized "Ocho Locos" voice on a ranked win and on
-    // every promotion modal trigger. Gated by the voiceFxEnabled setting
-    // inside playOchoLocosVoice itself.
-    if (isWin) {
-      setTimeout(() => { playOchoLocosVoice().catch(() => {}); }, 350);
-    }
+    // Note: the "Ocho Locos" voice cue for actual rank-ups is fired
+    // centrally inside ProfileContext.updateRanked() so every promotion
+    // (online, tournament, challenge rewards…) gets the same audio treatment.
   }, [gameState?.phase, gameState?.winnerIndex, modeParam]);
 
   // ─── Record game result (XP + coins) when game ends ───────────────────────

@@ -229,7 +229,7 @@ function ConfirmModal({
             <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Text style={[styles.cancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
             </Pressable>
-            <BouncePressable onPress={onConfirm} style={styles.buyBtn}>
+            <BouncePressable onPress={onConfirm} style={styles.buyBtn} sound>
               <LinearGradient colors={item.category === "emote" ? ["#67E8F9", "#3B82F6"] : [theme.goldLight, theme.gold]} style={styles.buyBtnGrad}>
                 <Ionicons name="bag-check" size={16} color="#1a0a00" />
                 <Text style={styles.buyBtnText}>{T("buy")}</Text>
@@ -847,6 +847,8 @@ export default function StoreScreen() {
             <BouncePressable
               style={[styles.dailyFreeBtn, freeClaimed && { opacity: 0.5 }]}
               onPress={freeClaimed ? () => {} : handleClaimFree}
+              sound={!freeClaimed}
+              glowColor="rgba(46, 204, 113, 0.4)"
             >
               <LinearGradient colors={freeClaimed ? ["#666", "#444"] : ["#2ECC71", "#1A8F4A"]} style={styles.dailyFreeBtnGrad}>
                 <Ionicons name={freeClaimed ? "checkmark" : "gift"} size={16} color="#fff" />
@@ -951,7 +953,7 @@ function DailyConfirmModal({
             <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Text style={[styles.cancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
             </Pressable>
-            <BouncePressable onPress={onConfirm} style={styles.buyBtn}>
+            <BouncePressable onPress={onConfirm} style={styles.buyBtn} sound>
               <LinearGradient colors={isFichas ? ["#7FD0FF", "#3498DB"] : [theme.goldLight, theme.gold]} style={styles.buyBtnGrad}>
                 <Ionicons name="bag-check" size={16} color="#1a0a00" />
                 <Text style={styles.buyBtnText}>{T("buy")}</Text>
@@ -1568,6 +1570,8 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
             key={t}
             onPress={() => handleBuy(t)}
             style={[styles.chestCard, styles.chestCardScroll, { backgroundColor: themeColors.surface, borderColor: COLORS[t] + "88" }]}
+            sound
+            glowColor={COLORS[t] + "55"}
           >
             <Ionicons name={ICONS[t]} size={28} color={COLORS[t]} />
             <Text style={[styles.chestName, { color: COLORS[t] }]}>{NAMES[t]}</Text>
@@ -1630,7 +1634,7 @@ function ChestConfirmModal({
             <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Text style={[styles.cancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
             </Pressable>
-            <BouncePressable onPress={onConfirm} style={styles.buyBtn}>
+            <BouncePressable onPress={onConfirm} style={styles.buyBtn} sound>
               <LinearGradient colors={["#7FD0FF", "#3498DB"]} style={styles.buyBtnGrad}>
                 <Ionicons name="bag-check" size={16} color="#1a0a00" />
                 <Text style={styles.buyBtnText}>{T("buy")}</Text>

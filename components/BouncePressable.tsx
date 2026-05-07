@@ -1,22 +1,26 @@
 import React from "react";
-import { Pressable, PressableProps, Platform, ViewStyle, StyleProp } from "react-native";
+import { Pressable, PressableProps, Platform, ViewStyle, StyleProp, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { playPremiumClick } from "@/lib/audioManager";
+import { usePressFeedback } from "@/hooks/usePressFeedback";
 
 interface BouncePressableProps extends PressableProps {
   scaleTo?: number;
   children?: React.ReactNode;
   inline?: boolean;
   haptic?: boolean;
-  /** When true, plays a short premium UI click on press. Opt-in to avoid
-   *  doubling sounds in screens that already trigger their own SFX (cards,
-   *  store rows, etc.). Recommended for main menu / modal action buttons. */
+  /** When true, plays the unified premium feedback (click SFX + haptic +
+   *  microglow overlay) on press. Opt-in to avoid doubling sounds in screens
+   *  that already trigger their own SFX (cards, store rows, etc.).
+   *  Recommended for main menu / modal action buttons. */
   sound?: boolean;
+  /** Color of the microglow overlay when `sound` is true. Defaults to a soft
+   *  warm gold that reads on most surfaces. */
+  glowColor?: string;
   wrapperStyle?: StyleProp<ViewStyle>;
 }
 
@@ -35,6 +39,7 @@ export default function BouncePressable({
   inline = false,
   haptic = true,
   sound = false,
+  glowColor = "rgba(255, 215, 0, 0.35)",
   wrapperStyle,
   ...rest
 }: BouncePressableProps) {
@@ -44,6 +49,17 @@ export default function BouncePressable({
     transform: [{ scale: scale.value }],
   }));
 
+  // Unified premium press feedback (sound + haptic + microglow). When `sound`
+  // is false we skip the hook entirely so existing call sites get zero
+  // behavioural change; when true the haptic is delegated to the hook so we
+  // don't double-fire it alongside `tapHaptic()`.
+  const premium = usePressFeedback({
+    sound: true,
+    haptic,
+    glow: true,
+    intensity: "premium",
+  });
+
   return (
     <Animated.View style={[aStyle, { alignSelf: inline ? "auto" : "stretch" }, wrapperStyle]}>
       <Pressable
@@ -52,8 +68,11 @@ export default function BouncePressable({
         onPressIn={(e) => {
           if (!disabled) {
             scale.value = withSpring(scaleTo, { damping: 15, stiffness: 320, mass: 0.4 });
-            if (haptic) tapHaptic();
-            if (sound) playPremiumClick().catch(() => {});
+            if (sound) {
+              premium.trigger();
+            } else if (haptic) {
+              tapHaptic();
+            }
           }
           onPressIn?.(e);
         }}
@@ -64,6 +83,16 @@ export default function BouncePressable({
         style={style}
       >
         {children}
+        {sound ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFillObject,
+              { backgroundColor: glowColor, borderRadius: 12 },
+              premium.glowStyle,
+            ]}
+          />
+        ) : null}
       </Pressable>
     </Animated.View>
   );

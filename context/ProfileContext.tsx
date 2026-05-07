@@ -14,6 +14,7 @@ import { BATTLE_PASS_TIERS, getBattlePassTiers, getCurrentBattlePassTier, getPla
 import { getCurrentSeason } from "@/lib/seasons";
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { RankedProfile, addStars, getRankUpRewards, getRankUpBonusCoins } from "@/lib/ranked";
+import { playOchoLocosVoice } from "@/lib/audioManager";
 import { Chest, ChestReward, ChestType, createChest, openChest as openChestReward } from "@/lib/chestSystem";
 import { getPlayerPathLevel, getPlayerPathReward, MAX_PLAYER_PATH_LEVEL } from "@/lib/playerPath";
 
@@ -581,6 +582,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [update]);
 
   const updateRanked = useCallback((delta: number) => {
+    let rankedUp = false;
     update((p) => {
       const nextRanked = addStars(p.rankedProfile, delta);
       const itemsToAdd: string[] = [];
@@ -588,6 +590,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
       // Detect rank up
       if (nextRanked.rank > p.rankedProfile.rank) {
+        rankedUp = true;
         bonusCoins = getRankUpBonusCoins(nextRanked.rank);
         const rewards = getRankUpRewards(nextRanked.rank);
         rewards.forEach(id => {
@@ -604,6 +607,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         ownedItems: [...p.ownedItems, ...itemsToAdd],
       };
     });
+    // Centralized rank-up audio cue. Fires for every rank promotion regardless
+    // of which game mode triggered it (online, offline tournament, challenge
+    // rewards, etc.). Gated by voiceFxEnabled inside playOchoLocosVoice.
+    if (rankedUp) {
+      // Slight delay so it doesn't collide with the win SFX tail.
+      setTimeout(() => { playOchoLocosVoice().catch(() => {}); }, 350);
+    }
   }, [update]);
 
   // ─── Ranked anti-abuse: penalty + cooldown for repeated abandons ─────────
