@@ -520,7 +520,7 @@ function SuitPicker({ onChoose, hand }: { onChoose: (s: Suit) => void; hand: Car
               minWidth: 28,
               textAlign: "center",
               color: cdColor,
-              fontVariant: ["tabular-nums" as any],
+              fontVariant: ["tabular-nums"],
             },
             cdStyle,
           ]}

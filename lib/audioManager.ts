@@ -47,6 +47,7 @@ let isInitialized = false;
 // If multiple requests come in during a transition, only the last one is applied.
 let transitionInProgress = false;
 let pendingTrack: MusicTrack | null = null;
+let pendingSequential = false;
 let lastRequestedTrack: MusicTrack | null = null;
 
 async function safe(fn: () => Promise<void>) {
@@ -124,15 +125,36 @@ function getOrCreateTrackPlayer(track: MusicTrack): AudioPlayer | null {
   return p;
 }
 
-async function applyMusicTransition(track: MusicTrack) {
+async function applyMusicTransition(track: MusicTrack, opts?: { sequential?: boolean }) {
   if (currentTrack === track && bgPlayer) return;
   if (!isMusicEnabled) return;
 
-  // True crossfade between persistent per-track players. Old player is paused
-  // (NOT destroyed) so its position is preserved; next time we switch back to
-  // it, playback resumes seamlessly from where it left off.
   const oldPlayer = bgPlayer;
   const newPlayer = getOrCreateTrackPlayer(track);
+
+  // Sequential mode: fully fade out + pause the old track BEFORE starting the
+  // new one. Used for ranked matchmaking → game so menu/search music never
+  // overlaps the start of the game track.
+  if (opts?.sequential) {
+    if (oldPlayer && oldPlayer !== newPlayer) {
+      await fadePlayerTo(oldPlayer, 0);
+      await safe(async () => { oldPlayer.pause(); });
+    }
+    if (newPlayer) {
+      await safe(async () => {
+        newPlayer.volume = 0;
+        newPlayer.play();
+      });
+      bgPlayer = newPlayer;
+      currentTrack = track;
+      await fadePlayerTo(newPlayer, musicVolume);
+    }
+    return;
+  }
+
+  // Default: true crossfade between persistent per-track players. Old player
+  // is paused (NOT destroyed) so its position is preserved; next time we
+  // switch back to it, playback resumes seamlessly from where it left off.
   if (newPlayer) {
     await safe(async () => {
       newPlayer.volume = 0;
@@ -161,10 +183,11 @@ async function fadePlayerTo(player: any, targetVol: number) {
   }
 }
 
-async function requestMusicTrack(track: MusicTrack) {
+async function requestMusicTrack(track: MusicTrack, opts?: { sequential?: boolean }) {
   // Record the latest desired track
   lastRequestedTrack = track;
   pendingTrack = track;
+  if (opts?.sequential) pendingSequential = true;
 
   // If a transition is already in progress, let it pick up pendingTrack when done
   if (transitionInProgress) return;
@@ -174,8 +197,10 @@ async function requestMusicTrack(track: MusicTrack) {
     // Keep processing until there's no more pending request
     while (pendingTrack !== null) {
       const target = pendingTrack;
+      const seq = pendingSequential;
       pendingTrack = null;
-      await applyMusicTransition(target);
+      pendingSequential = false;
+      await applyMusicTransition(target, { sequential: seq });
     }
   } finally {
     transitionInProgress = false;
@@ -186,8 +211,8 @@ export async function startMenuMusic() {
   await requestMusicTrack("menu");
 }
 
-export async function startGameMusic() {
-  await requestMusicTrack("game");
+export async function startGameMusic(opts?: { sequential?: boolean }) {
+  await requestMusicTrack("game", opts);
 }
 
 export async function startSearchMusic() {

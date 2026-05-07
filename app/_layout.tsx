@@ -475,13 +475,16 @@ function AudioManager() {
     syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled ?? true);
   }, [profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled, isLoaded]);
 
-  // React to route changes — skip the very first run (handled by init above)
+  // React to route changes — skip the very first run (handled by init above).
+  // Use sequential (non-overlapping) fade when entering a game route so menu
+  // or search music never overlaps the game track (e.g. ranked matchmaking →
+  // match transition).
   useEffect(() => {
     if (!isLoaded) return;
     if (isFirstRun.current) { isFirstRun.current = false; return; }
     const inGame = isGameRoute(segments as string[]);
     if (inGame) {
-      startGameMusic().catch(() => {});
+      startGameMusic({ sequential: true }).catch(() => {});
     } else {
       startMenuMusic().catch(() => {});
     }
