@@ -301,8 +301,8 @@ export default function SettingsScreen() {
             right={<Switch value={profile.vibrationEnabled ?? true} onValueChange={toggleVibration} {...sw(profile.vibrationEnabled ?? true, "#9B59B6")} />}
           />
           <SettingRow
-            label={T("voiceFx" as any) || "Voz y efectos especiales"}
-            sub={T("voiceFxDesc" as any) || "Voz \"Ocho Locos\" y cues de eventos"}
+            label={T("voiceFx") || "Voz y efectos especiales"}
+            sub={T("voiceFxDesc") || "Voz \"Ocho Locos\" y cues de eventos"}
             icon="mic" iconColor="#E67E22" iconBg="#2a1a0a"
             isDark={isDark}
             right={<Switch value={profile.voiceFxEnabled ?? true} onValueChange={toggleVoiceFx} {...sw(profile.voiceFxEnabled ?? true, "#E67E22")} />}

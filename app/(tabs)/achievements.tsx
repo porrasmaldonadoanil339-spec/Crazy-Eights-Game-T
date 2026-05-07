@@ -248,6 +248,7 @@ export default function AchievementsScreen() {
           <BouncePressable
             onPress={() => handleClaimAchievement(ach.id)}
             style={[styles.claimBtn, { backgroundColor: themeGold }]}
+            sound
           >
             <Text style={styles.claimText}>{claimLabel}</Text>
           </BouncePressable>
@@ -486,6 +487,7 @@ export default function AchievementsScreen() {
             {!isPremiumBattlePassActive && (
               <BouncePressable
                 onPress={handleUnlockPremiumBP}
+                sound
                 style={{
                   marginHorizontal: 12,
                   marginBottom: 10,
@@ -993,6 +995,7 @@ function PlayerPathView({
               <BouncePressable
                 onPress={() => handleClaim(lvl)}
                 style={[styles.bpClaimBtn, { backgroundColor: themeGold }]}
+                sound
               >
                 <Text style={[styles.bpClaimText]}>{claimLabel}</Text>
               </BouncePressable>

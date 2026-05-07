@@ -696,8 +696,15 @@ export async function playPremiumClick() {
 
 // Synthesized "Ocho Locos" voice cue. Gated by the dedicated
 // `voiceFxEnabled` setting so users can keep SFX on while muting the voice.
+// Includes a short cooldown so multiple emitters (e.g. ranked-win + rank-up
+// promotion) firing in quick succession can't stack the same voice clip.
+let lastOchoLocosVoiceAt = 0;
+const OCHO_LOCOS_VOICE_COOLDOWN_MS = 2500;
 export async function playOchoLocosVoice() {
   if (!isVoiceFxEnabled) return;
+  const now = Date.now();
+  if (now - lastOchoLocosVoiceAt < OCHO_LOCOS_VOICE_COOLDOWN_MS) return;
+  lastOchoLocosVoiceAt = now;
   await playSfx("ochoLocosVoice", sfxVolume * 0.95);
 }
 
