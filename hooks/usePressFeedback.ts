@@ -8,7 +8,7 @@ import {
   Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { playPremiumClick } from "@/lib/audioManager";
+import { playPremiumClick, getHapticEnabled } from "@/lib/audioManager";
 
 export type PressFeedbackIntensity = "subtle" | "premium" | "heavy";
 
@@ -41,7 +41,8 @@ export function usePressFeedback(opts: Options = {}) {
     if (sound) {
       playPremiumClick().catch(() => {});
     }
-    if (haptic && Platform.OS !== "web") {
+    // Respect the user's global vibration toggle (synced via audioManager).
+    if (haptic && Platform.OS !== "web" && getHapticEnabled()) {
       const fn =
         intensity === "heavy"
           ? Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)

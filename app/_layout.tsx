@@ -11,6 +11,7 @@ LogBox.ignoreLogs([
 ]);
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { QuickOnboarding } from "@/components/QuickOnboarding";
 import { queryClient } from "@/lib/query-client";
@@ -252,8 +253,30 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
     ])).start();
 
     // Startup fanfare — synthesized "Ocho Locos" voice over the studio logo.
-    // Gated by the voiceFxEnabled toggle inside playOchoLocosVoice itself.
-    setTimeout(() => { playOchoLocosVoice().catch(() => {}); }, 300);
+    // Two guards (Task #74 review):
+    //   (a) Honour the persisted voiceFxEnabled flag *before* in-memory
+    //       syncSettings() has had a chance to run (cold start).
+    //   (b) Only play once per calendar day — avoid voice fatigue from rapid
+    //       relaunches.
+    setTimeout(() => {
+      (async () => {
+        try {
+          const raw = await AsyncStorage.getItem("ocho_profile_v3");
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed?.voiceFxEnabled === false) return;
+          }
+          const today = new Date().toISOString().slice(0, 10);
+          const lastDay = await AsyncStorage.getItem("ocho_voice_splash_day");
+          if (lastDay === today) return;
+          await AsyncStorage.setItem("ocho_voice_splash_day", today);
+          playOchoLocosVoice().catch(() => {});
+        } catch {
+          // Best-effort: if storage fails, fall back to the in-memory gate.
+          playOchoLocosVoice().catch(() => {});
+        }
+      })();
+    }, 300);
 
     // ── Transition to Phase 2 ─────────────────────────────────────────────
     const studioTimer = setTimeout(() => {

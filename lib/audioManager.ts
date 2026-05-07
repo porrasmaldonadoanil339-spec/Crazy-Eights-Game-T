@@ -724,6 +724,11 @@ export function syncSettings(
 
 export function getMuted() { return isSfxMuted; }
 export function getMusicEnabled() { return isMusicEnabled; }
+// Centralized accessors for Task #74 — used by usePressFeedback so any
+// premium press feedback respects the user's global vibration / voice
+// toggles even before a syncSettings() round-trip.
+export function getHapticEnabled() { return isHapticEnabled; }
+export function getVoiceFxEnabled() { return isVoiceFxEnabled; }
 
 export function setMusicVolume(vol: number) {
   musicVolume = Math.max(0, Math.min(1, vol));
