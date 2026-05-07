@@ -1521,8 +1521,10 @@ export default function OnlineGameScreen() {
     cardsDrawnRef.current = 0;
     resultRecordedRef.current = false;
     rankedUpdatedRef.current = false;
-    // Music is route-driven by AudioManager; the user is still on game-online,
-    // so game music continues seamlessly across replays.
+    // Replay stays on /game-online, so the route-driven AudioManager doesn't
+    // re-trigger. Game-over stopped the music, so explicitly restart it here
+    // (user-initiated action — comparable to the in-game music toggle).
+    startGameMusic().catch(() => {});
     // Re-arm the event intro banner so it appears for the new match too.
     eventBannerShownRef.current = false;
     if (newEventId) {
