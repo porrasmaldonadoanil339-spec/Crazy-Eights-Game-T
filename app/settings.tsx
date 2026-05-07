@@ -211,7 +211,7 @@ export default function SettingsScreen() {
   const toggleMusic = async () => {
     const next = !profile.musicEnabled;
     updateSettings({ musicEnabled: next });
-    syncSettings(next, profile.sfxEnabled);
+    syncSettings(next, profile.sfxEnabled, profile.vibrationEnabled, profile.voiceFxEnabled ?? true);
     if (!next) { stopMusic().catch(() => {}); }
     else if (getCurrentTrack() === null) { startMenuMusic().catch(() => {}); }
   };
@@ -219,13 +219,20 @@ export default function SettingsScreen() {
   const toggleSfx = () => {
     const next = !profile.sfxEnabled;
     updateSettings({ sfxEnabled: next });
-    syncSettings(profile.musicEnabled, next);
+    syncSettings(profile.musicEnabled, next, profile.vibrationEnabled, profile.voiceFxEnabled ?? true);
   };
 
   const toggleVibration = () => {
     const next = !profile.vibrationEnabled;
     updateSettings({ vibrationEnabled: next });
+    syncSettings(profile.musicEnabled, profile.sfxEnabled, next, profile.voiceFxEnabled ?? true);
     if (next) Vibration.vibrate(80);
+  };
+
+  const toggleVoiceFx = () => {
+    const next = !(profile.voiceFxEnabled ?? true);
+    updateSettings({ voiceFxEnabled: next });
+    syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled, next);
   };
 
   const toggleMuteEmotes = () => {
@@ -292,6 +299,13 @@ export default function SettingsScreen() {
             icon="phone-portrait" iconColor="#9B59B6" iconBg="#2a1a3a"
             isDark={isDark}
             right={<Switch value={profile.vibrationEnabled ?? true} onValueChange={toggleVibration} {...sw(profile.vibrationEnabled ?? true, "#9B59B6")} />}
+          />
+          <SettingRow
+            label={T("voiceFx" as any) || "Voz y efectos especiales"}
+            sub={T("voiceFxDesc" as any) || "Voz \"Ocho Locos\" y cues de eventos"}
+            icon="mic" iconColor="#E67E22" iconBg="#2a1a0a"
+            isDark={isDark}
+            right={<Switch value={profile.voiceFxEnabled ?? true} onValueChange={toggleVoiceFx} {...sw(profile.voiceFxEnabled ?? true, "#E67E22")} />}
           />
           <SettingRow
             label={T("muteEmotes" as any) || "Silenciar Emotes del Rival"} sub={T("muteEmotesDesc" as any) || "Ocultar mensajes del rival"}

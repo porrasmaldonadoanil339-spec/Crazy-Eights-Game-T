@@ -134,6 +134,10 @@ export interface PlayerProfile {
   musicEnabled: boolean;
   sfxEnabled: boolean;
   vibrationEnabled: boolean;
+  // Task #74 — sub-toggle for the synthesized "Ocho Locos" voice and other
+  // special voice/SFX cues (rank promotion, splash). Defaults to true. When
+  // false, regular SFX still play but voice cues are silenced.
+  voiceFxEnabled: boolean;
   muteEmotes: boolean;
   language: string;
   darkMode: boolean;
@@ -238,6 +242,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   musicEnabled: true,
   sfxEnabled: true,
   vibrationEnabled: true,
+  voiceFxEnabled: true,
   muteEmotes: false,
   language: "es",
   darkMode: true,
@@ -310,7 +315,7 @@ interface ProfileContextValue {
   claimDailyReward: () => { reward: DailyReward; queued: boolean } | null;
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
-  updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
+  updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "voiceFxEnabled" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
   updateEquippedEmotes: (emoteIds: string[]) => void;
   updateRanked: (delta: number) => void;
   recordRankedAbandon: () => { totalStarLoss: number; cooldownMs: number; abandonsInWindow: number };
@@ -464,6 +469,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             dailyRewardIndex: saved.dailyRewardIndex ?? 0,
             musicEnabled: saved.musicEnabled ?? true,
             sfxEnabled: saved.sfxEnabled ?? true,
+            voiceFxEnabled: saved.voiceFxEnabled ?? true,
             cardDesignId: saved.cardDesignId ?? "face_default",
             tableDesignId: saved.tableDesignId ?? "table_casino",
             selectedFrameId: saved.selectedFrameId ?? "frame_gold",
@@ -1119,7 +1125,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return { reward, queued: willQueue };
   }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, profile.chestInventory, profile.chestOverflow, update]);
 
-  const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
+  const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "voiceFxEnabled" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
     update((p) => ({ ...p, ...settings }));
   }, [update]);
 

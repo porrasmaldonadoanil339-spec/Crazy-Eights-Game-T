@@ -28,7 +28,7 @@ import {
   Nunito_800ExtraBold as Nunito_800ExtraBold_Asset,
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
-import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded } from "@/lib/audioManager";
+import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded, playOchoLocosVoice } from "@/lib/audioManager";
 import { markSplashComplete } from "@/lib/splashState";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useProfile } from "@/context/ProfileContext";
@@ -251,8 +251,9 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
       Animated.timing(glowAnim, { toValue: 1, duration: 1200, useNativeDriver: nativeDriver }),
     ])).start();
 
-    // Startup fanfare
-    setTimeout(() => { playSound("win").catch(() => {}); }, 300);
+    // Startup fanfare — synthesized "Ocho Locos" voice over the studio logo.
+    // Gated by the voiceFxEnabled toggle inside playOchoLocosVoice itself.
+    setTimeout(() => { playOchoLocosVoice().catch(() => {}); }, 300);
 
     // ── Transition to Phase 2 ─────────────────────────────────────────────
     const studioTimer = setTimeout(() => {
@@ -459,7 +460,7 @@ function AudioManager() {
   useEffect(() => {
     if (!isLoaded) return;
     initAudio().then(() => {
-      syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled ?? true);
+      syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled ?? true, profile.voiceFxEnabled ?? true);
       preloadSounds().catch(() => {});
       const inGame = isGameRoute(segments as string[]);
       if (inGame) {
@@ -472,8 +473,8 @@ function AudioManager() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled ?? true);
-  }, [profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled, isLoaded]);
+    syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled ?? true, profile.voiceFxEnabled ?? true);
+  }, [profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled, profile.voiceFxEnabled, isLoaded]);
 
   // React to route changes — skip the very first run (handled by init above).
   // Use sequential (non-overlapping) fade when entering a game route so menu

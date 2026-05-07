@@ -6,12 +6,17 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { playPremiumClick } from "@/lib/audioManager";
 
 interface BouncePressableProps extends PressableProps {
   scaleTo?: number;
   children?: React.ReactNode;
   inline?: boolean;
   haptic?: boolean;
+  /** When true, plays a short premium UI click on press. Opt-in to avoid
+   *  doubling sounds in screens that already trigger their own SFX (cards,
+   *  store rows, etc.). Recommended for main menu / modal action buttons. */
+  sound?: boolean;
   wrapperStyle?: StyleProp<ViewStyle>;
 }
 
@@ -29,6 +34,7 @@ export default function BouncePressable({
   disabled,
   inline = false,
   haptic = true,
+  sound = false,
   wrapperStyle,
   ...rest
 }: BouncePressableProps) {
@@ -47,6 +53,7 @@ export default function BouncePressable({
           if (!disabled) {
             scale.value = withSpring(scaleTo, { damping: 15, stiffness: 320, mass: 0.4 });
             if (haptic) tapHaptic();
+            if (sound) playPremiumClick().catch(() => {});
           }
           onPressIn?.(e);
         }}

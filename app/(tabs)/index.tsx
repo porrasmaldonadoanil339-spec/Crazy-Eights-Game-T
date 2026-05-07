@@ -1387,6 +1387,7 @@ export default function PlayScreen() {
         <BouncePressable
           onPress={() => router.push("/(tabs)/achievements")}
           style={styles.bpShortcut}
+          sound
         >
           <LinearGradient
             colors={["#7B2FBE", "#A855F7", "#7B2FBE"]}
