@@ -440,14 +440,39 @@ function DirectionArrow({ direction }: { direction: 1 | -1 }) {
   return <Animated.Text style={[gameStyles.dirArrow, style]}>{direction === 1 ? "↻" : "↺"}</Animated.Text>;
 }
 
+// Returns the most common suit in the hand (ties broken in SUITS declaration
+// order). Falls back to a random suit only when the hand is empty.
+function pickDefaultSuit(hand: Card[]): Suit {
+  const suits: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
+  if (!hand || hand.length === 0) {
+    return suits[Math.floor(Math.random() * suits.length)];
+  }
+  const counts: Record<Suit, number> = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
+  for (const c of hand) {
+    if (c && c.suit && c.suit in counts) counts[c.suit]++;
+  }
+  let best: Suit = suits[0];
+  let bestN = -1;
+  for (const s of suits) {
+    if (counts[s] > bestN) { bestN = counts[s]; best = s; }
+  }
+  if (bestN <= 0) return suits[Math.floor(Math.random() * suits.length)];
+  return best;
+}
+
 // ─── Suit picker ──────────────────────────────────────────────────────────
 // Visible 5-second countdown for competitive matches (ranked + online).
-// On expiry, a random suit is auto-selected so the match never stalls.
-function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
+// On expiry, the picker auto-selects the suit the player holds the most of
+// (ties broken in suit declaration order); only falls back to a random suit
+// if the hand is empty (e.g. instant-win edge case).
+function SuitPicker({ onChoose, hand }: { onChoose: (s: Suit) => void; hand: Card[] }) {
   const T = useT();
   const [countdown, setCountdown] = useState(5);
   const cdAnim = useSharedValue(1);
   const firedRef = useRef(false);
+  const handRef = useRef(hand);
+  // Keep the latest hand visible to the timer callback without resetting it.
+  useEffect(() => { handRef.current = hand; }, [hand]);
 
   useEffect(() => {
     setCountdown(5);
@@ -464,8 +489,7 @@ function SuitPicker({ onChoose }: { onChoose: (s: Suit) => void }) {
           clearInterval(interval);
           if (!firedRef.current) {
             firedRef.current = true;
-            const randomSuit = SUITS[Math.floor(Math.random() * SUITS.length)];
-            onChoose(randomSuit);
+            onChoose(pickDefaultSuit(handRef.current));
           }
           return 0;
         }
@@ -989,12 +1013,10 @@ export default function OnlineGameScreen() {
   }, [isOnline]);
 
   // ─── Skip-lobby: initialize game immediately for ranked (pre-lobbied) games ──
-  // Stop any lingering menu/search music from the previous screen so the
-  // transition into the match is clean. Game music starts once dealing finishes
-  // (handleDealingComplete), matching the local-game audio flow.
+  // Music is owned by app/_layout.tsx AudioManager (game-online is in
+  // GAME_MUSIC_ROUTES), so we don't touch music here.
   useEffect(() => {
     if (!skipLobby) return;
-    stopMusic().catch(() => {});
     const gs = initMultiGame(allNames, 8, modeParam === "ranked" ? null : (getActiveEvent(playerLevel)?.id ?? null));
     gs.phase = "playing";
     setGameState(gs);
@@ -1122,7 +1144,7 @@ export default function OnlineGameScreen() {
 
   const handleDealingComplete = useCallback(() => {
     setLobbyPhase("game");
-    startGameMusic().catch(() => {});
+    // Music handled by app/_layout.tsx AudioManager (game-online is a game route).
   }, []);
 
   // ─── In-game menu handlers ────────────────────────────────────────────────
@@ -1499,7 +1521,8 @@ export default function OnlineGameScreen() {
     cardsDrawnRef.current = 0;
     resultRecordedRef.current = false;
     rankedUpdatedRef.current = false;
-    startGameMusic().catch(() => {});
+    // Music is route-driven by AudioManager; the user is still on game-online,
+    // so game music continues seamlessly across replays.
     // Re-arm the event intro banner so it appears for the new match too.
     eventBannerShownRef.current = false;
     if (newEventId) {
@@ -1909,7 +1932,7 @@ export default function OnlineGameScreen() {
       {/* Suit picker */}
       {gs.phase === "choosing_suit" && selectedCard && gs.currentPlayerIndex === 0 && (
         <View style={StyleSheet.absoluteFill}>
-          <SuitPicker onChoose={handleChooseSuit} />
+          <SuitPicker onChoose={handleChooseSuit} hand={gs.hands[0] ?? []} />
         </View>
       )}
 

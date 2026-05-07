@@ -11,7 +11,7 @@ import { Alert } from "react-native";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
-import { playButton, startMenuMusic, startSearchMusic, stopMusic } from "@/lib/audioManager";
+import { playButton, startMenuMusic, startSearchMusic } from "@/lib/audioManager";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { getLocalizedRankInfo } from "@/lib/ranked";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
@@ -142,9 +142,8 @@ export default function RankedLobbyScreen() {
 
   const handleStartMatch = useCallback(async () => {
     await playButton().catch(() => {});
-    // Hard-stop menu/search music BEFORE navigating so no menu audio leaks into
-    // the match transition. game-online will start game music after dealing.
-    stopMusic().catch(() => {});
+    // Music transition is owned by app/_layout.tsx (AudioManager): "game-online"
+    // is part of GAME_MUSIC_ROUTES, so navigation alone swaps menu→game music.
     router.replace({ pathname: "/game-online", params: { count: "4", mode: "ranked", skipLobby: "true" } });
   }, []);
 

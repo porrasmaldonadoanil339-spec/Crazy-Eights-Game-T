@@ -298,13 +298,36 @@ const pendStyles = StyleSheet.create({
   num: { fontFamily: "Nunito_800ExtraBold" },
 });
 
+// Returns the most common suit in the hand (ties broken in SUITS order).
+// Falls back to a random suit only if the hand is empty.
+function pickDefaultSuit(hand: Card[]): Suit {
+  if (!hand || hand.length === 0) {
+    return SUITS[Math.floor(Math.random() * SUITS.length)];
+  }
+  const counts: Record<Suit, number> = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
+  for (const c of hand) {
+    if (c && c.suit && c.suit in counts) counts[c.suit]++;
+  }
+  let best: Suit = SUITS[0];
+  let bestN = -1;
+  for (const s of SUITS) {
+    if (counts[s] > bestN) { bestN = counts[s]; best = s; }
+  }
+  if (bestN <= 0) return SUITS[Math.floor(Math.random() * SUITS.length)];
+  return best;
+}
+
 // ─── Suit picker ─────────────────────────────────────────────────────────────
-function SuitPicker({ visible, onSelect, isJoker }: {
-  visible: boolean; onSelect: (s: Suit) => void; isJoker?: boolean;
+// Auto-selects on expiry the suit the player holds the most of (random only
+// as fallback if the hand is empty).
+function SuitPicker({ visible, onSelect, isJoker, hand }: {
+  visible: boolean; onSelect: (s: Suit) => void; isJoker?: boolean; hand: Card[];
 }) {
   const T = useT();
   const [countdown, setCountdown] = useState(5);
   const countdownAnim = useSharedValue(1);
+  const handRef = useRef(hand);
+  useEffect(() => { handRef.current = hand; }, [hand]);
 
   useEffect(() => {
     if (!visible) {
@@ -322,8 +345,7 @@ function SuitPicker({ visible, onSelect, isJoker }: {
         );
         if (next <= 0) {
           clearInterval(interval);
-          const randomSuit = SUITS[Math.floor(Math.random() * SUITS.length)];
-          onSelect(randomSuit);
+          onSelect(pickDefaultSuit(handRef.current));
           return 0;
         }
         return next;
@@ -2737,6 +2759,7 @@ export default function GameScreen() {
         visible={suitPickerVisible}
         onSelect={handleSuitSelect}
         isJoker={isJokerSelected}
+        hand={gameState?.playerHand ?? []}
       />
 
       {isGameOver && !showTournamentModal && session?.mode !== "tournament" && (
