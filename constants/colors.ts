@@ -55,4 +55,49 @@ export const Colors = DarkColors;
 
 export type ThemeColors = typeof DarkColors;
 
+// ─── Shadow tokens ───────────────────────────────────────────────────────────
+// Normalised elevation styles so cards, modals and CTAs share consistent
+// depth. Always spread these into a style object — never override individual
+// fields. RN's `shadow*` props are deprecated on web but the equivalent
+// `boxShadow` mapping is handled by RN Web internally for these tokens.
+export const Shadows = {
+  sm: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  lg: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  gold: {
+    shadowColor: GOLD,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  goldDeep: {
+    shadowColor: GOLD,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.7,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+} as const;
+
+export type ShadowToken = keyof typeof Shadows;
+
 export default { light: { text: DarkColors.text, background: DarkColors.background, tint: DarkColors.gold, tabIconDefault: DarkColors.textMuted, tabIconSelected: DarkColors.gold } };

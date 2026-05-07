@@ -24,6 +24,8 @@ import { useUIState } from "@/context/UIStateContext";
 import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName, diffDesc as getDiffDesc } from "@/lib/achTranslations";
 import BouncePressable from "@/components/BouncePressable";
 import { usePressFeedback } from "@/hooks/usePressFeedback";
+import { ModalBackdrop } from "@/components/ModalBackdrop";
+import { Particles } from "@/components/Particles";
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
@@ -255,6 +257,7 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
 
   return (
     <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
+      <ModalBackdrop intensity={28} dimOpacity={0.55} style={styles.modalBgLayout}>
       <Pressable style={styles.modalBg} onPress={onClose}>
         <View style={styles.diffModal}>
           <LinearGradient colors={["#1a2f1a", Colors.surface]} style={styles.diffModalGrad}>
@@ -303,6 +306,7 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
           </LinearGradient>
         </View>
       </Pressable>
+      </ModalBackdrop>
     </Modal>
   );
 }
@@ -347,7 +351,7 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFul
 
   return (
     <Modal transparent animationType="fade" visible={visible}>
-      <View style={styles.dailyOverlay}>
+      <ModalBackdrop intensity={32} dimOpacity={0.6} style={styles.dailyOverlay}>
         <Animated.View style={[styles.dailyModal, animStyle]}>
           <LinearGradient colors={["#1a1200", "#2a1f00"]} style={styles.dailyGrad}>
             <Text style={styles.dailyTitle}>{T("dailyReward")}</Text>
@@ -373,7 +377,7 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFul
             </Pressable>
           </LinearGradient>
         </Animated.View>
-      </View>
+      </ModalBackdrop>
     </Modal>
   );
 }
@@ -417,6 +421,9 @@ function TitleSparkle({ x, y, size, delay }: { x: number; y: number; size: numbe
 
 function PokerTitle() {
   const theme = useTheme();
+  // Two independent rhythms so the breathing never feels metronomic:
+  //   glowAnim drives the wordmark shadow + outer halo (slow ~1.8s)
+  //   haloAnim drives the inner halo opacity (slower ~2.4s, opposite phase)
   const glowAnim = useSharedValue(0.6);
   const haloAnim = useSharedValue(0.25);
   useEffect(() => {
@@ -438,6 +445,12 @@ function PokerTitle() {
     opacity: haloAnim.value,
     transform: [{ scale: 0.95 + glowAnim.value * 0.1 }],
   }));
+  // Outer aura — wider radius, lower opacity, slightly out of phase. Adds a
+  // subtle "stage light" glow without making the wordmark look smudged.
+  const outerHaloStyle = useAnimatedStyle(() => ({
+    opacity: 0.10 + glowAnim.value * 0.18,
+    transform: [{ scale: 0.92 + (1 - glowAnim.value) * 0.18 }],
+  }));
   return (
     <View style={styles.titleWrap}>
       <View style={styles.titleSuits}>
@@ -447,13 +460,27 @@ function PokerTitle() {
         <Text style={[styles.suitBlack, { color: theme.textMuted }]}>♣</Text>
       </View>
       <View style={styles.titleStage}>
+        <Animated.View pointerEvents="none" style={[styles.titleOuterHalo, outerHaloStyle]} />
         <Animated.View pointerEvents="none" style={[styles.titleHalo, haloStyle]} />
-        <TitleSparkle x={-118} y={-4} size={11} delay={0} />
-        <TitleSparkle x={108} y={-8} size={9} delay={420} />
+        {/* Gold sparkles around the wordmark — a couple are intentionally
+            larger for that "premium" twinkle. The wordmark itself is never
+            translated and never rendered on top of these (they sit behind). */}
+        <TitleSparkle x={-128} y={-6} size={14} delay={0} />
+        <TitleSparkle x={118} y={-10} size={12} delay={420} />
         <TitleSparkle x={-96} y={26} size={8} delay={1100} />
-        <TitleSparkle x={96} y={30} size={10} delay={1620} />
+        <TitleSparkle x={104} y={28} size={10} delay={1620} />
         <Animated.View style={glowStyle}>
-          <Text style={styles.mainTitle}>OCHO LOCOS</Text>
+          {/* Two-layer wordmark: a low-opacity wider-shadow copy sits behind
+              the main text to give a deeper drop-shadow without bleeding the
+              foreground colour. Both render the literal "OCHO LOCOS" — the
+              brand name never translates. */}
+          <Text
+            pointerEvents="none"
+            style={[styles.mainTitle, styles.mainTitleShadow]}
+          >
+            OCHO LOCOS
+          </Text>
+          <Text style={[styles.mainTitle, styles.mainTitleFront]}>OCHO LOCOS</Text>
         </Animated.View>
       </View>
       <Text style={styles.titleTagline}>CRAZY EIGHTS · CASINO EDITION</Text>
@@ -1112,7 +1139,22 @@ export default function PlayScreen() {
           </Pressable>
         )}
 
-        <PokerTitle />
+        <View style={styles.titleHeroWrap}>
+          {/* Soft gold particles drifting behind the wordmark — a separate
+              decorative layer from the suit background so the menu hero
+              feels alive without competing with the title. */}
+          <Particles
+            count={10}
+            color="#F4D03F"
+            minSize={2}
+            maxSize={4}
+            baseOpacity={0.3}
+            width={SW}
+            height={170}
+            seed={1}
+          />
+          <PokerTitle />
+        </View>
 
         <RankedPreviewCard isDark={isDark} />
 
@@ -1923,6 +1965,7 @@ const styles = StyleSheet.create({
   bpShortcutSub: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#FFD700AA" },
 
   // Poker title
+  titleHeroWrap: { position: "relative", overflow: "hidden" },
   titleWrap: { alignItems: "center", paddingVertical: 10, gap: 4 },
   titleSuits: { flexDirection: "row", gap: 12, marginBottom: 4 },
   suitRed: { fontSize: 22, color: "#C0392B", opacity: 0.8 },
@@ -1933,10 +1976,26 @@ const styles = StyleSheet.create({
     width: 280, height: 70, borderRadius: 35,
     backgroundColor: "rgba(212,175,55,0.20)",
   },
+  titleOuterHalo: {
+    position: "absolute",
+    width: 360, height: 110, borderRadius: 55,
+    backgroundColor: "rgba(244,208,63,0.14)",
+  },
   mainTitle: {
     fontFamily: "Nunito_800ExtraBold", fontSize: 36, color: Colors.gold,
     letterSpacing: 5,
-    textShadowColor: "rgba(212,175,55,0.65)", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 24,
+  },
+  mainTitleFront: {
+    textShadowColor: "rgba(212,175,55,0.75)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 16,
+  },
+  mainTitleShadow: {
+    position: "absolute",
+    color: "rgba(0,0,0,0.55)",
+    textShadowColor: "rgba(0,0,0,0.85)",
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 14,
   },
   titleTagline: {
     fontFamily: "Nunito_400Regular", fontSize: 10, color: Colors.textDim,
@@ -2064,7 +2123,8 @@ const styles = StyleSheet.create({
   statChipSep: { color: Colors.textDim, fontSize: 11 },
 
   // Difficulty modal
-  modalBg: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end" },
+  modalBg: { flex: 1, justifyContent: "flex-end" },
+  modalBgLayout: { flex: 1, justifyContent: "flex-end" },
   diffModal: { borderTopLeftRadius: 26, borderTopRightRadius: 26, overflow: "hidden", maxHeight: "85%" },
   diffModalGrad: { padding: 22, paddingBottom: 36 },
   diffModalHandle: {
@@ -2103,7 +2163,7 @@ const styles = StyleSheet.create({
   expertBadgeText: { fontFamily: "Nunito_700Bold", fontSize: 10 },
 
   // Daily reward modal
-  dailyOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.85)", alignItems: "center", justifyContent: "center" },
+  dailyOverlay: { flex: 1, alignItems: "center", justifyContent: "center" },
   dailyModal: { width: 300, borderRadius: 24, overflow: "hidden", borderWidth: 1.5, borderColor: Colors.gold + "44" },
   dailyGrad: { padding: 28, alignItems: "center", gap: 12 },
   dailyTitle: {
