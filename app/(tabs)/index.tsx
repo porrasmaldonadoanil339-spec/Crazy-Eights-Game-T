@@ -422,9 +422,6 @@ function TitleSparkle({ x, y, size, delay }: { x: number; y: number; size: numbe
 
 function PokerTitle() {
   const theme = useTheme();
-  // Two independent rhythms so the breathing never feels metronomic:
-  //   glowAnim drives the wordmark shadow + outer halo (slow ~1.8s)
-  //   haloAnim drives the inner halo opacity (slower ~2.4s, opposite phase)
   const glowAnim = useSharedValue(0.6);
   const haloAnim = useSharedValue(0.25);
   useEffect(() => {
@@ -446,8 +443,6 @@ function PokerTitle() {
     opacity: haloAnim.value,
     transform: [{ scale: 0.95 + glowAnim.value * 0.1 }],
   }));
-  // Outer aura — wider radius, lower opacity, slightly out of phase. Adds a
-  // subtle "stage light" glow without making the wordmark look smudged.
   const outerHaloStyle = useAnimatedStyle(() => ({
     opacity: 0.10 + glowAnim.value * 0.18,
     transform: [{ scale: 0.92 + (1 - glowAnim.value) * 0.18 }],
@@ -463,18 +458,12 @@ function PokerTitle() {
       <View style={styles.titleStage}>
         <Animated.View pointerEvents="none" style={[styles.titleOuterHalo, outerHaloStyle]} />
         <Animated.View pointerEvents="none" style={[styles.titleHalo, haloStyle]} />
-        {/* Gold sparkles around the wordmark — a couple are intentionally
-            larger for that "premium" twinkle. The wordmark itself is never
-            translated and never rendered on top of these (they sit behind). */}
         <TitleSparkle x={-128} y={-6} size={14} delay={0} />
         <TitleSparkle x={118} y={-10} size={12} delay={420} />
         <TitleSparkle x={-96} y={26} size={8} delay={1100} />
         <TitleSparkle x={104} y={28} size={10} delay={1620} />
         <Animated.View style={glowStyle}>
-          {/* Two-layer wordmark: a low-opacity wider-shadow copy sits behind
-              the main text to give a deeper drop-shadow without bleeding the
-              foreground colour. Both render the literal "OCHO LOCOS" — the
-              brand name never translates. */}
+          {/* "OCHO LOCOS" never translates. */}
           <Text
             pointerEvents="none"
             style={[styles.mainTitle, styles.mainTitleShadow]}
@@ -509,7 +498,6 @@ function ModeCard({
   const T = useT();
   const personality = MODE_PERSONALITY[mode.id] ?? { glowIntensity: 0.25, pulseMs: 1800, flair: null };
   const pulse = useSharedValue(0);
-  // Reusable entry microanimation — staggered per card index (Task #75).
   const entryStyle = useEntryAnimation({ delay: idx * 55, duration: 360, fromTranslateY: 14, fromScale: 0.94 });
 
   useEffect(() => {
@@ -627,7 +615,6 @@ function ModeCard({
 
 function PrimaryPlayCard({ onPress, theme, T }: { onPress: () => void; theme: any; T: (k: any) => string }) {
   const pulse = useSharedValue(0);
-  // Reusable entry microanimation (Task #75) — fade + scale + lift on mount.
   const entryStyle = useEntryAnimation({ duration: 380, fromTranslateY: 16, fromScale: 0.96 });
   useEffect(() => {
     pulse.value = withRepeat(
@@ -1129,9 +1116,6 @@ export default function PlayScreen() {
         )}
 
         <View style={styles.titleHeroWrap}>
-          {/* Soft gold particles drifting behind the wordmark — a separate
-              decorative layer from the suit background so the menu hero
-              feels alive without competing with the title. */}
           <Particles
             count={10}
             color="#F4D03F"

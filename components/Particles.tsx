@@ -100,13 +100,7 @@ export interface ParticlesProps {
   seed?: number;
 }
 
-/**
- * Reusable soft particles overlay. Designed for backgrounds and decorative
- * surfaces (menu, hero areas). All animations run on the Reanimated UI
- * thread; it never re-renders after mount.
- *
- * Place this absolutely positioned in a parent — it fills its container.
- */
+// Soft particles overlay for backgrounds. Animated on the UI thread.
 export function Particles({
   count = 14,
   color = "#D4AF37",
@@ -120,11 +114,9 @@ export function Particles({
   const W = width ?? SW;
   const H = height ?? SH;
 
-  // Memoise positions/sizes/durations so the layout is stable across renders.
   const particles = useMemo(() => {
     const arr: ParticleProps[] = [];
     for (let i = 0; i < count; i++) {
-      // Pseudo-random but deterministic per (i, seed) so HMR doesn't reshuffle.
       const r = (n: number) => {
         const v = Math.sin((i + seed + 1) * (n + 1) * 12.9898) * 43758.5453;
         return v - Math.floor(v);

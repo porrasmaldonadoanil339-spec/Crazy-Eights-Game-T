@@ -3,6 +3,7 @@ import React, { useState, useRef, useMemo, useEffect, memo, useCallback } from "
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
   Platform, Modal, FlatList, Animated, Easing,
+  StyleProp, ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,9 +22,7 @@ import Reanimated from "react-native-reanimated";
 import { useEntryAnimation } from "@/hooks/useEntryAnimation";
 import { getDailyShopItems, getDailyFreeItem, getDailyDateKey, getDailyEmotes, DailyShopItem } from "@/lib/dailyShop";
 
-// Tiny wrapper so we can call the entry-animation hook per item inside a
-// map without violating the rules of hooks (Task #75).
-function EntryWrap({ delay = 0, children, style }: { delay?: number; children: React.ReactNode; style?: any }) {
+function EntryWrap({ delay = 0, children, style }: { delay?: number; children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
   const animStyle = useEntryAnimation({ delay, fromTranslateY: 10, fromScale: 0.94, duration: 320 });
   return <Reanimated.View style={[animStyle, style]}>{children}</Reanimated.View>;
 }

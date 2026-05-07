@@ -55,11 +55,7 @@ export const Colors = DarkColors;
 
 export type ThemeColors = typeof DarkColors;
 
-// ─── Shadow tokens ───────────────────────────────────────────────────────────
-// Normalised elevation styles so cards, modals and CTAs share consistent
-// depth. Always spread these into a style object — never override individual
-// fields. RN's `shadow*` props are deprecated on web but the equivalent
-// `boxShadow` mapping is handled by RN Web internally for these tokens.
+// Shared shadow tokens.
 export const Shadows = {
   sm: {
     shadowColor: "#000",

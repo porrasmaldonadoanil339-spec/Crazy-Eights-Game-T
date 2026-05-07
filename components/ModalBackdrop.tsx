@@ -14,12 +14,7 @@ interface ModalBackdropProps {
   children?: React.ReactNode;
 }
 
-/**
- * Premium modal backdrop. On native it uses a BlurView so the menu reads
- * through the modal as a defocused background; on web (where BlurView is
- * less reliable) it falls back to a solid dim layer that matches the
- * darkened tone of the blurred variant.
- */
+// BlurView backdrop on native; solid dim on web.
 export function ModalBackdrop({
   intensity = 30,
   tint = "dark",
