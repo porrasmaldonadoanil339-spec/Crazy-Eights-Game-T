@@ -33,10 +33,6 @@ interface PlayingCardProps {
 
 type EffectLabelKey = "effectLabelSkip" | "effectLabelReverse" | "effectLabelExtra" | "effectLabelColor";
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
-// Per-rank ability metadata. `text` (e.g. "+1") is shown verbatim; `labelKey`
-// is translated. Both can coexist but in practice each rank uses one.
-// `highlight` bumps the +3-style emphasis (used for +3 and +4) so the
-// highest-impact draws read as the most dangerous on the table.
 type EffectInfo = {
   icon: IoniconName;
   text?: string;
@@ -48,20 +44,14 @@ type EffectInfo = {
 
 function getEffectInfo(rank: Card["rank"]): EffectInfo | null {
   switch (rank) {
-    // Draw stack: +N text + Ionicon. +1/+2 use a plain "add" sign; +3/+4 use
-    // "flash" to mark the heavy-hit cards (matches the task example
-    // `[flash] +3`). Colors retain the previous identity palette.
-    case "A":     return { icon: "add",       text: "+1", bg: "#D97706", border: "#FCD34D" };
-    case "2":     return { icon: "add",       text: "+2", bg: "#DC2626", border: "#FCA5A5" };
-    case "3":     return { icon: "flash",     text: "+3", bg: "#EA580C", border: "#FDBA74", highlight: true };
-    case "Joker": return { icon: "flash",     text: "+4", bg: "#7C3AED", border: "#C084FC", highlight: true };
-    // Action cards: Ionicon + short label. Spanish maps to:
-    //   J → "Bloqueo" (ban), Q → "Reversa" (sync), K → "Otra" (refresh),
-    //   8 → "Color" (color-palette).
-    case "J":     return { icon: "ban",                   labelKey: "effectLabelSkip",    bg: "#F59E0B", border: "#FDE68A" };
-    case "Q":     return { icon: "sync",                  labelKey: "effectLabelReverse", bg: "#2563EB", border: "#93C5FD" };
-    case "K":     return { icon: "refresh",               labelKey: "effectLabelExtra",   bg: "#16A34A", border: "#86EFAC" };
-    case "8":     return { icon: "color-palette",         labelKey: "effectLabelColor",   bg: "#D4AF37", border: "#FDE68A" };
+    case "A":     return { icon: "add",           text: "+1", bg: "#D97706", border: "#FCD34D" };
+    case "2":     return { icon: "add",           text: "+2", bg: "#DC2626", border: "#FCA5A5" };
+    case "3":     return { icon: "flash",         text: "+3", bg: "#EA580C", border: "#FDBA74", highlight: true };
+    case "Joker": return { icon: "flash",         text: "+4", bg: "#7C3AED", border: "#C084FC", highlight: true };
+    case "J":     return { icon: "ban",           labelKey: "effectLabelSkip",    bg: "#F59E0B", border: "#FDE68A" };
+    case "Q":     return { icon: "sync",          labelKey: "effectLabelReverse", bg: "#2563EB", border: "#93C5FD" };
+    case "K":     return { icon: "refresh",       labelKey: "effectLabelExtra",   bg: "#16A34A", border: "#86EFAC" };
+    case "8":     return { icon: "color-palette", labelKey: "effectLabelColor",   bg: "#D4AF37", border: "#FDE68A" };
     default: return null;
   }
 }
@@ -75,73 +65,45 @@ const _labelKeyCheck: Record<EffectLabelKey, TranslationKey> = {
 };
 void _labelKeyCheck;
 
-// Task #126 — Card ability bar redesign.
-//   - "mini"  → icon-only, small chip in the top-right corner. Used for the
-//               rival's hand (size="sm") where the bar would be unreadable.
-//   - "full"  → bottom bar across the card with `[Ionicon] [SHORT TEXT]`.
-//               Tall (~22% of card height for `md`), opaque background, white
-//               Nunito_800ExtraBold uppercase text. Always shows BOTH icon
-//               and text — even draw cards (+1/+2/+3/+4) — so every ability
-//               reads with the same clear structure.
-//   - "lg" full → same shape as "full" but a touch larger to match the
-//               selection-zoom card. Driven by the `cardHeight` param so
-//               sizing scales with the card without forcing per-size styles.
-function EffectBadge({
-  rank,
-  variant,
-  cardHeight,
-}: {
-  rank: Card["rank"];
-  variant: "mini" | "full";
-  cardHeight: number;
-}) {
+// Unified [Ionicon] + [SHORT TEXT] bottom bar for every ability card.
+// Geometry scales from cardHeight so the same component works on the
+// rival's small cards, the player's hand, and the selection-zoom card.
+function EffectBadge({ rank, cardHeight }: { rank: Card["rank"]; cardHeight: number }) {
   const tr = useT();
   const info = getEffectInfo(rank);
   if (!info) return null;
 
-  if (variant === "mini") {
-    const size = 16;
-    return (
-      <View style={[badgeStyles.miniWrap, {
-        backgroundColor: info.bg, borderColor: info.border,
-        minWidth: size, height: size, borderRadius: size / 2,
-      }]} pointerEvents="none">
-        <Ionicons name={info.icon} size={9} color="#FFFFFF" />
-      </View>
-    );
-  }
-
-  // Bar geometry scales with the card so it stays legible on every size
-  // (md hand cards, lg selection-zoom, lg discard pile). Min/max keep
-  // extremes from collapsing or ballooning.
-  const barH = Math.max(18, Math.min(28, Math.round(cardHeight * 0.22)));
-  const iconSize = Math.max(10, Math.round(barH * 0.6));
-  const textSize = Math.max(9, Math.round(barH * 0.46));
+  const compact = cardHeight < 80;
+  const barH = compact
+    ? Math.max(13, Math.round(cardHeight * 0.22))
+    : Math.max(20, Math.min(28, Math.round(cardHeight * 0.22)));
+  const iconSize = Math.max(8, Math.round(barH * 0.65));
+  const textSize = Math.max(8, Math.round(barH * 0.5));
   const label = info.labelKey ? tr(info.labelKey) : null;
   const display = info.text ?? label ?? "";
 
   return (
-    <View style={[badgeStyles.fullWrap, {
+    <View style={[badgeStyles.barWrap, {
       backgroundColor: info.bg,
       borderColor: info.border,
-      borderBottomLeftRadius: 7,
-      borderBottomRightRadius: 7,
-      // +3/+4 get a slightly thicker accent border to read as the heaviest hits.
+      borderBottomLeftRadius: compact ? 5 : 7,
+      borderBottomRightRadius: compact ? 5 : 7,
       borderWidth: info.highlight ? 1.5 : 1,
       height: barH,
-      paddingHorizontal: Math.max(4, Math.round(barH * 0.25)),
-      gap: Math.max(3, Math.round(barH * 0.2)),
+      paddingHorizontal: Math.max(3, Math.round(barH * 0.22)),
+      gap: Math.max(2, Math.round(barH * 0.2)),
     }]} pointerEvents="none">
       <Ionicons name={info.icon} size={iconSize} color="#FFFFFF" />
       {display ? (
         <Text
-          style={[badgeStyles.fullLabel, {
+          style={[badgeStyles.barLabel, {
             fontSize: textSize,
             lineHeight: textSize + 2,
+            letterSpacing: compact ? 0.2 : 0.4,
           }]}
           numberOfLines={1}
           adjustsFontSizeToFit
-          minimumFontScale={0.75}
+          minimumFontScale={0.6}
         >
           {display}
         </Text>
@@ -151,28 +113,16 @@ function EffectBadge({
 }
 
 const badgeStyles = StyleSheet.create({
-  miniWrap: {
-    position: "absolute",
-    top: 2, right: 2,
-    alignItems: "center", justifyContent: "center",
-    borderWidth: 1, paddingHorizontal: 2,
-    shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 2, shadowOffset: { width: 0, height: 1 },
-    elevation: 3, zIndex: 10,
-  },
-  // Full bar — no transparency on the background color (opaque) so it reads
-  // clearly against busy card faces, and bottom corners square with the
-  // card's own corner radius.
-  fullWrap: {
+  barWrap: {
     position: "absolute",
     bottom: 0, left: 0, right: 0,
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     shadowColor: "#000", shadowOpacity: 0.55, shadowRadius: 3, shadowOffset: { width: 0, height: -1 },
     elevation: 5, zIndex: 10,
   },
-  fullLabel: {
+  barLabel: {
     fontFamily: "Nunito_800ExtraBold",
     color: "#FFFFFF",
-    letterSpacing: 0.4,
     textTransform: "uppercase",
     textShadowColor: "rgba(0,0,0,0.45)",
     textShadowRadius: 2,
@@ -197,7 +147,7 @@ function hexLuminance(hex: string): number {
   return 0.299 * r + 0.587 * g + 0.114 * b;
 }
 
-function CardFront({ card, sobj, cardColors, showBadge, badgeVariant }: { card: Card; sobj: typeof SIZES.md; cardColors?: [string, string, string]; showBadge: boolean; badgeVariant: "mini" | "full" }) {
+function CardFront({ card, sobj, cardColors, showBadge }: { card: Card; sobj: typeof SIZES.md; cardColors?: [string, string, string]; showBadge: boolean }) {
   const isJoker = card.rank === "Joker";
   const isEight = card.rank === "8";
   const isFace = ["J", "Q", "K"].includes(card.rank);
@@ -240,7 +190,7 @@ function CardFront({ card, sobj, cardColors, showBadge, badgeVariant }: { card: 
           <Text style={[styles.rankTxt, { fontSize: sobj.rs, color: customSuitColor ?? "#A855F7", transform: [{ rotate: "180deg" }] }]}>★</Text>
         </View>
         <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: (customSuitColor ?? "#A855F7") + "44" }]} />
-        {showBadge && <EffectBadge rank={card.rank} variant={badgeVariant} cardHeight={sobj.h} />}
+        {showBadge && <EffectBadge rank={card.rank} cardHeight={sobj.h} />}
       </LinearGradient>
     );
   }
@@ -318,7 +268,7 @@ function CardFront({ card, sobj, cardColors, showBadge, badgeVariant }: { card: 
       {(isEight || isFace) && (
         <View style={[styles.innerFrame, { borderRadius: sobj.corner - 2, borderColor: color + "18" }]} />
       )}
-      {showBadge && <EffectBadge rank={card.rank} variant={badgeVariant} cardHeight={sobj.h} />}
+      {showBadge && <EffectBadge rank={card.rank} cardHeight={sobj.h} />}
     </LinearGradient>
   );
 }
@@ -408,7 +358,6 @@ export function PlayingCard({
   showEffectBadge = true,
 }: PlayingCardProps) {
   const sobj = SIZES[sizeKey];
-  const badgeVariant: "mini" | "full" = sizeKey === "sm" ? "mini" : "full";
   const ty = useSharedValue(0);
   const sc = useSharedValue(1);
   const glowOp = useSharedValue(0);
@@ -508,7 +457,7 @@ export function PlayingCard({
       <View style={[styles.cardWrap, { width: sobj.w, height: sobj.h, borderRadius: sobj.corner, ...shadowEl }]}>
         {faceDown
           ? <CardBack sobj={sobj} backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
-          : <CardFront card={card} sobj={sobj} cardColors={cardColors} showBadge={showEffectBadge} badgeVariant={badgeVariant} />
+          : <CardFront card={card} sobj={sobj} cardColors={cardColors} showBadge={showEffectBadge} />
         }
         {/* Top-edge highlight for premium glossy feel */}
         <LinearGradient
