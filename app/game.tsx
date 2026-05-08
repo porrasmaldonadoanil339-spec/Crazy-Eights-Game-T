@@ -2096,11 +2096,39 @@ export default function GameScreen() {
       // tier-appropriate fichas + bonus coins. Fire-and-forget so a storage
       // hiccup never blocks the standard win-reward flow below.
       if (consumeFichasRunActive()) {
+        // Reto de Fichas — V1/V2/V3 progression. Each tier grants its
+        // fichas + bonus coins, and V3 (legendary) drops a premium chest
+        // (chest type taken from the tier's `chest` field, currently
+        // "legendary").
         recordFichasWin().then(({ tierJustCleared }) => {
-          if (tierJustCleared) {
-            addCoins(tierJustCleared.fichasReward + tierJustCleared.bonusCoins);
+          if (!tierJustCleared) return;
+          addCoins(tierJustCleared.fichasReward + tierJustCleared.bonusCoins);
+          if (tierJustCleared.chest) {
+            const result = addChestToInventory(tierJustCleared.chest as ChestType, "win");
+            if (result.added) {
+              setPendingChestType(tierJustCleared.chest as ChestType);
+              setShowChestReward(true);
+            }
           }
         }).catch(() => {});
+      }
+
+      // Tournament round-by-round escalation: R1 small, R2 medium, R3
+      // chunky, plus a streak bonus when the player takes 2-in-a-row or
+      // sweeps. Stacks on top of the standard recordGameResult payout.
+      if (session.mode === "tournament") {
+        const r = tournamentRound; // current round (pre-increment)
+        const escalateCoins = r >= 3 ? 200 : r === 2 ? 100 : 50;
+        const escalateXp = r >= 3 ? 75 : r === 2 ? 40 : 20;
+        addCoins(escalateCoins);
+        addXp(escalateXp);
+        const consecutiveWins = lastTournamentRoundWon === true ? tournamentScores[0] + 1 : 1;
+        if (consecutiveWins >= 2) addCoins(75); // win-streak bonus
+        // Sweep bonus: winning the final round AND being already 2-0.
+        if (r >= 3 && tournamentScores[0] >= 2) {
+          addCoins(300);
+          addChestToInventory("legendary", "win");
+        }
       }
       updateAchievementProgress("first_win", 1);
       updateAchievementProgress("win_5", 1);
