@@ -36,7 +36,7 @@ import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge 
 import { getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
-import { stopMusic, startGameMusicForMode, startMenuMusic, syncSettings, playWin, playLose, playChestOpen, setForceAmbience } from "@/lib/audioManager";
+import { stopMusic, startGameMusicForMode, startMenuMusic, syncSettings, playVictory, playDefeat, playChestOpen, setForceAmbience } from "@/lib/audioManager";
 import { scheduleReEngagementNotification } from "@/lib/notifications";
 import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
@@ -1070,13 +1070,14 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
     titleOp.value = withDelay(200, withTiming(1, { duration: 400 }));
     stopMusic().catch(() => {});
     if (isWin) {
-      playWin().catch(() => {});
-      // Personality SFX: victory fanfare + crowd applause stacked on win
-      setTimeout(() => playSound("victory_fanfare").catch(() => {}), 200);
+      // Task #124 — single end-of-match victory cue (chime + fanfare combo)
+      // followed by the crowd applause personality layer.
+      playVictory().catch(() => {});
       setTimeout(() => playSound("applause").catch(() => {}), 700);
     } else {
-      playLose().catch(() => {});
-      // Personality SFX: a tongue-in-cheek boo on loss to soften the sting
+      // Task #124 — dedicated defeat cue, then a tongue-in-cheek boo to
+      // soften the sting.
+      playDefeat().catch(() => {});
       setTimeout(() => playSound("boo").catch(() => {}), 250);
     }
   }, []);

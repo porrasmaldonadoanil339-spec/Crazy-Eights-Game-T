@@ -24,7 +24,7 @@ import {
 } from "@/lib/multiplayerEngine";
 import { useProfile } from "@/context/ProfileContext";
 import {
-  playCardFlip, playCardDraw, playButton, playWin, playLose, playChestOpen, playOchoLocosVoice,
+  playCardFlip, playCardDraw, playButton, playVictory, playDefeat, playChestOpen, playOchoLocosVoice,
   playSpeedTick, stopMusic, startGameMusicForMode, syncSettings
 } from "@/lib/audioManager";
 import { CardPlayEffect } from "@/components/CardPlayEffect";
@@ -1001,8 +1001,9 @@ export default function OnlineGameScreen() {
           stopMusic().catch(() => {});
           // Player index 0 is always "me" after rotation in buildLocalState.
           const iWon = local.winnerIndex === 0;
-          if (iWon) playWin().catch(() => {});
-          else playLose().catch(() => {});
+          // Task #124 — end-of-match result cues shared with offline modes.
+          if (iWon) playVictory().catch(() => {});
+          else playDefeat().catch(() => {});
         }
       } catch {
       }
@@ -2066,7 +2067,7 @@ export default function OnlineGameScreen() {
       {rivalAbandoned && (
         <RivalAbandonedOverlay
           rivalName={currentCpuProfiles[0]?.name ?? "Rival"}
-          onClaim={() => { playWin().catch(() => {}); router.back(); }}
+          onClaim={() => { playVictory().catch(() => {}); router.back(); }}
           onPlayAgain={handlePlayAgain}
         />
       )}

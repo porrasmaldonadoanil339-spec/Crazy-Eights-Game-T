@@ -22,7 +22,7 @@ import {
   suitName, suitSymbol, suitColor, multiGetTopCard,
 } from "@/lib/multiplayerEngine";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc } from "@/lib/eventModes";
-import { playCardFlip, playCardDraw, playButton, playSpeedTick, stopMusic, startGameMusicForMode } from "@/lib/audioManager";
+import { playCardFlip, playCardDraw, playButton, playSpeedTick, stopMusic, startGameMusicForMode, playVictory } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS, getCardDesignById } from "@/lib/storeItems";
 import { DealAnimation } from "@/components/DealAnimation";
@@ -258,8 +258,13 @@ export default function MultiGameScreen() {
   useEffect(() => {
     if (gameState.phase === "game_over") {
       stopMusic().catch(() => {});
+      // Task #124 — pass-and-play is local, so the device owner is always at
+      // the table when a winner is declared; play the victory cue.
+      if (gameState.winnerIndex !== null) {
+        playVictory().catch(() => {});
+      }
     }
-  }, [gameState.phase]);
+  }, [gameState.phase, gameState.winnerIndex]);
 
   // Coop / pass-and-play uses the warm "game" track per the per-mode music
   // routing in lib/audioManager.ts. Started on match begin so this screen

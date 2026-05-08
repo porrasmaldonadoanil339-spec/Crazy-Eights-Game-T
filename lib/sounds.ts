@@ -50,6 +50,8 @@ export type SoundEvent =
   | "boo"
   | "cackle"
   | "victory_fanfare"
+  | "victory"
+  | "defeat"
   // Task #83 — unique opening sound per chest rarity.
   | "chest_open_common"
   | "chest_open_rare"
@@ -102,8 +104,12 @@ import {
   playBoo,
   playCackle,
   playVictoryFanfare,
+  playVictory,
+  playDefeat,
   playChestOpen,
 } from "@/lib/audioManager";
+
+export { playVictory, playDefeat } from "@/lib/audioManager";
 
 export async function playSound(event: SoundEvent) {
   switch (event) {
@@ -158,6 +164,8 @@ export async function playSound(event: SoundEvent) {
     case "boo":                return playBoo();
     case "cackle":             return playCackle();
     case "victory_fanfare":    return playVictoryFanfare();
+    case "victory":            return playVictory();
+    case "defeat":             return playDefeat();
     case "chest_open_common":    return playChestOpen("common");
     case "chest_open_rare":      return playChestOpen("rare");
     case "chest_open_magic":     return playChestOpen("magic");
