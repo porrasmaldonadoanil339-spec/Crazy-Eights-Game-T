@@ -1996,12 +1996,12 @@ export default function OnlineGameScreen() {
 
         {/* CPU emote bubble — top center */}
         <View style={{ position: "absolute", top: tableCenterY - 110, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
-          <EmoteBubble emote={cpuEmote} side="cpu" muted={muteCpuEmotes} lang={profile.language as any} />
+          <EmoteBubble emote={cpuEmote} side="cpu" muted={muteCpuEmotes} lang={profile.language ?? "es"} />
         </View>
 
         {/* Player emote bubble — above hand */}
         <View style={{ position: "absolute", bottom: 185, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
-          <EmoteBubble emote={playerEmote} side="player" lang={profile.language as any} />
+          <EmoteBubble emote={playerEmote} side="player" lang={profile.language ?? "es"} />
         </View>
 
         {/* Emote panel button — bottom right */}

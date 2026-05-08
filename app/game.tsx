@@ -2658,7 +2658,7 @@ export default function GameScreen() {
       {/* AI section with CPU emote */}
       <View style={styles.aiSectionWrapper}>
         <AiHand count={gameState.aiHand.length} isThinking={isAiThinkingVis} cpuProfile={activeCpu} backColors={backColors} backAccent={backAccent} cardColors={cardColors} />
-        <EmoteBubble emote={cpuEmote} side="cpu" muted={muteCpuEmotes} lang={(profile.language ?? "es") as any} />
+        <EmoteBubble emote={cpuEmote} side="cpu" muted={muteCpuEmotes} lang={profile.language ?? "es"} />
         {cpuChatter && !muteCpuEmotes && (
           <Animated.View entering={FadeIn.duration(220)} exiting={FadeOut.duration(280)} style={styles.cpuChatterBubble}>
             <Text style={styles.cpuChatterText} numberOfLines={2}>{cpuChatter}</Text>
@@ -2836,7 +2836,7 @@ export default function GameScreen() {
           </View>
         )}
         {/* Player emote bubble */}
-        <EmoteBubble emote={playerEmote} side="player" lang={(profile.language ?? "es") as any} />
+        <EmoteBubble emote={playerEmote} side="player" lang={profile.language ?? "es"} />
 
         {/* Arc fan hand — unified scroll system (matches ranked mode) */}
         {dealAnimationDone && (() => {

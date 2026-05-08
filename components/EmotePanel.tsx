@@ -28,8 +28,14 @@ export const EMOTES: Emote[] = [
 interface EmoteBubbleProps {
   emote: Emote | null;
   side: "player" | "cpu";
-  lang?: "es" | "en" | "pt";
+  lang?: string;
   muted?: boolean;
+}
+
+type EmoteLabelLang = "es" | "en" | "pt";
+function normalizeEmoteLang(lang: string | undefined): EmoteLabelLang {
+  if (lang === "en" || lang === "pt") return lang;
+  return "es";
 }
 
 const EMOTE_LABELS: Record<string, Record<"es" | "en" | "pt", string>> = {
@@ -91,7 +97,7 @@ export function EmoteBubble({ emote, side, lang = "es", muted = false }: EmoteBu
   if (!emote || muted) return null;
 
   const rotate = iconRot.interpolate({ inputRange: [-1, 1], outputRange: ["-12deg", "12deg"] });
-  const label = EMOTE_LABELS[emote.id]?.[lang] ?? "";
+  const label = EMOTE_LABELS[emote.id]?.[normalizeEmoteLang(lang)] ?? "";
 
   return (
     <Animated.View
