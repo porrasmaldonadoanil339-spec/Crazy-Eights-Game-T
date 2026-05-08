@@ -909,11 +909,13 @@ export default function MultiGameScreen() {
           looks identical to every other mode. Sits above the table UI and
           dismisses itself once the player's first hand has been revealed. */}
       {gameStarted && !dealAnimationDone && gameState.phase !== "game_over" && (
-        <View style={[StyleSheet.absoluteFillObject, { zIndex: 800 }]} pointerEvents="auto">
-          <LinearGradient
-            colors={["#051209", "#081a0d", "#0a1f10", "#081a0d", "#051209"]}
-            style={StyleSheet.absoluteFill}
-          />
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "#051209", zIndex: 800 }]} pointerEvents="auto">
+          {/* DealAnimation is rendered without any extra chrome so it
+              presents identically to Clasificatoria / Online (game-online.tsx
+              uses the same plain solid background). DealAnimation only lays
+              out 1/2/3 opponent placeholders, so for 4P/6P pass-and-play we
+              clamp to the supported max — the rest of the table simply isn't
+              shown during the brief intro overlay. */}
           <DealAnimation
             cardsPerPlayer={gameState.hands[0]?.length ?? 7}
             playerCards={gameState.hands[0] ?? []}
