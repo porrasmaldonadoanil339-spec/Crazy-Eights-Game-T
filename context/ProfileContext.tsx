@@ -1030,7 +1030,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const bpTier = seasonTiers.find((t) => t.tier === tier);
       if (!bpTier) return p;
       // Cannot claim tier you have not reached yet.
-      if ((p.totalXp ?? 0) < bpTier.xpRequired) return p;
+      // Task #123 — entitlement uses per-season XP so a high-totalXP player
+      // cannot insta-claim everything immediately after a season rollover.
+      if (Math.max(0, (p.totalXp ?? 0) - (p.battlePassSeasonXpBase ?? 0)) < bpTier.xpRequired) return p;
 
       if (track === "free") {
         if (p.claimedBattlePassTiers.includes(tier)) return p;
@@ -1135,7 +1137,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       skippedChests = 0;
       // Clash Royale–style: auto-grant every premium reward already reached by current XP
       const tiers = getBattlePassTiers(seasonNum);
-      const reachedPremium = tiers.filter((t) => (p.totalXp ?? 0) >= t.xpRequired);
+      // Task #123 — auto-claim only tiers actually reached this season.
+      const seasonXp = Math.max(0, (p.totalXp ?? 0) - (p.battlePassSeasonXpBase ?? 0));
+      const reachedPremium = tiers.filter((t) => seasonXp >= t.xpRequired);
       const alreadyClaimed = new Set(p.claimedBattlePassPremiumTiers ?? []);
       let next: PlayerProfile = {
         ...p,
