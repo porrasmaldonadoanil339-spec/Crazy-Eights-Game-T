@@ -106,10 +106,12 @@ export const CUSTOM_LOGO_STINGER_MAX_MS = 2000;
 export const CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES = 5 * 1024 * 1024;
 // Task #104 — upper bound on what /profile/stinger/shrink will accept.
 // Sources between SOURCE_MAX_BYTES and this cap can be re-encoded down
-// to mono 64k AAC by the server so they fit under the trim limit. Past
-// this cap we don't even try — the request body would balloon and the
-// shrink itself becomes wasteful.
-export const CUSTOM_LOGO_STINGER_SHRINK_MAX_INPUT_BYTES = 30 * 1024 * 1024;
+// to mono 64k AAC by the server so they fit under the trim limit. The
+// client cap sits a hair under the server's raw byte cap (30 MB) so a
+// borderline file doesn't get rejected by express's JSON parser limit
+// (40 MB) once base64-encoded — base64 inflates by 4/3, so 28 MB raw =
+// ~37.4 MB on the wire, leaving headroom for the JSON envelope.
+export const CUSTOM_LOGO_STINGER_SHRINK_MAX_INPUT_BYTES = 28 * 1024 * 1024;
 
 type MusicTrack = "menu" | "search" | "game";
 

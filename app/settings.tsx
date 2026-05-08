@@ -229,6 +229,10 @@ export default function SettingsScreen() {
   // Task #104 — busy flag while the server-side shrink is running so the
   // button can show a spinner-style label and avoid duplicate taps.
   const [isShrinkingDraft, setIsShrinkingDraft] = useState(false);
+  // Task #104 — epoch counter incremented every time the trim modal opens
+  // (or closes) so an in-flight shrink whose result lands after the
+  // player cancels doesn't re-open the modal with the shrunk clip.
+  const stingerDraftEpochRef = useRef(0);
   const draftPreviewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isPreviewingDraft, setIsPreviewingDraft] = useState(false);
   // Mutable refs so PanResponder callbacks always read the latest values
@@ -447,9 +451,18 @@ export default function SettingsScreen() {
     teardownDraftPreview();
     setIsShrinkingDraft(true);
     const draft = stingerDraft;
+    // Task #104 — capture the current epoch so a slow shrink whose result
+    // lands after the player cancels (or closes) the modal can drop its
+    // result on the floor instead of re-opening the modal or stomping on
+    // a different draft.
+    const epoch = stingerDraftEpochRef.current;
     (async () => {
       try {
         const result = await shrinkCustomStingerToFile(draft.srcUri, draft.ext);
+        if (epoch !== stingerDraftEpochRef.current) {
+          if (result.ok) cleanupOldCustomClip(result.uri);
+          return;
+        }
         if (!result.ok) {
           Alert.alert(stingerTitle(), shrinkErrorMessage(result.reason));
           return;
@@ -458,7 +471,12 @@ export default function SettingsScreen() {
         // but the player's previously-set start/end markers are clamped
         // against the new value defensively in case re-encoding rounded.
         const newDuration = await measureClipDurationMs(result.uri);
+        if (epoch !== stingerDraftEpochRef.current) {
+          cleanupOldCustomClip(result.uri);
+          return;
+        }
         if (!newDuration) {
+          cleanupOldCustomClip(result.uri);
           Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
           return;
         }
@@ -473,7 +491,7 @@ export default function SettingsScreen() {
         setDraftStartMs(0);
         setDraftEndMs(initialEnd);
       } finally {
-        setIsShrinkingDraft(false);
+        if (epoch === stingerDraftEpochRef.current) setIsShrinkingDraft(false);
       }
     })();
   };
@@ -528,6 +546,10 @@ export default function SettingsScreen() {
 
   const cancelStingerTrim = () => {
     teardownDraftPreview();
+    // Task #104 — bump the epoch so any in-flight shrink that resolves
+    // after this point sees a stale token and bails before touching state.
+    stingerDraftEpochRef.current += 1;
+    setIsShrinkingDraft(false);
     setStingerDraft(null);
   };
 
