@@ -41,24 +41,19 @@ export function getActiveEvent(level: number): OchoEvent | null {
 }
 
 function getEventStatus(level: number) {
+  // Single source of truth: weekly rotation from lib/events.ts. The local
+  // ALL_EVENTS array stays only as UI metadata (color/icon/chest tier),
+  // looked up by id from the active weekly slot to avoid scheduler drift.
+  const { getCurrentWeeklyEvent, getNextWeeklyEvent } = require("@/lib/events");
+  const slot = getCurrentWeeklyEvent();
+  const nextCfg = getNextWeeklyEvent();
+  const event = ALL_EVENTS.find(e => e.id === slot.event.id) ?? ALL_EVENTS[0];
+  const nextEvent = ALL_EVENTS.find(e => e.id === nextCfg.id) ?? ALL_EVENTS[1];
+  type Status = "live" | "level_locked" | "locked_cycle";
   if (level < 5) {
-    return { event: ALL_EVENTS[0], nextEvent: ALL_EVENTS[1], status: "level_locked" as const, hoursLeft: 0, nextInHours: 0 };
+    return { event, nextEvent, status: "level_locked" as Status, hoursLeft: 0, nextInHours: 0 };
   }
-  const BASE = new Date("2026-03-01T00:00:00Z").getTime();
-  const now = Date.now();
-  const CYCLE = 3 * 24 * 3600 * 1000;
-  const elapsed = now - BASE;
-  const cycleIndex = Math.floor(elapsed / CYCLE);
-  const eventIdx = cycleIndex % ALL_EVENTS.length;
-  const event = ALL_EVENTS[eventIdx];
-  const nextEvent = ALL_EVENTS[(eventIdx + 1) % ALL_EVENTS.length];
-  const cyclePosMs = elapsed % CYCLE;
-  const eventDurMs = event.durationDays * 24 * 3600 * 1000;
-  const isLive = cyclePosMs < eventDurMs;
-  const hoursLeft = isLive ? Math.ceil((eventDurMs - cyclePosMs) / 3600000) : 0;
-  const nextInHours = isLive ? 0 : Math.ceil((CYCLE - cyclePosMs) / 3600000);
-  // After event ends → "locked_cycle" until the next event activates (re-locks then re-unlocks)
-  return { event, nextEvent, status: (isLive ? "live" : "locked_cycle") as "live" | "locked_cycle", hoursLeft, nextInHours };
+  return { event, nextEvent, status: "live" as Status, hoursLeft: slot.hoursLeft, nextInHours: 0 };
 }
 
 interface EventsCardProps {

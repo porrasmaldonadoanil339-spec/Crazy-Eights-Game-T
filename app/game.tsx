@@ -2132,13 +2132,16 @@ export default function GameScreen() {
         const r = tournamentRound; // current round (pre-increment)
         const escalateCoins = r >= 3 ? 200 : r === 2 ? 100 : 50;
         const escalateXp = r >= 3 ? 75 : r === 2 ? 40 : 20;
+        const escalateFichas = r >= 3 ? 30 : r === 2 ? 15 : 5;
         addCoins(escalateCoins);
         addXp(escalateXp);
+        addFichas(escalateFichas);
         const consecutiveWins = lastTournamentRoundWon === true ? tournamentScores[0] + 1 : 1;
         if (consecutiveWins >= 2) addCoins(75); // win-streak bonus
         // Sweep bonus: winning the final round AND being already 2-0.
         if (r >= 3 && tournamentScores[0] >= 2) {
           addCoins(300);
+          addFichas(75);
           addChestToInventory("legendary", "win");
         }
       }
