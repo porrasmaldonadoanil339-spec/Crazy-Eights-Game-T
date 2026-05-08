@@ -566,7 +566,7 @@ export default function AchievementsScreen() {
               </View>
               <View style={{ width: 36 }} />
               <View style={[styles.bpColTag, { backgroundColor: themeGold + "22", borderColor: themeGold + "55" }]}>
-                <Ionicons name="diamond" size={11} color={themeGold} />
+                <ChipIcon size={11} color={themeGold} />
                 <Text style={[styles.bpTrackTagText, { color: themeGold }]}>PREMIUM</Text>
               </View>
             </View>
