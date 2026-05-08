@@ -55,25 +55,34 @@ function base64ToBytes(b64: string): Uint8Array {
   return bytes;
 }
 
+// Task #105 — build a multipart payload that points React Native's fetch at
+// the source file's uri so the bytes stream from disk to the network without
+// ever being read into JS memory. RN's FormData accepts the
+// `{ uri, name, type } as any` shape; this is the documented (if untyped)
+// pattern for streaming local files. We DO NOT set Content-Type ourselves
+// — fetch derives the multipart boundary string from FormData.
+function buildStingerFormData(srcUri: string, ext: string, extra?: Record<string, string | number>): FormData {
+  const fd = new FormData();
+  const safeExt = ext.replace(/[^a-z0-9]/gi, "").toLowerCase() || "bin";
+  fd.append("file", { uri: srcUri, name: `clip.${safeExt}`, type: `audio/${safeExt}` } as unknown as Blob);
+  if (extra) {
+    for (const [k, v] of Object.entries(extra)) fd.append(k, String(v));
+  }
+  return fd;
+}
+
 export async function trimCustomStingerToFile(
   srcUri: string,
   ext: string,
   startMs: number,
   endMs: number,
 ): Promise<{ uri: string; durationMs: number; ext: string } | null> {
-  let base64: string;
-  try {
-    base64 = await new File(srcUri).base64();
-  } catch {
-    return null;
-  }
   let trimmed: { ext: string; durationMs: number; data: string };
   try {
     const url = new URL("/api/auth/profile/stinger/trim", getApiUrl()).toString();
     const resp = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: base64, ext, startMs, endMs }),
+      body: buildStingerFormData(srcUri, ext, { startMs, endMs }),
     });
     if (!resp.ok) return null;
     const json = await resp.json() as { ok?: boolean; ext?: string; durationMs?: number; data?: string };
@@ -120,19 +129,15 @@ export async function shrinkCustomStingerToFile(
   srcUri: string,
   ext: string,
 ): Promise<ShrinkStingerResult> {
-  let base64: string;
-  try {
-    base64 = await new File(srcUri).base64();
-  } catch {
-    return { ok: false, reason: "transient" };
-  }
+  // Task #105 — stream the source bytes via multipart instead of base64
+  // JSON so a 25-30 MB recording doesn't have to be loaded into JS memory
+  // before being sent. fetch + RN's FormData reads from `srcUri` directly.
   let resp: Response;
   try {
     const url = new URL("/api/auth/profile/stinger/shrink", getApiUrl()).toString();
     resp = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: base64, ext }),
+      body: buildStingerFormData(srcUri, ext),
     });
   } catch {
     return { ok: false, reason: "transient" };

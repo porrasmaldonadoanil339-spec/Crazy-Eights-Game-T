@@ -1,4 +1,6 @@
 import express, { Router } from "express";
+import type { Request, Response, NextFunction } from "express";
+import multer from "multer";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -767,47 +769,114 @@ function runFfmpegTrim(srcPath: string, dstPath: string, startSec: number, durat
   });
 }
 
+// ─── Multer pipeline shared by /trim and /shrink (Task #105) ──────────────
+// Both endpoints used to take the audio as a base64 JSON field, which forced
+// the client to read the whole clip into memory and the server to parse a
+// 1.3x-inflated JSON body. Switching to multipart/form-data lets multer
+// stream the bytes straight to a temp file on disk, capping memory usage
+// regardless of input size, and lets us raise the shrink input cap without
+// blowing the JSON parser.
+//
+// Two upload instances so each endpoint can enforce its own fileSize cap
+// (trim: STINGER_MAX_BYTES = 5 MB; shrink: 30 MB). Disk storage drops the
+// uploaded file under os.tmpdir() with a sanitized extension matching the
+// client's hint; we look it up via STINGER_ALLOWED_EXT before letting it
+// reach ffmpeg.
+function pickStingerExt(file: Express.Multer.File): string {
+  const fromName = (file.originalname.split(".").pop() || "").toLowerCase();
+  if (STINGER_ALLOWED_EXT.has(fromName)) return fromName;
+  // Fall back to mimetype (e.g. "audio/mp4" -> "mp4") so the OS picker on
+  // Android — which sometimes hands us a synthesized name like "audio" —
+  // still routes through ffmpeg with a sensible container guess.
+  const fromMime = (file.mimetype.split("/")[1] || "").toLowerCase();
+  if (STINGER_ALLOWED_EXT.has(fromMime)) return fromMime;
+  return "";
+}
+
+function makeStingerUpload(maxBytes: number) {
+  return multer({
+    storage: multer.diskStorage({
+      destination: (_req, _file, cb) => cb(null, os.tmpdir()),
+      filename: (_req, file, cb) => {
+        const tmpId = crypto.randomBytes(8).toString("hex");
+        const safeExt = pickStingerExt(file) || "bin";
+        cb(null, `stinger-up-${tmpId}.${safeExt}`);
+      },
+    }),
+    limits: { fileSize: maxBytes, files: 1, fields: 8 },
+    fileFilter: (_req, file, cb) => {
+      if (!pickStingerExt(file)) {
+        cb(new Error("unsupported audio format"));
+        return;
+      }
+      cb(null, true);
+    },
+  });
+}
+
+const stingerTrimUpload = makeStingerUpload(STINGER_MAX_BYTES);
+const stingerShrinkUpload = makeStingerUpload(30 * 1024 * 1024);
+
+// Express middleware that shares the per-IP rate limit across the trim and
+// shrink endpoints. Runs before multer so rate-limited callers don't even
+// upload their bytes.
+function stingerRateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
+  const ip = (req.ip || req.socket.remoteAddress || "unknown").toString();
+  const rate = checkStingerTrimRateLimit(ip);
+  if (!rate.ok) {
+    res.setHeader("Retry-After", String(rate.retryAfterSec));
+    res.status(429).json({ error: "too many requests", retryAfterSec: rate.retryAfterSec });
+    return;
+  }
+  next();
+}
+
+// Translate multer errors (file too large, unsupported ext, etc.) into the
+// same JSON shape the rest of the route uses, instead of leaking them up to
+// the global error handler as a generic 500.
+function handleStingerUploadError(err: unknown, _req: Request, res: Response, next: NextFunction) {
+  if (!err) return next();
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(413).json({ error: "audio file too large" });
+    }
+    return res.status(400).json({ error: `upload failed: ${err.code}` });
+  }
+  if (err instanceof Error && err.message === "unsupported audio format") {
+    return res.status(400).json({ error: "unsupported audio format" });
+  }
+  return next(err);
+}
+
 router.post(
   "/profile/stinger/trim",
-  express.json({ limit: "8mb" }),
+  stingerRateLimitMiddleware,
+  (req, res, next) => stingerTrimUpload.single("file")(req, res, (err) => handleStingerUploadError(err, req, res, next)),
   async (req, res) => {
-    const ip = (req.ip || req.socket.remoteAddress || "unknown").toString();
-    const rate = checkStingerTrimRateLimit(ip);
-    if (!rate.ok) {
-      res.setHeader("Retry-After", String(rate.retryAfterSec));
-      return res.status(429).json({ error: "too many trim requests", retryAfterSec: rate.retryAfterSec });
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "file field required" });
+    const startMs = Number(req.body.startMs);
+    const endMs = Number(req.body.endMs);
+    const cleanup = () => { try { fs.unlinkSync(file.path); } catch {} };
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
+      cleanup();
+      return res.status(400).json({ error: "startMs and endMs required" });
     }
-    const { data, ext, startMs, endMs } = req.body as {
-      data?: string; ext?: string; startMs?: number; endMs?: number;
-    };
-    if (!data || !ext || typeof startMs !== "number" || typeof endMs !== "number") {
-      return res.status(400).json({ error: "data, ext, startMs, endMs required" });
-    }
-    const safeExt = ext.replace(/[^a-z0-9]/gi, "").toLowerCase();
-    if (!STINGER_ALLOWED_EXT.has(safeExt)) {
+    const safeExt = pickStingerExt(file);
+    if (!safeExt) {
+      cleanup();
       return res.status(400).json({ error: "unsupported audio format" });
     }
     const start = Math.max(0, Math.floor(startMs));
     const end = Math.max(start + 50, Math.floor(endMs));
     const durationMs = Math.min(end - start, 2000);
-    if (durationMs < 50) return res.status(400).json({ error: "trim window too short" });
-
-    let srcBuf: Buffer;
-    try {
-      srcBuf = Buffer.from(data, "base64");
-    } catch {
-      return res.status(400).json({ error: "invalid base64" });
+    if (durationMs < 50) {
+      cleanup();
+      return res.status(400).json({ error: "trim window too short" });
     }
-    if (srcBuf.byteLength === 0 || srcBuf.byteLength > STINGER_MAX_BYTES) {
-      return res.status(413).json({ error: "audio file too large" });
-    }
-
-    const tmpId = crypto.randomBytes(8).toString("hex");
-    const srcPath = path.join(os.tmpdir(), `stinger-src-${tmpId}.${safeExt}`);
-    const dstPath = path.join(os.tmpdir(), `stinger-trim-${tmpId}.m4a`);
+    const dstPath = path.join(os.tmpdir(), `stinger-trim-${crypto.randomBytes(8).toString("hex")}.m4a`);
     try {
-      fs.writeFileSync(srcPath, srcBuf);
-      await runFfmpegTrim(srcPath, dstPath, start / 1000, durationMs / 1000);
+      await runFfmpegTrim(file.path, dstPath, start / 1000, durationMs / 1000);
       const out = fs.readFileSync(dstPath);
       return res.json({
         ok: true,
@@ -819,21 +888,21 @@ router.post(
       const msg = err instanceof Error ? err.message : String(err);
       return res.status(500).json({ error: "trim failed", detail: msg });
     } finally {
-      try { fs.unlinkSync(srcPath); } catch {}
+      cleanup();
       try { fs.unlinkSync(dstPath); } catch {}
     }
   },
 );
 
-// ─── Custom logo stinger shrink (Task #104) ────────────────────────────────
+// ─── Custom logo stinger shrink (Task #104, multipart-streamed in #105) ──
 // Re-encodes an oversized source clip down to a smaller mono 64k AAC m4a so
 // the trim flow can accept it (the trim endpoint above rejects sources over
 // STINGER_MAX_BYTES = 5 MB). The client uses this when the player picks a
 // long, high-bitrate recording: instead of forcing them to re-record, we
 // shrink it server-side and hand back a smaller m4a they can then trim.
-// Reuses the trim endpoint's per-IP rate limit since both share the same
-// ffmpeg pool. No auth — matches the trim endpoint, so guests benefit too.
-const STINGER_SHRINK_MAX_INPUT_BYTES = 30 * 1024 * 1024;
+// Shares the trim endpoint's per-IP rate limit and multipart upload pipeline
+// so the source bytes stream straight to disk via multer instead of being
+// buffered as base64 JSON. No auth — matches trim, so guests benefit too.
 
 function runFfmpegShrink(srcPath: string, dstPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -866,37 +935,23 @@ function runFfmpegShrink(srcPath: string, dstPath: string): Promise<void> {
 
 router.post(
   "/profile/stinger/shrink",
-  express.json({ limit: "40mb" }),
+  stingerRateLimitMiddleware,
+  (req, res, next) => stingerShrinkUpload.single("file")(req, res, (err) => handleStingerUploadError(err, req, res, next)),
   async (req, res) => {
-    const ip = (req.ip || req.socket.remoteAddress || "unknown").toString();
-    const rate = checkStingerTrimRateLimit(ip);
-    if (!rate.ok) {
-      res.setHeader("Retry-After", String(rate.retryAfterSec));
-      return res.status(429).json({ error: "too many shrink requests", retryAfterSec: rate.retryAfterSec });
-    }
-    const { data, ext } = req.body as { data?: string; ext?: string };
-    if (!data || !ext) {
-      return res.status(400).json({ error: "data and ext required" });
-    }
-    const safeExt = ext.replace(/[^a-z0-9]/gi, "").toLowerCase();
-    if (!STINGER_ALLOWED_EXT.has(safeExt)) {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "file field required" });
+    const cleanup = () => { try { fs.unlinkSync(file.path); } catch {} };
+    if (!pickStingerExt(file)) {
+      cleanup();
       return res.status(400).json({ error: "unsupported audio format" });
     }
-    let srcBuf: Buffer;
-    try {
-      srcBuf = Buffer.from(data, "base64");
-    } catch {
-      return res.status(400).json({ error: "invalid base64" });
+    if (file.size === 0) {
+      cleanup();
+      return res.status(400).json({ error: "empty file" });
     }
-    if (srcBuf.byteLength === 0 || srcBuf.byteLength > STINGER_SHRINK_MAX_INPUT_BYTES) {
-      return res.status(413).json({ error: "audio file too large to shrink" });
-    }
-    const tmpId = crypto.randomBytes(8).toString("hex");
-    const srcPath = path.join(os.tmpdir(), `stinger-shrink-src-${tmpId}.${safeExt}`);
-    const dstPath = path.join(os.tmpdir(), `stinger-shrink-${tmpId}.m4a`);
+    const dstPath = path.join(os.tmpdir(), `stinger-shrink-${crypto.randomBytes(8).toString("hex")}.m4a`);
     try {
-      fs.writeFileSync(srcPath, srcBuf);
-      await runFfmpegShrink(srcPath, dstPath);
+      await runFfmpegShrink(file.path, dstPath);
       const out = fs.readFileSync(dstPath);
       // Defensive: the encoder settings should always produce something
       // under STINGER_MAX_BYTES, but pathologically long sources could
@@ -915,7 +970,7 @@ router.post(
       const msg = err instanceof Error ? err.message : String(err);
       return res.status(500).json({ error: "shrink failed", detail: msg });
     } finally {
-      try { fs.unlinkSync(srcPath); } catch {}
+      cleanup();
       try { fs.unlinkSync(dstPath); } catch {}
     }
   },
