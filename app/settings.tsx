@@ -1454,22 +1454,35 @@ export default function SettingsScreen() {
                       // on the structured server reason. "too_large" and
                       // "bad_request" can't be fixed by retrying the same clip,
                       // so the badge shows the message without the tap target.
-                      let cfg: { icon: "cloud-upload-outline" | "cloud-done-outline" | "cloud-offline-outline"; color: string; label: string; tapRetry: boolean } | null = null;
+                      // Task #100 — `tapAction` distinguishes the generic
+                      // server-side retry (network/storage/etc.) from the
+                      // sign-in prompt shown to guests/expired sessions.
+                      // The latter routes to /login because retrying the
+                      // upload without a fresh token would just fail the
+                      // same way; the auto-retry hook in app/_layout.tsx
+                      // resumes the upload as soon as auth changes.
+                      type BadgeCfg = {
+                        icon: "cloud-upload-outline" | "cloud-done-outline" | "cloud-offline-outline" | "log-in-outline";
+                        color: string;
+                        label: string;
+                        tapAction: "none" | "retry" | "signIn";
+                      };
+                      let cfg: BadgeCfg | null = null;
                       if (status.phase === "uploading") {
-                        cfg = { icon: "cloud-upload-outline", color: "#4FC3F7", label: T("logoStingerBackupSyncing") || "Backing up…", tapRetry: false };
+                        cfg = { icon: "cloud-upload-outline", color: "#4FC3F7", label: T("logoStingerBackupSyncing") || "Backing up…", tapAction: "none" };
                       } else if (status.phase === "synced") {
-                        cfg = { icon: "cloud-done-outline", color: "#27AE60", label: T("logoStingerBackupSynced") || "Synced", tapRetry: false };
+                        cfg = { icon: "cloud-done-outline", color: "#27AE60", label: T("logoStingerBackupSynced") || "Synced", tapAction: "none" };
                       } else if (status.phase === "failed") {
                         if (status.reason === "too_large" || status.reason === "bad_request") {
-                          cfg = { icon: "cloud-offline-outline", color: "#E74C3C", label: T("logoStingerBackupTooLarge") || "Clip is too big to back up", tapRetry: false };
+                          cfg = { icon: "cloud-offline-outline", color: "#E74C3C", label: T("logoStingerBackupTooLarge") || "Clip is too big to back up", tapAction: "none" };
                         } else if (status.reason === "rate_limited") {
-                          cfg = { icon: "cloud-offline-outline", color: "#E67E22", label: T("logoStingerBackupRateLimited") || "Too many backups — try again later", tapRetry: true };
+                          cfg = { icon: "cloud-offline-outline", color: "#E67E22", label: T("logoStingerBackupRateLimited") || "Too many backups — try again later", tapAction: "retry" };
                         } else if (status.reason === "storage_full") {
-                          cfg = { icon: "cloud-offline-outline", color: "#E67E22", label: T("logoStingerBackupStorageFull") || "Cloud backup is full — tap to retry", tapRetry: true };
-                        } else if (status.reason === "unauthorized") {
-                          cfg = { icon: "cloud-offline-outline", color: "#E67E22", label: T("logoStingerBackupSessionExpired") || "Session expired — sign in again", tapRetry: true };
+                          cfg = { icon: "cloud-offline-outline", color: "#E67E22", label: T("logoStingerBackupStorageFull") || "Cloud backup is full — tap to retry", tapAction: "retry" };
+                        } else if (status.reason === "no_auth" || status.reason === "unauthorized") {
+                          cfg = { icon: "log-in-outline", color: "#4FC3F7", label: T("logoStingerBackupSignIn") || "Sign in to back this up to the cloud", tapAction: "signIn" };
                         } else {
-                          cfg = { icon: "cloud-offline-outline", color: "#E74C3C", label: T("logoStingerBackupFailed") || "Backup failed — tap to retry", tapRetry: true };
+                          cfg = { icon: "cloud-offline-outline", color: "#E74C3C", label: T("logoStingerBackupFailed") || "Backup failed — tap to retry", tapAction: "retry" };
                         }
                       }
                       if (!cfg) return null;
@@ -1479,9 +1492,13 @@ export default function SettingsScreen() {
                           <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 11, color: cfg.color }}>{cfg.label}</Text>
                         </View>
                       );
-                      return cfg.tapRetry
-                        ? <TouchableOpacity onPress={retryCustomStingerUpload} accessibilityRole="button">{inner}</TouchableOpacity>
-                        : <View>{inner}</View>;
+                      if (cfg.tapAction === "retry") {
+                        return <TouchableOpacity onPress={retryCustomStingerUpload} accessibilityRole="button">{inner}</TouchableOpacity>;
+                      }
+                      if (cfg.tapAction === "signIn") {
+                        return <TouchableOpacity onPress={() => router.push("/login")} accessibilityRole="button">{inner}</TouchableOpacity>;
+                      }
+                      return <View>{inner}</View>;
                     })()}
                     <View style={{ flexDirection: "row", gap: 8 }}>
                       <TouchableOpacity

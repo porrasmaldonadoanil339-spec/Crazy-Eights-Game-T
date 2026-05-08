@@ -475,6 +475,12 @@ function AudioManager() {
   const segments = useSegments();
   const isFirstRun = useRef(true);
   const { profile, isLoaded, updateSettings } = useProfile();
+  // Task #100 — react to sign-in/out so the silent stinger backup retry
+  // resumes as soon as the player authenticates from /login. Without this
+  // dep, the hook would only re-fire on AppState/NetInfo changes and a
+  // straight-line "sign in -> back to settings" flow would leave the badge
+  // stuck on the sign-in prompt until they backgrounded the app.
+  const { user: authUser } = useAuth();
 
   // Lock to portrait on mount (runtime enforcement in addition to app.json)
   useEffect(() => {
@@ -587,6 +593,15 @@ function AudioManager() {
       stingerPermanentFailureUri.current = "";
     }
   }, [profile.customLogoStingerUri]);
+  // Task #100 — when the auth state flips (guest → signed-in or fresh
+  // login after token expiry), clear the "permanent failure" memo so the
+  // next attempt actually runs. `no_auth` / `unauthorized` are marked
+  // permanent in isPermanentUploadError to avoid hammering the endpoint
+  // every foreground while the player is signed out, but a successful
+  // sign-in is exactly the trigger that makes those reasons retryable.
+  useEffect(() => {
+    stingerPermanentFailureUri.current = "";
+  }, [authUser?.id]);
   useEffect(() => {
     if (!isLoaded) return;
     let cancelled = false;
@@ -624,7 +639,7 @@ function AudioManager() {
       appSub.remove();
       netSub();
     };
-  }, [isLoaded, updateSettings]);
+  }, [isLoaded, updateSettings, authUser?.id]);
 
   // Stop music when app goes to background, resume when it returns to foreground
   useEffect(() => {
