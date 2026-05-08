@@ -15,6 +15,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES, CUSTOM_LOGO_STINGER_SHRINK_MAX_INPUT_BYTES, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
 import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, shrinkCustomStingerToFile, computeStingerWaveform, type UploadStingerErrorReason, type ShrinkStingerErrorReason } from "@/lib/customStingerCache";
+import { getStingerSourceMemo, setStingerSourceMemo, clearStingerSourceMemo, subscribeStingerSourceMemo, type StingerSourceMemo } from "@/lib/customStingerSourceSession";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
@@ -215,6 +216,12 @@ export default function SettingsScreen() {
       return { phase: "failed", reason: "unknown" };
     });
   }, [profile.customLogoStingerUri]);
+  // Task #98 — subscribe to the in-memory source memo so the custom intro
+  // card knows whether a "Re-trim" entry point should be shown. The memo is
+  // populated after a successful Save (and cleared on Remove / app reload).
+  const [stingerSourceMemo, setStingerSourceMemoState] = useState<StingerSourceMemo | null>(() => getStingerSourceMemo());
+  useEffect(() => subscribeStingerSourceMemo(() => setStingerSourceMemoState(getStingerSourceMemo())), []);
+
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   // Task #87 — draft state for the trim modal. After picking/recording a clip
   // we hold the source URI + measured duration here so the player can scrub
@@ -388,8 +395,18 @@ export default function SettingsScreen() {
   // Task #87 — instead of persisting immediately, open the trim modal so the
   // player can pick which 2-second window of the source clip to keep. The
   // modal's Save handler is what actually copies the file + updates profile.
-  const openStingerTrim = async (srcUri: string, ext: string) => {
-    const durationMs = await measureClipDurationMs(srcUri);
+  // Task #98 — `opts` lets the Re-trim entry point pre-populate duration /
+  // size / window from the in-memory source memo so the player can iterate
+  // on the same recording without re-measuring or losing their last picks.
+  const openStingerTrim = async (
+    srcUri: string,
+    ext: string,
+    opts?: { initialStartMs?: number; initialEndMs?: number; durationMs?: number; srcSizeBytes?: number },
+  ) => {
+    let durationMs = opts?.durationMs ?? 0;
+    if (!durationMs) {
+      durationMs = await measureClipDurationMs(srcUri);
+    }
     if (!durationMs) {
       Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
       return;
@@ -398,18 +415,34 @@ export default function SettingsScreen() {
     // can show it and warn when the clip is too big to be trimmed / backed
     // up server-side. Best-effort: 0 means "unknown" and the warning row
     // simply won't render.
-    let srcSizeBytes = 0;
-    try {
-      const f = new File(srcUri);
-      const s = f.size;
-      if (typeof s === "number" && isFinite(s) && s > 0) srcSizeBytes = s;
-    } catch {}
+    let srcSizeBytes = opts?.srcSizeBytes ?? 0;
+    if (!srcSizeBytes) {
+      try {
+        const f = new File(srcUri);
+        const s = f.size;
+        if (typeof s === "number" && isFinite(s) && s > 0) srcSizeBytes = s;
+      } catch {}
+    }
     // Default the trim window to the first 2 seconds of the source (or the
     // full clip if shorter than the cap). The player can then drag handles
-    // to move the window before previewing / saving.
-    const initialEnd = Math.min(durationMs, CUSTOM_LOGO_STINGER_MAX_MS);
+    // to move the window before previewing / saving. Task #98 — Re-trim
+    // restores the player's previously-picked window instead, clamped to
+    // the (re-measured) duration in case the source has shifted slightly.
+    const fallbackEnd = Math.min(durationMs, CUSTOM_LOGO_STINGER_MAX_MS);
+    let initialStart = Math.max(0, Math.min(opts?.initialStartMs ?? 0, durationMs));
+    let initialEnd = Math.max(initialStart + 100, Math.min(opts?.initialEndMs ?? fallbackEnd, durationMs));
+    if (initialEnd - initialStart > CUSTOM_LOGO_STINGER_MAX_MS) {
+      initialEnd = initialStart + CUSTOM_LOGO_STINGER_MAX_MS;
+    }
+    // Defensive clamp for sub-100ms sources: the min-window math above can
+    // push initialEnd past durationMs. Pull it back and slide initialStart
+    // down with it so the saved markers always stay inside the source.
+    if (initialEnd > durationMs) {
+      initialEnd = durationMs;
+      initialStart = Math.max(0, initialEnd - 100);
+    }
     setStingerDraft({ srcUri, ext, durationMs, srcSizeBytes });
-    setDraftStartMs(0);
+    setDraftStartMs(initialStart);
     setDraftEndMs(initialEnd);
     // Task #92 — kick off the real waveform decode in parallel with opening
     // the modal. The modal renders a spinner over the bar row until the
@@ -639,6 +672,24 @@ export default function SettingsScreen() {
         if (previousUri && !/^https?:\/\//i.test(previousUri) && previousUri !== savedUri) {
           cleanupOldCustomClip(previousUri);
         }
+        // Task #98 — remember this session's source clip + the window the
+        // player picked so the custom intro card's "Re-trim" entry point
+        // can re-open the modal without forcing them to re-record / re-
+        // upload. If the prior memo pointed at a different source file,
+        // delete that file from disk now (the player just committed a new
+        // one — the old recording is no longer reachable from the UI).
+        const prevMemo = getStingerSourceMemo();
+        if (prevMemo && prevMemo.srcUri !== draft.srcUri) {
+          cleanupOldCustomClip(prevMemo.srcUri);
+        }
+        setStingerSourceMemo({
+          srcUri: draft.srcUri,
+          ext: draft.ext,
+          durationMs: draft.durationMs,
+          srcSizeBytes: draft.srcSizeBytes,
+          startMs,
+          endMs,
+        });
         setStingerDraft(null);
         if (profile.sfxEnabled) previewLogoStinger("custom").catch(() => {});
         if (profile.vibrationEnabled) Vibration.vibrate(30);
@@ -802,6 +853,38 @@ export default function SettingsScreen() {
     }
   };
 
+  // Task #98 — Re-trim entry point: re-open the trim modal with this
+  // session's previously-saved source clip + last-picked window so the
+  // player can pick a different 2-second slice without re-recording. If
+  // the source file has been swept off disk (e.g. the OS cleared the
+  // picker / recorder cache), drop the stale memo and ask the player to
+  // upload or record again.
+  const reTrimCustomStinger = async () => {
+    if (customStingerBusy || isRecordingStinger) return;
+    const memo = getStingerSourceMemo();
+    if (!memo) return;
+    let exists = false;
+    try {
+      const f = new File(memo.srcUri);
+      exists = !!f.exists;
+    } catch {}
+    if (!exists) {
+      clearStingerSourceMemo();
+      Alert.alert(
+        stingerTitle(),
+        T("logoStingerRetrimUnavailable")
+          || "The original recording isn't available anymore. Upload or record again to re-trim.",
+      );
+      return;
+    }
+    await openStingerTrim(memo.srcUri, memo.ext, {
+      initialStartMs: memo.startMs,
+      initialEndMs: memo.endMs,
+      durationMs: memo.durationMs,
+      srcSizeBytes: memo.srcSizeBytes,
+    });
+  };
+
   const removeCustomStinger = () => {
     const prevUri = profile.customLogoStingerUri || "";
     const prevWasRemote = /^https?:\/\//i.test(prevUri);
@@ -832,6 +915,14 @@ export default function SettingsScreen() {
     // / signing back in doesn't restore a clip the user just cleared.
     if (prevWasRemote) clearCustomStingerCache();
     deleteRemoteCustomStinger().catch(() => {});
+    // Task #98 — clearing the custom slot also drops the in-memory source
+    // memo + its on-disk recording so a future "Re-trim" doesn't point at
+    // a stale file the player just removed.
+    const prevMemo = getStingerSourceMemo();
+    if (prevMemo) {
+      cleanupOldCustomClip(prevMemo.srcUri);
+      clearStingerSourceMemo();
+    }
     if (profile.vibrationEnabled) Vibration.vibrate(30);
   };
 
@@ -1523,6 +1614,18 @@ export default function SettingsScreen() {
                             : (T("logoStingerRecord") || "Record")}
                         </Text>
                       </TouchableOpacity>
+                      {hasCustom && stingerSourceMemo && (
+                        <TouchableOpacity
+                          onPress={reTrimCustomStinger}
+                          disabled={customStingerBusy || isRecordingStinger}
+                          style={[styles.customStingerBtn, { borderColor: "#F1C40F", opacity: customStingerBusy || isRecordingStinger ? 0.5 : 1 }]}
+                        >
+                          <Ionicons name="cut" size={16} color="#F1C40F" />
+                          <Text style={[styles.customStingerBtnText, { color: "#F1C40F" }]}>
+                            {T("logoStingerRetrim") || "Re-trim"}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
                       {hasCustom && (
                         <TouchableOpacity
                           onPress={removeCustomStinger}
