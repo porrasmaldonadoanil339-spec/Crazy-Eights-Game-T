@@ -41,11 +41,12 @@ function filenameFromUrl(url: string): string | null {
 // Task #91 — re-encode the trimmed [startMs, endMs] window of a source clip
 // into a real m4a file by round-tripping through the server's ffmpeg-backed
 // /api/auth/profile/stinger/trim endpoint. Writes the trimmed bytes into the
-// app's document directory and returns the local file:// URI plus the
-// trimmed clip's actual duration. Returns null on any failure (network /
-// server / write error) so callers can show an alert instead of silently
-// keeping the full source. No auth required (the endpoint is rate-limited
-// per IP and stateless), so guests can trim too.
+// app's document directory and returns a `TrimStingerResult` discriminated
+// union: `{ ok: true, uri, durationMs, ext }` on success, or
+// `{ ok: false, reason: "aborted" | "failed" }` so callers can distinguish a
+// user-initiated cancellation (Task #108) from a real network/server/write
+// failure and show the right UI. No auth required (the endpoint is rate-
+// limited per IP and stateless), so guests can trim too.
 const TRIMMED_DIR = "custom-stingers";
 
 function base64ToBytes(b64: string): Uint8Array {
