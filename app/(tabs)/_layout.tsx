@@ -40,7 +40,7 @@ export default function TabLayout() {
           borderTopWidth: 0,
           elevation: 0,
           height: TAB_BAR_BASE_HEIGHT + (Platform.OS === "web" ? 34 : insets.bottom),
-          paddingBottom: (Platform.OS === "web" ? 34 : Math.max(insets.bottom, 8)) + 6,
+          paddingBottom: Platform.OS === "web" ? 34 : insets.bottom,
           paddingTop: 6,
         } : { display: "none" },
         tabBarItemStyle: {

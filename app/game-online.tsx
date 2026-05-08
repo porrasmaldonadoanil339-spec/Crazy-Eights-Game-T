@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect, memo } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image, ActivityIndicator, Alert, BackHandler,
+  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image, ActivityIndicator, Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,6 +12,7 @@ import Animated, {
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
+import { useGameBackHandler } from "@/hooks/useGameBackHandler";
 import { t, Lang } from "@/lib/i18n";
 import { PlayingCard } from "@/components/PlayingCard";
 import { cardGlowColor, isSpecialRank } from "@/lib/cardVisuals";
@@ -863,21 +864,9 @@ export default function OnlineGameScreen() {
   const [disconnectedPlayerMsg, setDisconnectedPlayerMsg] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<"connected" | "reconnecting" | "reconnected">("connected");
 
-  // Intercept Android hardware back button → show confirm modal instead of leaving silently.
-  useEffect(() => {
-    if (Platform.OS === "web") return;
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (showExitModal) {
-        // Modal already open — close it instead of popping the screen,
-        // so the physical button mirrors the on-screen "No" button.
-        setShowExitModal(false);
-        return true;
-      }
-      setShowExitModal(true);
-      return true;
-    });
-    return () => sub.remove();
-  }, [showExitModal]);
+  // Intercept Android hardware back button → show confirm modal instead of
+  // leaving silently. Shared logic with single-player and local multi.
+  useGameBackHandler({ visible: showExitModal, setVisible: setShowExitModal });
 
   // ─── In-game menu ────────────────────────────────────────────────────────
   const [showGameMenu, setShowGameMenu] = useState(false);

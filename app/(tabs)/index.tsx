@@ -21,7 +21,7 @@ import { getCurrentWeeklyEvent } from "@/lib/events";
 import { markFichasRunActive } from "@/lib/fichasChallenge";
 import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
-import { playButton, syncSettings, playChestOpen } from "@/lib/audioManager";
+import { playButton, syncSettings, playChestOpen, playLogoStinger } from "@/lib/audioManager";
 import { playSound } from "@/lib/sounds";
 import { useUIState } from "@/context/UIStateContext";
 import { modeName as getModeName, modeDesc as getModeDesc, diffName as getDiffName, diffDesc as getDiffDesc } from "@/lib/achTranslations";
@@ -862,6 +862,16 @@ export default function PlayScreen() {
   useEffect(() => {
     setMultiPlayerNames(Array.from({ length: 6 }, (_, i) => `${T("player")} ${i + 1}`));
   }, [lang]);
+
+  // Task #79 — premium logo stinger plays once when the menu first mounts
+  // (per app session) to give the brand a sonic identity. Gated by SFX
+  // toggle inside playLogoStinger / playSfx, and waits for splash to
+  // finish so it lands in sync with the logo reveal.
+  useEffect(() => {
+    if (!splashReady) return;
+    const t = setTimeout(() => { playLogoStinger().catch(() => {}); }, 60);
+    return () => clearTimeout(t);
+  }, [splashReady]);
 
   // Load challenges
   useEffect(() => {

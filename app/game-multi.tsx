@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView,
-  Modal, Platform, Dimensions, useWindowDimensions, BackHandler,
+  Modal, Platform, Dimensions, useWindowDimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,6 +13,7 @@ import Animated, {
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
+import { useGameBackHandler } from "@/hooks/useGameBackHandler";
 import { PlayingCard } from "@/components/PlayingCard";
 import {
   MultiGameState, Card, Suit,
@@ -379,20 +380,9 @@ export default function MultiGameScreen() {
   const lastEmoteAtRef = useRef<Record<number, number>>({});
 
   // Intercept Android hardware back button → confirm before leaving the match.
-  useEffect(() => {
-    if (Platform.OS === "web") return;
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (!gameStarted) return false;
-      if (showExitModal) {
-        // Mirror the on-screen "No" button: second back press closes the modal.
-        setShowExitModal(false);
-        return true;
-      }
-      setShowExitModal(true);
-      return true;
-    });
-    return () => sub.remove();
-  }, [gameStarted, showExitModal]);
+  // Only active once the multi/Coop match has actually started; before that
+  // the system back should pop the lobby screen normally.
+  useGameBackHandler({ visible: showExitModal, setVisible: setShowExitModal, enabled: gameStarted });
 
   // Re-initialize when starting
   const handleStartGame = useCallback(() => {

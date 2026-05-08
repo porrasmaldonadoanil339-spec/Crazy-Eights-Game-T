@@ -424,6 +424,7 @@ const styles = StyleSheet.create({
     borderRadius: 24, padding: 24, alignItems: "center",
     justifyContent: "center",
     borderWidth: 1, borderColor: Colors.border, gap: 10,
+    alignSelf: "center", width: "100%", maxWidth: 480,
   },
   iconCircle: {
     width: 76, height: 76, borderRadius: 38,
@@ -462,7 +463,10 @@ const styles = StyleSheet.create({
   demoHand: { flexDirection: "row", justifyContent: "center", alignItems: "flex-end" },
   successMsg: { flexDirection: "row", alignItems: "center", gap: 6, justifyContent: "center" },
   successText: { fontFamily: "Nunito_700Bold", fontSize: 14, color: Colors.success },
-  navRow: { flexDirection: "row", paddingHorizontal: 20, paddingTop: 14, gap: 12 },
+  navRow: {
+    flexDirection: "row", paddingHorizontal: 20, paddingTop: 14, gap: 12,
+    alignSelf: "center", width: "100%", maxWidth: 480,
+  },
   navBack: {
     flexDirection: "row", alignItems: "center", gap: 6,
     paddingVertical: 14, paddingHorizontal: 18, borderRadius: 14,

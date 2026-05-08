@@ -2,7 +2,7 @@ import { CoinIcon } from "@/components/CoinIcon";
 import BouncePressable from "@/components/BouncePressable";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions, Image, Alert, BackHandler,
+  View, Text, StyleSheet, Pressable, ScrollView, Modal, Platform, Dimensions, Image, Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,6 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
 import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
+import { useGameBackHandler } from "@/hooks/useGameBackHandler";
 import { t, Lang } from "@/lib/i18n";
 import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
@@ -1425,19 +1426,10 @@ export default function GameScreen() {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Hardware back button (Android) → confirm before leaving the match.
-  useEffect(() => {
-    if (Platform.OS === "web" || Platform.OS === "ios") return;
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (showExitConfirm) {
-        // Mirror on-screen "No": second back press dismisses the modal.
-        setShowExitConfirm(false);
-        return true;
-      }
-      setShowExitConfirm(true);
-      return true;
-    });
-    return () => sub.remove();
-  }, [showExitConfirm]);
+  // Centralized in `useGameBackHandler` so Practice / Classic / Lightning /
+  // Tournament / Challenge / Ranked (all served by this screen) share the
+  // exact same confirm-before-exit behaviour as multi/online.
+  useGameBackHandler({ visible: showExitConfirm, setVisible: setShowExitConfirm });
   const [showChestReward, setShowChestReward] = useState(false);
   const [pendingChestType, setPendingChestType] = useState<ChestType | null>(null);
   const [pendingChestId, setPendingChestId] = useState<string | null>(null);
