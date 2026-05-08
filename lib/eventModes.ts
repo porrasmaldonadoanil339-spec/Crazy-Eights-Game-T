@@ -9,7 +9,8 @@ export type EventId =
   | "frozen"
   | "inferno"
   | "chaos"
-  | "casino";
+  | "casino"
+  | "fiebre";
 
 export interface EventConfig {
   id: EventId;
@@ -68,18 +69,18 @@ export const EVENT_CONFIGS: Record<EventId, EventConfig> = {
   },
   frozen: {
     id: "frozen",
-    name: "Congelado",
-    shortName: "Hielo",
-    desc: "Turnos lentos y mano grande. Piensa cada movimiento.",
+    name: "Muerte Súbita",
+    shortName: "Súbita",
+    desc: "Una sola mano corta — el primer error te elimina.",
     icon: "snow",
     color: "#3498DB",
-    cardsPerPlayer: 10,
+    cardsPerPlayer: 5,
     turnSeconds: 12,
   },
   inferno: {
     id: "inferno",
-    name: "Inferno",
-    shortName: "Inferno",
+    name: "Relámpago Extremo",
+    shortName: "Relámpago",
     desc: "Solo 4 segundos por turno y 5 cartas. ¡Quema rivales!",
     icon: "flame",
     color: "#E74C3C",
@@ -88,8 +89,8 @@ export const EVENT_CONFIGS: Record<EventId, EventConfig> = {
   },
   chaos: {
     id: "chaos",
-    name: "Caos",
-    shortName: "Caos",
+    name: "Modo Troll",
+    shortName: "Troll",
     desc: "Doble efecto y palo cambiante. ¡Confía en tus reflejos!",
     icon: "skull",
     color: "#FF1744",
@@ -107,6 +108,17 @@ export const EVENT_CONFIGS: Record<EventId, EventConfig> = {
     icon: "diamond",
     color: "#8E44AD",
     cardsPerPlayer: 8,
+  },
+  fiebre: {
+    id: "fiebre",
+    name: "Modo Fiebre",
+    shortName: "Fiebre",
+    desc: "Cartas extra y efectos dobles. Recompensas inflamadas.",
+    icon: "flame",
+    color: "#FF6B35",
+    cardsPerPlayer: 10,
+    turnSeconds: 7,
+    doubleDrawEffect: true,
   },
 };
 
@@ -157,7 +169,7 @@ export function getEventDesc(id: EventId, T: Translator): string {
 
 export const EVENT_ORDER: EventId[] = [
   "speed", "random", "double", "survival",
-  "frozen", "inferno", "chaos", "casino",
+  "frozen", "inferno", "chaos", "casino", "fiebre",
 ];
 
 export function pickRandomSuit(exclude?: Suit): Suit {

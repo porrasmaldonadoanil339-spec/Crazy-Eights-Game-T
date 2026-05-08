@@ -1445,15 +1445,23 @@ export default function GameScreen() {
     }
   }, [dealAnimationDone, session?.mode]);
 
-  // Tournament round intro banner — fires whenever a fresh round is dealt
-  // (initial deal AND each round started via startNextTournamentRound).
+  // ROUND 1/2/3 intro banner. Gated to round <= 3 so the post-increment
+  // value of 4 (set when the third round ends) never shows a "ROUND 4".
   useEffect(() => {
-    if (session?.mode === "tournament" && dealAnimationDone) {
+    if (session?.mode === "tournament" && dealAnimationDone && tournamentRound <= 3) {
       setShowTournamentRoundBanner(true);
       const t = setTimeout(() => setShowTournamentRoundBanner(false), 2400);
       return () => clearTimeout(t);
     }
   }, [dealAnimationDone, session?.mode, tournamentRound]);
+
+  // Safety: clear any lingering Fichas-run flag when the game screen
+  // unmounts so a back/abandon path cannot leak the marker into a later
+  // unrelated match. The win/loss handlers above already consume it on
+  // game-end; this covers the manual-exit case.
+  useEffect(() => {
+    return () => { consumeFichasRunActive(); };
+  }, []);
 
   // Event mode intro banner
   useEffect(() => {

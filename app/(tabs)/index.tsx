@@ -966,7 +966,7 @@ export default function PlayScreen() {
       return;
     }
     await playSound("mode_select").catch(() => {});
-    startGame(modeId as any, "normal");
+    startGame(modeId, "normal");
     router.push("/game");
   };
 
@@ -1492,11 +1492,9 @@ export default function PlayScreen() {
           fichasRemaining={fichasModePlaysRemaining()}
           onFichasPress={() => {
             recordFichasModePlay();
-            // Flag this run so the win handler in app/game.tsx advances
-            // the V1/V2/V3 Reto de Fichas progression and grants the
-            // tier-appropriate fichas/coins/chest rewards.
+            // Flag this run so the win handler advances V1/V2/V3.
             markFichasRunActive();
-            startGame("classic" as any, "normal");
+            startGame("classic", "normal");
             router.push("/game");
           }}
           onModePress={handleModePress}
