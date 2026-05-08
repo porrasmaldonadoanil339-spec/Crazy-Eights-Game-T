@@ -12,7 +12,7 @@ import { reloadAppAsync } from "expo";
 import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
-import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack } from "@/lib/audioManager";
+import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, previewLogoStinger, type LogoStingerId } from "@/lib/audioManager";
 import { useT } from "@/hooks/useT";
 import { playSound } from "@/lib/sounds";
 import { Colors } from "@/constants/colors";
@@ -169,6 +169,7 @@ export default function SettingsScreen() {
   const { user, logout } = useAuth();
   const T = useT();
   const [showLangModal, setShowLangModal] = useState(false);
+  const [showStingerModal, setShowStingerModal] = useState(false);
   const [langSearch, setLangSearch] = useState("");
   const [showFaqModal, setShowFaqModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -233,6 +234,19 @@ export default function SettingsScreen() {
     const next = !(profile.voiceFxEnabled ?? true);
     updateSettings({ voiceFxEnabled: next });
     syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled, next);
+  };
+
+  const selectLogoStinger = (id: LogoStingerId) => {
+    updateSettings({ logoStingerId: id });
+    if (profile.sfxEnabled) {
+      previewLogoStinger(id).catch(() => {});
+    }
+    if (profile.vibrationEnabled) Vibration.vibrate(30);
+  };
+
+  const previewCurrentStinger = () => {
+    if (!profile.sfxEnabled) return;
+    previewLogoStinger(profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID).catch(() => {});
   };
 
   const toggleMuteEmotes = () => {
@@ -306,6 +320,14 @@ export default function SettingsScreen() {
             icon="mic" iconColor="#E67E22" iconBg="#2a1a0a"
             isDark={isDark}
             right={<Switch value={profile.voiceFxEnabled ?? true} onValueChange={toggleVoiceFx} {...sw(profile.voiceFxEnabled ?? true, "#E67E22")} />}
+          />
+          <SettingRow
+            label={T("logoStinger") || "Sonido del logo"}
+            sub={T(`logoStinger${(profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID).charAt(0).toUpperCase()}${(profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID).slice(1)}` as any) || (profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID)}
+            icon="musical-note" iconColor="#F1C40F" iconBg="#2a2a1a"
+            isDark={isDark}
+            onPress={() => { previewCurrentStinger(); setShowStingerModal(true); }}
+            right={<Ionicons name="chevron-forward" size={16} color={titleColor} />}
           />
           <SettingRow
             label={T("muteEmotes" as any) || "Silenciar Emotes del Rival"} sub={T("muteEmotesDesc" as any) || "Ocultar mensajes del rival"}
@@ -737,6 +759,51 @@ export default function SettingsScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.langOptionName, isSelected && { color: "#D4AF37" }]}>{lang.label}</Text>
                       <Text style={styles.langOptionSub}>{lang.subtitle}</Text>
+                    </View>
+                    {isSelected && <Ionicons name="checkmark-circle" size={20} color="#D4AF37" />}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Logo Stinger Picker Modal — Task #82 */}
+      <Modal visible={showStingerModal} transparent animationType="slide" onRequestClose={() => setShowStingerModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.langModal}>
+            <LinearGradient colors={["#0a1a0c", "#061209"]} style={StyleSheet.absoluteFill} />
+            <View style={styles.langModalHeader}>
+              <Text style={styles.langModalTitle}>{T("logoStinger") || "Sonido del logo"}</Text>
+              <Pressable onPress={() => setShowStingerModal(false)} style={styles.langModalClose}>
+                <Ionicons name="close" size={22} color="#6B7A5C" />
+              </Pressable>
+            </View>
+            <Text style={{ paddingHorizontal: 16, paddingBottom: 8, color: "#6B7A5C", fontFamily: "Nunito_500Medium", fontSize: 12 }}>
+              {T("logoStingerDesc") || "Toca para escuchar y elegir tu intro"}
+            </Text>
+            <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false}>
+              {LOGO_STINGERS.map((s) => {
+                const isSelected = (profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID) === s.id;
+                const labelKey = `logoStinger${s.id.charAt(0).toUpperCase()}${s.id.slice(1)}` as any;
+                const label = T(labelKey) || s.id;
+                return (
+                  <Pressable
+                    key={s.id}
+                    onPress={() => selectLogoStinger(s.id)}
+                    style={({ pressed }) => [
+                      styles.langOption,
+                      isSelected && styles.langOptionSelected,
+                      pressed && { opacity: 0.8 },
+                    ]}
+                  >
+                    <View style={[styles.iconCircle, { backgroundColor: "#2a2a1a", marginRight: 12 }]}>
+                      <Ionicons name={isSelected ? "musical-notes" : "play"} size={18} color="#F1C40F" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.langOptionName, isSelected && { color: "#D4AF37" }]}>{label}</Text>
+                      <Text style={styles.langOptionSub}>{(s.durationMs / 1000).toFixed(1)}s</Text>
                     </View>
                     {isSelected && <Ionicons name="checkmark-circle" size={20} color="#D4AF37" />}
                   </Pressable>

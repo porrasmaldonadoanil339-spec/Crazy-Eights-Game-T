@@ -29,7 +29,7 @@ import {
   Nunito_800ExtraBold as Nunito_800ExtraBold_Asset,
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
-import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded, playOchoLocosVoice } from "@/lib/audioManager";
+import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded, playOchoLocosVoice, setLogoStingerId, DEFAULT_LOGO_STINGER_ID } from "@/lib/audioManager";
 import { markSplashComplete } from "@/lib/splashState";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useProfile } from "@/context/ProfileContext";
@@ -484,6 +484,9 @@ function AudioManager() {
     if (!isLoaded) return;
     initAudio().then(() => {
       syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled ?? true, profile.voiceFxEnabled ?? true);
+      // Task #82 — apply the player's chosen logo stinger before the menu mounts
+      // so the boot stinger plays the selected variant on cold start.
+      setLogoStingerId(profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID);
       preloadSounds().catch(() => {});
       const inGame = isGameRoute(segments as string[]);
       if (inGame) {
@@ -498,6 +501,14 @@ function AudioManager() {
     if (!isLoaded) return;
     syncSettings(profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled ?? true, profile.voiceFxEnabled ?? true);
   }, [profile.musicEnabled, profile.sfxEnabled, profile.vibrationEnabled, profile.voiceFxEnabled, isLoaded]);
+
+  // Task #82 — keep the audio manager in sync with the player's stinger pick
+  // so picking a new variant takes effect on next app launch (and immediately
+  // for any future calls within the session).
+  useEffect(() => {
+    if (!isLoaded) return;
+    setLogoStingerId(profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID);
+  }, [profile.logoStingerId, isLoaded]);
 
   // React to route changes — skip the very first run (handled by init above).
   // Use sequential (non-overlapping) fade when entering a game route so menu
