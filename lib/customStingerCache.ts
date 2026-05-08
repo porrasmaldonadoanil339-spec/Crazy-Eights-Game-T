@@ -129,18 +129,17 @@ export async function uploadCustomStinger(localUri: string, ext: string): Promis
 // again on the next foreground / reconnect — the same payload + the same
 // server state will fail the same way). The settings screen still allows
 // a manual retry for `storage_full` / `rate_limited` since those are
-// time-based, but the silent background retry stays out of it.
-//
-// Note: `no_auth` and `unauthorized` are deliberately *not* treated as
-// permanent here. The user may sign in / refresh their token after a
-// guest save, and the auto-retry should resume on the next foreground
-// without needing the URI to change. The upload itself short-circuits
-// cheaply on missing/invalid tokens, so retrying costs almost nothing.
+// time-based, but the silent background retry stays out of it. `401`
+// (`unauthorized`) is permanent for the silent path because the token
+// won't fix itself — the player needs to re-auth, at which point the
+// settings badge tells them to do so and the URI-change reset (or a
+// manual retry) restarts the upload.
 export function isPermanentUploadError(reason: UploadStingerErrorReason): boolean {
   return reason === "too_large"
       || reason === "rate_limited"
       || reason === "storage_full"
-      || reason === "bad_request";
+      || reason === "bad_request"
+      || reason === "unauthorized";
 }
 
 // Task #96 — silent retry of the cloud upload for a locally-saved custom

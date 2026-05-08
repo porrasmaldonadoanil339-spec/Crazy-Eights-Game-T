@@ -1317,6 +1317,8 @@ export default function SettingsScreen() {
                           cfg = { icon: "cloud-offline-outline", color: "#E67E22", label: T("logoStingerBackupRateLimited") || "Too many backups — try again later", tapRetry: true };
                         } else if (status.reason === "storage_full") {
                           cfg = { icon: "cloud-offline-outline", color: "#E67E22", label: T("logoStingerBackupStorageFull") || "Cloud backup is full — tap to retry", tapRetry: true };
+                        } else if (status.reason === "unauthorized") {
+                          cfg = { icon: "cloud-offline-outline", color: "#E67E22", label: T("logoStingerBackupSessionExpired") || "Session expired — sign in again", tapRetry: true };
                         } else {
                           cfg = { icon: "cloud-offline-outline", color: "#E74C3C", label: T("logoStingerBackupFailed") || "Backup failed — tap to retry", tapRetry: true };
                         }
