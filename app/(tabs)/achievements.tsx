@@ -57,6 +57,7 @@ export default function AchievementsScreen() {
     itemName?: string;
     itemIcon?: string;
     accent?: string;
+    chestType?: ChestType;
   }>({ visible: false });
   const T = useT();
   const theme = useTheme();
@@ -156,7 +157,8 @@ export default function AchievementsScreen() {
         subtitle: `${tier}/${seasonTiers.length}`,
         coins: free.coins,
         itemName: undefined,
-        itemIcon: free.icon === "cash" ? "cash" : "cube",
+        itemIcon: free.icon === "cash" ? "cash" : undefined,
+        chestType: free.type === "chest" ? (free.chestType as ChestType) : undefined,
         accent: Colors.gold,
       });
     } else {
@@ -166,7 +168,8 @@ export default function AchievementsScreen() {
         subtitle: `${tier}/${seasonTiers.length}`,
         coins: isCoins ? (bp!.rewardValue as number) : 0,
         itemName: bp ? getBPRewardLabel(bp, lang) : undefined,
-        itemIcon: bp?.rewardType === "chest" ? "cube" : bp?.rewardType === "coins" ? "cash" : "trophy",
+        itemIcon: bp?.rewardType === "coins" ? "cash" : bp?.rewardType === "chest" ? undefined : "trophy",
+        chestType: bp?.rewardType === "chest" ? (String(bp.rewardValue) as ChestType) : undefined,
         accent: Colors.gold,
       });
     }
@@ -498,11 +501,11 @@ export default function AchievementsScreen() {
                 shadowRadius: 14,
                 elevation: 8,
               }]}>
-                <BpLevelCircle level={battlePassTier} maxLevel={seasonTiers.length} themeGold={themeGold} themeColors={themeColors} />
+                <BpLevelCircle level={Math.max(1, battlePassTier)} maxLevel={seasonTiers.length} themeGold={themeGold} themeColors={themeColors} />
                 <View style={{ flex: 1, gap: 6 }}>
-                  <Text style={[styles.bpLevelNum, { color: themeGold }]}>{battlePassTier}/{seasonTiers.length}</Text>
+                  <Text style={[styles.bpLevelNum, { color: themeGold }]}>{Math.max(1, battlePassTier)}/{seasonTiers.length}</Text>
                   <View style={[styles.bpXpBar, { backgroundColor: themeColors.border, overflow: "hidden" }]}>
-                    <View style={[styles.bpXpFill, { width: `${(battlePassTier / seasonTiers.length) * 100}%`, backgroundColor: themeGold, shadowColor: themeGold, shadowOpacity: 0.7, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } }]} />
+                    <View style={[styles.bpXpFill, { width: `${(Math.max(1, battlePassTier) / seasonTiers.length) * 100}%`, backgroundColor: themeGold, shadowColor: themeGold, shadowOpacity: 0.7, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } }]} />
                   </View>
                   <Text style={[styles.bpXpText, { color: themeColors.textMuted }]}>{xpProgress.current} / {xpProgress.needed} XP</Text>
                 </View>
@@ -599,6 +602,7 @@ export default function AchievementsScreen() {
         xp={rewardPopup.xp}
         itemName={rewardPopup.itemName}
         itemIcon={rewardPopup.itemIcon}
+        chestType={rewardPopup.chestType}
         accent={rewardPopup.accent}
         onClose={() => setRewardPopup({ visible: false })}
       />

@@ -1,4 +1,6 @@
 import { CoinIcon } from "@/components/CoinIcon";
+import ChestVisual from "@/components/ChestVisual";
+import type { ChestType } from "@/lib/chestSystem";
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Pressable, Dimensions } from "react-native";
 import Animated, {
@@ -28,6 +30,7 @@ interface RewardPopupProps {
   itemIcon?: string;
   itemColor?: string;
   accent?: string;
+  chestType?: ChestType;
   onClose: () => void;
 }
 
@@ -56,6 +59,7 @@ export default function RewardPopup({
   itemIcon,
   itemColor,
   accent = Colors.gold,
+  chestType,
   onClose,
 }: RewardPopupProps) {
   const bgOp = useSharedValue(0);
@@ -199,7 +203,9 @@ export default function RewardPopup({
               colors={[accent, accent + "AA"]}
               style={styles.iconCircle}
             >
-              {itemIcon === "cash" ? (
+              {chestType ? (
+                <ChestVisual type={chestType} size={88} showShadow={false} />
+              ) : itemIcon === "cash" ? (
                 <CoinIcon size={56} color="#1a0a00" />
               ) : (
                 <Ionicons name={(itemIcon ?? "trophy") as any} size={56} color="#1a0a00" />
