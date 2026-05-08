@@ -694,31 +694,36 @@ function EventLiveBadge({ level }: { level: number }) {
   const entryStyle = useEntryAnimation({ delay: 60, fromTranslateY: 12 });
   const slot = getCurrentWeeklyEvent();
   const ev = slot.event;
-  const iconName = (ev.icon || "flash") as React.ComponentProps<typeof Ionicons>["name"];
+  const locked = level < 5;
+  const iconName = (locked ? "lock-closed" : (ev.icon || "flash")) as React.ComponentProps<typeof Ionicons>["name"];
+  const baseColor = ev.color || "#A855F7";
+  const gradColors: [string, string, string] = locked
+    ? ["#3A3A3A", "#2A2A2A", "#1F1F1F"]
+    : [baseColor, baseColor + "CC", baseColor];
   return (
     <Animated.View style={entryStyle}>
       <BouncePressable
         onPress={() => {
-          if (level < 5) return;
+          if (locked) return;
           playSound("mode_select").catch(() => {});
           startGame("classic", "normal", undefined, ev.id);
           router.push("/game");
         }}
-        style={styles.bpShortcut}
+        style={[styles.bpShortcut, locked && { opacity: 0.6 }]}
         sound
-        glowColor={(ev.color || "#A855F7") + "55"}
+        glowColor={baseColor + (locked ? "22" : "55")}
       >
         <LinearGradient
-          colors={[ev.color || "#7B2FBE", (ev.color || "#A855F7") + "CC", ev.color || "#7B2FBE"]}
+          colors={gradColors}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
           style={styles.bpShortcutGrad}
         >
-          <Ionicons name={iconName} size={20} color="#FFD700" />
+          <Ionicons name={iconName} size={20} color={locked ? "#888" : "#FFD700"} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.bpShortcutTitle}>{ev.name} · EN VIVO</Text>
-            <Text style={styles.bpShortcutSub}>Termina en {slot.daysLeft}d</Text>
+            <Text style={styles.bpShortcutTitle}>{ev.name} {locked ? "· NIVEL 5" : "· EN VIVO"}</Text>
+            <Text style={styles.bpShortcutSub}>{locked ? "Desbloquea al nivel 5" : `Termina en ${slot.daysLeft}d`}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#FFD700" />
+          <Ionicons name={locked ? "lock-closed" : "chevron-forward"} size={18} color={locked ? "#888" : "#FFD700"} />
         </LinearGradient>
       </BouncePressable>
     </Animated.View>
