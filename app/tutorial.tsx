@@ -7,7 +7,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
-  useSharedValue, useAnimatedStyle, withSpring, withTiming, withSequence,
+  useSharedValue, useAnimatedStyle, withTiming, withSequence,
   FadeIn, FadeOut,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
@@ -300,6 +300,12 @@ export default function TutorialScreen() {
   const hasInteractive = !!current.interactive;
   const canAdvance = !hasInteractive || current.interactive === "done" || interactiveDone;
 
+  // Card transition: pure fade — no horizontal slide. Earlier versions chained
+  // a withTiming callback on the UI thread that set slideX=-30, then a JS
+  // setTimeout reset it to 30 and spring-snapped to 0. When the UI callback
+  // landed AFTER the JS timer (a common race), slideX got stuck at -30,
+  // causing the card to drift left a little more on every advance. Dropping
+  // the slide entirely guarantees the card stays perfectly centered.
   const goNext = async () => {
     if (!canAdvance) return;
     await playSound("button_press");
@@ -308,15 +314,12 @@ export default function TutorialScreen() {
       router.back();
       return;
     }
-    opacity.value = withTiming(0, { duration: 150 }, () => {
-      slideX.value = -30;
-    });
+    opacity.value = withTiming(0, { duration: 150 });
     setTimeout(() => {
       setStep((s) => s + 1);
       setInteractiveDone(false);
-      slideX.value = 30;
+      slideX.value = 0;
       opacity.value = withTiming(1, { duration: 200 });
-      slideX.value = withSpring(0, { damping: 16 });
     }, 160);
   };
 
@@ -327,6 +330,7 @@ export default function TutorialScreen() {
     setTimeout(() => {
       setStep((s) => s - 1);
       setInteractiveDone(false);
+      slideX.value = 0;
       opacity.value = withTiming(1, { duration: 200 });
     }, 160);
   };

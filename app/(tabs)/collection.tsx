@@ -177,9 +177,8 @@ export default function CollectionScreen() {
   }, [T]);
 
   const keyExtractorItems = useCallback((i: GridItem) => i.id, []);
-  const renderItem = useCallback(({ item, index }: { item: GridItem; index: number }) => {
+  const renderItem = useCallback(({ item }: { item: GridItem }) => {
     const isOwned = item.isDefault || owned.includes(item.id);
-    const isFirstInRow = index % 4 === 0;
     const isEquipped = activeCat === "emote"
       ? isEmoteEquipped(item.id)
       : equippedId(activeCat) === item.id;
@@ -217,7 +216,7 @@ export default function CollectionScreen() {
     return (
       <BouncePressable
         onPress={handlePress}
-        style={[styles.gridItem, isFirstInRow && { marginLeft: 8 }]}
+        style={styles.gridItem}
       >
         <View style={styles.previewSlot}>
           {/* Locked items: desaturated (Clash Royale-style grayed look). No overlays, no padlock icon. */}
@@ -404,7 +403,7 @@ const styles = StyleSheet.create({
     height: 32,
   },
   catLabel: { fontFamily: "Nunito_700Bold", fontSize: 11 },
-  gridContent: { paddingLeft: 14, paddingRight: 6, paddingTop: 6, gap: 14 },
+  gridContent: { paddingLeft: 20, paddingRight: 12, paddingTop: 6, gap: 14 },
   colWrapper: { justifyContent: "space-between" },
   gridItem: {
     width: "24%",

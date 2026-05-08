@@ -1541,11 +1541,24 @@ export default function PlayScreen() {
         {/* Daily Challenges Section */}
         {challenges.length > 0 && (
           <View style={{ marginVertical: 10 }}>
-            <View style={[styles.sectionHeader, { marginTop: 0 }]}>
-              <Ionicons name="flash" size={14} color={theme.gold} />
-              <Text style={[styles.sectionLabel, { color: theme.gold }]}>
-                {T("dailyChallenges" as any)}
-              </Text>
+            <View style={[styles.sectionHeader, { marginTop: 0, justifyContent: "space-between" }]}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Ionicons name="flash" size={14} color={theme.gold} />
+                <Text style={[styles.sectionLabel, { color: theme.gold }]}>
+                  {T("dailyChallenges" as any)}
+                </Text>
+              </View>
+              <View style={{
+                flexDirection: "row", alignItems: "center", gap: 4,
+                paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+                backgroundColor: theme.gold + "1A",
+                borderWidth: 1, borderColor: theme.gold + "44",
+              }}>
+                <Ionicons name="checkmark-circle" size={12} color={theme.gold} />
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: theme.gold, letterSpacing: 0.5 }}>
+                  {challenges.filter((c) => c.claimed).length}/{challenges.length}
+                </Text>
+              </View>
             </View>
             <FlatList
               horizontal
