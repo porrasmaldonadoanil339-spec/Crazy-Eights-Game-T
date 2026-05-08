@@ -44,6 +44,7 @@ import ChestOpeningModal from "@/components/ChestOpeningModal";
 import ChestVisual from "@/components/ChestVisual";
 import RoundTransition from "@/components/RoundTransition";
 import { consumeFichasRunActive, peekFichasRunActive, recordFichasWin } from "@/lib/fichasChallenge";
+import { getModeIdentity } from "@/lib/modeIdentity";
 import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc, pickRandomSuit, type EventId } from "@/lib/eventModes";
 
@@ -1470,14 +1471,16 @@ export default function GameScreen() {
 
   useEffect(() => () => { consumeFichasRunActive(); }, []);
 
-  // Layer the casino ambience under in-game music for Reto de Fichas. Cleared
-  // on unmount so leaving the match returns audio to the default behaviour
-  // (ambience only under the menu track).
+  // Layer the casino ambience under in-game music whenever the active mode
+  // identity asks for it (Reto de Fichas, Torneo, Ranked). Cleared on unmount
+  // so leaving the match returns audio to the default behaviour (ambience
+  // only under the menu track).
+  const wantsAmbience = getModeIdentity(session?.mode, { isFichasRun }).ambience;
   useEffect(() => {
-    if (!isFichasRun) return;
+    if (!wantsAmbience) return;
     setForceAmbience(true).catch(() => {});
     return () => { setForceAmbience(false).catch(() => {}); };
-  }, [isFichasRun]);
+  }, [wantsAmbience]);
 
   // Event mode intro banner
   useEffect(() => {
@@ -1707,6 +1710,7 @@ export default function GameScreen() {
 
   const currentModeConfig = session?.mode ? getModeById(session.mode) : null;
   const modeName = currentModeConfig ? T(`mode${currentModeConfig.id.charAt(0).toUpperCase() + currentModeConfig.id.slice(1)}` as any) : "";
+  const modeIdentity = getModeIdentity(session?.mode, { isFichasRun });
 
   // Play menu music during matchmaking, switch to game music when it ends
   useEffect(() => {
@@ -2454,16 +2458,16 @@ export default function GameScreen() {
         style={StyleSheet.absoluteFill}
       />
       <AnimatedBackground />
-      {isFichasRun && (
-        // Casino-purple haze layered over the table felt for Reto de Fichas.
-        // Subtle enough to keep cards readable, but instantly distinct from
-        // a normal Classic match.
-        <LinearGradient
-          colors={["#6B21A833", "#A855F71A", "#D4AF3722"]}
-          locations={[0, 0.5, 1]}
-          style={[StyleSheet.absoluteFill, { pointerEvents: "none" } as any]}
-        />
-      )}
+      {/* Per-mode identity haze — gives each mode (Práctica/Clásico/
+          Lightning/Torneo/Desafíos/Ranked + the Reto de Fichas override)
+          a distinct tint over the shared table felt. Subtle enough to
+          keep cards readable, but instantly distinguishable. */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={modeIdentity.overlay}
+        locations={[0, 0.5, 1]}
+        style={StyleSheet.absoluteFill}
+      />
       <View style={styles.tableGlowBorder} />
 
       {/* Ripple effect on play — color-coded for special cards */}
