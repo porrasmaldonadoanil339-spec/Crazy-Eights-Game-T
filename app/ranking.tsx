@@ -131,11 +131,23 @@ function buildLeaderboard(
 
   const extraSeed = period === "weekly" ? 50000 + weekKey * 41 : period === "monthly" ? 60000 + monthKey * 23 : 70000;
   const extraCount = 1000 - CPU_PROFILES.length - 1;
-  const extraEntries = generateExtraPlayers(Math.max(0, extraCount), extraSeed).map(e => ({
-    ...e,
-    wins: Math.max(1, Math.floor(e.wins * multiplier)),
-    score: Math.max(1, Math.floor(e.score * multiplier)),
-  }));
+  const extraEntries = generateExtraPlayers(Math.max(0, extraCount), extraSeed).map(e => {
+    const wins = Math.max(1, Math.floor(e.wins * multiplier));
+    // Task #120 — recompute prestige after period-adjusting wins to avoid drift.
+    const pres = buildPrestigeFields({ name: e.name, level: e.level, wins });
+    return {
+      ...e,
+      wins,
+      score: Math.max(1, Math.floor(e.score * multiplier)),
+      bestStreak: pres.bestStreak,
+      totalGames: pres.totalGames,
+      achievementsUnlocked: pres.achievementsUnlocked,
+      titlesUnlocked: pres.titlesUnlocked,
+      topRankName: pres.topRankName,
+      rankName: pres.rankName,
+      winRate: pres.winRate,
+    };
+  });
 
   const playerWinsAdjusted = Math.max(0, Math.floor(playerWins * multiplier));
   const playerPres = buildPrestigeFields({ name: playerName, level: playerLevel, wins: playerWinsAdjusted });
