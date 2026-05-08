@@ -1431,7 +1431,7 @@ export default function PlayScreen() {
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.bpShortcutGrad}
                 >
-                  <Ionicons name={(ev.icon as any) || "flash"} size={20} color="#FFD700" />
+                  <Ionicons name={(ev.icon || "flash") as React.ComponentProps<typeof Ionicons>["name"]} size={20} color="#FFD700" />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.bpShortcutTitle}>{ev.name} · EN VIVO</Text>
                     <Text style={styles.bpShortcutSub}>Termina en {slot.daysLeft}d</Text>

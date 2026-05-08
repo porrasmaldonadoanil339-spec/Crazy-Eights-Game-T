@@ -2114,9 +2114,10 @@ export default function GameScreen() {
           if (!tierJustCleared) return;
           addCoins(tierJustCleared.fichasReward + tierJustCleared.bonusCoins);
           if (tierJustCleared.chest) {
-            const result = addChestToInventory(tierJustCleared.chest as ChestType, "win");
+            const chest = tierJustCleared.chest;
+            const result = addChestToInventory(chest, "win");
             if (result.added) {
-              setPendingChestType(tierJustCleared.chest as ChestType);
+              setPendingChestType(chest);
               setShowChestReward(true);
             }
           }

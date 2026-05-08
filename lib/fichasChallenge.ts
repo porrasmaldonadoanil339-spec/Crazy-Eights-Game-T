@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import type { ChestType } from "./chestSystem";
 
 // Reto de Fichas — premium casino-themed challenge. Three escalating tiers
 // per session; each tier completed grants a richer reward, with V3 dropping
@@ -12,7 +13,7 @@ export interface FichasTierConfig {
   desc: string;
   fichasReward: number;
   bonusCoins: number;
-  chest?: "common" | "rare" | "epic" | "legendary";
+  chest?: ChestType;
   accentColor: string;
 }
 
