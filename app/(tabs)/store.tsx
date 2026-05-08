@@ -6,6 +6,7 @@ import {
   StyleProp, ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTabBarSpacing } from "@/hooks/useTabBarSpacing";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
@@ -647,6 +648,7 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
 
 export default function StoreScreen() {
   const insets = useSafeAreaInsets();
+  const tabSpacing = useTabBarSpacing();
   const { profile, buyDailyShopItem, claimDailyShopFree, updateCardBack, updateCardDesign, updateTableDesign, updateAvatar, updateTitle, updateFrame, updateEffect, updateEquippedEmotes, buyItem } = useProfile();
   const [confirmItem, setConfirmItem] = useState<DailyShopItem | null>(null);
   const [confirmEmote, setConfirmEmote] = useState<StoreItem | null>(null);
@@ -825,7 +827,7 @@ export default function StoreScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={Platform.OS !== "web"}
-        contentContainerStyle={{ paddingBottom: bottomPad + 90, width: "100%", maxWidth: 820, alignSelf: "center" }}
+        contentContainerStyle={{ paddingBottom: tabSpacing.contentBottomPad, width: "100%", maxWidth: 820, alignSelf: "center" }}
       >
         <ChestShop themeColors={theme} themeGold={themeGold} showToast={showToast} T={T} />
         <EmotesSection

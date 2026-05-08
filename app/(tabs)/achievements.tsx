@@ -11,6 +11,7 @@ import {
 import { useT } from "@/hooks/useT";
 import { useTheme } from "@/hooks/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTabBarSpacing } from "@/hooks/useTabBarSpacing";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
@@ -36,6 +37,7 @@ type Tab = "playerpath" | "battlepass" | "achievements";
 
 export default function AchievementsScreen() {
   const insets = useSafeAreaInsets();
+  const tabSpacing = useTabBarSpacing();
   const { profile, claimAchievementReward, claimBattlePassTier, claimPlayerPathLevel, xpProgress, battlePassTier, isPremiumBattlePassActive, unlockPremiumBattlePass, premiumBattlePassCost } = useProfile();
   const [activeTab, setActiveTab] = useState<Tab>("playerpath");
   const [toast, setToast] = useState<string | null>(null);
@@ -433,7 +435,7 @@ export default function AchievementsScreen() {
           maxToRenderPerBatch={10}
           windowSize={7}
           removeClippedSubviews={Platform.OS !== "web"}
-          ListFooterComponent={<View style={{ height: 100 }} />}
+          ListFooterComponent={<View style={{ height: tabSpacing.contentBottomPad }} />}
         />
       )}
       {activeTab === "battlepass" && (
@@ -447,7 +449,7 @@ export default function AchievementsScreen() {
         maxToRenderPerBatch={8}
         windowSize={5}
         removeClippedSubviews={Platform.OS !== "web"}
-        ListFooterComponent={<View style={{ height: 100 }} />}
+        ListFooterComponent={<View style={{ height: tabSpacing.contentBottomPad }} />}
         ListHeaderComponent={
           <>
             <View style={styles.bpSeasonHeader}>
@@ -887,6 +889,8 @@ function PlayerPathView({
   setRewardPopup: (s: any) => void;
   showToast: (msg: string) => void;
 }) {
+  const insets = useSafeAreaInsets();
+  const tabSpacing = useTabBarSpacing();
   const progress = getPlayerPathProgress(profile.totalXp);
   const claimedSet = useMemo(
     () => new Set(profile.claimedPlayerPathLevels ?? []),
@@ -955,7 +959,7 @@ function PlayerPathView({
           </Text>
         </View>
       }
-      ListFooterComponent={<View style={{ height: 100 }} />}
+      ListFooterComponent={<View style={{ height: tabSpacing.contentBottomPad }} />}
       renderItem={({ item: lvl }) => {
         const data = getPlayerPathLevelData(lvl);
         const reached = lvl <= progress.level;

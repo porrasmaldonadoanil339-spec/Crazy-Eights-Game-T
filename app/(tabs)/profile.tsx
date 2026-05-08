@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { useT } from "@/hooks/useT";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTabBarSpacing } from "@/hooks/useTabBarSpacing";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
@@ -407,6 +408,7 @@ function StatRow({ label, value, textColor, textMuted }: { label: string; value:
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const tabSpacing = useTabBarSpacing();
   const { profile, level, xpProgress, updateName, updateAvatar, updateTitle, updateFrame, updatePhotoUri, updateCountry, updateSettings } = useProfile();
   const { user, logout } = useAuth();
   const [showEditName, setShowEditName] = useState(false);
@@ -532,7 +534,7 @@ export default function ProfileScreen() {
     <View style={[styles.container, { paddingTop: topPad }]}>
       <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: tabSpacing.contentBottomPad }]}>
         <Text style={[styles.screenTitle, { color: themeGold }]}>{T("profile")}</Text>
 
         {/* Connect Account banner — only for guest users */}

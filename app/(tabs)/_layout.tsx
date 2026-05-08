@@ -7,6 +7,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { useT } from "@/hooks/useT";
 import { playTabSwitch } from "@/lib/audioManager";
 import { useUIState } from "@/context/UIStateContext";
+import { TAB_BAR_BASE_HEIGHT } from "@/hooks/useTabBarSpacing";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -38,9 +39,9 @@ export default function TabLayout() {
           }),
           borderTopWidth: 0,
           elevation: 0,
-          height: 78 + (Platform.OS === "web" ? 34 : insets.bottom),
-          paddingBottom: (Platform.OS === "web" ? 34 : Math.max(insets.bottom, 12)) + 14,
-          paddingTop: 4,
+          height: TAB_BAR_BASE_HEIGHT + (Platform.OS === "web" ? 34 : insets.bottom),
+          paddingBottom: (Platform.OS === "web" ? 34 : Math.max(insets.bottom, 8)) + 6,
+          paddingTop: 6,
         } : { display: "none" },
         tabBarItemStyle: {
           paddingTop: 0,

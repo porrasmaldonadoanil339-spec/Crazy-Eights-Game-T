@@ -7,6 +7,7 @@ import {
 import { useT } from "@/hooks/useT";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTabBarSpacing } from "@/hooks/useTabBarSpacing";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue, useAnimatedStyle, withSpring, withTiming,
@@ -784,6 +785,7 @@ function ModesGridSection({
 
 export default function PlayScreen() {
   const insets = useSafeAreaInsets();
+  const tabSpacing = useTabBarSpacing();
   const { startGame } = useGame();
   const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, chestOverflow, openChestFromInventory, openChestFromOverflow, battlePassTier, recordFichasModePlay, fichasModePlaysRemaining, isChestInventoryFull, chestOverflowCount, chestOverflowLimit } = useProfile();
   const { setTabBarVisible, splashReady } = useUIState();
@@ -1098,7 +1100,7 @@ export default function PlayScreen() {
       <View style={[styles.feltTextureV1, { pointerEvents: "none" } as any]} />
       <AnimatedBackground isDark={isDark} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: tabSpacing.contentBottomPad }]}>
         {/* Profile bar — clickable to go to profile */}
         <Pressable
           onPress={() => { playButton().catch(() => {}); router.push("/(tabs)/profile"); }}

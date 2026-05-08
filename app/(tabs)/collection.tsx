@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, Pressable, Platform, Modal } from "re
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTabBarSpacing } from "@/hooks/useTabBarSpacing";
 import { useT } from "@/hooks/useT";
 import { Colors, LightColors } from "@/constants/colors";
 import { useProfile } from "@/context/ProfileContext";
@@ -48,6 +49,7 @@ const RARITY_ORDER: Record<string, number> = {
 
 export default function CollectionScreen() {
   const insets = useSafeAreaInsets();
+  const tabSpacing = useTabBarSpacing();
   const T = useT();
   const {
     profile,
@@ -265,7 +267,7 @@ export default function CollectionScreen() {
         key="grid-4col"
         renderItem={renderItem}
         columnWrapperStyle={styles.colWrapper}
-        contentContainerStyle={styles.gridContent}
+        contentContainerStyle={[styles.gridContent, { paddingBottom: tabSpacing.contentBottomPad }]}
         initialNumToRender={20}
         maxToRenderPerBatch={20}
         windowSize={5}
@@ -348,7 +350,7 @@ const styles = StyleSheet.create({
     height: 32,
   },
   catLabel: { fontFamily: "Nunito_700Bold", fontSize: 11 },
-  gridContent: { paddingLeft: 14, paddingRight: 6, paddingBottom: 100, paddingTop: 6, gap: 14 },
+  gridContent: { paddingLeft: 14, paddingRight: 6, paddingTop: 6, gap: 14 },
   colWrapper: { justifyContent: "space-between" },
   gridItem: {
     width: "24%",
