@@ -787,6 +787,12 @@ let selectedLogoStingerId: LogoStingerId = DEFAULT_LOGO_STINGER_ID;
 // the player cached so repeated previews / boot don't decode the file twice.
 let customStingerUri: string | null = null;
 let customStingerPlayer: AudioPlayer | null = null;
+// Task #87 — start/end markers (ms) within the saved clip. When a trim window
+// is active, playback seeks to startMs and a scheduled pause stops playback at
+// endMs. Defaults to the full clip (0..MAX_MS) when no trim has been picked.
+let customStingerStartMs = 0;
+let customStingerEndMs = CUSTOM_LOGO_STINGER_MAX_MS;
+let customStingerStopTimer: ReturnType<typeof setTimeout> | null = null;
 
 function sfxKeyForStinger(id: LogoStingerId): SoundKey {
   const entry = LOGO_STINGERS.find((s) => s.id === id);
@@ -806,6 +812,10 @@ export function getLogoStingerId(): LogoStingerId {
 // picks a new file).
 export function setCustomStingerUri(uri: string | null) {
   if (uri === customStingerUri) return;
+  if (customStingerStopTimer) {
+    clearTimeout(customStingerStopTimer);
+    customStingerStopTimer = null;
+  }
   if (customStingerPlayer) {
     try { customStingerPlayer.pause(); customStingerPlayer.remove(); } catch {}
     customStingerPlayer = null;
@@ -828,16 +838,114 @@ function getOrCreateCustomStingerPlayer(): AudioPlayer | null {
   return customStingerPlayer;
 }
 
+// Task #87 — clamp/normalize the trim window so the audio manager never tries
+// to play a window with a negative or zero duration. The start marker is NOT
+// clamped to 2 seconds — long source clips can have a start anywhere inside
+// the file (e.g. 3.5s into a 6s recording). Only the *window length*
+// (end-start) is bounded by CUSTOM_LOGO_STINGER_MAX_MS.
+function effectiveCustomTrim(): { startSec: number; durationMs: number } {
+  const startMs = Math.max(0, customStingerStartMs);
+  const endMs = Math.max(startMs, customStingerEndMs);
+  let durationMs = Math.min(endMs - startMs, CUSTOM_LOGO_STINGER_MAX_MS);
+  if (!isFinite(durationMs) || durationMs <= 0) durationMs = CUSTOM_LOGO_STINGER_MAX_MS;
+  return { startSec: startMs / 1000, durationMs };
+}
+
+// Task #87 — register the trim window for the saved custom clip. End-start is
+// always capped at CUSTOM_LOGO_STINGER_MAX_MS by the picker UI; this guard is
+// belt-and-braces so a stale profile field can't make playback hang past the
+// 2-second budget. The start marker itself is NOT capped (the source clip can
+// be longer than 2 seconds).
+export function setCustomStingerTrim(startMs: number, endMs: number) {
+  const a = Math.max(0, Math.floor(startMs));
+  const b = Math.max(a, Math.floor(endMs));
+  customStingerStartMs = a;
+  customStingerEndMs = Math.min(b, a + CUSTOM_LOGO_STINGER_MAX_MS);
+}
+
+// Task #87 — preview an arbitrary [startMs, endMs] window of a draft clip
+// (the user's pick before they've committed to Save). Owned end-to-end by the
+// audio manager so the trim modal doesn't have to manage its own AudioPlayer:
+// it caches one player per URI, scrubs to startMs, and schedules a pause at
+// endMs. Bypasses the SFX mute toggle on purpose — the player tapped Preview.
+let draftStingerPlayer: AudioPlayer | null = null;
+let draftStingerUri: string | null = null;
+let draftStingerStopTimer: ReturnType<typeof setTimeout> | null = null;
+
+export async function previewCustomStingerWindow(
+  uri: string,
+  startMs: number,
+  endMs: number,
+): Promise<boolean> {
+  if (isBackgrounded) return false;
+  stopCustomStingerWindowPreview();
+  if (draftStingerPlayer && draftStingerUri !== uri) {
+    try { draftStingerPlayer.remove(); } catch {}
+    draftStingerPlayer = null;
+  }
+  if (!draftStingerPlayer) {
+    try {
+      draftStingerPlayer = createAudioPlayer({ uri });
+      draftStingerUri = uri;
+    } catch {
+      draftStingerPlayer = null;
+      draftStingerUri = null;
+      return false;
+    }
+  }
+  const start = Math.max(0, startMs);
+  const windowMs = Math.max(50, Math.min(CUSTOM_LOGO_STINGER_MAX_MS, endMs - start));
+  const p = draftStingerPlayer;
+  await safe(async () => {
+    p.volume = sfxVolume * 0.95;
+    p.seekTo(start / 1000);
+    p.play();
+  });
+  draftStingerStopTimer = setTimeout(() => {
+    draftStingerStopTimer = null;
+    try { p.pause(); } catch {}
+  }, windowMs);
+  return true;
+}
+
+export function stopCustomStingerWindowPreview() {
+  if (draftStingerStopTimer) {
+    clearTimeout(draftStingerStopTimer);
+    draftStingerStopTimer = null;
+  }
+  if (draftStingerPlayer) {
+    try { draftStingerPlayer.pause(); } catch {}
+  }
+}
+
+export function releaseCustomStingerWindowPreview() {
+  stopCustomStingerWindowPreview();
+  if (draftStingerPlayer) {
+    try { draftStingerPlayer.remove(); } catch {}
+  }
+  draftStingerPlayer = null;
+  draftStingerUri = null;
+}
+
 async function playStingerById(id: LogoStingerId, volume: number): Promise<boolean> {
   if (isSfxMuted || isBackgrounded) return false;
   if (id === "custom") {
     const p = getOrCreateCustomStingerPlayer();
     if (!p) return false;
+    const { startSec, durationMs } = effectiveCustomTrim();
     await safe(async () => {
       p.volume = volume;
-      p.seekTo(0);
+      p.seekTo(startSec);
       p.play();
     });
+    if (customStingerStopTimer) {
+      clearTimeout(customStingerStopTimer);
+      customStingerStopTimer = null;
+    }
+    customStingerStopTimer = setTimeout(() => {
+      customStingerStopTimer = null;
+      try { p.pause(); } catch {}
+    }, durationMs);
     return true;
   }
   await playSfx(sfxKeyForStinger(id), volume);

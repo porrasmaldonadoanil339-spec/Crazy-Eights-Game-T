@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, Switch, Platform, ScrollView,
   Modal, Pressable, Vibration, Linking, Alert, TextInput, Animated,
+  PanResponder, LayoutChangeEvent,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,7 +13,7 @@ import { reloadAppAsync } from "expo";
 import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
-import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, type LogoStingerId } from "@/lib/audioManager";
+import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import { File, Directory, Paths } from "expo-file-system";
@@ -20,6 +21,12 @@ import { useT } from "@/hooks/useT";
 import type { TranslationKey } from "@/lib/i18n";
 import { playSound } from "@/lib/sounds";
 import { Colors } from "@/constants/colors";
+
+// Task #87 — recording cap. Sources picked via the file picker can be any
+// length (the trim modal scrolls a 2-second window across them). Recordings
+// auto-stop at this length so the user has enough material to pick a slice
+// from without holding the mic button forever.
+const CUSTOM_STINGER_RECORD_MAX_MS = 6000;
 
 const LANGUAGES = [
   { code: "es",  label: "Español",          subtitle: "Español (Latinoamérica)", flag: "🇲🇽" },
@@ -178,6 +185,28 @@ export default function SettingsScreen() {
   const [customStingerBusy, setCustomStingerBusy] = useState(false);
   const [isRecordingStinger, setIsRecordingStinger] = useState(false);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  // Task #87 — draft state for the trim modal. After picking/recording a clip
+  // we hold the source URI + measured duration here so the player can scrub
+  // a 2-second window and preview it before committing to disk + profile.
+  const [stingerDraft, setStingerDraft] = useState<
+    | null
+    | { srcUri: string; ext: string; durationMs: number }
+  >(null);
+  const [draftStartMs, setDraftStartMs] = useState(0);
+  const [draftEndMs, setDraftEndMs] = useState(CUSTOM_LOGO_STINGER_MAX_MS);
+  const [trimTrackWidth, setTrimTrackWidth] = useState(0);
+  const draftPreviewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isPreviewingDraft, setIsPreviewingDraft] = useState(false);
+  // Mutable refs so PanResponder callbacks always read the latest values
+  // without stale-closure bugs.
+  const draftStartMsRef = useRef(0);
+  const draftEndMsRef = useRef(CUSTOM_LOGO_STINGER_MAX_MS);
+  const trimTrackWidthRef = useRef(0);
+  const draftDurationMsRef = useRef(0);
+  useEffect(() => { draftStartMsRef.current = draftStartMs; }, [draftStartMs]);
+  useEffect(() => { draftEndMsRef.current = draftEndMs; }, [draftEndMs]);
+  useEffect(() => { trimTrackWidthRef.current = trimTrackWidth; }, [trimTrackWidth]);
+  useEffect(() => { draftDurationMsRef.current = stingerDraft?.durationMs ?? 0; }, [stingerDraft]);
   const [langSearch, setLangSearch] = useState("");
   const [showFaqModal, setShowFaqModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -326,30 +355,175 @@ export default function SettingsScreen() {
     return msg || T(fallbackKey) || fallback;
   };
 
-  const applyNewCustomClip = async (srcUri: string, ext: string) => {
+  // Task #87 — instead of persisting immediately, open the trim modal so the
+  // player can pick which 2-second window of the source clip to keep. The
+  // modal's Save handler is what actually copies the file + updates profile.
+  const openStingerTrim = async (srcUri: string, ext: string) => {
     const durationMs = await measureClipDurationMs(srcUri);
     if (!durationMs) {
       Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
       return;
     }
-    if (durationMs > CUSTOM_LOGO_STINGER_MAX_MS + 150) {
-      Alert.alert(stingerTitle(), T("logoStingerTooLong") || "Clip must be 2 seconds or less");
-      return;
+    // Default the trim window to the first 2 seconds of the source (or the
+    // full clip if shorter than the cap). The player can then drag handles
+    // to move the window before previewing / saving.
+    const initialEnd = Math.min(durationMs, CUSTOM_LOGO_STINGER_MAX_MS);
+    setStingerDraft({ srcUri, ext, durationMs });
+    setDraftStartMs(0);
+    setDraftEndMs(initialEnd);
+  };
+
+  const stopDraftPreview = () => {
+    if (draftPreviewTimer.current) {
+      clearTimeout(draftPreviewTimer.current);
+      draftPreviewTimer.current = null;
     }
+    stopCustomStingerWindowPreview();
+    setIsPreviewingDraft(false);
+  };
+
+  const previewDraftWindow = () => {
+    if (!stingerDraft) return;
+    // Trim preview routes through the audio manager so the modal doesn't own
+    // its own AudioPlayer lifecycle. Bypasses the global SFX toggle on
+    // purpose: the player explicitly tapped Preview. Auto-saved playback
+    // (after Save / on boot) still respects the SFX toggle.
+    stopDraftPreview();
+    const start = draftStartMsRef.current;
+    const end = draftEndMsRef.current;
+    const windowMs = Math.max(50, end - start);
+    previewCustomStingerWindow(stingerDraft.srcUri, start, end)
+      .then((ok) => {
+        if (!ok) {
+          Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
+          return;
+        }
+        setIsPreviewingDraft(true);
+        draftPreviewTimer.current = setTimeout(() => {
+          draftPreviewTimer.current = null;
+          setIsPreviewingDraft(false);
+        }, windowMs);
+      })
+      .catch(() => {
+        Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
+      });
+  };
+
+  // Tear down the preview state when the trim modal closes so the audio
+  // manager's cached draft player is released before we persist (or discard)
+  // the source clip.
+  const teardownDraftPreview = () => {
+    if (draftPreviewTimer.current) {
+      clearTimeout(draftPreviewTimer.current);
+      draftPreviewTimer.current = null;
+    }
+    releaseCustomStingerWindowPreview();
+    setIsPreviewingDraft(false);
+  };
+
+  const cancelStingerTrim = () => {
+    teardownDraftPreview();
+    setStingerDraft(null);
+  };
+
+  const saveStingerTrim = () => {
+    if (!stingerDraft) return;
+    const startMs = Math.max(0, Math.floor(draftStartMs));
+    const endMs = Math.min(
+      stingerDraft.durationMs,
+      Math.max(startMs + 100, Math.floor(draftEndMs)),
+    );
+    teardownDraftPreview();
     let savedUri: string;
     try {
-      savedUri = persistCustomClip(srcUri, ext);
+      savedUri = persistCustomClip(stingerDraft.srcUri, stingerDraft.ext);
     } catch {
       Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
       return;
     }
     const previousUri = profile.customLogoStingerUri || "";
     setCustomStingerUri(savedUri);
-    updateSettings({ customLogoStingerUri: savedUri, logoStingerId: "custom" });
+    // Sync trim into the audio manager *before* the optional preview so the
+    // immediate playStingerById("custom") call uses the new window. The
+    // _layout effect will re-sync on the next profile push too, but doing it
+    // here makes the post-save preview deterministic in the same tick.
+    setCustomStingerTrim(startMs, endMs);
+    updateSettings({
+      customLogoStingerUri: savedUri,
+      customLogoStingerStartMs: startMs,
+      customLogoStingerEndMs: endMs,
+      logoStingerId: "custom",
+    });
     if (previousUri && previousUri !== savedUri) cleanupOldCustomClip(previousUri);
+    setStingerDraft(null);
     if (profile.sfxEnabled) previewLogoStinger("custom").catch(() => {});
     if (profile.vibrationEnabled) Vibration.vibrate(30);
   };
+
+  // Cleanup any in-flight preview when the screen unmounts.
+  useEffect(() => () => { teardownDraftPreview(); }, []);
+
+  // PanResponder factory for the start/end trim handles. `which` controls
+  // which marker is being dragged. Conversion factor: pixels → ms based on
+  // the measured track width and the source clip's full duration. We snapshot
+  // the start/end values at grant time and apply gesture.dx on top of those —
+  // reading the live refs during onMove would double-count because they
+  // update on every setState round-trip.
+  const dragOriginStartMs = useRef(0);
+  const dragOriginEndMs = useRef(0);
+  const makeHandlePanResponder = (which: "start" | "end") =>
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        // Stop any in-flight preview so dragging doesn't fight playback.
+        if (isPreviewingDraft) stopDraftPreview();
+        dragOriginStartMs.current = draftStartMsRef.current;
+        dragOriginEndMs.current = draftEndMsRef.current;
+      },
+      onPanResponderMove: (_evt, gesture) => {
+        const trackW = trimTrackWidthRef.current;
+        const totalMs = draftDurationMsRef.current;
+        if (trackW <= 0 || totalMs <= 0) return;
+        const msPerPx = totalMs / trackW;
+        if (which === "start") {
+          let nextStart = dragOriginStartMs.current + gesture.dx * msPerPx;
+          nextStart = Math.max(0, Math.min(nextStart, totalMs));
+          // Keep end fixed; window can shrink to a 100ms minimum and is
+          // always capped at MAX_MS.
+          let nextEnd = draftEndMsRef.current;
+          if (nextEnd - nextStart > CUSTOM_LOGO_STINGER_MAX_MS) {
+            nextEnd = nextStart + CUSTOM_LOGO_STINGER_MAX_MS;
+          }
+          if (nextEnd - nextStart < 100) {
+            nextStart = nextEnd - 100;
+          }
+          setDraftStartMs(nextStart);
+          setDraftEndMs(nextEnd);
+        } else {
+          let nextEnd = dragOriginEndMs.current + gesture.dx * msPerPx;
+          nextEnd = Math.max(0, Math.min(nextEnd, totalMs));
+          let nextStart = draftStartMsRef.current;
+          if (nextEnd - nextStart > CUSTOM_LOGO_STINGER_MAX_MS) {
+            nextStart = nextEnd - CUSTOM_LOGO_STINGER_MAX_MS;
+          }
+          if (nextEnd - nextStart < 100) {
+            nextEnd = nextStart + 100;
+          }
+          setDraftStartMs(Math.max(0, nextStart));
+          setDraftEndMs(nextEnd);
+        }
+      },
+      onPanResponderRelease: () => {
+        // No state work needed — the refs already track the live values via
+        // the useEffect syncs at the top of the component, so the next drag's
+        // `gesture.dx` is applied on top of the freshly-released positions.
+        if (profile.vibrationEnabled) Vibration.vibrate(10);
+      },
+    });
+
+  const startHandlePan = useRef(makeHandlePanResponder("start")).current;
+  const endHandlePan = useRef(makeHandlePanResponder("end")).current;
 
   const pickCustomStingerFile = async () => {
     if (customStingerBusy || isRecordingStinger) return;
@@ -364,7 +538,7 @@ export default function SettingsScreen() {
       const asset = result.assets[0];
       const dotIdx = asset.name?.lastIndexOf(".") ?? -1;
       const ext = dotIdx >= 0 ? asset.name.slice(dotIdx + 1) : "m4a";
-      await applyNewCustomClip(asset.uri, ext);
+      await openStingerTrim(asset.uri, ext);
     } catch (err) {
       Alert.alert(stingerTitle(), errorMessage(err, "logoStingerLoadFailed", "Could not load the audio"));
     } finally {
@@ -389,8 +563,10 @@ export default function SettingsScreen() {
       setIsRecordingStinger(true);
       if (profile.vibrationEnabled) Vibration.vibrate(40);
       recorder.record();
-      // Auto-stop at the 2-second cap.
-      await new Promise<void>((r) => setTimeout(r, CUSTOM_LOGO_STINGER_MAX_MS));
+      // Task #87 — record for up to 6 seconds so the trim modal has a real
+      // window to scrub across. The 2-second cap is enforced by the trim
+      // handles + saved end-start when the player commits.
+      await new Promise<void>((r) => setTimeout(r, CUSTOM_STINGER_RECORD_MAX_MS));
       try { await recorder.stop(); } catch {}
       setIsRecordingStinger(false);
       const uri = recorder.uri;
@@ -398,7 +574,7 @@ export default function SettingsScreen() {
         Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
         return;
       }
-      await applyNewCustomClip(uri, "m4a");
+      await openStingerTrim(uri, "m4a");
     } catch (err) {
       setIsRecordingStinger(false);
       Alert.alert(stingerTitle(), errorMessage(err, "logoStingerLoadFailed", "Could not load the audio"));
@@ -412,11 +588,22 @@ export default function SettingsScreen() {
     setCustomStingerUri(null);
     // Fall back to the *previously selected* built-in stinger if Custom was
     // the active pick, not the global default.
+    // Reset trim markers to defaults so a freshly-picked replacement clip
+    // doesn't inherit the previous selection's window.
     if ((profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID) === "custom") {
       const fallbackId: LogoStingerId = profile.lastBuiltInLogoStingerId ?? DEFAULT_LOGO_STINGER_ID;
-      updateSettings({ customLogoStingerUri: "", logoStingerId: fallbackId });
+      updateSettings({
+        customLogoStingerUri: "",
+        customLogoStingerStartMs: 0,
+        customLogoStingerEndMs: CUSTOM_LOGO_STINGER_MAX_MS,
+        logoStingerId: fallbackId,
+      });
     } else {
-      updateSettings({ customLogoStingerUri: "" });
+      updateSettings({
+        customLogoStingerUri: "",
+        customLogoStingerStartMs: 0,
+        customLogoStingerEndMs: CUSTOM_LOGO_STINGER_MAX_MS,
+      });
     }
     cleanupOldCustomClip(prevUri);
     if (profile.vibrationEnabled) Vibration.vibrate(30);
@@ -1079,6 +1266,150 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
+      {/* Task #87 — Custom intro trim modal. Opens after a clip is picked or
+          recorded. Lets the player drag two handles over the source waveform
+          to pick the 2-second window to keep, preview it, and save (or
+          cancel) before anything is written to disk / profile. */}
+      <Modal
+        visible={!!stingerDraft}
+        transparent
+        animationType="slide"
+        onRequestClose={cancelStingerTrim}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.langModal}>
+            <LinearGradient colors={["#0a1a0c", "#061209"]} style={StyleSheet.absoluteFill} />
+            <View style={styles.langModalHeader}>
+              <Text style={styles.langModalTitle}>
+                {T("logoStingerTrimTitle") || "Trim your intro"}
+              </Text>
+              <Pressable onPress={cancelStingerTrim} style={styles.langModalClose}>
+                <Ionicons name="close" size={22} color="#6B7A5C" />
+              </Pressable>
+            </View>
+            <Text style={{ paddingHorizontal: 4, paddingBottom: 12, color: "#6B7A5C", fontFamily: "Nunito_500Medium", fontSize: 12 }}>
+              {T("logoStingerTrimDesc") || "Drag the handles to pick a 2-second slice, then preview before saving."}
+            </Text>
+
+            {stingerDraft && (() => {
+              const totalMs = Math.max(1, stingerDraft.durationMs);
+              const startPct = Math.max(0, Math.min(100, (draftStartMs / totalMs) * 100));
+              const endPct = Math.max(0, Math.min(100, (draftEndMs / totalMs) * 100));
+              const windowSec = Math.max(0, (draftEndMs - draftStartMs) / 1000);
+              // Deterministic "waveform" bars derived from the source URI so
+              // re-renders during a drag don't flicker. 36 bars at varied
+              // heights gives a familiar audio-clip look without needing an
+              // actual decoder pass.
+              const bars: number[] = [];
+              const seed = stingerDraft.srcUri;
+              for (let i = 0; i < 36; i++) {
+                let h = 0;
+                for (let j = 0; j < seed.length; j++) {
+                  h = ((h << 5) - h + seed.charCodeAt(j) + i * 31) | 0;
+                }
+                const norm = (Math.abs(h) % 100) / 100;
+                bars.push(0.25 + norm * 0.75);
+              }
+              return (
+                <View>
+                  <View style={styles.trimDurationRow}>
+                    <Text style={styles.trimMetaText}>
+                      {`0:00 / ${(stingerDraft.durationMs / 1000).toFixed(1)}s`}
+                    </Text>
+                    <Text style={styles.trimWindowText}>
+                      {`${windowSec.toFixed(2)}s`}
+                    </Text>
+                  </View>
+                  <View
+                    style={styles.trimTrack}
+                    onLayout={(e: LayoutChangeEvent) => setTrimTrackWidth(e.nativeEvent.layout.width)}
+                  >
+                    {/* Background "waveform" */}
+                    <View style={styles.trimWaveformRow} pointerEvents="none">
+                      {bars.map((b, i) => (
+                        <View
+                          key={i}
+                          style={[
+                            styles.trimWaveformBar,
+                            { height: 6 + b * 32 },
+                          ]}
+                        />
+                      ))}
+                    </View>
+                    {/* Selected window highlight */}
+                    <View
+                      pointerEvents="none"
+                      style={[
+                        styles.trimSelection,
+                        { left: `${startPct}%`, width: `${Math.max(0, endPct - startPct)}%` },
+                      ]}
+                    />
+                    {/* Start handle */}
+                    <View
+                      {...startHandlePan.panHandlers}
+                      style={[styles.trimHandle, { left: `${startPct}%`, marginLeft: -14 }]}
+                    >
+                      <View style={styles.trimHandleGrip} />
+                    </View>
+                    {/* End handle */}
+                    <View
+                      {...endHandlePan.panHandlers}
+                      style={[styles.trimHandle, { left: `${endPct}%`, marginLeft: -14 }]}
+                    >
+                      <View style={styles.trimHandleGrip} />
+                    </View>
+                  </View>
+                  <View style={styles.trimMarkersRow}>
+                    <Text style={styles.trimMetaText}>
+                      {`${T("logoStingerTrimStart") || "Start"}: ${(draftStartMs / 1000).toFixed(2)}s`}
+                    </Text>
+                    <Text style={styles.trimMetaText}>
+                      {`${T("logoStingerTrimEnd") || "End"}: ${(draftEndMs / 1000).toFixed(2)}s`}
+                    </Text>
+                  </View>
+
+                  <View style={styles.trimButtonRow}>
+                    <TouchableOpacity
+                      onPress={isPreviewingDraft ? stopDraftPreview : previewDraftWindow}
+                      style={[styles.customStingerBtn, { borderColor: "#4FC3F7", flex: 1 }]}
+                    >
+                      <Ionicons
+                        name={isPreviewingDraft ? "stop-circle" : "play-circle"}
+                        size={18}
+                        color="#4FC3F7"
+                      />
+                      <Text style={[styles.customStingerBtnText, { color: "#4FC3F7" }]}>
+                        {isPreviewingDraft
+                          ? (T("logoStingerTrimStop") || "Stop")
+                          : (T("logoStingerTrimPreview") || "Preview")}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={cancelStingerTrim}
+                      style={[styles.customStingerBtn, { borderColor: "#6B7A5C", flex: 1 }]}
+                    >
+                      <Ionicons name="close-circle" size={18} color="#6B7A5C" />
+                      <Text style={[styles.customStingerBtnText, { color: "#6B7A5C" }]}>
+                        {T("logoStingerTrimCancel") || "Cancel"}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={saveStingerTrim}
+                      style={[styles.customStingerBtn, { borderColor: "#27AE60", flex: 1, backgroundColor: "rgba(39,174,96,0.12)" }]}
+                    >
+                      <Ionicons name="checkmark-circle" size={18} color="#27AE60" />
+                      <Text style={[styles.customStingerBtnText, { color: "#27AE60" }]}>
+                        {T("logoStingerTrimSave") || "Save"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })()}
+          </View>
+        </View>
+      </Modal>
+
       {showResetToast && (
         <Animated.View
           pointerEvents="none"
@@ -1151,6 +1482,35 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.2)",
   },
   customStingerBtnText: { fontFamily: "Nunito_700Bold", fontSize: 12 },
+  // Task #87 — trim modal: scrubber track, fake waveform, draggable handles.
+  trimDurationRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10, paddingHorizontal: 4 },
+  trimMetaText: { fontFamily: "Nunito_500Medium", fontSize: 12, color: "#8A9978" },
+  trimWindowText: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#D4AF37" },
+  trimTrack: {
+    height: 56, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.35)",
+    borderWidth: 1, borderColor: "rgba(212,175,55,0.18)",
+    justifyContent: "center", overflow: "visible", marginBottom: 8,
+  },
+  trimWaveformRow: {
+    position: "absolute", left: 6, right: 6, top: 0, bottom: 0,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+  },
+  trimWaveformBar: { width: 3, borderRadius: 2, backgroundColor: "rgba(168,200,140,0.5)" },
+  trimSelection: {
+    position: "absolute", top: 0, bottom: 0,
+    backgroundColor: "rgba(212,175,55,0.18)",
+    borderLeftWidth: 1.5, borderRightWidth: 1.5, borderColor: "rgba(212,175,55,0.55)",
+  },
+  trimHandle: {
+    position: "absolute", top: -6, bottom: -6, width: 28,
+    alignItems: "center", justifyContent: "center",
+  },
+  trimHandleGrip: {
+    width: 14, height: "100%", borderRadius: 7,
+    backgroundColor: "#D4AF37", borderWidth: 2, borderColor: "#0a1a0c",
+  },
+  trimMarkersRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 14, paddingHorizontal: 4 },
+  trimButtonRow: { flexDirection: "row", gap: 8, marginTop: 6 },
   // FAQ
   faqModal: {
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
