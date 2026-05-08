@@ -33,6 +33,7 @@ import { useEntryAnimation } from "@/hooks/useEntryAnimation";
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge } from "@/lib/challenges";
+import { getDailyDateKey } from "@/lib/dailyShop";
 import { getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
 import { FlatList } from "react-native";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
@@ -992,6 +993,17 @@ export default function PlayScreen() {
     }
   }, [isLoaded]);
 
+  // Daily-shop free gift availability — recompute on a 60s tick so the badge
+  // disappears when claimed and reappears at midnight rollover even if the
+  // home screen stays mounted.
+  const [dailyShopTick, setDailyShopTick] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setDailyShopTick(Date.now()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+  const dailyShopToday = React.useMemo(() => getDailyDateKey(new Date(dailyShopTick)), [dailyShopTick]);
+  const dailyShopGiftAvailable = isLoaded && profile.lastDailyShopFreeDate !== dailyShopToday;
+
   const dailyModalShown = useRef(false);
   // Show daily reward once per session, only after profile loaded AND splash dismissed
   // AND the player has finished the tutorial (so first-time players see the tutorial first,
@@ -1185,6 +1197,24 @@ export default function PlayScreen() {
             <Ionicons name="gift" size={16} color={theme.gold} />
             <Text style={[styles.dailyBannerText, { color: theme.gold }]}>{T("dailyRewardReady")}</Text>
             <Ionicons name="chevron-forward" size={14} color={theme.gold} />
+          </Pressable>
+        )}
+
+        {/* Daily shop free-gift banner — surfaces the rotating cosmetic gift
+            that previously was only visible inside the Store tab. Tap deep-
+            links to /store with a highlight param so the free-gift card
+            scrolls into view and pulses. */}
+        {dailyShopGiftAvailable && (
+          <Pressable
+            onPress={() => {
+              playButton().catch(() => {});
+              router.push("/(tabs)/store?highlight=freeGift");
+            }}
+            style={[styles.dailyBanner, { backgroundColor: isDark ? "rgba(46,204,113,0.14)" : "rgba(26,143,74,0.14)", borderColor: "rgba(46,204,113,0.45)" }]}
+          >
+            <Ionicons name="gift" size={16} color="#2ECC71" />
+            <Text style={[styles.dailyBannerText, { color: "#2ECC71" }]}>{T("dailyShopGiftReady")}</Text>
+            <Ionicons name="chevron-forward" size={14} color="#2ECC71" />
           </Pressable>
         )}
 

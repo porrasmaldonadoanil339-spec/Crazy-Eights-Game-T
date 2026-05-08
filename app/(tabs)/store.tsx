@@ -17,9 +17,9 @@ import type { Lang } from "@/lib/i18n";
 import { ItemPreview } from "@/components/ItemPreview";
 import { playSound } from "@/lib/sounds";
 import { useT } from "@/hooks/useT";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import BouncePressable from "@/components/BouncePressable";
-import Reanimated from "react-native-reanimated";
+import Reanimated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, withRepeat, Easing as REasing } from "react-native-reanimated";
 import { useEntryAnimation } from "@/hooks/useEntryAnimation";
 import { getDailyShopItems, getDailyFreeItem, getDailyDateKey, getDailyEmotes, DailyShopItem } from "@/lib/dailyShop";
 
@@ -650,10 +650,22 @@ export default function StoreScreen() {
   const insets = useSafeAreaInsets();
   const tabSpacing = useTabBarSpacing();
   const { profile, buyDailyShopItem, claimDailyShopFree, updateCardBack, updateCardDesign, updateTableDesign, updateAvatar, updateTitle, updateFrame, updateEffect, updateEquippedEmotes, buyItem } = useProfile();
+  const params = useLocalSearchParams<{ highlight?: string }>();
   const [confirmItem, setConfirmItem] = useState<DailyShopItem | null>(null);
   const [confirmEmote, setConfirmEmote] = useState<StoreItem | null>(null);
   const [infoItem, setInfoItem] = useState<StoreItem | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const freeGiftYRef = useRef<number>(0);
+  const highlightAnim = useSharedValue(0);
+  const highlightStyle = useAnimatedStyle(() => ({
+    shadowColor: "#2ECC71",
+    shadowOpacity: 0.25 + highlightAnim.value * 0.55,
+    shadowRadius: 6 + highlightAnim.value * 18,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: Math.round(2 + highlightAnim.value * 10),
+    transform: [{ scale: 1 + highlightAnim.value * 0.02 }],
+  }));
 
   const T = useT();
   const theme = useTheme();
@@ -794,6 +806,31 @@ export default function StoreScreen() {
 
   const localizedFreeItem = useMemo(() => localizeItem(freeItem, lang), [freeItem, lang]);
 
+  // Deep-link from the home screen (?highlight=freeGift) — scroll the daily
+  // free-gift card into view and pulse it briefly so the user can find it.
+  useEffect(() => {
+    if (params.highlight !== "freeGift") return;
+    const t = setTimeout(() => {
+      const y = Math.max(0, freeGiftYRef.current - 24);
+      scrollRef.current?.scrollTo({ y, animated: true });
+      highlightAnim.value = withSequence(
+        withRepeat(
+          withSequence(
+            withTiming(1, { duration: 480, easing: REasing.inOut(REasing.sin) }),
+            withTiming(0, { duration: 480, easing: REasing.inOut(REasing.sin) }),
+          ),
+          3,
+          false,
+        ),
+        withTiming(0, { duration: 200 }),
+      );
+      // Clear the param so revisiting the tab without re-tapping the home
+      // banner doesn't re-trigger the pulse.
+      router.setParams({ highlight: "" });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [params.highlight]);
+
   const handleClaimFree = async () => {
     if (freeClaimed) return;
     const ok = claimDailyShopFree(freeItem.id);
@@ -825,6 +862,7 @@ export default function StoreScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={Platform.OS !== "web"}
         contentContainerStyle={{ paddingBottom: tabSpacing.contentBottomPad, width: "100%", maxWidth: 820, alignSelf: "center" }}
@@ -838,7 +876,10 @@ export default function StoreScreen() {
           onEquipToggle={toggleEmote}
         />
 
-        <View style={styles.dailyFreeWrap}>
+        <Reanimated.View
+          style={[styles.dailyFreeWrap, highlightStyle]}
+          onLayout={(e) => { freeGiftYRef.current = e.nativeEvent.layout.y; }}
+        >
           <LinearGradient colors={["#2ECC7144", "#1A8F4A22"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyFreeGrad}>
             <View style={styles.dailyFreeIcon}>
               <Ionicons name="gift" size={28} color="#2ECC71" />
@@ -866,7 +907,7 @@ export default function StoreScreen() {
               </LinearGradient>
             </BouncePressable>
           </LinearGradient>
-        </View>
+        </Reanimated.View>
 
         <View style={styles.dailyStripWrap}>
           <LinearGradient colors={["#FF6B6B22", "#C13E3E11"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.dailyStripGrad}>
