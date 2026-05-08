@@ -635,6 +635,9 @@ router.post("/dev-reset", (req, res) => {
 // when the player removes their pick.
 const STINGERS_DIR = path.join("/tmp", "ocho-stingers");
 const STINGER_MAX_BYTES = 5 * 1024 * 1024;
+const STINGER_TOTAL_QUOTA_BYTES = 500 * 1024 * 1024;
+const STINGER_RATE_WINDOW_MS = 60 * 60 * 1000;
+const STINGER_RATE_MAX_UPLOADS = 5;
 const STINGER_ALLOWED_EXT = new Set(["m4a", "mp3", "wav", "aac", "ogg", "caf", "webm", "mp4"]);
 const STINGER_MIME_BY_EXT: Record<string, string> = {
   m4a:  "audio/mp4",
@@ -647,8 +650,35 @@ const STINGER_MIME_BY_EXT: Record<string, string> = {
   webm: "audio/webm",
 };
 
+const stingerUploadHistory = new Map<string, number[]>();
+
+function checkStingerRateLimit(userId: string): { ok: true } | { ok: false; retryAfterSec: number } {
+  const now = Date.now();
+  const cutoff = now - STINGER_RATE_WINDOW_MS;
+  const recent = (stingerUploadHistory.get(userId) ?? []).filter(t => t > cutoff);
+  if (recent.length >= STINGER_RATE_MAX_UPLOADS) {
+    const retryAfterSec = Math.max(1, Math.ceil((recent[0] + STINGER_RATE_WINDOW_MS - now) / 1000));
+    stingerUploadHistory.set(userId, recent);
+    return { ok: false, retryAfterSec };
+  }
+  recent.push(now);
+  stingerUploadHistory.set(userId, recent);
+  return { ok: true };
+}
+
 function ensureStingersDir() {
   try { fs.mkdirSync(STINGERS_DIR, { recursive: true }); } catch {}
+}
+
+function getStingersDirUsage(): number {
+  ensureStingersDir();
+  let total = 0;
+  try {
+    for (const name of fs.readdirSync(STINGERS_DIR)) {
+      try { total += fs.statSync(path.join(STINGERS_DIR, name)).size; } catch {}
+    }
+  } catch {}
+  return total;
 }
 
 function deleteStingerFilesForUser(userId: string) {
@@ -660,6 +690,19 @@ function deleteStingerFilesForUser(userId: string) {
       }
     }
   } catch {}
+}
+
+function getUserStingerBytes(userId: string): number {
+  ensureStingersDir();
+  let total = 0;
+  try {
+    for (const name of fs.readdirSync(STINGERS_DIR)) {
+      if (name.startsWith(`${userId}-`)) {
+        try { total += fs.statSync(path.join(STINGERS_DIR, name)).size; } catch {}
+      }
+    }
+  } catch {}
+  return total;
 }
 
 function buildStingerUrl(req: import("express").Request, filename: string): string {
@@ -694,7 +737,21 @@ router.post(
       return res.status(413).json({ error: "audio file too large" });
     }
 
+    const rate = checkStingerRateLimit(payload.userId);
+    if (!rate.ok) {
+      res.setHeader("Retry-After", String(rate.retryAfterSec));
+      return res.status(429).json({
+        error: "too many uploads, please slow down",
+        retryAfterSec: rate.retryAfterSec,
+      });
+    }
+
     ensureStingersDir();
+    const projectedTotal = getStingersDirUsage() - getUserStingerBytes(payload.userId) + buf.byteLength;
+    if (projectedTotal > STINGER_TOTAL_QUOTA_BYTES) {
+      return res.status(507).json({ error: "server stinger storage full, try again later" });
+    }
+
     deleteStingerFilesForUser(payload.userId);
     // Capability-style URL: include 16 bytes of randomness so the public GET
     // endpoint can't be enumerated from a known userId. The per-user cleanup
