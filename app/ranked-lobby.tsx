@@ -16,6 +16,8 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { getLocalizedRankInfo } from "@/lib/ranked";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { AVATARS } from "@/lib/storeItems";
+import { pickRivalsWithIndices } from "@/lib/rivalGenerator";
+import type { RivalProfile } from "@/lib/rivalGenerator";
 
 const AVATAR_COLORS = ["#E74C3C","#9B59B6","#E67E22","#2ECC71","#1A8FC1","#D4AF37","#C0392B","#27AE60","#8E44AD","#F39C12"];
 const RANK_GOLD = "#D4AF37";
@@ -69,6 +71,11 @@ export default function RankedLobbyScreen() {
   const [invitedIds, setInvitedIds] = useState<string[]>([]);
   const [phase, setPhase] = useState<"lobby" | "searching" | "found">("lobby");
   const [searchProgress, setSearchProgress] = useState(0);
+  // Task #125 — rivals are picked once during the search phase and forwarded
+  // to /game-online via params so the avatar/name shown in the "found" reveal
+  // is the exact same opponent faced in the actual match (matchmaking trust).
+  const [matchRivals, setMatchRivals] = useState<RivalProfile[]>([]);
+  const [matchRivalIndices, setMatchRivalIndices] = useState<number[]>([]);
 
   const mySlot: FriendSlot = {
     id: "me",
@@ -128,6 +135,12 @@ export default function RankedLobbyScreen() {
     }
     setPhase("searching");
     startSearchMusic().catch(() => {});
+    // Pick the rivals up front so the "found" screen shows the same faces the
+    // player will see at the table. Indices flow to /game-online via params.
+    const cpuRivalsNeeded = Math.max(0, 3 - filledSlots);
+    const { rivals, indices } = pickRivalsWithIndices(cpuRivalsNeeded, level || 1);
+    setMatchRivals(rivals);
+    setMatchRivalIndices(indices);
     let progress = 0;
     const iv = setInterval(() => {
       progress += Math.random() * 8 + 4;
@@ -138,14 +151,22 @@ export default function RankedLobbyScreen() {
       setSearchProgress(100);
       setPhase("found");
     }, 4000 + Math.random() * 3000);
-  }, []);
+  }, [isRankedOnCooldown, rankedCooldownRemainingMs, T, filledSlots, level]);
 
   const handleStartMatch = useCallback(async () => {
     await playButton().catch(() => {});
     // Music transition is owned by app/_layout.tsx (AudioManager): "game-online"
     // is part of GAME_MUSIC_ROUTES, so navigation alone swaps menu→game music.
-    router.replace({ pathname: "/game-online", params: { count: "4", mode: "ranked", skipLobby: "true" } });
-  }, []);
+    router.replace({
+      pathname: "/game-online",
+      params: {
+        count: "4",
+        mode: "ranked",
+        skipLobby: "true",
+        rivalIndices: matchRivalIndices.join(","),
+      },
+    });
+  }, [matchRivalIndices]);
 
   const statusLabel = (s: FriendStatus) => s === "available" ? T("statusAvailable" as any) : s === "online" ? T("statusOnline" as any) : T("statusPlaying" as any);
   const statusOrder = (s: FriendStatus) => s === "available" ? 0 : s === "online" ? 1 : 2;
@@ -302,6 +323,24 @@ export default function RankedLobbyScreen() {
             <Ionicons name={rankInfo.icon as any} size={18} color={rankInfo.color} />
             <Text style={[styles.foundRankTxt, { color: ACCENT }]}>{rankInfo.displayName}</Text>
           </View>
+          {matchRivals.length > 0 && (
+            <View style={styles.foundRivalsRow}>
+              {matchRivals.map((r, i) => (
+                <Animated.View key={`rv_${i}`} entering={FadeIn.delay(120 * i).duration(360)} style={styles.foundRivalCard}>
+                  <View style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}>
+                    <AvatarDisplay
+                      avatarId={r.avatarId}
+                      photoUri={r.photoUrl}
+                      size={52}
+                      iconSize={26}
+                    />
+                  </View>
+                  <Text style={styles.foundRivalName} numberOfLines={1}>{r.name}</Text>
+                  <Text style={styles.foundRivalLvl}>Nv. {r.level}</Text>
+                </Animated.View>
+              ))}
+            </View>
+          )}
           <Pressable onPress={handleStartMatch} style={styles.startBtn}>
             <LinearGradient colors={["#2ECC71", "#1a9a50"]} style={styles.startGrad}>
               <Ionicons name="play" size={20} color="#fff" />
@@ -487,8 +526,26 @@ const styles = StyleSheet.create({
   foundSub: {
     fontFamily: "Nunito_700Bold", fontSize: 13, color: "rgba(255,255,255,0.55)", textAlign: "center", marginBottom: 16,
   },
-  foundRankRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 24 },
+  foundRankRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 },
   foundRankTxt: { fontFamily: "Nunito_800ExtraBold", fontSize: 18 },
+  foundRivalsRow: {
+    flexDirection: "row", alignItems: "flex-start", justifyContent: "center",
+    gap: 12, marginBottom: 24, alignSelf: "stretch", paddingHorizontal: 8,
+  },
+  foundRivalCard: {
+    alignItems: "center", gap: 4,
+    paddingVertical: 10, paddingHorizontal: 8, borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    flex: 1, minWidth: 0,
+  },
+  foundRivalName: {
+    fontFamily: "Nunito_700Bold", fontSize: 12, color: "#fff",
+    maxWidth: 80, textAlign: "center",
+  },
+  foundRivalLvl: {
+    fontFamily: "Nunito_700Bold", fontSize: 10, color: "rgba(255,255,255,0.5)",
+  },
   startBtn: { width: "100%", borderRadius: 16, overflow: "hidden" },
   startGrad: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",

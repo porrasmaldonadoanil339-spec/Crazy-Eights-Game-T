@@ -704,11 +704,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [update]);
 
   // ─── Ranked anti-abuse: penalty + cooldown for repeated abandons ─────────
+  // Task #125 — strict ±1 star economy. Every abandono = exactly -1 star
+  // (auto-loss). Repeat-offender deterrence is handled by an *escalating
+  // matchmaking cooldown* (not extra star loss), so the star ladder keeps
+  // its strict ±1 contract while bad-faith players still feel pressure.
   // Window: rolling 24 hours. Tiers:
-  //   1 abandon  →  -1 star  (base loss)
-  //   2 abandons →  -1 star
-  //   3-4        →  -2 stars (extra penalty)
-  //   5+         →  -3 stars + 10 min cooldown (no matchmaking)
+  //   1-2 abandons →  -1 star, no cooldown
+  //   3-4 abandons →  -1 star, 10 min cooldown
+  //   5+  abandons →  -1 star, 60 min cooldown
   const ABANDON_WINDOW_MS = 24 * 60 * 60 * 1000;
   const recordRankedAbandon = useCallback(() => {
     const now = Date.now();
@@ -717,10 +720,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const recent = (p.recentRankedAbandons ?? []).filter(t => now - t < ABANDON_WINDOW_MS);
       recent.push(now);
       const count = recent.length;
-      let starLoss = 1;
+      const starLoss = 1; // strict ±1 — escalation lives in the cooldown only
       let cooldownMs = 0;
-      if (count >= 5) { starLoss = 3; cooldownMs = 10 * 60 * 1000; }
-      else if (count >= 3) { starLoss = 2; }
+      if (count >= 5) cooldownMs = 60 * 60 * 1000;
+      else if (count >= 3) cooldownMs = 10 * 60 * 1000;
       result = { totalStarLoss: starLoss, cooldownMs, abandonsInWindow: count };
       const nextRanked = addStars(p.rankedProfile, -starLoss);
       const cooldownUntil = cooldownMs > 0 ? now + cooldownMs : (p.rankedCooldownUntil ?? 0);

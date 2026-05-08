@@ -37,6 +37,7 @@ import { getModeById } from "@/lib/gameModes";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
 import { ChestType, ChestReward } from "@/lib/chestSystem";
 import { CPU_PROFILES, type CpuProfile } from "@/lib/cpuProfiles";
+import { generateRival, rivalToCpuProfile } from "@/lib/rivalGenerator";
 import { playSound } from "@/lib/sounds";
 import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
 import { addStars, getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
@@ -799,7 +800,7 @@ function RankedResultOverlay({ type, onDone }: { type: "promotion" | "demotion";
 export default function OnlineGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = useWindowDimensions();
-  const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string; skipLobby?: string; names?: string }>();
+  const params = useLocalSearchParams<{ count?: string; rivalName?: string; code?: string; pidx?: string; mode?: string; skipLobby?: string; names?: string; rivalIndices?: string }>();
   const { profile, level: playerLevel, addXp, updateRanked, recordRankedAbandon, recordGameResult, updateAchievementProgress, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
   const T = useT();
 
@@ -832,11 +833,36 @@ export default function OnlineGameScreen() {
   const modeParam = params.mode || "classic";
 
   const [currentCpuProfiles, setCurrentCpuProfiles] = useState<CpuProfile[]>(() => {
-    const profiles = pickCpuProfiles(
-      playerCount - 1,
-      playerLevel || 1,
-      modeParam === "ranked" ? { rankedRank: profile.rankedProfile.rank } : undefined,
-    );
+    // Task #125 — when matchmaking already picked specific rivals (ranked
+    // lobby, online direct-search), it forwards their indices via params so
+    // we can rebuild the *exact same* CpuProfile objects here. Guarantees
+    // the avatar/name/level shown in the matchmaking reveal is the avatar
+    // faced in the actual game.
+    const indicesParam = params.rivalIndices;
+    let profiles: CpuProfile[];
+    if (indicesParam) {
+      const indices = indicesParam
+        .split(",")
+        .map(s => parseInt(s, 10))
+        .filter(n => Number.isFinite(n) && n >= 0);
+      if (indices.length >= playerCount - 1) {
+        profiles = indices
+          .slice(0, playerCount - 1)
+          .map(i => rivalToCpuProfile(generateRival(i)));
+      } else {
+        profiles = pickCpuProfiles(
+          playerCount - 1,
+          playerLevel || 1,
+          modeParam === "ranked" ? { rankedRank: profile.rankedProfile.rank } : undefined,
+        );
+      }
+    } else {
+      profiles = pickCpuProfiles(
+        playerCount - 1,
+        playerLevel || 1,
+        modeParam === "ranked" ? { rankedRank: profile.rankedProfile.rank } : undefined,
+      );
+    }
     if (params.names) {
       params.names.split(",").forEach((name, i) => {
         if (name.trim() && profiles[i]) {

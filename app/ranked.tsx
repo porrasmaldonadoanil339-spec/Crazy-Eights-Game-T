@@ -45,7 +45,16 @@ const COUNTRIES = [
   { code: "IN", name: "India" }, { code: "PH", name: "Filipinas" }, { code: "ID", name: "Indonesia" },
 ];
 
-function generatePlayer(index: number) {
+// Task #125 — Free Fire-style world ranking drift. Non-player rows are still
+// deterministic per (index, sessionEpoch) so the leaderboard feels alive
+// (rivals climb and fall a few spots between sessions/minutes) without
+// turning into pure noise. The epoch is captured per-mount inside the screen
+// component (see RankedScreen) so reopening the tab yields fresh movement
+// without requiring a full reload — and HMR doesn't pin a stale value.
+
+function generatePlayer(index: number, sessionEpoch: number) {
+  // Mixing the epoch into the seed shifts the score deltas (and therefore
+  // the final position) between sessions while keeping name/avatar stable.
   const seed = index + 12345;
   const firstName = FIRST_NAMES[Math.floor(seededRand(seed * 1) * FIRST_NAMES.length)];
   const lastName = LAST_NAMES[Math.floor(seededRand(seed * 2) * LAST_NAMES.length)];
@@ -79,6 +88,15 @@ function generatePlayer(index: number) {
     level = Math.floor(seededRand(seed * 8) * 20) + 1;
   }
 
+  // Per-epoch drift: small ±2-star jitter on the score so neighbors swap a
+  // few spots between sessions. Rank/division stay fixed per index so the
+  // leaderboard's tier silhouettes (top 10 mítico, top 100 diamante, …)
+  // remain stable; only intra-tier order drifts.
+  const baseDivision = Math.floor(seededRand(seed * 9) * 5);
+  const baseStars = Math.floor(seededRand(seed * 10) * 5) + 1;
+  const driftSeed = seed * 17 + sessionEpoch;
+  const drift = Math.floor(seededRand(driftSeed) * 5) - 2; // -2..+2
+
   return {
     id: `global_${index}`,
     name,
@@ -87,11 +105,20 @@ function generatePlayer(index: number) {
     photoUrl,
     country,
     rank: rankIdx,
-    division: Math.floor(seededRand(seed * 9) * 5),
-    stars: Math.floor(seededRand(seed * 10) * 5) + 1,
+    division: baseDivision,
+    stars: baseStars,
     level,
     position: index + 1,
     isMe: false,
+    __drift: drift,
+  } as ReturnType<typeof _playerShape>;
+}
+// Phantom shape helper so TypeScript infers the __drift field above.
+function _playerShape() {
+  return {
+    id: "", name: "", avatarIcon: "", avatarColor: "", photoUrl: undefined as string | undefined,
+    country: { code: "", name: "" }, rank: 0, division: 0, stars: 0, level: 0,
+    position: 0, isMe: false as boolean, __drift: 0,
   };
 }
 
@@ -112,6 +139,10 @@ export default function RankedScreen() {
   
   const [visibleCount, setVisibleCount] = useState(50);
   const totalPlayers = 10000;
+  // Per-mount drift epoch: each time the screen opens, the leaderboard
+  // shuffles slightly (Free Fire-style). Captured once per mount so scrolling
+  // doesn't reorder rows mid-session.
+  const [sessionEpoch] = useState(() => Math.floor(Date.now() / 90000));
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -124,12 +155,14 @@ export default function RankedScreen() {
     rank * 10000 + division * 1000 + stars;
 
   const visiblePlayers = useMemo(() => {
-    const players = Array.from({ length: Math.min(visibleCount, totalPlayers) }).map((_, i) => generatePlayer(i));
+    const players = Array.from({ length: Math.min(visibleCount, totalPlayers) }).map((_, i) => generatePlayer(i, sessionEpoch));
 
     // Sort highest score first so División 1 appears above División 5,
-    // and within the same division more stars ranks higher.
+    // and within the same division more stars ranks higher. Per-epoch drift
+    // is added so neighbors gently swap places between sessions.
     players.sort((a, b) =>
-      rankScore(b.rank, b.division, b.stars) - rankScore(a.rank, a.division, a.stars)
+      (rankScore(b.rank, b.division, b.stars) + ((b as any).__drift ?? 0)) -
+      (rankScore(a.rank, a.division, a.stars) + ((a as any).__drift ?? 0))
     );
 
     // Re-assign sequential positions after sorting
@@ -156,7 +189,7 @@ export default function RankedScreen() {
       };
     }
     return players;
-  }, [visibleCount, profile.name, profile.rankedProfile, level]);
+  }, [visibleCount, profile.name, profile.rankedProfile, level, sessionEpoch, profile.avatarId, profile.selectedFrameId, profile.photoUri]);
 
   const loadMore = useCallback(() => {
     if (visibleCount < totalPlayers) {

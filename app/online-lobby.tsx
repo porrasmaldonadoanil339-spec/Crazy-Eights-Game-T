@@ -19,6 +19,7 @@ import { getSocket, ensureDisconnected } from "@/lib/onlineSocket";
 import { getLocalizedRankInfo } from "@/lib/ranked";
 import { playButton, startMenuMusic, startSearchMusic } from "@/lib/audioManager";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
+import { pickRivalsWithIndices } from "@/lib/rivalGenerator";
 import { playSound } from "@/lib/sounds";
 import { TipRotator, FloatingCardField } from "@/components/LiveLoader";
 import { RankShield } from "@/components/RankShield";
@@ -271,6 +272,8 @@ export default function OnlineLobbyScreen() {
 
   // ── Direct fake matchmaking flow ─────────────────────────────────────────────
   const directSearchTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // Track rival indices when matchmaking uses the rivalGenerator pool (ranked).
+  const directSearchIndicesRef = useRef<number[]>([]);
 
   const latestFakePlayers = useRef<PlayerInfo[]>([]);
   useEffect(() => { latestFakePlayers.current = fakePlayers; }, [fakePlayers]);
@@ -278,6 +281,9 @@ export default function OnlineLobbyScreen() {
   function startDirectGame() {
     const allFakes = latestFakePlayers.current;
     const names = allFakes.map(p => p.name).join(",");
+    // Task #125 — when matchmaking has rivalIndices stashed (ranked direct
+    // search), forward them so the game uses the exact rivals revealed here.
+    const rivalIndices = directSearchIndicesRef.current;
     router.replace({
       pathname: "/game-online",
       params: {
@@ -285,6 +291,7 @@ export default function OnlineLobbyScreen() {
         mode: mode,
         skipLobby: "true",
         names: names,
+        ...(rivalIndices.length > 0 ? { rivalIndices: rivalIndices.join(",") } : {}),
       },
     });
   }
@@ -296,11 +303,41 @@ export default function OnlineLobbyScreen() {
     playSound("searching").catch(() => {});
     startSearchMusic().catch(() => {});
 
+    // Task #125 — for ranked, pull rivals from the rivalGenerator pool (with
+    // batch dedupe by name+avatar) and forward their indices to the game so
+    // the matchmaking faces match the in-game faces. Casual stays on the
+    // lighter CPU_PROFILES pool to preserve the existing aesthetic.
+    let rankedRivals: { name: string; avatarId: string; level: number; photoUrl?: string }[] = [];
+    if (mode === "ranked") {
+      const { rivals, indices } = pickRivalsWithIndices(needed, myProfile.level || 1);
+      rankedRivals = rivals;
+      directSearchIndicesRef.current = indices;
+    } else {
+      directSearchIndicesRef.current = [];
+    }
+
     // Add fake players one by one with staggered delays (~10s total search)
     for (let i = 0; i < needed; i++) {
       const delay = 2000 + i * 2500 + Math.floor(Math.random() * 600);
       const t = setTimeout(() => {
-        const fp = makeFakePlayer(i + 1);
+        let fp: PlayerInfo;
+        if (mode === "ranked" && rankedRivals[i]) {
+          const r = rankedRivals[i];
+          fp = {
+            name: r.name,
+            playerIndex: i + 1,
+            avatarColor: FAKE_RANK_COLORS[i % FAKE_RANK_COLORS.length],
+            avatarIcon: "person",
+            photoUrl: r.photoUrl,
+            level: r.level,
+            rankColor: FAKE_RANK_COLORS[i % FAKE_RANK_COLORS.length],
+            rankIcon: "shield-half",
+            rankName: FAKE_RANK_NAMES[i % FAKE_RANK_NAMES.length],
+            avatarId: r.avatarId,
+          };
+        } else {
+          fp = makeFakePlayer(i + 1);
+        }
         setFakePlayers(prev => [...prev, fp]);
       }, delay);
       timers.push(t);

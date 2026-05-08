@@ -153,14 +153,26 @@ function getSessionExcludes(): Set<number> {
 }
 
 // ─── Pick N rivals near a given player level, no repeats ─────────────────────
+// Task #125 — also dedupes by displayed name and avatarId within the batch so
+// matchmaking never shows two rivals that look or read alike (a common
+// immersion break). The session-wide name/avatar memory is bounded so longer
+// sessions still find candidates.
+const _sessionUsedNames = new Set<string>();
+const _sessionUsedAvatars = new Set<string>();
+
 export function pickRivals(
   n: number,
   playerLevel: number,
   excludeIndices?: Set<number>
 ): RivalProfile[] {
   const results: RivalProfile[] = [];
+  const resultIndices: number[] = [];
   const sessionUsed = getSessionExcludes();
   const used = new Set<number>([...sessionUsed, ...(excludeIndices ?? [])]);
+  // Per-batch dedupe: within a single matchmaking call we never repeat a
+  // name or avatar even if the session-wide memory is empty.
+  const batchNames = new Set<string>();
+  const batchAvatars = new Set<string>();
 
   // Build a candidate range centered on player level
   // Search in expanding windows until we have enough
@@ -178,9 +190,15 @@ export function pickRivals(
       // Level filter: within ±15 of player level
       const levelDiff = Math.abs(rival.level - playerLevel);
       const maxDiff = Math.min(15, 10 + Math.floor(results.length * 3)); // expand if needed
-      if (levelDiff <= maxDiff) {
+      const nameKey = rival.name.toLowerCase();
+      const dupName = batchNames.has(nameKey) || _sessionUsedNames.has(nameKey);
+      const dupAvatar = batchAvatars.has(rival.avatarId) || _sessionUsedAvatars.has(rival.avatarId);
+      if (levelDiff <= maxDiff && !dupName && !dupAvatar) {
         used.add(idx);
+        batchNames.add(nameKey);
+        batchAvatars.add(rival.avatarId);
         results.push(rival);
+        resultIndices.push(idx);
       }
     }
     attempts++;
@@ -189,30 +207,97 @@ export function pickRivals(
     }
   }
 
-  // If still not enough (edge case), fill without level filter
+  // If still not enough (edge case), relax the level filter but keep BOTH
+  // the per-batch and the session-wide name/avatar dedupe so matchmaking
+  // never repeats a face the player has already seen this session.
   attempts = 0;
   while (results.length < n && attempts < TOTAL) {
     const idx = (startOffset + attempts * 1009) % TOTAL;
     if (!used.has(idx)) {
-      used.add(idx);
-      results.push(generateRival(idx));
+      const rival = generateRival(idx);
+      const nameKey = rival.name.toLowerCase();
+      const dupName = batchNames.has(nameKey) || _sessionUsedNames.has(nameKey);
+      const dupAvatar = batchAvatars.has(rival.avatarId) || _sessionUsedAvatars.has(rival.avatarId);
+      if (!dupName && !dupAvatar) {
+        used.add(idx);
+        batchNames.add(nameKey);
+        batchAvatars.add(rival.avatarId);
+        results.push(rival);
+        resultIndices.push(idx);
+      }
+    }
+    attempts++;
+  }
+
+  // Last-resort fallback: only the per-batch dedupe is still enforced (so a
+  // single matchmaking call never shows the same face twice). Session-wide
+  // dedupe is dropped here because at this point we've exhausted both the
+  // 100k-rival pool and the session memory — extremely rare and worth a
+  // duplicate over leaving an empty seat at the table.
+  attempts = 0;
+  while (results.length < n && attempts < TOTAL) {
+    const idx = (startOffset + attempts * 1013) % TOTAL;
+    if (!used.has(idx)) {
+      const rival = generateRival(idx);
+      const nameKey = rival.name.toLowerCase();
+      if (!batchNames.has(nameKey) && !batchAvatars.has(rival.avatarId)) {
+        used.add(idx);
+        batchNames.add(nameKey);
+        batchAvatars.add(rival.avatarId);
+        results.push(rival);
+        resultIndices.push(idx);
+      }
     }
     attempts++;
   }
 
   // Remember these rivals so we never re-issue them this session/day
-  results.forEach((r) => markRivalUsed(r));
+  results.forEach((r, i) => {
+    _sessionUsedNames.add(r.name.toLowerCase());
+    _sessionUsedAvatars.add(r.avatarId);
+    markRivalUsed(r, resultIndices[i]);
+  });
+  // Bound the session-wide name/avatar memory — at ~600 entries it auto-trims
+  // so very long sessions can still find candidates.
+  if (_sessionUsedNames.size > 600) {
+    const drop = _sessionUsedNames.values().next().value;
+    if (drop !== undefined) _sessionUsedNames.delete(drop);
+  }
+  if (_sessionUsedAvatars.size > AVATAR_IDS.length - 2) {
+    // Avatars pool is small; once nearly exhausted, clear so future picks
+    // can succeed without falling back to undeduped rivals.
+    _sessionUsedAvatars.clear();
+  }
+  // Stash indices alongside the results for callers that want to round-trip
+  // the exact same profiles into another screen (see pickRivalsWithIndices).
+  (results as any).__indices = resultIndices;
   return results;
 }
 
+// Variant that returns parallel arrays of rivals + indices so a caller can
+// pass the indices through router params and rebuild the identical profiles
+// on another screen via generateRival(idx). Used by ranked matchmaking to
+// guarantee the rival shown in the lobby is the rival faced in the match.
+export function pickRivalsWithIndices(
+  n: number,
+  playerLevel: number,
+  excludeIndices?: Set<number>,
+): { rivals: RivalProfile[]; indices: number[] } {
+  const rivals = pickRivals(n, playerLevel, excludeIndices);
+  const indices = ((rivals as any).__indices as number[] | undefined) ?? [];
+  return { rivals, indices };
+}
+
 // Track rivals after they're actually used (called by callers when a match starts)
-export function markRivalUsed(rival: RivalProfile) {
-  // Find the rival's index by re-hashing its name + level (cheap fingerprint).
-  // Safer alternative: callers pass the index when known. As a fallback we
-  // hash the displayed name to a stable bucket so repeats are unlikely.
-  let h = 0;
-  for (let i = 0; i < rival.name.length; i++) h = (h * 31 + rival.name.charCodeAt(i)) >>> 0;
-  _sessionUsedRivals.add(h % 100000);
+export function markRivalUsed(rival: RivalProfile, knownIndex?: number) {
+  if (typeof knownIndex === "number") {
+    _sessionUsedRivals.add(knownIndex);
+  } else {
+    // Fallback fingerprint when the index isn't known (legacy callers).
+    let h = 0;
+    for (let i = 0; i < rival.name.length; i++) h = (h * 31 + rival.name.charCodeAt(i)) >>> 0;
+    _sessionUsedRivals.add(h % 100000);
+  }
   // Cap memory so the set doesn't grow unbounded across very long sessions
   if (_sessionUsedRivals.size > 500) {
     const first = _sessionUsedRivals.values().next().value;
@@ -237,4 +322,15 @@ export function rivalToCpuProfile(r: RivalProfile) {
 export function pickRivalProfiles(n: number, playerLevel = 1): ReturnType<typeof rivalToCpuProfile>[] {
   const rivals = pickRivals(n, playerLevel);
   return rivals.map(rivalToCpuProfile);
+}
+
+// Variant that also returns the rival pool indices, so a caller (e.g. the
+// ranked matchmaking lobby) can pass them via router params and have the
+// game screen rebuild the exact same CpuProfile objects via generateRival.
+export function pickRivalProfilesWithIndices(
+  n: number,
+  playerLevel = 1,
+): { profiles: ReturnType<typeof rivalToCpuProfile>[]; indices: number[] } {
+  const { rivals, indices } = pickRivalsWithIndices(n, playerLevel);
+  return { profiles: rivals.map(rivalToCpuProfile), indices };
 }

@@ -102,15 +102,12 @@ export function getLocalizedRankInfo(rp: RankedProfile, lang: string) {
 export function addStars(rp: RankedProfile, delta: number): RankedProfile {
   let { rank, division, stars, maxStars, totalWins, totalLosses } = rp;
 
-  // Onboarding cushion: at Hierro/Bronce (rank 0–1) wins give an extra star
-  // and losses cost zero stars. Losses are still counted in totalLosses below
-  // so stats stay accurate. Keeps low-rank players moving forward so the
-  // climb out of the entry tiers feels achievable.
-  const lowRank = rank <= 1;
-  if (lowRank && delta > 0) delta = delta + 1;
-  let recordOnlyLoss = false;
-  if (lowRank && delta < 0) { recordOnlyLoss = true; delta = 0; }
-  if (recordOnlyLoss) totalLosses++;
+  // Task #125 — strict ±1 star economy. A ranked win is exactly +1 star, a
+  // ranked loss (or abandono escalation) is exactly -1 per unit of delta.
+  // The previous lowRank cushion (which doubled wins and zeroed losses at
+  // Hierro/Bronce) was removed because it produced the +2 star bug reported
+  // by players. Onboarding feel is now handled at the matchmaking level
+  // (early ranks face easier rivals) instead of star math.
 
   if (delta > 0) {
     totalWins++;
