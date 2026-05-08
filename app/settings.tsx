@@ -780,8 +780,20 @@ export default function SettingsScreen() {
         updateSettings({ customLogoStingerUri: result.url });
         setCustomStingerBackupStatus({ phase: "synced" });
       } finally {
-        setCustomStingerBusy(false);
-        setIsTrimmingDraft(false);
+        // Task #108 — only clear shared busy/trimming flags if no
+        // newer attempt is currently in flight. Without this guard, a
+        // late-resolving aborted attempt A would clobber the spinner
+        // state for the freshly-started attempt B (Save tapped right
+        // after Stop), leaving B's UI looking idle while the request
+        // is still running. trimAbortRef is null when this attempt
+        // was the last to settle (cleared above on the success/fail
+        // path) and equal to abortCtrl in the rare race where the
+        // ref hasn't been cleared yet — both mean "we're still the
+        // current attempt, safe to reset".
+        if (trimAbortRef.current === null || trimAbortRef.current === abortCtrl) {
+          setCustomStingerBusy(false);
+          setIsTrimmingDraft(false);
+        }
       }
     })();
   };
