@@ -976,6 +976,128 @@ router.post(
   },
 );
 
+// ─── Custom logo stinger waveform (Task #92) ───────────────────────────────
+// Decodes the source clip to mono PCM via ffmpeg and returns ~N peak-amplitude
+// samples (0..1) so the trim modal can render a real waveform of the recorded
+// audio instead of fake URI-hashed bars. Stateless / no auth (guests can also
+// trim, so they also get the real waveform) — rate-limited per IP separately
+// from the trim endpoint so a slow waveform decode doesn't eat the trim budget.
+const STINGER_WAVE_RATE_WINDOW_MS = 60 * 1000;
+const STINGER_WAVE_RATE_MAX = 30;
+const STINGER_WAVE_DEFAULT_SAMPLES = 36;
+const STINGER_WAVE_MAX_SAMPLES = 128;
+const stingerWaveHistory = new Map<string, number[]>();
+
+function checkStingerWaveRateLimit(ip: string): { ok: true } | { ok: false; retryAfterSec: number } {
+  const now = Date.now();
+  const cutoff = now - STINGER_WAVE_RATE_WINDOW_MS;
+  const recent = (stingerWaveHistory.get(ip) ?? []).filter(t => t > cutoff);
+  if (recent.length >= STINGER_WAVE_RATE_MAX) {
+    const retryAfterSec = Math.max(1, Math.ceil((recent[0] + STINGER_WAVE_RATE_WINDOW_MS - now) / 1000));
+    stingerWaveHistory.set(ip, recent);
+    return { ok: false, retryAfterSec };
+  }
+  recent.push(now);
+  stingerWaveHistory.set(ip, recent);
+  return { ok: true };
+}
+
+function runFfmpegDecodePcm(srcPath: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    // Decode whole file to mono signed-16 PCM at 8kHz on stdout. 8kHz keeps
+    // the PCM small (16 KB / sec) — way more than enough resolution for ~36
+    // visual bars across a clip up to 6s long.
+    const args = [
+      "-i", srcPath,
+      "-vn",
+      "-ac", "1",
+      "-ar", "8000",
+      "-f", "s16le",
+      "-",
+    ];
+    const proc = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"] });
+    const chunks: Buffer[] = [];
+    let stderr = "";
+    proc.stdout.on("data", (c: Buffer) => { chunks.push(c); });
+    proc.stderr.on("data", (c: Buffer) => { stderr += c.toString("utf8"); });
+    proc.on("error", reject);
+    proc.on("close", (code) => {
+      if (code === 0) resolve(Buffer.concat(chunks));
+      else reject(new Error(`ffmpeg exited ${code}: ${stderr.slice(-400)}`));
+    });
+  });
+}
+
+function pcmToPeakSamples(pcm: Buffer, samples: number): number[] {
+  const totalFrames = Math.floor(pcm.length / 2);
+  if (totalFrames <= 0 || samples <= 0) return [];
+  const out: number[] = new Array(samples).fill(0);
+  let globalPeak = 0;
+  for (let i = 0; i < samples; i++) {
+    const start = Math.floor((i * totalFrames) / samples);
+    const end = Math.max(start + 1, Math.floor(((i + 1) * totalFrames) / samples));
+    let peak = 0;
+    for (let f = start; f < end && f < totalFrames; f++) {
+      const v = pcm.readInt16LE(f * 2);
+      const a = v < 0 ? -v : v;
+      if (a > peak) peak = a;
+    }
+    out[i] = peak;
+    if (peak > globalPeak) globalPeak = peak;
+  }
+  // Normalize against the loudest bar so quiet recordings (which would
+  // otherwise look flat) still show shape. Clamp at 1.
+  const denom = globalPeak > 0 ? globalPeak : 1;
+  for (let i = 0; i < samples; i++) {
+    out[i] = Math.max(0, Math.min(1, out[i] / denom));
+  }
+  return out;
+}
+
+router.post(
+  "/profile/stinger/waveform",
+  express.json({ limit: "8mb" }),
+  async (req, res) => {
+    const ip = (req.ip || req.socket.remoteAddress || "unknown").toString();
+    const rate = checkStingerWaveRateLimit(ip);
+    if (!rate.ok) {
+      res.setHeader("Retry-After", String(rate.retryAfterSec));
+      return res.status(429).json({ error: "too many waveform requests", retryAfterSec: rate.retryAfterSec });
+    }
+    const { data, ext, samples } = req.body as { data?: string; ext?: string; samples?: number };
+    if (!data || !ext) return res.status(400).json({ error: "data and ext required" });
+    const safeExt = ext.replace(/[^a-z0-9]/gi, "").toLowerCase();
+    if (!STINGER_ALLOWED_EXT.has(safeExt)) {
+      return res.status(400).json({ error: "unsupported audio format" });
+    }
+    const wantSamples = Math.max(
+      4,
+      Math.min(STINGER_WAVE_MAX_SAMPLES, Math.floor(samples ?? STINGER_WAVE_DEFAULT_SAMPLES)),
+    );
+    let srcBuf: Buffer;
+    try { srcBuf = Buffer.from(data, "base64"); }
+    catch { return res.status(400).json({ error: "invalid base64" }); }
+    if (srcBuf.byteLength === 0 || srcBuf.byteLength > STINGER_MAX_BYTES) {
+      return res.status(413).json({ error: "audio file too large" });
+    }
+    const tmpId = crypto.randomBytes(8).toString("hex");
+    const srcPath = path.join(os.tmpdir(), `stinger-wave-${tmpId}.${safeExt}`);
+    try {
+      fs.writeFileSync(srcPath, srcBuf);
+      const pcm = await runFfmpegDecodePcm(srcPath);
+      const peaks = pcmToPeakSamples(pcm, wantSamples);
+      // Round to 3 decimals to keep the JSON payload tiny.
+      const rounded = peaks.map(v => Math.round(v * 1000) / 1000);
+      return res.json({ ok: true, samples: rounded });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return res.status(500).json({ error: "waveform failed", detail: msg });
+    } finally {
+      try { fs.unlinkSync(srcPath); } catch {}
+    }
+  },
+);
+
 router.post(
   "/profile/stinger",
   express.json({ limit: "6mb" }),

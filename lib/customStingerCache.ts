@@ -183,6 +183,41 @@ export async function shrinkCustomStingerToFile(
   }
 }
 
+// Task #92 — ask the server to decode the source clip and return ~N peak
+// amplitude samples (0..1) so the trim modal can render a real waveform of
+// the recorded audio. Returns null on any failure (no auth needed). Caller
+// is expected to fall back to a deterministic placeholder so the modal
+// still shows *something* if decoding fails.
+export async function computeStingerWaveform(
+  srcUri: string,
+  ext: string,
+  samples: number = 36,
+): Promise<number[] | null> {
+  let base64: string;
+  try {
+    base64 = await new File(srcUri).base64();
+  } catch {
+    return null;
+  }
+  try {
+    const url = new URL("/api/auth/profile/stinger/waveform", getApiUrl()).toString();
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: base64, ext, samples }),
+    });
+    if (!resp.ok) return null;
+    const json = await resp.json() as { ok?: boolean; samples?: number[] };
+    if (!json.ok || !Array.isArray(json.samples)) return null;
+    return json.samples.map(v => {
+      const n = typeof v === "number" && isFinite(v) ? v : 0;
+      return Math.max(0, Math.min(1, n));
+    });
+  } catch {
+    return null;
+  }
+}
+
 async function getAuthToken(): Promise<string | null> {
   try {
     const raw = await AsyncStorage.getItem("ocho_auth_v1");

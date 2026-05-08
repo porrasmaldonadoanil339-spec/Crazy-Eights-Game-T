@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, Switch, Platform, ScrollView,
   Modal, Pressable, Vibration, Linking, Alert, TextInput, Animated,
-  PanResponder, LayoutChangeEvent,
+  PanResponder, LayoutChangeEvent, ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,7 +14,7 @@ import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES, CUSTOM_LOGO_STINGER_SHRINK_MAX_INPUT_BYTES, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
-import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, shrinkCustomStingerToFile, type UploadStingerErrorReason, type ShrinkStingerErrorReason } from "@/lib/customStingerCache";
+import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, shrinkCustomStingerToFile, computeStingerWaveform, type UploadStingerErrorReason, type ShrinkStingerErrorReason } from "@/lib/customStingerCache";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
@@ -235,6 +235,13 @@ export default function SettingsScreen() {
   const stingerDraftEpochRef = useRef(0);
   const draftPreviewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isPreviewingDraft, setIsPreviewingDraft] = useState(false);
+  // Task #92 — real-amplitude bars for the trim modal. `null` while the
+  // server-side ffmpeg decode is in flight (we show a spinner), an empty
+  // array if it failed (we fall back to deterministic placeholder bars), or
+  // ~36 normalized peaks (0..1) once decoded. Reset whenever the source
+  // changes so reopening the modal with a new clip kicks off a fresh decode.
+  const [waveformBars, setWaveformBars] = useState<number[] | null>(null);
+  const waveformRequestId = useRef(0);
   // Mutable refs so PanResponder callbacks always read the latest values
   // without stale-closure bugs.
   const draftStartMsRef = useRef(0);
@@ -404,6 +411,21 @@ export default function SettingsScreen() {
     setStingerDraft({ srcUri, ext, durationMs, srcSizeBytes });
     setDraftStartMs(0);
     setDraftEndMs(initialEnd);
+    // Task #92 — kick off the real waveform decode in parallel with opening
+    // the modal. The modal renders a spinner over the bar row until the
+    // amplitudes arrive (or fall back to deterministic placeholder bars on
+    // failure). Use a request id so a second pick mid-flight wins.
+    setWaveformBars(null);
+    const requestId = ++waveformRequestId.current;
+    computeStingerWaveform(srcUri, ext, 36)
+      .then((bars) => {
+        if (waveformRequestId.current !== requestId) return;
+        setWaveformBars(bars && bars.length > 0 ? bars : []);
+      })
+      .catch(() => {
+        if (waveformRequestId.current !== requestId) return;
+        setWaveformBars([]);
+      });
   };
 
   // Task #101 — human-readable file size used by the trim modal. Returns
@@ -551,6 +573,10 @@ export default function SettingsScreen() {
     stingerDraftEpochRef.current += 1;
     setIsShrinkingDraft(false);
     setStingerDraft(null);
+    // Task #92 — bump the request id so any in-flight waveform fetch from
+    // the previous source can't land on the next modal open.
+    waveformRequestId.current++;
+    setWaveformBars(null);
   };
 
   const saveStingerTrim = () => {
@@ -1531,19 +1557,33 @@ export default function SettingsScreen() {
               const startPct = Math.max(0, Math.min(100, (draftStartMs / totalMs) * 100));
               const endPct = Math.max(0, Math.min(100, (draftEndMs / totalMs) * 100));
               const windowSec = Math.max(0, (draftEndMs - draftStartMs) / 1000);
-              // Deterministic "waveform" bars derived from the source URI so
-              // re-renders during a drag don't flicker. 36 bars at varied
-              // heights gives a familiar audio-clip look without needing an
-              // actual decoder pass.
-              const bars: number[] = [];
-              const seed = stingerDraft.srcUri;
-              for (let i = 0; i < 36; i++) {
-                let h = 0;
-                for (let j = 0; j < seed.length; j++) {
-                  h = ((h << 5) - h + seed.charCodeAt(j) + i * 31) | 0;
+              // Task #92 — real waveform bars come from the server-side
+              // ffmpeg decode (`computeStingerWaveform`). While the decode
+              // is in flight (`waveformBars === null`) we render flat
+              // placeholder bars under a small spinner. If decoding failed
+              // (`waveformBars === []`) we fall back to deterministic
+              // URI-hashed bars so the modal still looks like a waveform
+              // instead of an empty rectangle.
+              const isWaveformLoading = waveformBars === null;
+              let bars: number[];
+              if (waveformBars && waveformBars.length > 0) {
+                // Map 0..1 peaks into the same 0.25..1 visual range as the
+                // old placeholder so the bar row keeps a consistent floor
+                // (no zero-height bars) and very loud peaks fill the row.
+                bars = waveformBars.map(v => 0.25 + Math.max(0, Math.min(1, v)) * 0.75);
+              } else if (isWaveformLoading) {
+                bars = new Array(36).fill(0.35);
+              } else {
+                bars = [];
+                const seed = stingerDraft.srcUri;
+                for (let i = 0; i < 36; i++) {
+                  let h = 0;
+                  for (let j = 0; j < seed.length; j++) {
+                    h = ((h << 5) - h + seed.charCodeAt(j) + i * 31) | 0;
+                  }
+                  const norm = (Math.abs(h) % 100) / 100;
+                  bars.push(0.25 + norm * 0.75);
                 }
-                const norm = (Math.abs(h) % 100) / 100;
-                bars.push(0.25 + norm * 0.75);
               }
               return (
                 <View>
@@ -1596,8 +1636,11 @@ export default function SettingsScreen() {
                     style={styles.trimTrack}
                     onLayout={(e: LayoutChangeEvent) => setTrimTrackWidth(e.nativeEvent.layout.width)}
                   >
-                    {/* Background "waveform" */}
-                    <View style={styles.trimWaveformRow} pointerEvents="none">
+                    {/* Background waveform (real amplitudes once decoded). */}
+                    <View
+                      style={[styles.trimWaveformRow, isWaveformLoading && { opacity: 0.4 }]}
+                      pointerEvents="none"
+                    >
                       {bars.map((b, i) => (
                         <View
                           key={i}
@@ -1608,6 +1651,14 @@ export default function SettingsScreen() {
                         />
                       ))}
                     </View>
+                    {/* Task #92 — small spinner shown while the source clip
+                        is decoded server-side. Sits over the placeholder
+                        bars and disappears once amplitudes arrive. */}
+                    {isWaveformLoading && (
+                      <View style={styles.trimWaveformLoading} pointerEvents="none">
+                        <ActivityIndicator size="small" color="#D4AF37" />
+                      </View>
+                    )}
                     {/* Selected window highlight */}
                     <View
                       pointerEvents="none"
@@ -1781,6 +1832,10 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
   trimWaveformBar: { width: 3, borderRadius: 2, backgroundColor: "rgba(168,200,140,0.5)" },
+  trimWaveformLoading: {
+    position: "absolute", left: 0, right: 0, top: 0, bottom: 0,
+    alignItems: "center", justifyContent: "center",
+  },
   trimSelection: {
     position: "absolute", top: 0, bottom: 0,
     backgroundColor: "rgba(212,175,55,0.18)",
