@@ -28,11 +28,6 @@ import {
 import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import { getCurrentWeeklyEvent } from "@/lib/events";
-
-function getActiveEvent(level: number) {
-  if (level < 5) return null;
-  return getCurrentWeeklyEvent().event;
-}
 import { multiApplyRandomShuffle } from "@/lib/multiplayerEngine";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc } from "@/lib/eventModes";
 import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
@@ -46,6 +41,11 @@ import { addStars, getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
 import { updateChallengeProgress } from "@/lib/challenges";
 import BouncePressable from "@/components/BouncePressable";
 import DiscardBouncer from "@/components/DiscardBouncer";
+
+function getActiveEvent(level: number) {
+  if (level < 5) return null;
+  return getCurrentWeeklyEvent().event;
+}
 
 interface ServerGameState {
   discardTop: Card;

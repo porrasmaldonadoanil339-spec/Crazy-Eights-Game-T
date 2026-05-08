@@ -26,14 +26,14 @@ import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS } from "@/lib/storeItems";
 import { EmotePanel, EmoteBubble, type Emote } from "@/components/EmotePanel";
 import { getCurrentWeeklyEvent } from "@/lib/events";
+import { updateChallengeProgress } from "@/lib/challenges";
+import BouncePressable from "@/components/BouncePressable";
+import DiscardBouncer from "@/components/DiscardBouncer";
 
 function getActiveEvent(level: number) {
   if (level < 5) return null;
   return getCurrentWeeklyEvent().event;
 }
-import { updateChallengeProgress } from "@/lib/challenges";
-import BouncePressable from "@/components/BouncePressable";
-import DiscardBouncer from "@/components/DiscardBouncer";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const PLAYER_COLORS = ["#D4AF37", "#27AE60", "#E74C3C", "#9B59B6"];
