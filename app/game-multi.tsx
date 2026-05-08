@@ -24,7 +24,8 @@ import {
 import { getEventConfig, getEventName, getEventShortName, getEventDesc } from "@/lib/eventModes";
 import { playCardFlip, playCardDraw, playButton, playSpeedTick, stopMusic, startGameMusicForMode } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
-import { CARD_BACKS } from "@/lib/storeItems";
+import { CARD_BACKS, getCardDesignById } from "@/lib/storeItems";
+import { DealAnimation } from "@/components/DealAnimation";
 import { EmotePanel, EmoteBubble, type Emote } from "@/components/EmotePanel";
 import { getCurrentWeeklyEvent } from "@/lib/events";
 import { updateChallengeProgress } from "@/lib/challenges";
@@ -240,8 +241,19 @@ export default function MultiGameScreen() {
   const challengeRecordedRef = useRef(false);
 
   const [gameStarted, setGameStarted] = useState(false);
+  const [dealAnimationDone, setDealAnimationDone] = useState(false);
   const [playerCountSelect, setPlayerCountSelect] = useState(3);
   const [gameState, setGameState] = useState<MultiGameState>(() => initMultiGame(playerNames.slice(0, playerCountSelect), 8, activeEventId));
+
+  // Card visuals for the deal animation — pulled from the device owner's
+  // equipped card back / card design so the deal looks identical to what
+  // the player sees in their other modes.
+  const cardBackForDeal = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
+  const dealBackColors = (cardBackForDeal.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];
+  const dealBackAccent = cardBackForDeal.backAccent ?? Colors.gold;
+  const dealBackPattern = (cardBackForDeal.backPattern ?? "diamonds") as "diamonds" | "stars" | "circles" | "crosses" | "waves" | "hexagons";
+  const dealCardDesign = getCardDesignById(profile.cardDesignId ?? "face_default");
+  const dealCardColors = dealCardDesign.isDefault ? undefined : (dealCardDesign.backColors ?? undefined) as [string, string, string] | undefined;
 
   useEffect(() => {
     if (gameState.phase === "game_over") {
@@ -319,7 +331,7 @@ export default function MultiGameScreen() {
   // "Cartas Aleatorias" — shuffle the active suit at random every 4 turns.
   const lastShuffleTurnRef = useRef<number>(-1);
   useEffect(() => {
-    if (!gameStarted) return;
+    if (!gameStarted || !dealAnimationDone) return;
     if (gameState.eventId !== "random") return;
     if (gameState.phase !== "playing" && gameState.phase !== "pass_device") return;
     if (gameState.pendingDraw > 0) return;
@@ -331,7 +343,7 @@ export default function MultiGameScreen() {
     setEventShuffleFlash(true);
     const t = setTimeout(() => setEventShuffleFlash(false), 1200);
     return () => clearTimeout(t);
-  }, [gameStarted, gameState.turnId, gameState.phase, gameState.pendingDraw, gameState.eventId]);
+  }, [gameStarted, dealAnimationDone, gameState.turnId, gameState.phase, gameState.pendingDraw, gameState.eventId]);
 
   // "Velocidad Extrema" — auto-draw if the current player takes longer than turnSeconds.
   // Reset every time the turn rotates or pass-device → playing transition occurs.
@@ -347,7 +359,7 @@ export default function MultiGameScreen() {
       speedIntervalRef.current = null;
     }
     const sec = eventConfig?.turnSeconds;
-    if (!gameStarted || !sec || gameState.phase !== "playing") {
+    if (!gameStarted || !dealAnimationDone || !sec || gameState.phase !== "playing") {
       setSpeedProgress(1);
       speedLastTickSecRef.current = -1;
       return;
@@ -383,7 +395,7 @@ export default function MultiGameScreen() {
         speedIntervalRef.current = null;
       }
     };
-  }, [gameStarted, eventConfig?.turnSeconds, gameState.phase, gameState.turnId, gameState.currentPlayerIndex]);
+  }, [gameStarted, dealAnimationDone, eventConfig?.turnSeconds, gameState.phase, gameState.turnId, gameState.currentPlayerIndex]);
   // ─── Emotes per player (local pass-and-play) ─────────────────────────────
   const [activeEmotes, setActiveEmotes] = useState<Record<number, Emote | null>>({});
   const lastEmoteAtRef = useRef<Record<number, number>>({});
@@ -399,12 +411,26 @@ export default function MultiGameScreen() {
     const selectedNames = playerNames.slice(0, playerCountSelect);
     setGameState(initMultiGame(selectedNames, 8, activeEventId));
     setGameStarted(true);
+    // Reset the deal animation gate — when animations are disabled in
+    // settings, the gating effect below skips it immediately so the user
+    // preference is respected (mirrors app/game.tsx behaviour).
+    setDealAnimationDone(false);
     cardsPlayedRef.current = 0;
     eightsPlayedRef.current = 0;
     cardsDrawnRef.current = 0;
     challengeRecordedRef.current = false;
     eventResultRecordedRef.current = false;
   }, [playerCountSelect, playerNames, activeEventId]);
+
+  // Honour the "animations disabled" user setting — mirrors app/game.tsx
+  // line 1798-1802. Skips the deal overlay entirely when the player has
+  // turned animations off.
+  useEffect(() => {
+    if (!gameStarted) return;
+    if (profile.animationsEnabled === false && !dealAnimationDone) {
+      setDealAnimationDone(true);
+    }
+  }, [gameStarted, profile.animationsEnabled, dealAnimationDone]);
 
   // Event mode intro banner (shows for ~3.2s once a match with an active event begins)
   useEffect(() => {
@@ -876,6 +902,30 @@ export default function MultiGameScreen() {
           winnerColor={PLAYER_COLORS[gameState.winnerIndex % PLAYER_COLORS.length]}
           onClose={() => { playButton().catch(() => {}); router.back(); }}
         />
+      )}
+
+      {/* Deal animation overlay — same component used by app/game.tsx and
+          app/game-online.tsx, so the start of a Coop / pass-and-play match
+          looks identical to every other mode. Sits above the table UI and
+          dismisses itself once the player's first hand has been revealed. */}
+      {gameStarted && !dealAnimationDone && gameState.phase !== "game_over" && (
+        <View style={[StyleSheet.absoluteFillObject, { zIndex: 800 }]} pointerEvents="auto">
+          <LinearGradient
+            colors={["#051209", "#081a0d", "#0a1f10", "#081a0d", "#051209"]}
+            style={StyleSheet.absoluteFill}
+          />
+          <DealAnimation
+            cardsPerPlayer={gameState.hands[0]?.length ?? 7}
+            playerCards={gameState.hands[0] ?? []}
+            starterCard={multiGetTopCard(gameState)}
+            onComplete={() => setDealAnimationDone(true)}
+            backColors={dealBackColors}
+            backAccent={dealBackAccent}
+            backPattern={dealBackPattern}
+            cardColors={dealCardColors}
+            numOpponents={Math.min(3, Math.max(1, playerCount - 1))}
+          />
+        </View>
       )}
 
       {/* Exit confirmation */}
