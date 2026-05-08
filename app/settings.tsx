@@ -14,7 +14,7 @@ import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES, CUSTOM_LOGO_STINGER_SHRINK_MAX_INPUT_BYTES, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
-import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, shrinkCustomStingerToFile, computeStingerWaveform, persistCustomStingerSource, type UploadStingerErrorReason, type ShrinkStingerErrorReason } from "@/lib/customStingerCache";
+import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, shrinkCustomStingerToFile, computeStingerWaveform, persistCustomStingerSource, sweepCustomStingerSources, type UploadStingerErrorReason, type ShrinkStingerErrorReason } from "@/lib/customStingerCache";
 import { getStingerSourceMemo, setStingerSourceMemo, clearStingerSourceMemo, subscribeStingerSourceMemo, hydrateStingerSourceMemo, type StingerSourceMemo } from "@/lib/customStingerSourceSession";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
@@ -228,7 +228,14 @@ export default function SettingsScreen() {
   // existence and clears the persisted entry if the source is missing.
   useEffect(() => {
     hydrateStingerSourceMemo()
-      .then(() => setStingerSourceMemoState(getStingerSourceMemo()))
+      .then(() => {
+        const next = getStingerSourceMemo();
+        setStingerSourceMemoState(next);
+        // Task #109 — once we know the active source URI, sweep any
+        // orphaned files left behind by a crash between copy + memo
+        // persist so they don't accumulate over time.
+        try { sweepCustomStingerSources(next?.srcUri ?? null); } catch {}
+      })
       .catch(() => {});
   }, []);
 

@@ -456,6 +456,27 @@ export async function resolveCustomStingerUri(uri: string | null | undefined): P
   }
 }
 
+// Task #109 — best-effort sweep of `custom-stingers/source/`. The save and
+// remove flows already delete the previous source file, but a crash or
+// force-quit between copying a new source and persisting the memo can
+// leave an orphan behind. Called on app start (after the memo hydrates),
+// it walks the source directory and deletes any file that isn't the one
+// referenced by the active memo. Silent on every failure — losing the
+// sweep is harmless, only deleting a live source would be a bug.
+export function sweepCustomStingerSources(activeSrcUri: string | null | undefined): void {
+  try {
+    const dir = new Directory(Paths.document, SOURCE_DIR);
+    if (!dir.exists) return;
+    const keep = activeSrcUri ?? "";
+    for (const entry of dir.list()) {
+      try {
+        if (entry.uri === keep) continue;
+        entry.delete();
+      } catch {}
+    }
+  } catch {}
+}
+
 // Removes every cached download. Called when the player clears their custom
 // pick so we don't accumulate orphaned files in the document directory.
 export function clearCustomStingerCache(): void {
