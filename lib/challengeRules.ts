@@ -129,8 +129,24 @@ export interface ActiveChallengeRules {
   startingCards?: number;
 }
 
+// Curated AAA variant pool — 7 hand-picked rules that play well solo and
+// represent the spectrum (No robar / Victoria rápida / Solo números (red|black)
+// / Maestro del palo (face_only) / Remontada (big_hand) / Perfect (low_hand)
+// / Caos). Other rules in CHALLENGE_RULES remain available for legacy
+// references but are excluded from random generation.
+export const CURATED_VARIANT_IDS = [
+  "no_draw",      // No robar
+  "win_fast",     // Victoria rápida
+  "only_red",     // Solo números (rojas)
+  "face_only",    // Maestro del palo (figuras)
+  "big_hand",     // Remontada
+  "low_hand",     // Perfect (mano pequeña)
+  "chaos",        // Caos
+] as const;
+
 export function generateChallengeRules(): ActiveChallengeRules {
-  const shuffled = [...CHALLENGE_RULES].sort(() => Math.random() - 0.5);
+  const pool = CHALLENGE_RULES.filter((r) => CURATED_VARIANT_IDS.includes(r.id as typeof CURATED_VARIANT_IDS[number]));
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
   // Always exactly 1 rule per match — keeps each Desafío match focused on a
   // single twist instead of stacking rules that can interact unpredictably.
   const selectedRules = shuffled.slice(0, 1);

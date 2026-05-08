@@ -39,6 +39,7 @@ import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } fro
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import { getCpuPhrase, type CpuPhraseEvent } from "@/lib/cpuPhrases";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
+import RoundTransition from "@/components/RoundTransition";
 import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc, pickRandomSuit, type EventId } from "@/lib/eventModes";
 
@@ -435,40 +436,6 @@ const lightStyles = StyleSheet.create({
   title: { fontFamily: "Nunito_800ExtraBold", fontSize: 22, color: "#FFD700", letterSpacing: 3 },
   sub: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#C39BD3" },
 });
-
-// ─── Tournament round banner (ROUND 1/2/3 epic intro) ────────────────────────
-function TournamentRoundBanner({ round }: { round: number }) {
-  const sc = useSharedValue(0.5);
-  const op = useSharedValue(0);
-  const pulse = useSharedValue(1);
-  useEffect(() => {
-    sc.value = withSpring(1, { damping: 11 });
-    op.value = withTiming(1, { duration: 220 });
-    pulse.value = withRepeat(
-      withSequence(withTiming(1.05, { duration: 280 }), withTiming(1, { duration: 280 })), 4,
-    );
-  }, []);
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: sc.value * pulse.value }],
-    opacity: op.value,
-  }));
-  const isFinal = round >= 3;
-  const accent = isFinal ? "#FFD700" : "#E67E22";
-  return (
-    <Animated.View style={[lightStyles.overlay, { pointerEvents: "none" } as any]}>
-      <Animated.View style={[lightStyles.banner, { borderColor: accent, shadowColor: accent }, animStyle]}>
-        <LinearGradient colors={["#1a0d00", "#3d2400", "#1a0d00"]} style={lightStyles.bannerGrad}>
-          <Ionicons name="trophy" size={32} color={accent} />
-          <View style={lightStyles.textWrap}>
-            <Text style={[lightStyles.title, { color: accent }]}>ROUND {round}</Text>
-            <Text style={lightStyles.sub}>{isFinal ? "RONDA FINAL — TODO O NADA" : "GANA 2 DE 3 PARA EL TROFEO"}</Text>
-          </View>
-          <Ionicons name="trophy" size={32} color={accent} />
-        </LinearGradient>
-      </Animated.View>
-    </Animated.View>
-  );
-}
 
 // ─── Lightning "Fiebre" overlay (final-stretch warning, ≤2 cards) ─────────────
 function FiebreBadge() {
@@ -2918,7 +2885,7 @@ export default function GameScreen() {
       )}
 
       {showLightningBanner && <LightningBanner />}
-      {showTournamentRoundBanner && <TournamentRoundBanner round={tournamentRound} />}
+      {showTournamentRoundBanner && <RoundTransition round={tournamentRound} />}
       {session?.mode === "lightning"
         && dealAnimationDone
         && !isGameOver

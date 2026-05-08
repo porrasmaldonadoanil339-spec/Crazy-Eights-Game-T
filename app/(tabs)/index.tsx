@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors, LightColors } from "@/constants/colors";
 import { useTheme } from "@/hooks/useTheme";
 import { useGame } from "@/context/GameContext";
+import { getCurrentWeeklyEvent } from "@/lib/events";
 import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
 import { playButton, syncSettings, playChestOpen } from "@/lib/audioManager";
@@ -1411,6 +1412,40 @@ export default function PlayScreen() {
           <View style={[styles.dividerLine, { backgroundColor: theme.gold + "40" }]} />
         </View>
 
+        {/* Active event badge — surfaces the current weekly rotation slot
+            from lib/events.ts so the home screen highlights what's "live"
+            without the player having to scroll to the events card. */}
+        {(() => {
+          const slot = getCurrentWeeklyEvent();
+          const ev = slot.event;
+          return (
+            <Animated.View style={useEntryAnimation({ delay: 60, fromTranslateY: 12 })}>
+              <BouncePressable
+                onPress={() => startGame("classic", "normal", undefined, ev.id)}
+                style={styles.bpShortcut}
+                sound
+                glowColor={(ev.color || "#A855F7") + "55"}
+              >
+                <LinearGradient
+                  colors={[ev.color || "#7B2FBE", (ev.color || "#A855F7") + "CC", ev.color || "#7B2FBE"]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={styles.bpShortcutGrad}
+                >
+                  <Ionicons name={(ev.icon as any) || "flash"} size={20} color="#FFD700" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.bpShortcutTitle}>{ev.name} · EN VIVO</Text>
+                    <Text style={styles.bpShortcutSub}>Termina en {slot.daysLeft}d</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#FFD700" />
+                </LinearGradient>
+              </BouncePressable>
+            </Animated.View>
+          );
+        })()}
+
+        {/* Battle Pass shortcut — minimized by default (single compact row,
+            no expanded reward preview) so the new event badge above can
+            take the visual lead without crowding the home screen. */}
         <Animated.View style={useEntryAnimation({ delay: 80, fromTranslateY: 12 })}>
         <BouncePressable
           onPress={() => router.push("/(tabs)/achievements")}
