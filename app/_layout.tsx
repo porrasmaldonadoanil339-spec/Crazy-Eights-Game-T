@@ -306,7 +306,7 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
     // as the BIYIS PRIME STUDIOS sonic identity. Plays every cold start so
     // the brand always lands the same way. Honours the persisted SFX flag
     // before in-memory syncSettings has had a chance to run (cold start).
-    setTimeout(() => {
+    const stingerTimer = setTimeout(() => {
       (async () => {
         try {
           const raw = await AsyncStorage.getItem("ocho_profile_v3");
@@ -371,7 +371,10 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
       });
     }, STUDIO_DURATION);
 
-    return () => clearTimeout(studioTimer);
+    return () => {
+      clearTimeout(studioTimer);
+      clearTimeout(stingerTimer);
+    };
   }, []);
 
   const loadBarWidth = loadAnim.interpolate({ inputRange: [0, 1], outputRange: ["1%", "100%"] });
