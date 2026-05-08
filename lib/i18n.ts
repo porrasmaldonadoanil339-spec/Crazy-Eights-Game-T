@@ -736,7 +736,12 @@ const translations: Record<string, Partial<Entry>> = {
   effectReversed: { es:"Dirección invertida",en:"Direction reversed",pt:"Direção invertida" },
   effectExtraTurn: { es:"Turno extra",en:"Extra turn",pt:"Turno extra" },
   effectColorPicked: { es:"Color elegido: {s}",en:"Color picked: {s}",pt:"Cor escolhida: {s}" },
-  effectLabelSkip:    { es:"Salto",   en:"Skip",    pt:"Pular" },
+  // Task #126 — short, single-word labels designed for the redesigned card
+  // ability bar. Spanish "Bloqueo" replaces "Salto" to match the in-game
+  // wording shown on the J card per the task example. Rendered uppercase by
+  // the badge style; sources stay title-case so other consumers (e.g.
+  // tutorials) can capitalize as they wish.
+  effectLabelSkip:    { es:"Bloqueo", en:"Skip",    pt:"Pular" },
   effectLabelReverse: { es:"Reversa", en:"Reverse", pt:"Reversa" },
   effectLabelExtra:   { es:"Otra",    en:"Extra",   pt:"Extra" },
   effectLabelColor:   { es:"Color",   en:"Color",   pt:"Cor" },
