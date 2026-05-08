@@ -360,15 +360,7 @@ export default function AchievementsScreen() {
                 <Ionicons name="lock-closed" size={14} color={themeColors.textDim} style={{ marginTop: 2 }} />
               )
             ) : (
-              <Pressable
-                onPress={handleUnlockPremiumBP}
-                style={{ marginTop: 4, flexDirection: "row", alignItems: "center", gap: 3 }}
-              >
-                <Ionicons name="lock-closed" size={12} color={themeGold} />
-                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 9, color: themeGold, letterSpacing: 0.3 }} numberOfLines={1}>
-                  {T("premiumLocked" as any) || "PREMIUM"}
-                </Text>
-              </Pressable>
+              <Ionicons name="lock-closed" size={14} color={themeColors.textDim} style={{ marginTop: 4 }} />
             )}
           </View>
         </View>
