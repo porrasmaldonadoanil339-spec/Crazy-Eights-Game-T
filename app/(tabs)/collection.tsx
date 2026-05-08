@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     height: 32,
   },
   catLabel: { fontFamily: "Nunito_700Bold", fontSize: 11 },
-  gridContent: { paddingLeft: 20, paddingRight: 12, paddingTop: 6, gap: 14 },
+  gridContent: { paddingHorizontal: 12, paddingTop: 6, gap: 14 },
   colWrapper: { justifyContent: "space-between" },
   gridItem: {
     width: "24%",

@@ -227,12 +227,12 @@ function ConfirmModal({
             {item.category === "emote" ? (
               <>
                 <ChipIcon size={18} color="#3498DB" />
-                <Text style={[styles.priceText, { color: "#3498DB" }]}>{item.price} fichas</Text>
+                <Text style={[styles.priceText, { color: "#3498DB" }]}>{item.price}</Text>
               </>
             ) : (
               <>
                 <CoinIcon size={18} color={theme.gold} />
-                <Text style={[styles.priceText, { color: theme.gold }]}>{item.price} {T("coins")}</Text>
+                <Text style={[styles.priceText, { color: theme.gold }]}>{item.price}</Text>
               </>
             )}
           </View>
@@ -1000,7 +1000,7 @@ function DailyConfirmModal({
             {isFichas
               ? <ChipIcon size={18} color="#3498DB" />
               : <CoinIcon size={18} color={theme.gold} />}
-            <Text style={[styles.priceText, { color: isFichas ? "#3498DB" : theme.gold }]}>{item.finalPrice} {isFichas ? "Fichas" : T("coins")}</Text>
+            <Text style={[styles.priceText, { color: isFichas ? "#3498DB" : theme.gold }]}>{item.finalPrice}</Text>
           </View>
           <View style={styles.confirmBtns}>
             <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -1102,7 +1102,7 @@ const styles = StyleSheet.create({
   },
   catCountActive: { backgroundColor: Colors.gold + "33" },
   catCountText: { fontFamily: "Nunito_800ExtraBold", fontSize: 9, color: Colors.textDim },
-  grid: { paddingLeft: 30, paddingRight: 12, flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  grid: { paddingHorizontal: 16, flexDirection: "row", flexWrap: "wrap", gap: 10 },
   dailyFreeWrap: { paddingHorizontal: 16, marginBottom: 10, marginTop: 4 },
   dailyFreeGrad: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: "#2ECC7166" },
   dailyFreeIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#2ECC7122", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#2ECC7155" },
@@ -1694,7 +1694,7 @@ function ChestConfirmModal({
           </Text>
           <View style={styles.priceRow}>
             <ChipIcon size={18} color="#3498DB" />
-            <Text style={[styles.priceText, { color: "#3498DB" }]}>{T("chestPriceFichas").replace("{n}", String(price))}</Text>
+            <Text style={[styles.priceText, { color: "#3498DB" }]}>{price}</Text>
           </View>
           <View style={styles.confirmBtns}>
             <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>

@@ -212,8 +212,8 @@ function EmotePreview({ item, compact }: { item: StoreItem; compact?: boolean })
   const color = item.previewColor;
   const icon = (item.preview ?? "happy") as IconName;
   return (
-    <View style={[previewStyles.centerWrap, compact ? previewStyles.effectCircleCompact : previewStyles.effectCircle, { borderWidth: 0 }]}>
-      <AnimatedEmoteIcon icon={icon} color={color} size={compact ? 40 : 60} />
+    <View style={previewStyles.centerWrap}>
+      <AnimatedEmoteIcon icon={icon} color={color} size={compact ? 44 : 64} />
     </View>
   );
 }
