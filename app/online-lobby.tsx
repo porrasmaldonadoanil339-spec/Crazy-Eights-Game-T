@@ -21,6 +21,7 @@ import { playButton, startMenuMusic, startSearchMusic } from "@/lib/audioManager
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { TipRotator, FloatingCardField } from "@/components/LiveLoader";
+import { RankShield } from "@/components/RankShield";
 
 const ACCENT = Colors.gold;
 
@@ -79,6 +80,37 @@ function SpinnerIcon() {
     <Animated.View style={style}>
       <Ionicons name="reload" size={28} color={ACCENT} />
     </Animated.View>
+  );
+}
+
+function RankedSearchHero({ rank, color }: { rank: number; color: string }) {
+  const pulse = useSharedValue(1);
+  const ring = useSharedValue(0);
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withSequence(withTiming(1.06, { duration: 900 }), withTiming(1, { duration: 900 })),
+      -1,
+    );
+    ring.value = withRepeat(withTiming(1, { duration: 1800, easing: Easing.out(Easing.quad) }), -1);
+  }, []);
+  const shieldStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity: 1 - ring.value,
+    transform: [{ scale: 0.9 + ring.value * 0.7 }],
+  }));
+  return (
+    <View style={{ width: 140, height: 140, alignItems: "center", justifyContent: "center" }}>
+      <Animated.View
+        pointerEvents="none"
+        style={[{
+          position: "absolute", width: 120, height: 120, borderRadius: 60,
+          borderWidth: 2, borderColor: color,
+        }, ringStyle]}
+      />
+      <Animated.View style={shieldStyle}>
+        <RankShield rank={rank} size={104} showGlow />
+      </Animated.View>
+    </View>
   );
 }
 
@@ -180,6 +212,7 @@ export default function OnlineLobbyScreen() {
 
   const [phase, setPhase] = useState<Phase>(directSearch ? "direct_search" : "select");
   const [fakePlayers, setFakePlayers] = useState<PlayerInfo[]>([]);
+  const [searchElapsed, setSearchElapsed] = useState(0);
   const [foundPlayers, setFoundPlayers] = useState<PlayerInfo[]>([myProfile]);
   const [roomCode, setRoomCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -264,8 +297,18 @@ export default function OnlineLobbyScreen() {
     }, gameDelay);
     timers.push(t3);
 
+    // Tick search elapsed seconds for the "expanding range" indicator
+    setSearchElapsed(0);
+    const tick = setInterval(() => {
+      setSearchElapsed(s => s + 1);
+    }, 1000);
+    timers.push(tick as unknown as ReturnType<typeof setTimeout>);
+
     directSearchTimers.current = timers;
-    return () => timers.forEach(t => clearTimeout(t));
+    return () => {
+      timers.forEach(t => clearTimeout(t));
+      clearInterval(tick);
+    };
   }, [directSearch]);
 
   function buildProfilePayload() {
@@ -277,6 +320,7 @@ export default function OnlineLobbyScreen() {
       rankColor: myProfile.rankColor,
       rankIcon: myProfile.rankIcon,
       rankName: myProfile.rankName,
+      rank: profile.rankedProfile?.rank ?? 0,
     };
   }
 
@@ -318,6 +362,10 @@ export default function OnlineLobbyScreen() {
 
     s.on("matchmaking_joined", ({ queueSize }: { queueSize: number }) => {
       setFoundPlayers([myProfile]);
+    });
+
+    s.on("matchmaking_status", ({ expanding }: { queueSize: number; needed: number; rankWindow?: number; expanding?: boolean }) => {
+      if (expanding) setSearchElapsed(s => (s < 5 ? 5 : s));
     });
 
     s.on("matchmaking_found", ({ code, playerIndex, players }: { code: string; playerIndex: number; players: PlayerInfo[] }) => {
@@ -483,35 +531,78 @@ export default function OnlineLobbyScreen() {
 
   if (phase === "direct_search" || phase === "direct_found") {
     const isFound = phase === "direct_found";
-
-    // ── First interface: player slot list (all modes) ──────────────────────
-    const allPlayers = [{ ...myProfile, playerIndex: 0 }, ...fakePlayers];
+    const isRanked = mode === "ranked";
+    const themeColor = isRanked ? rankInfo.color : ACCENT;
+    const themeColorDark = isRanked ? rankInfo.color + "55" : "#A07800";
+    const bgColors = isRanked
+      ? ["#020810", rankInfo.color + "1A", "#08050a"] as [string, string, string]
+      : ["#020810", "#041530", "#08050a"] as [string, string, string];
+    const showExpanding = !isFound && searchElapsed >= 5;
 
     return (
       <View style={[styles.fullBg, { paddingTop: topPad + 10, paddingBottom: botPad + 10 }]}>
-        <LinearGradient colors={["#020810", "#041530", "#08050a"]} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
 
         <View style={styles.header}>
           <Pressable onPress={() => { directSearchTimers.current.forEach(t => clearTimeout(t)); router.back(); }} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={20} color={ACCENT} />
+            <Ionicons name="arrow-back" size={20} color={themeColor} />
           </Pressable>
-          <Text style={styles.headerTitle}>
-            {isFound ? T("rivalFound" as any) : T("searchingMatch" as any)}
+          <Text style={[styles.headerTitle, isRanked && { color: themeColor }]} numberOfLines={1}>
+            {isFound ? T("rivalFound" as any) : (isRanked ? T("rankedMatchmakingTitle" as any) : T("searchingMatch" as any))}
           </Text>
         </View>
 
         <FloatingCardField count={6} />
         <View style={styles.matchmakingContent}>
-          {!isFound && <SpinnerIcon />}
+          {!isFound && (
+            isRanked ? (
+              <RankedSearchHero rank={profile.rankedProfile.rank} color={themeColor} />
+            ) : (
+              <SpinnerIcon />
+            )
+          )}
           {isFound && (
             <Animated.View entering={FadeIn.duration(400)}>
               <Ionicons name="checkmark-circle" size={64} color="#27AE60" />
             </Animated.View>
           )}
 
+          {isRanked && !isFound && (
+            <View style={{ alignItems: "center", marginTop: 8, gap: 4 }}>
+              <Text style={[styles.matchmakingLabel, { color: themeColor, fontSize: 18 }]} numberOfLines={1}>
+                {rankInfo.displayName}
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Ionicons name="locate" size={12} color={themeColor + "BB"} />
+                <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: themeColor + "BB", letterSpacing: 1 }}>
+                  {T("searchingNearRank" as any)}
+                </Text>
+              </View>
+            </View>
+          )}
+
           <Text style={[styles.matchmakingLabel, isFound && { color: "#27AE60" }]}>
             {isFound ? T("rivalFound" as any) : T("waitingPlayers")}
           </Text>
+
+          {showExpanding && (
+            <Animated.View
+              entering={FadeIn.duration(300)}
+              style={{
+                flexDirection: "row", alignItems: "center", gap: 8,
+                paddingHorizontal: 14, paddingVertical: 7, borderRadius: 14,
+                backgroundColor: themeColor + "1A",
+                borderWidth: 1, borderColor: themeColor + "55",
+                marginTop: 4,
+              }}
+            >
+              <Ionicons name="resize" size={14} color={themeColor} />
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: themeColor, letterSpacing: 0.5 }}>
+                {T("expandingSearch" as any)}
+              </Text>
+            </Animated.View>
+          )}
+
           {!isFound && <TipRotator />}
 
           <View style={styles.slotsList}>
@@ -532,7 +623,7 @@ export default function OnlineLobbyScreen() {
           )}
           {isFound && (
             <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.preMatchBar}>
-              <LinearGradient colors={[ACCENT, "#A07800"]} style={styles.preMatchBarFill} />
+              <LinearGradient colors={[themeColor, themeColorDark]} style={styles.preMatchBarFill} />
             </Animated.View>
           )}
         </View>

@@ -861,6 +861,7 @@ export default function OnlineGameScreen() {
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [disconnectedPlayerMsg, setDisconnectedPlayerMsg] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<"connected" | "reconnecting" | "reconnected">("connected");
 
   // Intercept Android hardware back button → show confirm modal instead of leaving silently.
   useEffect(() => {
@@ -983,6 +984,23 @@ export default function OnlineGameScreen() {
     s.off("game_over");
     s.off("player_left");
     s.off("player_disconnected");
+    s.off("disconnect");
+    s.off("connect");
+    s.off("reconnect");
+
+    // Surface socket disconnect / reconnect to the player so they're not stuck
+    // staring at a frozen board with no feedback.
+    s.on("disconnect", () => {
+      setConnectionStatus("reconnecting");
+    });
+    const handleConnected = () => {
+      setConnectionStatus(prev => (prev === "reconnecting" ? "reconnected" : "connected"));
+      setTimeout(() => {
+        setConnectionStatus(curr => (curr === "reconnected" ? "connected" : curr));
+      }, 1800);
+    };
+    s.on("connect", handleConnected);
+    s.on("reconnect", handleConnected);
 
     s.on("game_state", (srv: ServerGameState) => {
       try {
@@ -1022,6 +1040,9 @@ export default function OnlineGameScreen() {
       s.off("game_over");
       s.off("player_left");
       s.off("player_disconnected");
+      s.off("disconnect");
+      s.off("connect");
+      s.off("reconnect");
     };
   }, [isOnline]);
 
@@ -2115,6 +2136,39 @@ export default function OnlineGameScreen() {
           }}>
             <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#1a0a00", letterSpacing: 3 }}>
               ¡TU TURNO!
+            </Text>
+          </View>
+        </Animated.View>
+      )}
+
+      {/* ─── Local socket reconnecting / reconnected toast ─── */}
+      {isOnline && connectionStatus !== "connected" && (
+        <Animated.View
+          entering={FadeIn.duration(200)}
+          style={{
+            position: "absolute", top: topPad + 10, left: 20, right: 20,
+            alignItems: "center", zIndex: 610, pointerEvents: "none" as any,
+          }}
+        >
+          <View style={{
+            backgroundColor: "rgba(15,15,25,0.92)", borderRadius: 10,
+            paddingHorizontal: 16, paddingVertical: 8,
+            borderWidth: 1,
+            borderColor: connectionStatus === "reconnected" ? "rgba(46,204,113,0.45)" : "rgba(255,200,0,0.45)",
+            flexDirection: "row", alignItems: "center", gap: 8,
+          }}>
+            <Ionicons
+              name={connectionStatus === "reconnected" ? "wifi" : "sync"}
+              size={14}
+              color={connectionStatus === "reconnected" ? "#2ECC71" : "#FFC800"}
+            />
+            <Text style={{
+              fontFamily: "Nunito_700Bold", fontSize: 12,
+              color: connectionStatus === "reconnected" ? "#2ECC71" : "#FFC800",
+            }}>
+              {connectionStatus === "reconnected"
+                ? (T("reconnected" as any) || "¡Conectado!")
+                : (T("reconnecting" as any) || "Reconectando…")}
             </Text>
           </View>
         </Animated.View>

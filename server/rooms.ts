@@ -55,10 +55,24 @@ function maybeApplyRandomShuffle(room: Room): boolean {
 interface MatchmakingEntry extends RoomPlayerProfile {
   socketId: string;
   joinedAt: number;
+  rank: number; // 0..11 (used for progressive rank-window matching)
 }
 
 const rooms = new Map<string, Room>();
 const matchmakingQueues = new Map<string, MatchmakingEntry[]>();
+const matchmakingTickers = new Map<string, ReturnType<typeof setInterval>>();
+
+// Progressive rank window for ranked matchmaking. After joining the queue, the
+// acceptable rank delta widens over time so a player is never stuck waiting
+// forever. Non-ranked modes use an unlimited window (any rank pairs).
+function rankWindowForElapsed(elapsedMs: number): number {
+  const s = elapsedMs / 1000;
+  if (s < 5)  return 1;   // ±1 rank tier (e.g. Plata vs Bronce/Oro)
+  if (s < 10) return 2;
+  if (s < 18) return 3;
+  if (s < 28) return 5;
+  return 99;              // anyone
+}
 
 // Mirrors the live-event schedule from components/EventsCard.tsx so the server
 // can determine which event is currently active without depending on
@@ -298,11 +312,12 @@ export function setupRooms(httpServer: HttpServer) {
     // ─── Matchmaking queue ─────────────────────────────────────────────────
     socket.on("join_matchmaking", ({
       playerName, mode = "classic", playerCount = 2,
-      avatarColor, avatarIcon, level, rankColor, rankIcon, rankName,
+      avatarColor, avatarIcon, level, rankColor, rankIcon, rankName, rank,
     }: {
       playerName: string; mode?: string; playerCount?: number;
       avatarColor?: string; avatarIcon?: string; level?: number;
       rankColor?: string; rankIcon?: string; rankName?: string;
+      rank?: number;
     }) => {
       if (inMatchmaking) return;
 
@@ -315,6 +330,7 @@ export function setupRooms(httpServer: HttpServer) {
         socketId: socket.id,
         name: playerName || "Jugador",
         joinedAt: Date.now(),
+        rank: typeof rank === "number" ? Math.max(0, Math.min(11, Math.floor(rank))) : 0,
         avatarColor: avatarColor ?? DEFAULT_PROFILE.avatarColor,
         avatarIcon: avatarIcon ?? DEFAULT_PROFILE.avatarIcon,
         level: level ?? DEFAULT_PROFILE.level,
@@ -329,45 +345,13 @@ export function setupRooms(httpServer: HttpServer) {
       matchmakingQueueKey = key;
 
       socket.emit("matchmaking_joined", { queueSize: queue.length, needed: playerCount });
+      socket.emit("matchmaking_status", {
+        queueSize: queue.length, needed: playerCount,
+        rankWindow: rankWindowForElapsed(0), expanding: false,
+      });
 
-      io.sockets.sockets.get(socket.id)?.emit("matchmaking_status", { queueSize: queue.length, needed: playerCount });
-
-      if (queue.length >= playerCount) {
-        const matched = queue.splice(0, playerCount);
-        matchmakingQueues.set(key, queue);
-
-        const code = uniqueCode();
-        const room: Room = {
-          code,
-          hostSocketId: matched[0].socketId,
-          players: matched.map((m, i) => ({
-            ...m,
-            playerIndex: i,
-            isBot: false,
-          })),
-          maxPlayers: playerCount,
-          gameState: null,
-          hands: [],
-          status: "waiting",
-          createdAt: Date.now(),
-          mode,
-        };
-        rooms.set(code, room);
-
-        for (const p of room.players) {
-          const s = io.sockets.sockets.get(p.socketId);
-          if (s) {
-            s.join(code);
-            (s as any)._currentRoom = code;
-            (s as any)._myPlayerIndex = p.playerIndex;
-            (s as any)._inMatchmaking = false;
-            (s as any)._matchmakingQueueKey = null;
-            s.emit("matchmaking_found", { code, playerIndex: p.playerIndex, players: buildPlayersInfo(room) });
-          }
-        }
-
-        startPreMatch(room, io);
-      }
+      ensureMatchmakingTicker(key, mode, playerCount, io);
+      tryProgressiveMatch(key, mode, playerCount, io);
     });
 
     socket.on("cancel_matchmaking", () => {
@@ -453,6 +437,8 @@ export function setupRooms(httpServer: HttpServer) {
       if (room.gameState.phase !== "choosing_suit") return;
 
       try {
+        const prev = suitChoiceTimers.get(room.code);
+        if (prev) { clearTimeout(prev); suitChoiceTimers.delete(room.code); }
         const newState = multiChooseSuit(room.gameState, suit);
         room.gameState = newState;
         maybeApplyRandomShuffle(room);
@@ -526,6 +512,7 @@ export function setupRooms(httpServer: HttpServer) {
         });
 
         if (realPlayers(room).length === 0) {
+          clearRoomTimers(roomCode);
           rooms.delete(roomCode);
         } else if (room.hostSocketId === socket.id && realPlayers(room).length > 0) {
           room.hostSocketId = realPlayers(room)[0].socketId;
@@ -538,6 +525,91 @@ export function setupRooms(httpServer: HttpServer) {
   });
 
   return io;
+}
+
+function ensureMatchmakingTicker(key: string, mode: string, playerCount: number, io: SocketServer) {
+  if (matchmakingTickers.has(key)) return;
+  const id = setInterval(() => {
+    const queue = matchmakingQueues.get(key);
+    if (!queue || queue.length === 0) {
+      const t = matchmakingTickers.get(key);
+      if (t) clearInterval(t);
+      matchmakingTickers.delete(key);
+      return;
+    }
+    // Push live status (rank window / expanding flag) to each waiting player.
+    const now = Date.now();
+    for (const e of queue) {
+      const elapsed = now - e.joinedAt;
+      const win = mode === "ranked" ? rankWindowForElapsed(elapsed) : 99;
+      io.sockets.sockets.get(e.socketId)?.emit("matchmaking_status", {
+        queueSize: queue.length,
+        needed: playerCount,
+        rankWindow: win,
+        expanding: mode === "ranked" && elapsed >= 5_000,
+      });
+    }
+    tryProgressiveMatch(key, mode, playerCount, io);
+  }, 750);
+  matchmakingTickers.set(key, id);
+}
+
+// Greedy rank-window matcher: starts from the longest-waiting entry and pulls
+// in the next playerCount-1 candidates whose rank deltas fit inside that
+// entry's current widening window. Falls back to FIFO for non-ranked modes.
+function tryProgressiveMatch(key: string, mode: string, playerCount: number, io: SocketServer) {
+  const queue = matchmakingQueues.get(key);
+  if (!queue || queue.length < playerCount) return;
+  const now = Date.now();
+
+  // Anchor = longest-waiting entry (queue is FIFO so it's index 0).
+  const anchor = queue[0];
+  const anchorWindow = mode === "ranked" ? rankWindowForElapsed(now - anchor.joinedAt) : 99;
+
+  const matched: MatchmakingEntry[] = [anchor];
+  for (let i = 1; i < queue.length && matched.length < playerCount; i++) {
+    const cand = queue[i];
+    if (mode === "ranked") {
+      const candWindow = rankWindowForElapsed(now - cand.joinedAt);
+      const allowed = Math.min(anchorWindow, candWindow);
+      if (Math.abs(cand.rank - anchor.rank) > allowed) continue;
+    }
+    matched.push(cand);
+  }
+
+  if (matched.length < playerCount) return;
+
+  // Remove matched entries from the queue (preserve order of the rest).
+  const matchedIds = new Set(matched.map(m => m.socketId));
+  matchmakingQueues.set(key, queue.filter(e => !matchedIds.has(e.socketId)));
+
+  const code = uniqueCode();
+  const room: Room = {
+    code,
+    hostSocketId: matched[0].socketId,
+    players: matched.map((m, i) => ({ ...m, playerIndex: i, isBot: false })),
+    maxPlayers: playerCount,
+    gameState: null,
+    hands: [],
+    status: "waiting",
+    createdAt: Date.now(),
+    mode,
+  };
+  rooms.set(code, room);
+
+  for (const p of room.players) {
+    const s = io.sockets.sockets.get(p.socketId);
+    if (s) {
+      s.join(code);
+      (s as any)._currentRoom = code;
+      (s as any)._myPlayerIndex = p.playerIndex;
+      (s as any)._inMatchmaking = false;
+      (s as any)._matchmakingQueueKey = null;
+      s.emit("matchmaking_found", { code, playerIndex: p.playerIndex, players: buildPlayersInfo(room) });
+    }
+  }
+
+  startPreMatch(room, io);
 }
 
 function startPreMatch(room: Room, io: SocketServer) {
@@ -604,16 +676,98 @@ function broadcastGameState(room: Room, io: SocketServer) {
 }
 
 const autoplayTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const humanTurnTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const suitChoiceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+// Stability: if a connected human player doesn't act within this window, the
+// server force-plays for them (bot logic). Prevents zombie matches when a
+// player goes to background, loses focus, or has flaky network.
+const HUMAN_TURN_TIMEOUT_MS = 45_000;
+// Same idea but for the "choose suit" sub-phase after playing an 8: shorter
+// because a single tap is all that's required.
+const SUIT_CHOICE_TIMEOUT_MS = 15_000;
+
+function pickAutoSuit(hand: Card[]): Suit {
+  const counts: Record<Suit, number> = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
+  for (const c of hand) {
+    if (c.rank !== "8" && (c.suit in counts)) counts[c.suit]++;
+  }
+  let best: Suit = "hearts"; let bestN = -1;
+  (["hearts", "diamonds", "clubs", "spades"] as Suit[]).forEach(s => {
+    if (counts[s] > bestN) { bestN = counts[s]; best = s; }
+  });
+  return best;
+}
+
+function clearRoomTimers(code: string) {
+  const a = autoplayTimers.get(code); if (a) { clearTimeout(a); autoplayTimers.delete(code); }
+  const h = humanTurnTimers.get(code); if (h) { clearTimeout(h); humanTurnTimers.delete(code); }
+  const s = suitChoiceTimers.get(code); if (s) { clearTimeout(s); suitChoiceTimers.delete(code); }
+}
 
 function scheduleAutoplay(room: Room, io: SocketServer) {
   if (!room.gameState) return;
-  if (room.gameState.phase === "game_over") return;
-  if (room.gameState.phase === "choosing_suit") return;
+  if (room.gameState.phase === "game_over") { clearRoomTimers(room.code); return; }
+
+  // ─── choosing_suit recovery ──────────────────────────────────────────────
+  // The active player must pick a suit. If it's a bot, do it after a short
+  // delay; if it's a human, arm a timeout that auto-picks for them.
+  if (room.gameState.phase === "choosing_suit") {
+    const curr = room.gameState.currentPlayerIndex;
+    const isBot = !!room.players.find(p => p.playerIndex === curr && p.isBot);
+    const prev = suitChoiceTimers.get(room.code);
+    if (prev) clearTimeout(prev);
+
+    const delay = isBot ? 700 + Math.random() * 600 : SUIT_CHOICE_TIMEOUT_MS;
+    const t = setTimeout(() => {
+      suitChoiceTimers.delete(room.code);
+      if (!room.gameState) return;
+      if (room.gameState.phase !== "choosing_suit") return;
+      if (room.gameState.currentPlayerIndex !== curr) return;
+      try {
+        const hand = room.gameState.hands?.[curr] ?? [];
+        const suit = pickAutoSuit(hand);
+        room.gameState = multiChooseSuit(room.gameState, suit);
+        maybeApplyRandomShuffle(room);
+        broadcastGameState(room, io);
+        scheduleAutoplay(room, io);
+      } catch {}
+    }, delay);
+    suitChoiceTimers.set(room.code, t);
+    return;
+  }
 
   const curr = room.gameState.currentPlayerIndex;
   // Check if current player is a real (non-bot) human player
   const humanPlayer = room.players.find(p => p.playerIndex === curr && !p.isBot);
-  if (humanPlayer) return;
+  if (humanPlayer) {
+    // Arm a long-running idle-turn timer so a stuck human player can't freeze
+    // the room. The timer is reset every time a new game_state is broadcast.
+    const prevHuman = humanTurnTimers.get(room.code);
+    if (prevHuman) clearTimeout(prevHuman);
+    const idle = setTimeout(() => {
+      if (!room.gameState) return;
+      if (room.gameState.currentPlayerIndex !== curr) return;
+      try {
+        const newState = cpuPlayMulti(room.gameState);
+        room.gameState = newState;
+        maybeApplyRandomShuffle(room);
+        broadcastGameState(room, io);
+        if (room.gameState.phase !== "game_over" && room.gameState.phase !== "choosing_suit") {
+          scheduleAutoplay(room, io);
+        }
+      } catch {}
+    }, HUMAN_TURN_TIMEOUT_MS);
+    humanTurnTimers.set(room.code, idle);
+    return;
+  }
+
+  // Bot turn — clear any pending human idle timer so it doesn't fire later
+  const prevHuman = humanTurnTimers.get(room.code);
+  if (prevHuman) {
+    clearTimeout(prevHuman);
+    humanTurnTimers.delete(room.code);
+  }
 
   const prev = autoplayTimers.get(room.code);
   if (prev) clearTimeout(prev);
