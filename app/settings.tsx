@@ -185,6 +185,26 @@ export default function SettingsScreen() {
   // Task #85 — busy flags for the custom intro slot (file picker + recorder).
   const [customStingerBusy, setCustomStingerBusy] = useState(false);
   const [isRecordingStinger, setIsRecordingStinger] = useState(false);
+  // Task #94 — cloud-backup status for the custom clip. Derived from the
+  // profile URI on mount: a remote https URL means we already synced, a
+  // local file:// URI means the upload either never ran or failed (so the
+  // clip won't roam to other devices until the player retries).
+  type StingerBackupStatus = "idle" | "uploading" | "synced" | "failed";
+  const [customStingerBackupStatus, setCustomStingerBackupStatus] = useState<StingerBackupStatus>(() => {
+    const uri = profile.customLogoStingerUri || "";
+    if (!uri) return "idle";
+    return /^https?:\/\//i.test(uri) ? "synced" : "failed";
+  });
+  // Re-derive when the profile URI changes from elsewhere (cloud sync,
+  // remove, etc.) — but never overwrite an in-flight "uploading" state.
+  useEffect(() => {
+    setCustomStingerBackupStatus((prev) => {
+      if (prev === "uploading") return prev;
+      const uri = profile.customLogoStingerUri || "";
+      if (!uri) return "idle";
+      return /^https?:\/\//i.test(uri) ? "synced" : "failed";
+    });
+  }, [profile.customLogoStingerUri]);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   // Task #87 — draft state for the trim modal. After picking/recording a clip
   // we hold the source URI + measured duration here so the player can scrub
@@ -465,17 +485,40 @@ export default function SettingsScreen() {
 
     // Task #88 — back the clip up to the cloud so signing in on another
     // device (or reinstalling the app) restores the same intro instead of
-    // pointing at a now-missing local file. Fire-and-forget: when offline /
-    // unauthenticated the local file:// URI we just saved keeps working on
-    // this device, and the next save attempt will retry the upload.
+    // pointing at a now-missing local file. Task #94 — surface the status
+    // (uploading / synced / failed) so the player knows whether the clip
+    // will roam, and can retry without re-running the trim flow.
+    setCustomStingerBackupStatus("uploading");
     (async () => {
       const remoteUrl = await uploadCustomStinger(savedUri, ext);
-      if (!remoteUrl) return;
-      // Pre-populate the cache slot keyed by the remote filename so the
-      // resolver in _layout.tsx hits cache on the next boot instead of
-      // re-downloading what we already have on disk.
+      if (!remoteUrl) {
+        setCustomStingerBackupStatus("failed");
+        return;
+      }
       cacheLocalCopyForRemote(remoteUrl, savedUri);
       updateSettings({ customLogoStingerUri: remoteUrl });
+      setCustomStingerBackupStatus("synced");
+    })();
+  };
+
+  // Task #94 — retry the cloud upload of the currently-saved local clip
+  // without re-running the trim flow. Used by the "Backup failed" badge.
+  const retryCustomStingerUpload = () => {
+    const localUri = profile.customLogoStingerUri || "";
+    if (!localUri || /^https?:\/\//i.test(localUri)) return;
+    if (customStingerBackupStatus === "uploading") return;
+    const dotIdx = localUri.lastIndexOf(".");
+    const ext = dotIdx >= 0 ? localUri.slice(dotIdx + 1).toLowerCase() : "m4a";
+    setCustomStingerBackupStatus("uploading");
+    (async () => {
+      const remoteUrl = await uploadCustomStinger(localUri, ext);
+      if (!remoteUrl) {
+        setCustomStingerBackupStatus("failed");
+        return;
+      }
+      cacheLocalCopyForRemote(remoteUrl, localUri);
+      updateSettings({ customLogoStingerUri: remoteUrl });
+      setCustomStingerBackupStatus("synced");
     })();
   };
 
@@ -1246,6 +1289,27 @@ export default function SettingsScreen() {
                       </View>
                       {isSelected && <Ionicons name="checkmark-circle" size={20} color="#D4AF37" />}
                     </Pressable>
+                    {hasCustom && (() => {
+                      const status = customStingerBackupStatus;
+                      const cfg = status === "uploading"
+                        ? { icon: "cloud-upload-outline" as const, color: "#4FC3F7", label: T("logoStingerBackupSyncing") || "Backing up…" }
+                        : status === "synced"
+                        ? { icon: "cloud-done-outline" as const, color: "#27AE60", label: T("logoStingerBackupSynced") || "Synced" }
+                        : status === "failed"
+                        ? { icon: "cloud-offline-outline" as const, color: "#E74C3C", label: T("logoStingerBackupFailed") || "Backup failed — tap to retry" }
+                        : null;
+                      if (!cfg) return null;
+                      const isFailed = status === "failed";
+                      const inner = (
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                          <Ionicons name={cfg.icon} size={13} color={cfg.color} />
+                          <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 11, color: cfg.color }}>{cfg.label}</Text>
+                        </View>
+                      );
+                      return isFailed
+                        ? <TouchableOpacity onPress={retryCustomStingerUpload} accessibilityRole="button">{inner}</TouchableOpacity>
+                        : <View>{inner}</View>;
+                    })()}
                     <View style={{ flexDirection: "row", gap: 8 }}>
                       <TouchableOpacity
                         onPress={pickCustomStingerFile}
