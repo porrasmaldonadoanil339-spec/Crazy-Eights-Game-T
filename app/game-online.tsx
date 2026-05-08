@@ -957,8 +957,14 @@ export default function OnlineGameScreen() {
       if (!inProgress) return;
       rankedAbandonRecordedRef.current = true;
       try { recordRankedAbandonRef.current(); } catch {}
-      // Mark game as resolved so reopening the app doesn't double-count.
-      setRivalAbandoned(true);
+      // Defensive: lock the end-of-match ranked update so if the player
+      // returns and the game still resolves naturally (or any code path
+      // reaches the result effect), no second star delta is applied.
+      rankedUpdatedRef.current = true;
+      // NOTE: deliberately NOT setting rivalAbandoned=true — that flag
+      // drives the "rival abandoned" overlay UX, which is wrong wording
+      // for a self-abandon. The rankedAbandonRecordedRef + rankedUpdatedRef
+      // guards already prevent any double-penalty.
     };
     const sub = AppState.addEventListener("change", (next) => {
       if (next === "background" || next === "inactive") tryRecordAbandon();
@@ -2441,6 +2447,7 @@ export default function OnlineGameScreen() {
                     && lobbyPhase === "game";
                   if (modeParam === "ranked" && inProgress && !rankedAbandonRecordedRef.current) {
                     rankedAbandonRecordedRef.current = true;
+                    rankedUpdatedRef.current = true;
                     const r = recordRankedAbandon();
                     if (r.cooldownMs > 0) {
                       const mins = Math.round(r.cooldownMs / 60000);
