@@ -22,7 +22,7 @@ import {
   suitName, suitSymbol, suitColor, multiGetTopCard,
 } from "@/lib/multiplayerEngine";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc } from "@/lib/eventModes";
-import { playCardFlip, playCardDraw, playButton, playSpeedTick, stopMusic, startGameMusicForMode, playVictory } from "@/lib/audioManager";
+import { playCardFlip, playCardDraw, playButton, playSpeedTick, stopMusic, startGameMusicForMode, playVictory, playDefeat } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS, getCardDesignById } from "@/lib/storeItems";
 import { DealAnimation } from "@/components/DealAnimation";
@@ -258,10 +258,15 @@ export default function MultiGameScreen() {
   useEffect(() => {
     if (gameState.phase === "game_over") {
       stopMusic().catch(() => {});
-      // Task #124 — pass-and-play is local, so the device owner is always at
-      // the table when a winner is declared; play the victory cue.
+      // Task #124 — fire the result cue from the device owner's perspective
+      // (seat 0 is always the human in pass-and-play / coop). Victory if the
+      // human wins; defeat otherwise (including a CPU/teammate winning).
       if (gameState.winnerIndex !== null) {
-        playVictory().catch(() => {});
+        if (gameState.winnerIndex === 0) {
+          playVictory().catch(() => {});
+        } else {
+          playDefeat().catch(() => {});
+        }
       }
     }
   }, [gameState.phase, gameState.winnerIndex]);
