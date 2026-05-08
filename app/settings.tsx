@@ -14,8 +14,8 @@ import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES, CUSTOM_LOGO_STINGER_SHRINK_MAX_INPUT_BYTES, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
-import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, shrinkCustomStingerToFile, computeStingerWaveform, type UploadStingerErrorReason, type ShrinkStingerErrorReason } from "@/lib/customStingerCache";
-import { getStingerSourceMemo, setStingerSourceMemo, clearStingerSourceMemo, subscribeStingerSourceMemo, type StingerSourceMemo } from "@/lib/customStingerSourceSession";
+import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, shrinkCustomStingerToFile, computeStingerWaveform, persistCustomStingerSource, type UploadStingerErrorReason, type ShrinkStingerErrorReason } from "@/lib/customStingerCache";
+import { getStingerSourceMemo, setStingerSourceMemo, clearStingerSourceMemo, subscribeStingerSourceMemo, hydrateStingerSourceMemo, type StingerSourceMemo } from "@/lib/customStingerSourceSession";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
@@ -221,6 +221,16 @@ export default function SettingsScreen() {
   // populated after a successful Save (and cleared on Remove / app reload).
   const [stingerSourceMemo, setStingerSourceMemoState] = useState<StingerSourceMemo | null>(() => getStingerSourceMemo());
   useEffect(() => subscribeStingerSourceMemo(() => setStingerSourceMemoState(getStingerSourceMemo())), []);
+  // Task #106 — load any persisted source memo from AsyncStorage on mount
+  // so the "Re-trim" button reappears after the app is killed and reopened
+  // (as long as the source file is still on disk and the saved custom
+  // intro hasn't been removed). The hydrate helper validates file
+  // existence and clears the persisted entry if the source is missing.
+  useEffect(() => {
+    hydrateStingerSourceMemo()
+      .then(() => setStingerSourceMemoState(getStingerSourceMemo()))
+      .catch(() => {});
+  }, []);
 
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   // Task #87 — draft state for the trim modal. After picking/recording a clip
@@ -754,12 +764,18 @@ export default function SettingsScreen() {
         // upload. If the prior memo pointed at a different source file,
         // delete that file from disk now (the player just committed a new
         // one — the old recording is no longer reachable from the UI).
+        // Task #106 — copy the source out of the picker / recorder cache
+        // into the document directory so the Re-trim entry point still
+        // works after the app is killed and reopened. If the copy fails
+        // we fall back to the original URI (Re-trim will at least keep
+        // working for the rest of this session).
+        const persistedSrcUri = await persistCustomStingerSource(draft.srcUri, draft.ext) ?? draft.srcUri;
         const prevMemo = getStingerSourceMemo();
-        if (prevMemo && prevMemo.srcUri !== draft.srcUri) {
+        if (prevMemo && prevMemo.srcUri !== persistedSrcUri) {
           cleanupOldCustomClip(prevMemo.srcUri);
         }
         setStingerSourceMemo({
-          srcUri: draft.srcUri,
+          srcUri: persistedSrcUri,
           ext: draft.ext,
           durationMs: draft.durationMs,
           srcSizeBytes: draft.srcSizeBytes,
@@ -1007,11 +1023,17 @@ export default function SettingsScreen() {
     // Task #98 — clearing the custom slot also drops the in-memory source
     // memo + its on-disk recording so a future "Re-trim" doesn't point at
     // a stale file the player just removed.
-    const prevMemo = getStingerSourceMemo();
-    if (prevMemo) {
-      cleanupOldCustomClip(prevMemo.srcUri);
+    // Task #106 — hydrate first in case the player removes the custom
+    // intro before the startup hydration has had a chance to run; this
+    // way we still pick up the persisted source URI so we can delete the
+    // on-disk file. Then unconditionally clear the memo so AsyncStorage
+    // gets wiped even when nothing was loaded.
+    (async () => {
+      try { await hydrateStingerSourceMemo(); } catch {}
+      const prevMemo = getStingerSourceMemo();
+      if (prevMemo) cleanupOldCustomClip(prevMemo.srcUri);
       clearStingerSourceMemo();
-    }
+    })();
     if (profile.vibrationEnabled) Vibration.vibrate(30);
   };
 

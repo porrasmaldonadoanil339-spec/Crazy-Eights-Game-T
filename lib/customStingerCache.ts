@@ -146,6 +146,34 @@ export async function trimCustomStingerToFile(
 // vs "network/server").
 const SHRUNK_DIR = "custom-stingers";
 
+// Task #106 — copy the picker / recorder source clip into a stable slot
+// under the document directory so the "Re-trim" entry point still works
+// after the app is killed and reopened (cache-dir files are subject to
+// OS eviction). Returns the new persistent file:// URI, or `null` on any
+// failure so callers can fall back to the (still in-memory) original URI
+// for the current session. If `srcUri` already points inside our source
+// directory (e.g. the player is re-trimming the same recording), this is
+// a no-op and the original URI is returned unchanged.
+const SOURCE_DIR = "custom-stingers/source";
+
+export async function persistCustomStingerSource(srcUri: string, ext: string): Promise<string | null> {
+  try {
+    const dir = new Directory(Paths.document, SOURCE_DIR);
+    try { dir.create({ intermediates: true, idempotent: true }); } catch {}
+    if (srcUri.startsWith(dir.uri)) return srcUri;
+    const src = new File(srcUri);
+    if (!src.exists) return null;
+    const safeExt = ext.replace(/[^a-z0-9]/gi, "").toLowerCase() || "bin";
+    const fileName = `src-${Date.now()}-${Math.floor(Math.random() * 1e9).toString(36)}.${safeExt}`;
+    const dest = new File(dir, fileName);
+    if (dest.exists) { try { dest.delete(); } catch {} }
+    src.copy(dest);
+    return dest.uri;
+  } catch {
+    return null;
+  }
+}
+
 export type ShrinkStingerErrorReason =
   | "input_too_large"   // 413 — source was over 30 MB cap
   | "still_too_large"   // 413 — shrink ran but output still > 5 MB
