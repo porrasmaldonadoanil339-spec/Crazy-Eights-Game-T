@@ -435,18 +435,16 @@ export async function startSearchMusic() {
   await requestMusicTrack("search");
 }
 
-// Per-mode in-game music routing. Each gameplay mode owns its own
-// procedurally-generated loop (see scripts/gen-mode-music.mjs) so the
-// soundscape is genuinely distinct mode-by-mode — calm pad for Práctica,
-// warm casino lounge for Clásico, fast arpeggio for Lightning, dramatic
-// orchestral swell for Torneo, playful marimba for Desafíos, cold synth
-// pad for Ranked, bright major-7 vamp for Coop.
+// Per-mode in-game music routing. As of Task #124, every gameplay mode
+// shares the same calm Ranked loop (gameMusicRanked) — the previously
+// distinct per-mode beds (Práctica/Clásico/Lightning/Torneo/Desafío/
+// Coop) were removed in favor of a single, unified soundscape. The
+// per-mode MusicTrack ids are kept here so that call sites
+// (startGameMusicForMode in game.tsx / game-online.tsx / game-multi.tsx)
+// don't need to change; sourceForTrack collapses every game_* track to
+// gameMusicRanked.
 //
-// Reto de Fichas re-uses the Clásico loop and is differentiated by its
-// forced casino ambience + chest-fichas intro stinger; "online" reuses
-// the Clásico loop because online play mirrors offline classic rules.
-//
-// All routes go through the same serialized requestMusicTrack pipeline
+// All routes still go through the serialized requestMusicTrack pipeline
 // as startGameMusic so mode transitions never overlap.
 const MODE_TO_MUSIC_TRACK: Record<string, MusicTrack> = {
   practice:   "game_practice",
