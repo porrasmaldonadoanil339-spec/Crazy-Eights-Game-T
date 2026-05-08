@@ -356,7 +356,7 @@ function DailyBurstParticle({ progress, angle, dist, color }: { progress: { valu
 // Daily reward modal
 function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFull, onClose }: {
   visible: boolean;
-  reward: { coins: number; xp: number; label: string; icon: string; iconColor: string; chestType?: string } | null;
+  reward: { coins: number; xp: number; label: string; icon: string; iconColor: string; chestType?: ChestType } | null;
   onClaim: () => void;
   inventoryFull?: boolean;
   overflowFull?: boolean;
@@ -465,8 +465,8 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFul
               ))}
               {/* The chest (or gift if no chest type) */}
               <Animated.View style={[{ alignItems: "center", justifyContent: "center" }, chestStyle]}>
-                {reward.chestType ? (
-                  <ChestVisual type={reward.chestType as any} size={92} />
+                {reward.chestType && CHEST_CONFIG[reward.chestType] ? (
+                  <ChestVisual type={reward.chestType} size={92} />
                 ) : (
                   <View style={[styles.dailyIconWrap, { borderColor: mysteryColor + "AA", backgroundColor: mysteryColor + "1A", borderWidth: 3 }]}>
                     <Ionicons name="gift" size={56} color={mysteryColor} />
