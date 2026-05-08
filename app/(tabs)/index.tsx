@@ -840,27 +840,23 @@ export default function PlayScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top + 6;
   const xpPct = xpProgress.needed > 0 ? xpProgress.current / xpProgress.needed : 0;
 
-  // ─── Events data (no IIFE, React Compiler safe) ──────────────────────────
+  // ─── Events data (unified source: lib/events.ts weekly scheduler) ─────────
+  // Single source of truth — every "active event" surface on this screen
+  // (the events card, the EN VIVO badge, and the launch handler) reads from
+  // getCurrentWeeklyEvent so they cannot disagree. The full 8-event catalog
+  // (speed/random/double/survival/frozen/inferno/chaos/casino) is reachable
+  // through the rotation, not just the original four.
   const evIsLocked = level < 5;
-  const EV_BASE = new Date("2026-03-01T00:00:00Z").getTime();
-  const EV_CYCLE = 3 * 24 * 3600 * 1000;
-  const EV_ELAPSED = Date.now() - EV_BASE;
-  const EV_IDX = evIsLocked ? 0 : Math.floor(EV_ELAPSED / EV_CYCLE) % 4;
-  const EV_NAMES = ["Velocidad Extrema", "Cartas Aleatorias", "Doble Efecto", "Supervivencia"] as const;
-  const EV_DESCS = ["Todas las cartas tienen temporizador de 5s", "Las cartas especiales cambian aleatoriamente", "Las cartas especiales tienen efecto doble", "Comienza con 12 cartas. ¡Vacía tu mano!"] as const;
-  const EV_ICONS = ["flash", "shuffle", "copy", "shield"] as const;
-  const EV_COLORS = ["#F39C12", "#9B59B6", "#E74C3C", "#27AE60"] as const;
-  const EV_DURS = [2, 2, 2, 2] as const;
-  const evColor = EV_COLORS[EV_IDX];
-  const evName = EV_NAMES[EV_IDX];
-  const evDesc = EV_DESCS[EV_IDX];
-  const evIcon = EV_ICONS[EV_IDX];
-  const evCyclePosMs = EV_ELAPSED % EV_CYCLE;
-  const evDurMs = EV_DURS[EV_IDX] * 24 * 3600 * 1000;
-  const evIsLive = !evIsLocked && evCyclePosMs < evDurMs;
-  const evStatus = evIsLocked ? "locked" : evIsLive ? "live" : "upcoming";
-  const evHoursLeft = evIsLive ? Math.ceil((evDurMs - evCyclePosMs) / 3600000) : 0;
-  const evNextInHours = evIsLocked || evIsLive ? 0 : Math.ceil((EV_CYCLE - evCyclePosMs) / 3600000);
+  const evSlot = getCurrentWeeklyEvent();
+  const evConfig = evSlot.event;
+  const evColor = evConfig.color || "#F39C12";
+  const evName = evConfig.name;
+  const evDesc = evConfig.desc;
+  const evIcon = evConfig.icon || "flash";
+  const evIsLive = !evIsLocked;
+  const evStatus = evIsLocked ? "locked" : "live";
+  const evHoursLeft = evIsLive ? evSlot.hoursLeft : 0;
+  const evNextInHours = 0;
   const evStatusLabel = evStatus === "live" ? "EVENTO EN VIVO" : evStatus === "locked" ? "NIVEL 5 REQUERIDO" : "PROXIMO EVENTO";
   const evStatusColor = evStatus === "live" ? evColor : evStatus === "locked" ? "#666" : "#4A90E2";
   const evStatusIcon = evStatus === "live" ? "radio" : evStatus === "locked" ? "lock-closed" : "time";
@@ -1137,9 +1133,10 @@ export default function PlayScreen() {
           onPress={() => {
             if (evStatus !== "live") return;
             playSound("mode_select").catch(() => {});
-            const EV_IDS = ["speed", "random", "double", "survival"] as const;
-            const evId = EV_IDS[EV_IDX];
-            startGame("classic", "normal", undefined, evId);
+            // Launch whichever event is currently live in the weekly
+            // rotation — supports the full 8-event catalog, not just the
+            // original four.
+            startGame("classic", "normal", undefined, evConfig.id);
             router.push("/game");
           }}
           style={({ pressed }) => ({
@@ -1162,11 +1159,8 @@ export default function PlayScreen() {
                   <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: evColor }}>{evHoursLeft}h</Text>
                 </View>
               )}
-              {evStatus === "upcoming" && evNextInHours > 0 && (
-                <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 11, color: "#4A90E2" }}>en {evNextInHours}h</Text>
-                </View>
-              )}
+              {/* The legacy "upcoming" countdown branch was removed: with
+                  weekly rotation there is always a live event. */}
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <View style={{
@@ -1421,7 +1415,12 @@ export default function PlayScreen() {
           return (
             <Animated.View style={useEntryAnimation({ delay: 60, fromTranslateY: 12 })}>
               <BouncePressable
-                onPress={() => startGame("classic", "normal", undefined, ev.id)}
+                onPress={() => {
+                  if (level < 5) return;
+                  playSound("mode_select").catch(() => {});
+                  startGame("classic", "normal", undefined, ev.id);
+                  router.push("/game");
+                }}
                 style={styles.bpShortcut}
                 sound
                 glowColor={(ev.color || "#A855F7") + "55"}
