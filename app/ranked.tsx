@@ -10,6 +10,7 @@ import { Colors, LightColors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { useProfile } from "@/context/ProfileContext";
 import { getRankInfo, RANKS, RANK_COLORS, RANK_ICONS, DIVISIONS } from "@/lib/ranked";
+import { buildPrestigeFields } from "@/lib/prestige";
 import { RankShield } from "@/components/RankShield";
 import { getCurrentSeason, getSeasonRewardsForRank } from "@/lib/seasons";
 import type { Lang } from "@/lib/i18n";
@@ -186,12 +187,12 @@ export default function RankedScreen() {
     const rankLabel = `${T(`rank${RANKS[item.rank]}` as any)} ${DIVISIONS[item.division]}`;
     const seed = item.position * 31337;
     const wins = Math.floor(50 + seededRand(seed * 100) * 800);
-    const winRate = Math.round(40 + seededRand(seed * 200) * 45);
     const alreadySent = sentFriendIds.has(item.id);
-    // Task #120 — deterministic prestige metrics derived from the same seed.
-    const totalGames = Math.round(wins / Math.max(0.2, winRate / 100));
-    const bestStreak = 3 + Math.floor(seededRand(seed * 300) * 18);
-    const achievementsUnlocked = 20 + Math.floor(seededRand(seed * 400) * 180);
+    // Task #120 — derive prestige fields from canonical player stats via shared helper.
+    const prestige = buildPrestigeFields({
+      name: item.name, level: item.level, wins,
+      rank: item.rank, division: item.division,
+    }, profile.language ?? "es");
     const data: PlayerProfileData = {
       name: item.name,
       level: item.level,
@@ -203,12 +204,12 @@ export default function RankedScreen() {
       titleName: rankLabel,
       rank: item.position,
       rankName: rankLabel,
-      topRankName: rankLabel,
+      topRankName: prestige.topRankName,
       country: item.country,
-      winRate,
-      bestStreak,
-      achievementsUnlocked,
-      totalGames,
+      winRate: prestige.winRate,
+      bestStreak: prestige.bestStreak,
+      achievementsUnlocked: prestige.achievementsUnlocked,
+      totalGames: prestige.totalGames,
       isFriend: false,
       requestSent: alreadySent,
     };

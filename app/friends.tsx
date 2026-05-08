@@ -13,6 +13,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { useT } from "@/hooks/useT";
 import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { PlayerProfileModal, type PlayerProfileData } from "@/components/PlayerProfileModal";
+import { buildPrestigeFields } from "@/lib/prestige";
 
 const STORAGE_KEY = "ocho_friends_v1";
 const CHAT_STORAGE_KEY = "ocho_chats_v1";
@@ -404,11 +405,10 @@ export default function FriendsScreen() {
   };
 
   const openProfile = (f: Friend) => {
-    // Task #120 — deterministic prestige metrics derived from friend data.
-    const winRate = Math.min(90, 35 + Math.floor(f.level * 0.6));
-    const totalGames = Math.round(f.wins / Math.max(0.2, winRate / 100));
-    const bestStreak = 3 + Math.floor((f.level * 5) % 20);
-    const achievementsUnlocked = Math.min(981, 25 + f.level * 5);
+    // Task #120 — derive prestige fields from canonical friend data via shared helper.
+    const prestige = buildPrestigeFields({
+      name: f.name, level: f.level, wins: f.wins,
+    }, profile.language ?? "es");
     setProfileModal({
       name: f.name,
       level: f.level,
@@ -418,10 +418,12 @@ export default function FriendsScreen() {
       avatarColor: f.avatarColor,
       photoUrl: f.photoUrl,
       titleName: f.titleName,
-      winRate,
-      bestStreak,
-      achievementsUnlocked,
-      totalGames,
+      rankName: prestige.rankName,
+      topRankName: prestige.topRankName,
+      winRate: prestige.winRate,
+      bestStreak: prestige.bestStreak,
+      achievementsUnlocked: prestige.achievementsUnlocked,
+      totalGames: prestige.totalGames,
       isFriend: true,
     });
   };
@@ -642,15 +644,16 @@ export default function FriendsScreen() {
       <Pressable
         style={({ pressed }) => [styles.friendRow, { backgroundColor: surfaceColor, borderColor }, pressed && { opacity: 0.85 }]}
         onPress={() => {
-          // Task #120 — deterministic prestige metrics for search results.
-          const winRate = Math.min(90, 35 + Math.floor(item.level * 0.6));
-          const totalGames = Math.round(item.wins / Math.max(0.2, winRate / 100));
-          const bestStreak = 3 + Math.floor((item.level * 5) % 20);
-          const achievementsUnlocked = Math.min(981, 25 + item.level * 5);
+          // Task #120 — derive prestige fields via shared helper.
+          const prestige = buildPrestigeFields({
+            name: item.name, level: item.level, wins: item.wins,
+          }, profile.language ?? "es");
           setProfileModal({
             name: item.name, level: item.level, wins: item.wins, score: item.wins * 10,
             avatarIcon: item.avatarIcon, avatarColor: item.avatarColor, photoUrl: item.photoUrl,
-            winRate, bestStreak, achievementsUnlocked, totalGames,
+            rankName: prestige.rankName, topRankName: prestige.topRankName,
+            winRate: prestige.winRate, bestStreak: prestige.bestStreak,
+            achievementsUnlocked: prestige.achievementsUnlocked, totalGames: prestige.totalGames,
             isFriend: alreadyFriend, requestSent: sent,
           });
         }}
