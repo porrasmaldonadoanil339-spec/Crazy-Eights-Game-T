@@ -26,6 +26,14 @@ interface RankEntry {
   avatarColor: string;
   photoUrl?: string;
   isPlayer?: boolean;
+  // Task #120 — canonical prestige counters carried with each entry.
+  bestStreak: number;
+  totalGames: number;
+  achievementsUnlocked: number;
+  titlesUnlocked: number;
+  topRankName: string;
+  rankName: string;
+  winRate: number;
 }
 
 const COUNTRIES = [
@@ -55,6 +63,7 @@ function generateExtraPlayers(count: number, startSeed: number): RankEntry[] {
     const wins = Math.max(1, Math.floor(level * 14 * (1 + seededRand(s + 4) * 1.5)));
     const usePhoto = seededRand(s + 8) > 0.62;
     const photoNum = Math.floor(seededRand(s + 9) * 70) + 1;
+    const p = buildPrestigeFields({ name, level, wins });
     players.push({
       rank: 0,
       name,
@@ -64,6 +73,13 @@ function generateExtraPlayers(count: number, startSeed: number): RankEntry[] {
       avatarIcon: ICONS[Math.floor(seededRand(s + 6) * ICONS.length)],
       avatarColor: AVATAR_COLORS[Math.floor(seededRand(s + 7) * AVATAR_COLORS.length)],
       photoUrl: usePhoto ? `https://i.pravatar.cc/150?img=${photoNum}` : undefined,
+      bestStreak: p.bestStreak,
+      totalGames: p.totalGames,
+      achievementsUnlocked: p.achievementsUnlocked,
+      titlesUnlocked: p.titlesUnlocked,
+      topRankName: p.topRankName,
+      rankName: p.rankName,
+      winRate: p.winRate,
     });
   }
   return players;
@@ -93,6 +109,7 @@ function buildLeaderboard(
     const seed = i * 13 + periodSeed;
     const baseWins = Math.floor(p.level * 18 * (1 + seededRand(seed) * 2));
     const wins = Math.max(1, Math.floor(baseWins * multiplier));
+    const pres = buildPrestigeFields({ name: p.name, level: p.level, wins });
     return {
       rank: 0,
       name: p.name,
@@ -102,6 +119,13 @@ function buildLeaderboard(
       avatarIcon: p.avatarIcon,
       avatarColor: p.avatarColor,
       photoUrl: p.photoUrl,
+      bestStreak: pres.bestStreak,
+      totalGames: pres.totalGames,
+      achievementsUnlocked: pres.achievementsUnlocked,
+      titlesUnlocked: pres.titlesUnlocked,
+      topRankName: pres.topRankName,
+      rankName: pres.rankName,
+      winRate: pres.winRate,
     };
   });
 
@@ -114,6 +138,7 @@ function buildLeaderboard(
   }));
 
   const playerWinsAdjusted = Math.max(0, Math.floor(playerWins * multiplier));
+  const playerPres = buildPrestigeFields({ name: playerName, level: playerLevel, wins: playerWinsAdjusted });
   const playerEntry: RankEntry = {
     rank: 0,
     name: playerName,
@@ -124,6 +149,13 @@ function buildLeaderboard(
     avatarColor: Colors.gold,
     photoUrl: playerPhotoUrl,
     isPlayer: true,
+    bestStreak: playerPres.bestStreak,
+    totalGames: playerPres.totalGames,
+    achievementsUnlocked: playerPres.achievementsUnlocked,
+    titlesUnlocked: playerPres.titlesUnlocked,
+    topRankName: playerPres.topRankName,
+    rankName: playerPres.rankName,
+    winRate: playerPres.winRate,
   };
 
   const all = [...cpuEntries, ...extraEntries, playerEntry].sort((a, b) => b.score - a.score);
@@ -214,10 +246,7 @@ export default function RankingScreen() {
 
   const openPlayerProfile = (entry: RankEntry) => {
     if (entry.isPlayer) return;
-    // Task #120 — derive prestige fields from canonical entry data via shared helper.
-    const prestige = buildPrestigeFields({
-      name: entry.name, level: entry.level, wins: entry.wins,
-    }, profile.language ?? "es");
+    // Task #120 — read prestige fields directly from the canonical entry.
     setSelectedPlayer({
       name: entry.name,
       level: entry.level,
@@ -227,13 +256,13 @@ export default function RankingScreen() {
       avatarColor: entry.avatarColor,
       photoUrl: entry.photoUrl,
       rank: entry.rank,
-      rankName: prestige.rankName,
-      topRankName: prestige.topRankName,
-      winRate: prestige.winRate,
-      bestStreak: prestige.bestStreak,
-      achievementsUnlocked: prestige.achievementsUnlocked,
-      titlesUnlocked: prestige.titlesUnlocked,
-      totalGames: prestige.totalGames,
+      rankName: entry.rankName,
+      topRankName: entry.topRankName,
+      winRate: entry.winRate,
+      bestStreak: entry.bestStreak,
+      achievementsUnlocked: entry.achievementsUnlocked,
+      titlesUnlocked: entry.titlesUnlocked,
+      totalGames: entry.totalGames,
       requestSent: sentRequests.has(entry.name),
     });
   };

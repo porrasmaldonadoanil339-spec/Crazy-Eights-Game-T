@@ -34,6 +34,14 @@ interface Friend {
   wins: number;
   lastSeen: string;
   titleName: string;
+  // Task #120 — canonical prestige counters stored with each friend record.
+  bestStreak: number;
+  totalGames: number;
+  achievementsUnlocked: number;
+  titlesUnlocked: number;
+  topRankName: string;
+  rankName: string;
+  winRate: number;
 }
 
 interface FriendRequest {
@@ -158,7 +166,22 @@ export default function FriendsScreen() {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         if (stored) {
           const { friends: storedFriends, requests: storedRequests } = JSON.parse(stored);
-          setFriends(storedFriends);
+          // Task #120 — backfill prestige fields for legacy friend records.
+          const migratedFriends: Friend[] = (storedFriends as any[]).map((f) => {
+            if (f && typeof f.bestStreak === "number") return f as Friend;
+            const pres = buildPrestigeFields({ name: f.name, level: f.level, wins: f.wins ?? 0 });
+            return {
+              ...f,
+              bestStreak: pres.bestStreak,
+              totalGames: pres.totalGames,
+              achievementsUnlocked: pres.achievementsUnlocked,
+              titlesUnlocked: pres.titlesUnlocked,
+              topRankName: pres.topRankName,
+              rankName: pres.rankName,
+              winRate: pres.winRate,
+            } as Friend;
+          });
+          setFriends(migratedFriends);
           setRequests(storedRequests);
         } else {
           setFriends(buildInitialFriends());
@@ -260,6 +283,8 @@ export default function FriendsScreen() {
         removeOutgoingFriendRequest(req.id);
         const currentRequests = requestsRef.current.filter(r => r.id !== req.id);
         if (accept) {
+          const _wins = Math.floor(req.level * 12);
+          const _pres = buildPrestigeFields({ name: req.name, level: req.level, wins: _wins });
           const newFriend: Friend = {
             id: req.id,
             name: req.name,
@@ -268,9 +293,16 @@ export default function FriendsScreen() {
             avatarColor: req.avatarColor,
             photoUrl: req.photoUrl,
             online: Math.random() > 0.4,
-            wins: Math.floor(req.level * 12),
+            wins: _wins,
             lastSeen: T("statusNow"),
             titleName: T("player"),
+            bestStreak: _pres.bestStreak,
+            totalGames: _pres.totalGames,
+            achievementsUnlocked: _pres.achievementsUnlocked,
+            titlesUnlocked: _pres.titlesUnlocked,
+            topRankName: _pres.topRankName,
+            rankName: _pres.rankName,
+            winRate: _pres.winRate,
           };
           const currentFriends = [newFriend, ...friendsRef.current.filter(f => f.id !== req.id)];
           await saveDirectly(currentFriends, currentRequests);
@@ -306,18 +338,29 @@ export default function FriendsScreen() {
     const results = CPU_PROFILES
       .filter(p => p.name.toLowerCase().includes(lower))
       .slice(0, 12)
-      .map((p, i) => ({
-        id: p.name,
-        name: p.name,
-        level: p.level,
-        avatarIcon: p.avatarIcon,
-        avatarColor: p.avatarColor,
-        photoUrl: p.photoUrl,
-        online: seededRand(i + 22) > 0.5,
-        wins: Math.floor(p.level * 12),
-        lastSeen: LAST_SEEN[Math.floor(seededRand(i + 6) * LAST_SEEN.length)],
-        titleName: TITLE_NAMES[p.titleId] ?? T("player"),
-      }));
+      .map((p, i) => {
+        const wins = Math.floor(p.level * 12);
+        const pres = buildPrestigeFields({ name: p.name, level: p.level, wins });
+        return {
+          id: p.name,
+          name: p.name,
+          level: p.level,
+          avatarIcon: p.avatarIcon,
+          avatarColor: p.avatarColor,
+          photoUrl: p.photoUrl,
+          online: seededRand(i + 22) > 0.5,
+          wins,
+          lastSeen: LAST_SEEN[Math.floor(seededRand(i + 6) * LAST_SEEN.length)],
+          titleName: TITLE_NAMES[p.titleId] ?? T("player"),
+          bestStreak: pres.bestStreak,
+          totalGames: pres.totalGames,
+          achievementsUnlocked: pres.achievementsUnlocked,
+          titlesUnlocked: pres.titlesUnlocked,
+          topRankName: pres.topRankName,
+          rankName: pres.rankName,
+          winRate: pres.winRate,
+        };
+      });
     setSearchResults(results);
   };
 
@@ -348,6 +391,8 @@ export default function FriendsScreen() {
       if (accept) {
         const cpuProfile = CPU_PROFILES.find(p => p.name === name);
         if (cpuProfile) {
+          const _wins = Math.floor(cpuProfile.level * 12);
+          const _pres = buildPrestigeFields({ name: cpuProfile.name, level: cpuProfile.level, wins: _wins });
           const newFriend: Friend = {
             id: cpuProfile.name,
             name: cpuProfile.name,
@@ -356,9 +401,16 @@ export default function FriendsScreen() {
             avatarColor: cpuProfile.avatarColor,
             photoUrl: cpuProfile.photoUrl,
             online: Math.random() > 0.4,
-            wins: Math.floor(cpuProfile.level * 12),
+            wins: _wins,
             lastSeen: T("statusNow"),
             titleName: TITLE_NAMES[cpuProfile.titleId] ?? T("player"),
+            bestStreak: _pres.bestStreak,
+            totalGames: _pres.totalGames,
+            achievementsUnlocked: _pres.achievementsUnlocked,
+            titlesUnlocked: _pres.titlesUnlocked,
+            topRankName: _pres.topRankName,
+            rankName: _pres.rankName,
+            winRate: _pres.winRate,
           };
           const currentFriends = [newFriend, ...friendsRef.current.filter(f => f.id !== name)];
           await saveDirectly(currentFriends, currentRequests);
@@ -379,6 +431,8 @@ export default function FriendsScreen() {
   };
 
   const handleAcceptRequest = (req: FriendRequest) => {
+    const _wins = Math.floor(req.level * 12);
+    const _pres = buildPrestigeFields({ name: req.name, level: req.level, wins: _wins });
     const newFriend: Friend = {
       id: req.name,
       name: req.name,
@@ -387,9 +441,16 @@ export default function FriendsScreen() {
       avatarColor: req.avatarColor,
       photoUrl: req.photoUrl,
       online: true,
-      wins: Math.floor(req.level * 12),
+      wins: _wins,
       lastSeen: T("statusNow"),
       titleName: T("player"),
+      bestStreak: _pres.bestStreak,
+      totalGames: _pres.totalGames,
+      achievementsUnlocked: _pres.achievementsUnlocked,
+      titlesUnlocked: _pres.titlesUnlocked,
+      topRankName: _pres.topRankName,
+      rankName: _pres.rankName,
+      winRate: _pres.winRate,
     };
     setFriends(prev => [newFriend, ...prev]);
     setRequests(prev => prev.filter(r => r.id !== req.id));
@@ -405,10 +466,7 @@ export default function FriendsScreen() {
   };
 
   const openProfile = (f: Friend) => {
-    // Task #120 — derive prestige fields from canonical friend data via shared helper.
-    const prestige = buildPrestigeFields({
-      name: f.name, level: f.level, wins: f.wins,
-    }, profile.language ?? "es");
+    // Task #120 — read prestige counters directly from the canonical friend record.
     setProfileModal({
       name: f.name,
       level: f.level,
@@ -418,13 +476,13 @@ export default function FriendsScreen() {
       avatarColor: f.avatarColor,
       photoUrl: f.photoUrl,
       titleName: f.titleName,
-      rankName: prestige.rankName,
-      topRankName: prestige.topRankName,
-      winRate: prestige.winRate,
-      bestStreak: prestige.bestStreak,
-      achievementsUnlocked: prestige.achievementsUnlocked,
-      titlesUnlocked: prestige.titlesUnlocked,
-      totalGames: prestige.totalGames,
+      rankName: f.rankName,
+      topRankName: f.topRankName,
+      winRate: f.winRate,
+      bestStreak: f.bestStreak,
+      achievementsUnlocked: f.achievementsUnlocked,
+      titlesUnlocked: f.titlesUnlocked,
+      totalGames: f.totalGames,
       isFriend: true,
     });
   };
@@ -645,16 +703,13 @@ export default function FriendsScreen() {
       <Pressable
         style={({ pressed }) => [styles.friendRow, { backgroundColor: surfaceColor, borderColor }, pressed && { opacity: 0.85 }]}
         onPress={() => {
-          // Task #120 — derive prestige fields via shared helper.
-          const prestige = buildPrestigeFields({
-            name: item.name, level: item.level, wins: item.wins,
-          }, profile.language ?? "es");
+          // Task #120 — read prestige counters directly from the canonical search record.
           setProfileModal({
             name: item.name, level: item.level, wins: item.wins, score: item.wins * 10,
             avatarIcon: item.avatarIcon, avatarColor: item.avatarColor, photoUrl: item.photoUrl,
-            rankName: prestige.rankName, topRankName: prestige.topRankName,
-            winRate: prestige.winRate, bestStreak: prestige.bestStreak,
-            achievementsUnlocked: prestige.achievementsUnlocked, titlesUnlocked: prestige.titlesUnlocked, totalGames: prestige.totalGames,
+            rankName: item.rankName, topRankName: item.topRankName,
+            winRate: item.winRate, bestStreak: item.bestStreak,
+            achievementsUnlocked: item.achievementsUnlocked, titlesUnlocked: item.titlesUnlocked, totalGames: item.totalGames,
             isFriend: alreadyFriend, requestSent: sent,
           });
         }}
