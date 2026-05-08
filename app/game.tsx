@@ -40,6 +40,7 @@ import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmoteP
 import { getCpuPhrase, type CpuPhraseEvent } from "@/lib/cpuPhrases";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
 import RoundTransition from "@/components/RoundTransition";
+import { consumeFichasRunActive, recordFichasWin } from "@/lib/fichasChallenge";
 import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc, pickRandomSuit, type EventId } from "@/lib/eventModes";
 
@@ -2090,6 +2091,17 @@ export default function GameScreen() {
     }
 
     if (won) {
+      // Reto de Fichas — if the home screen flagged this match as a Fichas
+      // challenge run, advance V1/V2/V3 progression and grant the
+      // tier-appropriate fichas + bonus coins. Fire-and-forget so a storage
+      // hiccup never blocks the standard win-reward flow below.
+      if (consumeFichasRunActive()) {
+        recordFichasWin().then(({ tierJustCleared }) => {
+          if (tierJustCleared) {
+            addCoins(tierJustCleared.fichasReward + tierJustCleared.bonusCoins);
+          }
+        }).catch(() => {});
+      }
       updateAchievementProgress("first_win", 1);
       updateAchievementProgress("win_5", 1);
       updateAchievementProgress("win_25", 1);

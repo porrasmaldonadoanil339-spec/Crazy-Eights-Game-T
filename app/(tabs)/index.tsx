@@ -17,6 +17,7 @@ import { Colors, LightColors } from "@/constants/colors";
 import { useTheme } from "@/hooks/useTheme";
 import { useGame } from "@/context/GameContext";
 import { getCurrentWeeklyEvent } from "@/lib/events";
+import { markFichasRunActive } from "@/lib/fichasChallenge";
 import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
 import { playButton, syncSettings, playChestOpen } from "@/lib/audioManager";
@@ -1491,6 +1492,10 @@ export default function PlayScreen() {
           fichasRemaining={fichasModePlaysRemaining()}
           onFichasPress={() => {
             recordFichasModePlay();
+            // Flag this run so the win handler in app/game.tsx advances
+            // the V1/V2/V3 Reto de Fichas progression and grants the
+            // tier-appropriate fichas/coins/chest rewards.
+            markFichasRunActive();
             startGame("classic" as any, "normal");
             router.push("/game");
           }}

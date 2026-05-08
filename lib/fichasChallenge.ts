@@ -100,3 +100,19 @@ export async function resetFichasRun(): Promise<void> {
 export function getTierConfig(tier: FichasTier): FichasTierConfig {
   return FICHAS_TIERS.find((t) => t.tier === tier) ?? FICHAS_TIERS[0];
 }
+
+// Module-level marker so the home screen can flag "the next match is a
+// Fichas-challenge run" and the in-match win handler in app/game.tsx can
+// consume it on victory to advance V1 → V2 → V3 progression. Stays in
+// memory (no AsyncStorage) — a single match scope is intentional.
+let _fichasRunActive = false;
+
+export function markFichasRunActive(): void {
+  _fichasRunActive = true;
+}
+
+export function consumeFichasRunActive(): boolean {
+  const was = _fichasRunActive;
+  _fichasRunActive = false;
+  return was;
+}

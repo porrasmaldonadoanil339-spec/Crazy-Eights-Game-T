@@ -100,8 +100,13 @@ export function initGame(cardsPerPlayer: number = 8, difficulty: string = "norma
   };
 }
 
+// Lazy-required to avoid a circular import at module init (eventModes.ts
+// imports from gameEngine for shared types via app code paths).
 function eventDrawMultiplier(state: GameState): number {
-  return state.eventId === "double" ? 2 : 1;
+  if (!state.eventId) return 1;
+  const { EVENT_CONFIGS } = require("./eventModes") as typeof import("./eventModes");
+  const cfg = (EVENT_CONFIGS as Record<string, { doubleDrawEffect?: boolean }>)[state.eventId];
+  return cfg?.doubleDrawEffect ? 2 : 1;
 }
 
 export function getTopCard(state: GameState): Card {

@@ -26,7 +26,10 @@ export interface MultiGameState {
 }
 
 function multiEventDrawMultiplier(state: MultiGameState): number {
-  return state.eventId === "double" ? 2 : 1;
+  if (!state.eventId) return 1;
+  const { EVENT_CONFIGS } = require("./eventModes") as typeof import("./eventModes");
+  const cfg = (EVENT_CONFIGS as Record<string, { doubleDrawEffect?: boolean }>)[state.eventId];
+  return cfg?.doubleDrawEffect ? 2 : 1;
 }
 
 export function initMultiGame(playerNames: string[], cardsPerPlayer = 8, eventId?: string | null): MultiGameState {
