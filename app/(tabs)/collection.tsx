@@ -14,6 +14,13 @@ import BouncePressable from "@/components/BouncePressable";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { ItemPreview } from "@/components/ItemPreview";
 import { playSound } from "@/lib/sounds";
+import {
+  LOGO_STINGERS,
+  DEFAULT_LOGO_STINGER_ID,
+  STINGER_OWNED_PREFIX,
+  previewLogoStinger,
+  type LogoStingerId,
+} from "@/lib/audioManager";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -32,7 +39,16 @@ const CATEGORIES: CategoryDef[] = [
   { id: "title",        icon: "ribbon",        labelKey: "categoryTitles" },
   { id: "effect",       icon: "sparkles",      labelKey: "categoryEffects" },
   { id: "emote",        icon: "happy",         labelKey: "categoryEmotes" },
+  { id: "logo_stinger", icon: "musical-notes", labelKey: "logoStinger" },
 ];
+
+const STINGER_UNLOCK_BY_OWNED_ID: Record<string, LogoStingerId> = LOGO_STINGERS.reduce(
+  (acc, s) => {
+    acc[`${STINGER_OWNED_PREFIX}${s.id}`] = s.id;
+    return acc;
+  },
+  {} as Record<string, LogoStingerId>,
+);
 
 const RARITY_COLOR: Record<string, string> = {
   common: "#95A5A6",
@@ -55,7 +71,7 @@ export default function CollectionScreen() {
     profile,
     updateCardBack, updateCardDesign, updateTableDesign,
     updateAvatar, updateFrame, updateTitle, updateEffect,
-    updateEquippedEmotes,
+    updateEquippedEmotes, updateSettings,
   } = useProfile();
   const [activeCat, setActiveCat] = useState<StoreItemCategory>("card_back");
   const [infoItem, setInfoItem] = useState<StoreItem | null>(null);
@@ -110,6 +126,10 @@ export default function CollectionScreen() {
       case "title":        return profile.titleId;
       case "effect":       return profile.selectedEffect;
       case "emote":        return undefined;
+      case "logo_stinger": {
+        const id = (profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID) as LogoStingerId;
+        return `${STINGER_OWNED_PREFIX}${id}`;
+      }
     }
   };
 
@@ -133,6 +153,13 @@ export default function CollectionScreen() {
           updateEquippedEmotes([...equippedEmotes, item.id]);
         } else {
           setInfoItem(item);
+        }
+        break;
+      }
+      case "logo_stinger": {
+        const stingerId = STINGER_UNLOCK_BY_OWNED_ID[item.id];
+        if (stingerId) {
+          updateSettings({ logoStingerId: stingerId, lastBuiltInLogoStingerId: stingerId });
         }
         break;
       }
@@ -163,6 +190,17 @@ export default function CollectionScreen() {
       : localizeItem(item, lang);
 
     const handlePress = () => {
+      if (activeCat === "logo_stinger") {
+        const stingerId = STINGER_UNLOCK_BY_OWNED_ID[item.id];
+        if (stingerId) previewLogoStinger(stingerId).catch(() => {});
+        if (!isOwned) {
+          setInfoItem(item);
+          return;
+        }
+        if (!isEquipped) equip(item);
+        else setInfoItem(item);
+        return;
+      }
       if (!isOwned) {
         setInfoItem(item);
         return;
@@ -219,6 +257,20 @@ export default function CollectionScreen() {
   const infoRarityColor = infoItem ? (RARITY_COLOR[infoItem.rarity] ?? "#95A5A6") : "#95A5A6";
   const infoLocalized = infoItem ? localizeItem(infoItem, lang) : null;
   const infoOwned = !!(infoItem && (infoItem.isDefault || owned.includes(infoItem.id)));
+  const infoLockHint = ((): string | null => {
+    if (!infoItem || infoOwned) return null;
+    if (infoItem.category !== "logo_stinger") return null;
+    const stingerId = STINGER_UNLOCK_BY_OWNED_ID[infoItem.id];
+    const entry = LOGO_STINGERS.find((s) => s.id === stingerId);
+    if (!entry) return null;
+    if (entry.unlock.type === "battle_pass") {
+      return T("logoStingerLockedBattlePass") || "Unlock in the Battle Pass";
+    }
+    if (entry.unlock.type === "chest") {
+      return T("logoStingerLockedChest") || "Unlock from chests";
+    }
+    return null;
+  })();
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
@@ -305,7 +357,9 @@ export default function CollectionScreen() {
                 {!infoOwned && (
                   <View style={styles.modalLockRow}>
                     <Ionicons name="lock-closed" size={14} color={infoRarityColor} />
-                    <Text style={[styles.modalLockText, { color: infoRarityColor }]}>{T("locked")}</Text>
+                    <Text style={[styles.modalLockText, { color: infoRarityColor }]}>
+                      {infoLockHint ?? T("locked")}
+                    </Text>
                   </View>
                 )}
                 <Pressable
