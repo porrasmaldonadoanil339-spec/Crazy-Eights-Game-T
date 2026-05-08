@@ -36,7 +36,16 @@ export function initMultiGame(playerNames: string[], cardsPerPlayer = 8, eventId
   const deck = createDeck();
   const playerCount = playerNames.length;
   // Survival event: every player starts with 12 cards (mirrors single-player).
-  const effectiveCards = eventId === "survival" ? 12 : cardsPerPlayer;
+  // Honor per-event hand size from EVENT_CONFIGS (lazy require avoids the
+  // circular import with eventModes that pulled engine types).
+  let effectiveCards = cardsPerPlayer;
+  if (eventId) {
+    try {
+      const { EVENT_CONFIGS } = require("./eventModes");
+      const cfg = EVENT_CONFIGS[eventId];
+      if (cfg && typeof cfg.cardsPerPlayer === "number") effectiveCards = cfg.cardsPerPlayer;
+    } catch {}
+  }
   const hands: Card[][] = [];
   for (let i = 0; i < playerCount; i++) {
     hands.push(deck.splice(0, effectiveCards));

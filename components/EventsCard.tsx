@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing } from "react-native-reanimated";
 import { CoinIcon } from "@/components/CoinIcon";
+import { getCurrentWeeklyEvent, getNextWeeklyEvent } from "@/lib/events";
 
 export type EventDifficulty = "easy" | "medium" | "hard";
 
@@ -45,7 +46,6 @@ function getEventStatus(level: number) {
   // Single source of truth: weekly rotation from lib/events.ts. The local
   // ALL_EVENTS array stays only as UI metadata (color/icon/chest tier),
   // looked up by id from the active weekly slot to avoid scheduler drift.
-  const { getCurrentWeeklyEvent, getNextWeeklyEvent } = require("@/lib/events");
   const slot = getCurrentWeeklyEvent();
   const nextCfg = getNextWeeklyEvent();
   const event = ALL_EVENTS.find(e => e.id === slot.event.id) ?? ALL_EVENTS[0];
