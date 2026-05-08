@@ -476,11 +476,12 @@ function AudioManager() {
   const isFirstRun = useRef(true);
   const { profile, isLoaded, updateSettings } = useProfile();
   // Task #100 — react to sign-in/out so the silent stinger backup retry
-  // resumes as soon as the player authenticates from /login. Without this
-  // dep, the hook would only re-fire on AppState/NetInfo changes and a
-  // straight-line "sign in -> back to settings" flow would leave the badge
-  // stuck on the sign-in prompt until they backgrounded the app.
-  const { user: authUser } = useAuth();
+  // resumes as soon as the player authenticates from /login. We key on
+  // AuthContext's `authEpoch` (bumped on every login/logout/restore)
+  // instead of `user?.id` because the common token-expiry flow re-logs
+  // into the SAME account id — a user.id-keyed dep would never fire and
+  // the badge would stay stuck on the sign-in prompt forever.
+  const { authEpoch } = useAuth();
 
   // Lock to portrait on mount (runtime enforcement in addition to app.json)
   useEffect(() => {
@@ -593,15 +594,19 @@ function AudioManager() {
       stingerPermanentFailureUri.current = "";
     }
   }, [profile.customLogoStingerUri]);
-  // Task #100 — when the auth state flips (guest → signed-in or fresh
-  // login after token expiry), clear the "permanent failure" memo so the
-  // next attempt actually runs. `no_auth` / `unauthorized` are marked
-  // permanent in isPermanentUploadError to avoid hammering the endpoint
-  // every foreground while the player is signed out, but a successful
-  // sign-in is exactly the trigger that makes those reasons retryable.
+  // Task #100 — when the auth state flips (guest → signed-in, or fresh
+  // login after token expiry into the same account), clear the
+  // "permanent failure" memo so the next attempt actually runs.
+  // `no_auth` / `unauthorized` are marked permanent in
+  // isPermanentUploadError to avoid hammering the endpoint every
+  // foreground while the player is signed out; a successful sign-in is
+  // exactly the trigger that makes those reasons retryable. The retry
+  // useEffect below also lists `authEpoch` in its deps so it
+  // immediately re-runs `attempt()` after this reset — no need to wait
+  // for an AppState/NetInfo event.
   useEffect(() => {
     stingerPermanentFailureUri.current = "";
-  }, [authUser?.id]);
+  }, [authEpoch]);
   useEffect(() => {
     if (!isLoaded) return;
     let cancelled = false;
@@ -639,7 +644,7 @@ function AudioManager() {
       appSub.remove();
       netSub();
     };
-  }, [isLoaded, updateSettings, authUser?.id]);
+  }, [isLoaded, updateSettings, authEpoch]);
 
   // Stop music when app goes to background, resume when it returns to foreground
   useEffect(() => {
