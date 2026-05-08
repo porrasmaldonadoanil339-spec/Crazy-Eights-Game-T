@@ -693,15 +693,32 @@ export default function SettingsScreen() {
     (async () => {
       try {
         const trimmed = await trimCustomStingerToFile(draft.srcUri, draft.ext, startMs, endMs, abortCtrl.signal);
-        // Task #108 — only clear the controller if it still belongs to
-        // this attempt. abortStingerTrim() and cancelStingerTrim() may
-        // have already nulled it (and a Retry would have replaced it).
+        // Task #108 — cancellation must be authoritative even if the
+        // fetch had already resolved by the time the player tapped
+        // Stop / closed the modal: the bytes are on disk but applying
+        // them would still mutate settings + kick off an upload, which
+        // contradicts "cancel returns to the pre-save state". Two
+        // independent guards:
+        //   1. signal.aborted — set synchronously by .abort() so any
+        //      result that lands afterwards is ignored regardless of
+        //      what the result-shape says.
+        //   2. trimAbortRef identity — covers the case where a Retry
+        //      replaced the controller mid-flight; the previous
+        //      attempt must not be allowed to persist its result.
+        const stale = abortCtrl.signal.aborted || trimAbortRef.current !== abortCtrl;
         if (trimAbortRef.current === abortCtrl) trimAbortRef.current = null;
+        if (stale) {
+          // Drop the trimmed file on the floor if we got one — the
+          // existing custom-stinger sweep cleans up unreferenced
+          // files in the document dir.
+          return;
+        }
         if (!trimmed.ok) {
           if (trimmed.reason === "aborted") {
-            // Player tapped the Stop affordance — abortStingerTrim()
-            // already reset isTrimmingDraft / customStingerBusy and
-            // we explicitly do NOT show an error. Return early.
+            // Player tapped Stop while the fetch was in flight —
+            // abortStingerTrim() already reset isTrimmingDraft /
+            // customStingerBusy and we explicitly do NOT show an
+            // error. Return early.
             return;
           }
           // Task #99 — distinct inline error so the player can retry the
