@@ -43,9 +43,6 @@ export function getActiveEvent(level: number): OchoEvent | null {
 }
 
 function getEventStatus(level: number) {
-  // Single source of truth: weekly rotation from lib/events.ts. The local
-  // ALL_EVENTS array stays only as UI metadata (color/icon/chest tier),
-  // looked up by id from the active weekly slot to avoid scheduler drift.
   const slot = getCurrentWeeklyEvent();
   const nextCfg = getNextWeeklyEvent();
   const event = ALL_EVENTS.find(e => e.id === slot.event.id) ?? ALL_EVENTS[0];

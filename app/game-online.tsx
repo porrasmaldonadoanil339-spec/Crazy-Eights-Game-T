@@ -29,9 +29,6 @@ import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import { getCurrentWeeklyEvent } from "@/lib/events";
 
-// Unified event source: weekly rotation from lib/events.ts. Returns null
-// when the player is below the level-5 events unlock threshold so
-// multiplayer matches don't silently apply event rules to new players.
 function getActiveEvent(level: number) {
   if (level < 5) return null;
   return getCurrentWeeklyEvent().event;

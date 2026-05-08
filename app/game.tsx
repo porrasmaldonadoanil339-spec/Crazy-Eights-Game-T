@@ -1445,8 +1445,6 @@ export default function GameScreen() {
     }
   }, [dealAnimationDone, session?.mode]);
 
-  // ROUND 1/2/3 intro banner. Gated to round <= 3 so the post-increment
-  // value of 4 (set when the third round ends) never shows a "ROUND 4".
   useEffect(() => {
     if (session?.mode === "tournament" && dealAnimationDone && tournamentRound <= 3) {
       setShowTournamentRoundBanner(true);
@@ -1455,13 +1453,7 @@ export default function GameScreen() {
     }
   }, [dealAnimationDone, session?.mode, tournamentRound]);
 
-  // Safety: clear any lingering Fichas-run flag when the game screen
-  // unmounts so a back/abandon path cannot leak the marker into a later
-  // unrelated match. The win/loss handlers above already consume it on
-  // game-end; this covers the manual-exit case.
-  useEffect(() => {
-    return () => { consumeFichasRunActive(); };
-  }, []);
+  useEffect(() => () => { consumeFichasRunActive(); }, []);
 
   // Event mode intro banner
   useEffect(() => {
@@ -2125,9 +2117,6 @@ export default function GameScreen() {
         }).catch(() => {});
       }
 
-      // Tournament round-by-round escalation: R1 small, R2 medium, R3
-      // chunky, plus a streak bonus when the player takes 2-in-a-row or
-      // sweeps. Stacks on top of the standard recordGameResult payout.
       if (session.mode === "tournament") {
         const r = tournamentRound; // current round (pre-increment)
         const escalateCoins = r >= 3 ? 200 : r === 2 ? 100 : 50;

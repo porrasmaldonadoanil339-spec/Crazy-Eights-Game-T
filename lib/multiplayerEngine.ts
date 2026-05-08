@@ -1,4 +1,5 @@
 import { Card, Suit, Rank, createDeck, shuffleDeck, suitName, suitColor, suitSymbol, gm } from "./gameEngine";
+import { EVENT_CONFIGS, type EventId } from "./eventModes";
 
 export type { Suit, Rank, Card };
 export { suitName, suitColor, suitSymbol };
@@ -27,25 +28,15 @@ export interface MultiGameState {
 
 function multiEventDrawMultiplier(state: MultiGameState): number {
   if (!state.eventId) return 1;
-  const { EVENT_CONFIGS } = require("./eventModes") as typeof import("./eventModes");
-  const cfg = (EVENT_CONFIGS as Record<string, { doubleDrawEffect?: boolean }>)[state.eventId];
+  const cfg = EVENT_CONFIGS[state.eventId as EventId];
   return cfg?.doubleDrawEffect ? 2 : 1;
 }
 
 export function initMultiGame(playerNames: string[], cardsPerPlayer = 8, eventId?: string | null): MultiGameState {
   const deck = createDeck();
   const playerCount = playerNames.length;
-  // Survival event: every player starts with 12 cards (mirrors single-player).
-  // Honor per-event hand size from EVENT_CONFIGS (lazy require avoids the
-  // circular import with eventModes that pulled engine types).
-  let effectiveCards = cardsPerPlayer;
-  if (eventId) {
-    try {
-      const { EVENT_CONFIGS } = require("./eventModes");
-      const cfg = EVENT_CONFIGS[eventId];
-      if (cfg && typeof cfg.cardsPerPlayer === "number") effectiveCards = cfg.cardsPerPlayer;
-    } catch {}
-  }
+  const cfg = eventId ? EVENT_CONFIGS[eventId as EventId] : undefined;
+  const effectiveCards = cfg?.cardsPerPlayer ?? cardsPerPlayer;
   const hands: Card[][] = [];
   for (let i = 0; i < playerCount; i++) {
     hands.push(deck.splice(0, effectiveCards));

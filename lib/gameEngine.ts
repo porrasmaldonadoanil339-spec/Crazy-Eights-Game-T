@@ -1,3 +1,5 @@
+import { EVENT_CONFIGS, type EventId } from "./eventModes";
+
 export type Suit = "hearts" | "diamonds" | "clubs" | "spades";
 export type Rank =
   | "A" | "2" | "3" | "4" | "5" | "6" | "7"
@@ -100,12 +102,9 @@ export function initGame(cardsPerPlayer: number = 8, difficulty: string = "norma
   };
 }
 
-// Lazy-required to avoid a circular import at module init (eventModes.ts
-// imports from gameEngine for shared types via app code paths).
 function eventDrawMultiplier(state: GameState): number {
   if (!state.eventId) return 1;
-  const { EVENT_CONFIGS } = require("./eventModes") as typeof import("./eventModes");
-  const cfg = (EVENT_CONFIGS as Record<string, { doubleDrawEffect?: boolean }>)[state.eventId];
+  const cfg = EVENT_CONFIGS[state.eventId as EventId];
   return cfg?.doubleDrawEffect ? 2 : 1;
 }
 

@@ -1443,15 +1443,9 @@ export default function PlayScreen() {
           <View style={[styles.dividerLine, { backgroundColor: theme.gold + "40" }]} />
         </View>
 
-        {/* Active event badge — surfaces the current weekly rotation slot
-            from lib/events.ts. Hooks are called at top-level render scope
-            (not inside an IIFE) to satisfy the rules-of-hooks. */}
         <EventLiveBadge level={level} />
 
 
-        {/* Battle Pass shortcut — minimized by default (single compact row,
-            no expanded reward preview) so the new event badge above can
-            take the visual lead without crowding the home screen. */}
         <Animated.View style={useEntryAnimation({ delay: 80, fromTranslateY: 12 })}>
         <BouncePressable
           onPress={() => router.push("/(tabs)/achievements")}
@@ -1498,7 +1492,6 @@ export default function PlayScreen() {
           fichasRemaining={fichasModePlaysRemaining()}
           onFichasPress={() => {
             recordFichasModePlay();
-            // Flag this run so the win handler advances V1/V2/V3.
             markFichasRunActive();
             startGame("classic", "normal");
             router.push("/game");
