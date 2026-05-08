@@ -1046,12 +1046,24 @@ export default function OnlineGameScreen() {
     setGameState(gs);
   }, [skipLobby]);
 
-  // ─── Stop music when local game ends (online socket path handles its own) ──
+  // ─── Stop music + result cue when local game ends (online socket path handles its own) ──
+  const localResultCueFiredRef = useRef(false);
   useEffect(() => {
     if (isOnline) return;
     if (!gameState || gameState.phase !== "game_over") return;
     stopMusic().catch(() => {});
-  }, [gameState?.phase, isOnline]);
+    // Task #124 — fire victory/defeat for the local fallback path so result
+    // cues play in every mode, not just the socket-driven online path. Guard
+    // with a ref so it only fires once per match.
+    if (gameState.winnerIndex !== null && !localResultCueFiredRef.current) {
+      localResultCueFiredRef.current = true;
+      if (gameState.winnerIndex === 0) {
+        playVictory().catch(() => {});
+      } else {
+        playDefeat().catch(() => {});
+      }
+    }
+  }, [gameState?.phase, gameState?.winnerIndex, isOnline]);
 
   // ─── Ranked star update when game ends ───────────────────────────────────
   useEffect(() => {
