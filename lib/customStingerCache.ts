@@ -96,6 +96,88 @@ export async function trimCustomStingerToFile(
   }
 }
 
+// Task #104 — re-encode an oversized source clip down to a smaller mono
+// 64k AAC m4a via the server's /profile/stinger/shrink endpoint, then
+// write the result to the document directory and return its uri/ext/size.
+// Used by the trim modal when the picked source exceeds the trim
+// endpoint's 5 MB limit but is still small enough for the shrink endpoint
+// (30 MB). Returns a structured reason on failure so the UI can show a
+// specific message ("input too large" vs "still too big after shrinking"
+// vs "network/server").
+const SHRUNK_DIR = "custom-stingers";
+
+export type ShrinkStingerErrorReason =
+  | "input_too_large"   // 413 — source was over 30 MB cap
+  | "still_too_large"   // 413 — shrink ran but output still > 5 MB
+  | "rate_limited"      // 429 — try again later
+  | "bad_request"       // 400 — unsupported format / bad payload
+  | "transient";        // network / 5xx / file IO
+export type ShrinkStingerResult =
+  | { ok: true; uri: string; ext: string; sizeBytes: number }
+  | { ok: false; reason: ShrinkStingerErrorReason };
+
+export async function shrinkCustomStingerToFile(
+  srcUri: string,
+  ext: string,
+): Promise<ShrinkStingerResult> {
+  let base64: string;
+  try {
+    base64 = await new File(srcUri).base64();
+  } catch {
+    return { ok: false, reason: "transient" };
+  }
+  let resp: Response;
+  try {
+    const url = new URL("/api/auth/profile/stinger/shrink", getApiUrl()).toString();
+    resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: base64, ext }),
+    });
+  } catch {
+    return { ok: false, reason: "transient" };
+  }
+  if (!resp.ok) {
+    switch (resp.status) {
+      case 400: return { ok: false, reason: "bad_request" };
+      case 413: {
+        // Distinguish "input was over 30 MB" vs "shrunk output still > 5 MB"
+        // by checking the response body — both come back as 413 but mean
+        // different things to the player. Falls back to input_too_large
+        // on parse failure (the more common case in practice).
+        try {
+          const body = await resp.json() as { sizeBytes?: number };
+          if (typeof body.sizeBytes === "number") return { ok: false, reason: "still_too_large" };
+        } catch {}
+        return { ok: false, reason: "input_too_large" };
+      }
+      case 429: return { ok: false, reason: "rate_limited" };
+      default:  return { ok: false, reason: "transient" };
+    }
+  }
+  let json: { ok?: boolean; ext?: string; data?: string; sizeBytes?: number };
+  try {
+    json = await resp.json() as typeof json;
+  } catch {
+    return { ok: false, reason: "transient" };
+  }
+  if (!json.ok || !json.data || !json.ext || typeof json.sizeBytes !== "number") {
+    return { ok: false, reason: "transient" };
+  }
+  try {
+    const dir = new Directory(Paths.document, SHRUNK_DIR);
+    try { dir.create({ intermediates: true, idempotent: true }); } catch {}
+    const safeExt = json.ext.replace(/[^a-z0-9]/gi, "").toLowerCase() || "m4a";
+    const fileName = `intro-shrunk-${Date.now()}.${safeExt}`;
+    const dest = new File(dir, fileName);
+    if (dest.exists) { try { dest.delete(); } catch {} }
+    dest.write(base64ToBytes(json.data));
+    return { ok: true, uri: dest.uri, ext: safeExt, sizeBytes: json.sizeBytes };
+  } catch {
+    return { ok: false, reason: "transient" };
+  }
+}
+
 async function getAuthToken(): Promise<string | null> {
   try {
     const raw = await AsyncStorage.getItem("ocho_auth_v1");

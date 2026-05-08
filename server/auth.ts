@@ -825,6 +825,102 @@ router.post(
   },
 );
 
+// ─── Custom logo stinger shrink (Task #104) ────────────────────────────────
+// Re-encodes an oversized source clip down to a smaller mono 64k AAC m4a so
+// the trim flow can accept it (the trim endpoint above rejects sources over
+// STINGER_MAX_BYTES = 5 MB). The client uses this when the player picks a
+// long, high-bitrate recording: instead of forcing them to re-record, we
+// shrink it server-side and hand back a smaller m4a they can then trim.
+// Reuses the trim endpoint's per-IP rate limit since both share the same
+// ffmpeg pool. No auth — matches the trim endpoint, so guests benefit too.
+const STINGER_SHRINK_MAX_INPUT_BYTES = 30 * 1024 * 1024;
+
+function runFfmpegShrink(srcPath: string, dstPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // -vn drops any cover art, -ac 1 forces mono, -ar 22050 halves the
+    // sample rate, -b:a 64k fixes the bitrate so the output size scales
+    // ~linearly with duration (~8 KB / s). Even a ~10 minute source comes
+    // out under 5 MB, which is the trim endpoint's cap. -f mp4 because
+    // m4a is just an mp4 audio container; matches the trim output.
+    const args = [
+      "-y",
+      "-i", srcPath,
+      "-vn",
+      "-ac", "1",
+      "-ar", "22050",
+      "-c:a", "aac",
+      "-b:a", "64k",
+      "-f", "mp4",
+      dstPath,
+    ];
+    const proc = spawn("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
+    let stderr = "";
+    proc.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString("utf8"); });
+    proc.on("error", reject);
+    proc.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`ffmpeg exited ${code}: ${stderr.slice(-400)}`));
+    });
+  });
+}
+
+router.post(
+  "/profile/stinger/shrink",
+  express.json({ limit: "40mb" }),
+  async (req, res) => {
+    const ip = (req.ip || req.socket.remoteAddress || "unknown").toString();
+    const rate = checkStingerTrimRateLimit(ip);
+    if (!rate.ok) {
+      res.setHeader("Retry-After", String(rate.retryAfterSec));
+      return res.status(429).json({ error: "too many shrink requests", retryAfterSec: rate.retryAfterSec });
+    }
+    const { data, ext } = req.body as { data?: string; ext?: string };
+    if (!data || !ext) {
+      return res.status(400).json({ error: "data and ext required" });
+    }
+    const safeExt = ext.replace(/[^a-z0-9]/gi, "").toLowerCase();
+    if (!STINGER_ALLOWED_EXT.has(safeExt)) {
+      return res.status(400).json({ error: "unsupported audio format" });
+    }
+    let srcBuf: Buffer;
+    try {
+      srcBuf = Buffer.from(data, "base64");
+    } catch {
+      return res.status(400).json({ error: "invalid base64" });
+    }
+    if (srcBuf.byteLength === 0 || srcBuf.byteLength > STINGER_SHRINK_MAX_INPUT_BYTES) {
+      return res.status(413).json({ error: "audio file too large to shrink" });
+    }
+    const tmpId = crypto.randomBytes(8).toString("hex");
+    const srcPath = path.join(os.tmpdir(), `stinger-shrink-src-${tmpId}.${safeExt}`);
+    const dstPath = path.join(os.tmpdir(), `stinger-shrink-${tmpId}.m4a`);
+    try {
+      fs.writeFileSync(srcPath, srcBuf);
+      await runFfmpegShrink(srcPath, dstPath);
+      const out = fs.readFileSync(dstPath);
+      // Defensive: the encoder settings should always produce something
+      // under STINGER_MAX_BYTES, but pathologically long sources could
+      // still exceed it. Surface as 413 so the client shows a clear
+      // "still too big" message instead of round-tripping a useless file.
+      if (out.byteLength > STINGER_MAX_BYTES) {
+        return res.status(413).json({ error: "shrunk file still too large", sizeBytes: out.byteLength });
+      }
+      return res.json({
+        ok: true,
+        ext: "m4a",
+        sizeBytes: out.byteLength,
+        data: out.toString("base64"),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return res.status(500).json({ error: "shrink failed", detail: msg });
+    } finally {
+      try { fs.unlinkSync(srcPath); } catch {}
+      try { fs.unlinkSync(dstPath); } catch {}
+    }
+  },
+);
+
 router.post(
   "/profile/stinger",
   express.json({ limit: "6mb" }),

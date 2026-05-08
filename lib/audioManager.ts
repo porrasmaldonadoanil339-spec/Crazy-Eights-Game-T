@@ -104,6 +104,12 @@ export const CUSTOM_LOGO_STINGER_MAX_MS = 2000;
 // trim modal can warn the player when their source clip is too big to be
 // trimmed/uploaded *before* they tap Save.
 export const CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES = 5 * 1024 * 1024;
+// Task #104 — upper bound on what /profile/stinger/shrink will accept.
+// Sources between SOURCE_MAX_BYTES and this cap can be re-encoded down
+// to mono 64k AAC by the server so they fit under the trim limit. Past
+// this cap we don't even try — the request body would balloon and the
+// shrink itself becomes wasteful.
+export const CUSTOM_LOGO_STINGER_SHRINK_MAX_INPUT_BYTES = 30 * 1024 * 1024;
 
 type MusicTrack = "menu" | "search" | "game";
 

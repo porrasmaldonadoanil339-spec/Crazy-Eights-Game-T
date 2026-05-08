@@ -13,8 +13,8 @@ import { reloadAppAsync } from "expo";
 import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
-import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
-import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, type UploadStingerErrorReason } from "@/lib/customStingerCache";
+import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES, CUSTOM_LOGO_STINGER_SHRINK_MAX_INPUT_BYTES, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
+import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, shrinkCustomStingerToFile, type UploadStingerErrorReason, type ShrinkStingerErrorReason } from "@/lib/customStingerCache";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
@@ -226,6 +226,9 @@ export default function SettingsScreen() {
   const [draftStartMs, setDraftStartMs] = useState(0);
   const [draftEndMs, setDraftEndMs] = useState(CUSTOM_LOGO_STINGER_MAX_MS);
   const [trimTrackWidth, setTrimTrackWidth] = useState(0);
+  // Task #104 — busy flag while the server-side shrink is running so the
+  // button can show a spinner-style label and avoid duplicate taps.
+  const [isShrinkingDraft, setIsShrinkingDraft] = useState(false);
   const draftPreviewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isPreviewingDraft, setIsPreviewingDraft] = useState(false);
   // Mutable refs so PanResponder callbacks always read the latest values
@@ -406,6 +409,73 @@ export default function SettingsScreen() {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // Task #104 — re-encode the oversized source clip via the server's shrink
+  // endpoint, swap the draft over to the (smaller) result, and re-measure
+  // its duration so the trim window stays valid. Source files outside the
+  // shrink endpoint's input cap are rejected client-side with a clear
+  // alert; everything else routes through ShrinkStingerErrorReason. Best
+  // effort cleanup of the original picked clip on success — the path is
+  // either in the OS picker cache or the recorder's temp dir; either is
+  // safe to drop once we've taken its bytes.
+  const shrinkErrorMessage = (reason: ShrinkStingerErrorReason): string => {
+    const limit = `${(CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES / (1024 * 1024)).toFixed(0)} MB`;
+    if (reason === "input_too_large")
+      return T("logoStingerShrinkInputTooLarge")
+        || `Clip is too long to shrink. Try a shorter recording.`;
+    if (reason === "still_too_large")
+      return (T("logoStingerShrinkStillTooLarge") || "Even after shrinking the clip is over {limit}. Try a shorter recording.")
+        .replace("{limit}", limit);
+    if (reason === "rate_limited")
+      return T("logoStingerShrinkRateLimited") || "Too many shrink requests right now — try again in a minute.";
+    if (reason === "bad_request")
+      return T("logoStingerShrinkBadRequest") || "This audio format isn't supported.";
+    return T("logoStingerShrinkTransient") || "Couldn't shrink the clip. Check your connection and try again.";
+  };
+
+  const shrinkStingerSource = () => {
+    if (!stingerDraft || isShrinkingDraft) return;
+    if (stingerDraft.srcSizeBytes > CUSTOM_LOGO_STINGER_SHRINK_MAX_INPUT_BYTES) {
+      Alert.alert(
+        stingerTitle(),
+        T("logoStingerShrinkInputTooLarge")
+          || "Clip is too long to shrink. Try a shorter recording.",
+      );
+      return;
+    }
+    teardownDraftPreview();
+    setIsShrinkingDraft(true);
+    const draft = stingerDraft;
+    (async () => {
+      try {
+        const result = await shrinkCustomStingerToFile(draft.srcUri, draft.ext);
+        if (!result.ok) {
+          Alert.alert(stingerTitle(), shrinkErrorMessage(result.reason));
+          return;
+        }
+        // Re-measure duration of the shrunk clip — ffmpeg preserves it,
+        // but the player's previously-set start/end markers are clamped
+        // against the new value defensively in case re-encoding rounded.
+        const newDuration = await measureClipDurationMs(result.uri);
+        if (!newDuration) {
+          Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
+          return;
+        }
+        cleanupOldCustomClip(draft.srcUri);
+        setStingerDraft({
+          srcUri: result.uri,
+          ext: result.ext,
+          durationMs: newDuration,
+          srcSizeBytes: result.sizeBytes,
+        });
+        const initialEnd = Math.min(newDuration, CUSTOM_LOGO_STINGER_MAX_MS);
+        setDraftStartMs(0);
+        setDraftEndMs(initialEnd);
+      } finally {
+        setIsShrinkingDraft(false);
+      }
+    })();
   };
 
   const stopDraftPreview = () => {
@@ -1468,19 +1538,38 @@ export default function SettingsScreen() {
                     </Text>
                   </View>
                   {/* Task #101 — warn when the source clip exceeds the
-                      server's upload limit. The trim itself runs server-side
-                      (Task #91) and the endpoint refuses oversized payloads,
-                      so we can't trim or back up a too-big clip. Save is
-                      disabled below for the same reason. */}
-                  {stingerDraft.srcSizeBytes > CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES && (
-                    <View style={styles.trimWarnRow}>
-                      <Ionicons name="alert-circle-outline" size={14} color="#E67E22" />
-                      <Text style={styles.trimWarnText}>
-                        {(T("logoStingerTrimTooBigWarn") || "Clip is over {limit} — pick or record a shorter one to save it.")
-                          .replace("{limit}", `${(CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES / (1024 * 1024)).toFixed(0)} MB`)}
-                      </Text>
-                    </View>
-                  )}
+                      server's upload limit. Task #104 — when the source is
+                      within the shrink endpoint's input cap, also offer a
+                      one-tap "Shrink to fit" action that re-encodes it down
+                      so Save can proceed without a re-record. */}
+                  {stingerDraft.srcSizeBytes > CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES && (() => {
+                    const canShrink = stingerDraft.srcSizeBytes <= CUSTOM_LOGO_STINGER_SHRINK_MAX_INPUT_BYTES;
+                    return (
+                      <View style={styles.trimWarnRow}>
+                        <Ionicons name="alert-circle-outline" size={14} color="#E67E22" />
+                        <Text style={styles.trimWarnText}>
+                          {(canShrink
+                            ? (T("logoStingerTrimTooBigShrinkable") || "Clip is over {limit} — shrink it to fit, or pick a shorter one.")
+                            : (T("logoStingerTrimTooBigWarn") || "Clip is over {limit} — pick or record a shorter one to save it."))
+                            .replace("{limit}", `${(CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES / (1024 * 1024)).toFixed(0)} MB`)}
+                        </Text>
+                        {canShrink && (
+                          <TouchableOpacity
+                            onPress={shrinkStingerSource}
+                            disabled={isShrinkingDraft}
+                            style={styles.trimWarnAction}
+                          >
+                            <Ionicons name="contract-outline" size={14} color="#E67E22" />
+                            <Text style={styles.trimWarnActionText}>
+                              {isShrinkingDraft
+                                ? (T("logoStingerShrinking") || "Shrinking...")
+                                : (T("logoStingerShrinkAction") || "Shrink to fit")}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    );
+                  })()}
                   <View
                     style={styles.trimTrack}
                     onLayout={(e: LayoutChangeEvent) => setTrimTrackWidth(e.nativeEvent.layout.width)}
@@ -1658,6 +1747,8 @@ const styles = StyleSheet.create({
   trimWindowText: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#D4AF37" },
   trimWarnRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10, paddingHorizontal: 6, paddingVertical: 6, borderRadius: 6, backgroundColor: "rgba(230,126,34,0.12)", borderWidth: 1, borderColor: "rgba(230,126,34,0.3)" },
   trimWarnText: { fontFamily: "Nunito_600SemiBold", fontSize: 11, color: "#E67E22", flex: 1 },
+  trimWarnAction: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: "#E67E22", backgroundColor: "rgba(230,126,34,0.18)" },
+  trimWarnActionText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#E67E22" },
   trimTrack: {
     height: 56, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.35)",
     borderWidth: 1, borderColor: "rgba(212,175,55,0.18)",
