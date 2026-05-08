@@ -762,8 +762,8 @@ function TournamentModal({ scores, round, onContinue, onQuit, lastRoundWon }: {
             <View style={tStyles.starScoreTeam}>
               <Text style={tStyles.starTeamLabel}>{T("you")}</Text>
               <View style={tStyles.starsRow}>
-                {[0, 1].map(i => (
-                  <Ionicons key={i} name={i < scores[0] ? "star" : "star-outline"} size={28} color={i < scores[0] ? Colors.gold : "rgba(255,255,255,0.2)"} />
+                {[0, 1, 2].map(i => (
+                  <Ionicons key={i} name={i < scores[0] ? "star" : "star-outline"} size={26} color={i < scores[0] ? Colors.gold : "rgba(255,255,255,0.2)"} />
                 ))}
               </View>
             </View>
@@ -775,8 +775,8 @@ function TournamentModal({ scores, round, onContinue, onQuit, lastRoundWon }: {
             <View style={tStyles.starScoreTeam}>
               <Text style={tStyles.starTeamLabel}>{T("cpu")}</Text>
               <View style={tStyles.starsRow}>
-                {[0, 1].map(i => (
-                  <Ionicons key={i} name={i < scores[1] ? "star" : "star-outline"} size={28} color={i < scores[1] ? "#E74C3C" : "rgba(255,255,255,0.2)"} />
+                {[0, 1, 2].map(i => (
+                  <Ionicons key={i} name={i < scores[1] ? "star" : "star-outline"} size={26} color={i < scores[1] ? "#E74C3C" : "rgba(255,255,255,0.2)"} />
                 ))}
               </View>
             </View>
