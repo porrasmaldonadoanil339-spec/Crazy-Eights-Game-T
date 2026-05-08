@@ -23,10 +23,11 @@ const ALL_EVENTS: OchoEvent[] = [
   { id: "random",   name: "Cartas Aleatorias",  desc: "Las cartas especiales cambian aleatoriamente",      icon: "shuffle", color: "#9B59B6", durationDays: 2, difficulty: "medium", chestType: "rare" },
   { id: "double",   name: "Doble Efecto",       desc: "Las cartas especiales tienen efecto doble",         icon: "copy",    color: "#E74C3C", durationDays: 2, difficulty: "medium", chestType: "rare" },
   { id: "survival", name: "Supervivencia",      desc: "Comienza con 12 cartas. ¡Vacía tu mano!",           icon: "shield",  color: "#27AE60", durationDays: 2, difficulty: "easy",   chestType: "common" },
-  { id: "frozen",   name: "Congelado",          desc: "Turnos lentos y mano grande. Piensa cada jugada.",  icon: "snow",    color: "#3498DB", durationDays: 2, difficulty: "easy",   chestType: "common" },
-  { id: "inferno",  name: "Inferno",            desc: "4s por turno con solo 5 cartas. Pura velocidad.",   icon: "flame",   color: "#E74C3C", durationDays: 2, difficulty: "hard",   chestType: "epic" },
-  { id: "chaos",    name: "Caos",               desc: "Doble efecto y palo cambiante. ¡Sin reglas!",       icon: "skull",   color: "#FF1744", durationDays: 2, difficulty: "hard",   chestType: "legendary" },
+  { id: "frozen",   name: "Muerte Súbita",      desc: "Turnos lentos y mano grande. Piensa cada jugada.",  icon: "snow",    color: "#3498DB", durationDays: 2, difficulty: "easy",   chestType: "common" },
+  { id: "inferno",  name: "Relámpago Extremo",  desc: "4s por turno con solo 5 cartas. Pura velocidad.",   icon: "flame",   color: "#E74C3C", durationDays: 2, difficulty: "hard",   chestType: "epic" },
+  { id: "chaos",    name: "Modo Troll",         desc: "Doble efecto y palo cambiante. ¡Sin reglas!",       icon: "skull",   color: "#FF1744", durationDays: 2, difficulty: "hard",   chestType: "legendary" },
   { id: "casino",   name: "Casino Royale",      desc: "Recompensas premium para apostadores audaces.",     icon: "diamond", color: "#8E44AD", durationDays: 2, difficulty: "medium", chestType: "epic" },
+  { id: "fiebre",   name: "Modo Fiebre",        desc: "Roba doble en cada efecto. Mano grande, ritmo alto.", icon: "thermometer", color: "#FF6B35", durationDays: 2, difficulty: "medium", chestType: "rare" },
 ];
 
 const DIFF_META: Record<EventDifficulty, { label: string; color: string }> = {
