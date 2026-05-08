@@ -696,7 +696,7 @@ export default function MultiGameScreen() {
                 <SideOpponentFan count={handCount} name={op.name} color={op.color} side={op.pos} iconName={PLAYER_ICONS[op.idx % PLAYER_ICONS.length]} />
                 {isSkipped && <Text style={styles.skipLabel}>⊗ {T("action_skip")}</Text>}
                 <View pointerEvents="none" style={{ alignItems: "center", marginTop: 2 }}>
-                  <EmoteBubble emote={activeEmotes[op.idx] ?? null} side="cpu" />
+                  <EmoteBubble emote={activeEmotes[op.idx] ?? null} side="cpu" lang={profile.language ?? "es"} />
                 </View>
               </View>
             );
@@ -706,7 +706,7 @@ export default function MultiGameScreen() {
               <OpponentFan count={handCount} name={op.name} color={op.color} highlight={isSkipped} iconName={PLAYER_ICONS[op.idx % PLAYER_ICONS.length]} />
               {isSkipped && <Text style={styles.skipLabel}>⊗ {T("action_skip")}</Text>}
               <View pointerEvents="none" style={{ alignItems: "center", marginTop: 2 }}>
-                <EmoteBubble emote={activeEmotes[op.idx] ?? null} side="cpu" />
+                <EmoteBubble emote={activeEmotes[op.idx] ?? null} side="cpu" lang={profile.language ?? "es"} />
               </View>
             </View>
           );
@@ -765,7 +765,7 @@ export default function MultiGameScreen() {
           ) : null}
           {/* Current player emote bubble */}
           <View style={{ alignItems: "center", marginTop: 2 }} pointerEvents="none">
-            <EmoteBubble emote={activeEmotes[pidx] ?? null} side="player" />
+            <EmoteBubble emote={activeEmotes[pidx] ?? null} side="player" lang={profile.language ?? "es"} />
           </View>
           {/* Arc fan hand — unified scroll system (matches ranked mode) */}
           {(() => {
