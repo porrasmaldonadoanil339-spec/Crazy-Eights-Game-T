@@ -697,7 +697,10 @@ function TournamentModal({ scores, round, onContinue, onQuit, lastRoundWon }: {
   // AAA tournaments always run all 3 rounds (no best-of-3 early
   // termination), so the ROUND 1/2/3 transitions and the R3/sweep reward
   // logic in app/game.tsx win handler are always reachable.
-  const isOver = round >= 3;
+  // tournamentRound is post-incremented in the win handler, so after
+  // round N finishes the modal sees round = N + 1. Tournament is fully
+  // done only once the third round has been played, i.e. round > 3.
+  const isOver = round > 3;
   const playerWon = scores[0] >= 2;
   const lastRound = round - 1;
   const isFinalRound = scores[0] === 1 && scores[1] === 1;
