@@ -694,7 +694,10 @@ function TournamentModal({ scores, round, onContinue, onQuit, lastRoundWon }: {
   scores: [number, number]; round: number; onContinue: () => void; onQuit: () => void; lastRoundWon?: boolean;
 }) {
   const T = useT();
-  const isOver = scores[0] >= 2 || scores[1] >= 2;
+  // AAA tournaments always run all 3 rounds (no best-of-3 early
+  // termination), so the ROUND 1/2/3 transitions and the R3/sweep reward
+  // logic in app/game.tsx win handler are always reachable.
+  const isOver = round >= 3;
   const playerWon = scores[0] >= 2;
   const lastRound = round - 1;
   const isFinalRound = scores[0] === 1 && scores[1] === 1;
@@ -2091,15 +2094,11 @@ export default function GameScreen() {
     }
 
     if (won) {
-      // Reto de Fichas — if the home screen flagged this match as a Fichas
-      // challenge run, advance V1/V2/V3 progression and grant the
-      // tier-appropriate fichas + bonus coins. Fire-and-forget so a storage
-      // hiccup never blocks the standard win-reward flow below.
-      if (consumeFichasRunActive()) {
-        // Reto de Fichas — V1/V2/V3 progression. Each tier grants its
-        // fichas + bonus coins, and V3 (legendary) drops a premium chest
-        // (chest type taken from the tier's `chest` field, currently
-        // "legendary").
+      // Reto de Fichas — V1/V2/V3 progression on win. The flag is always
+      // consumed at game-end (see the loss branch below) so it cannot
+      // bleed into a later unrelated match.
+      const wasFichasRun = consumeFichasRunActive();
+      if (wasFichasRun) {
         recordFichasWin().then(({ tierJustCleared }) => {
           if (!tierJustCleared) return;
           addCoins(tierJustCleared.fichasReward + tierJustCleared.bonusCoins);
@@ -2170,6 +2169,9 @@ export default function GameScreen() {
         }
       }
     } else {
+      // Always consume the Fichas run flag on game-end so a loss cannot
+      // leave it active for a later unrelated win.
+      consumeFichasRunActive();
       // Even if lost, progress "play_mode" and "cards_played"
       const _evId = session.eventId ?? null;
       updateChallengeProgress("play_mode", 1, session.mode, false, _evId);
