@@ -40,7 +40,7 @@ export const FICHAS_TIERS: FichasTierConfig[] = [
     desc: "Tercera victoria seguida: cofre premium de fichas garantizado.",
     fichasReward: 100,
     bonusCoins: 250,
-    chest: "legendary",
+    chest: "fichas",
     accentColor: "#A855F7",
   },
 ];
