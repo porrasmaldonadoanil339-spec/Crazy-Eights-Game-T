@@ -1,4 +1,5 @@
 import { CoinIcon } from "@/components/CoinIcon";
+import { ChipIcon } from "@/components/ChipIcon";
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   View, Text, StyleSheet, Pressable, Platform, FlatList, Alert,
@@ -530,11 +531,11 @@ export default function AchievementsScreen() {
                     gap: 8,
                   }}
                 >
-                  <Ionicons name="diamond" size={20} color="#fff" />
+                  <ChipIcon size={20} color="#3498DB" />
                   <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#fff", letterSpacing: 0.5, textShadowColor: "rgba(0,0,0,0.35)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
                     {(T("unlockPremiumBP" as any) || "Desbloquear Premium")} · {premiumBattlePassCost}
                   </Text>
-                  <Ionicons name="diamond" size={14} color="#fff" />
+                  <ChipIcon size={14} color="#3498DB" />
                 </LinearGradient>
               </BouncePressable>
             )}

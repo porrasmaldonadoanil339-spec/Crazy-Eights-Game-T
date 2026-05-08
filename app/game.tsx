@@ -1,4 +1,5 @@
 import { CoinIcon } from "@/components/CoinIcon";
+import { ChipIcon } from "@/components/ChipIcon";
 import BouncePressable from "@/components/BouncePressable";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -2600,7 +2601,7 @@ export default function GameScreen() {
             // dedicated casino-purple identity so the player sees they're in
             // the chip challenge, not a generic Classic match.
             <View style={[styles.modePill, { borderColor: "#A855F799", backgroundColor: "#A855F71A" }]}>
-              <Ionicons name="diamond" size={11} color="#D4AF37" />
+              <ChipIcon size={11} color="#D4AF37" />
               <Text style={[styles.modeLabel, { color: "#D4AF37" }]}>RETO FICHAS</Text>
               {isExpert && <Ionicons name="timer" size={10} color="#E74C3C" style={{ marginLeft: 2 }} />}
             </View>

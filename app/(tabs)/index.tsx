@@ -1,4 +1,5 @@
 import { CoinIcon } from "@/components/CoinIcon";
+import { ChipIcon } from "@/components/ChipIcon";
 import React, { useState, useEffect, useRef } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView,
@@ -725,7 +726,7 @@ function ModeCard({
           <View style={styles.modeFooter}>
             {mode.isFichas ? (
               <View style={styles.modeReward}>
-                <Ionicons name="diamond" size={11} color="#3498DB" />
+                <ChipIcon size={11} color="#3498DB" />
                 <Text style={[styles.modeRewardText, { color: "#3498DB" }]}>{mode.fichasRemaining}/3</Text>
               </View>
             ) : (
@@ -1276,7 +1277,7 @@ export default function PlayScreen() {
             <Text style={[styles.coinsNum, { color: coinFlash ? "#FFD700" : theme.gold }]}>{shownCoins}</Text>
           </Animated.View>
           <View style={[styles.coinsBadge, { backgroundColor: "rgba(52,152,219,0.18)", borderColor: "#3498DB55" }]}>
-            <Ionicons name="diamond" size={12} color="#3498DB" />
+            <ChipIcon size={13} color="#3498DB" />
             <Text style={[styles.coinsNum, { color: "#3498DB" }]}>{profile.fichas ?? 0}</Text>
           </View>
           {canClaimDailyReward && (

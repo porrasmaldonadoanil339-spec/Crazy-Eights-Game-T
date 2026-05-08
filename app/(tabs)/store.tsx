@@ -1,4 +1,5 @@
 import { CoinIcon } from "@/components/CoinIcon";
+import { ChipIcon } from "@/components/ChipIcon";
 import React, { useState, useRef, useMemo, useEffect, memo, useCallback } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
@@ -225,7 +226,7 @@ function ConfirmModal({
           <View style={styles.priceRow}>
             {item.category === "emote" ? (
               <>
-                <Ionicons name="diamond" size={18} color="#3498DB" />
+                <ChipIcon size={18} color="#3498DB" />
                 <Text style={[styles.priceText, { color: "#3498DB" }]}>{item.price} fichas</Text>
               </>
             ) : (
@@ -628,7 +629,7 @@ function EmoteCard({ item, owned, isEquipped, equippedCount, isDailyHot, onPress
               <Text style={styles.freeText}>{T("free")}</Text>
             ) : (
               <View style={styles.priceRowSm}>
-                <Ionicons name="diamond" size={12} color="#3498DB" />
+                <ChipIcon size={12} color="#3498DB" />
                 <Text style={[styles.priceSmText, { color: "#3498DB" }]}>{item.price}</Text>
               </View>
             )}
@@ -856,7 +857,7 @@ export default function StoreScreen() {
             <Text style={[styles.coinsNum, { color: themeGold }]}>{profile.coins}</Text>
           </View>
           <View style={[styles.coinsBig, { backgroundColor: "#3498DB22", borderColor: "#3498DB55" }]}>
-            <Ionicons name="diamond" size={14} color="#3498DB" />
+            <ChipIcon size={16} color="#3498DB" />
             <Text style={[styles.coinsNum, { color: "#3498DB" }]}>{profile.fichas ?? 0}</Text>
           </View>
         </View>
@@ -997,7 +998,7 @@ function DailyConfirmModal({
           <Text style={[styles.confirmDesc, { color: theme.textMuted }]}>{localized.description}</Text>
           <View style={styles.priceRow}>
             {isFichas
-              ? <Ionicons name="diamond" size={18} color="#3498DB" />
+              ? <ChipIcon size={18} color="#3498DB" />
               : <CoinIcon size={18} color={theme.gold} />}
             <Text style={[styles.priceText, { color: isFichas ? "#3498DB" : theme.gold }]}>{item.finalPrice} {isFichas ? "Fichas" : T("coins")}</Text>
           </View>
@@ -1060,7 +1061,7 @@ const DailyShopCard = memo(function DailyShopCard({ item, owned, isEquipped, onC
             <EquipBadge isEquipped={isEquipped} onEquip={handleEquip} T={T} />
           ) : (
             <View style={styles.priceRowSm}>
-              {isFichas ? <Ionicons name="diamond" size={12} color="#3498DB" /> : <CoinIcon size={12} color={Colors.gold} />}
+              {isFichas ? <ChipIcon size={12} color="#3498DB" /> : <CoinIcon size={12} color={Colors.gold} />}
               <Text style={[styles.priceSmText, { color: isFichas ? "#3498DB" : Colors.gold }]}>{item.finalPrice}</Text>
             </View>
           )}
@@ -1625,7 +1626,7 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
         <Ionicons name="cube" size={14} color={themeGold} />
         <Text style={[styles.chestShopTitle, { color: themeGold }]}>{T("chestShopHeader").replace("{n}", String(dailyRemaining))}</Text>
         <View style={{ flex: 1 }} />
-        <Ionicons name="diamond" size={12} color="#3498DB" />
+        <ChipIcon size={12} color="#3498DB" />
         <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#3498DB" }}>{profile.fichas ?? 0}</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingLeft: 8, paddingRight: 4 }}>
@@ -1640,7 +1641,7 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
               <MiniChest type={t} size={50} />
               <Text style={[styles.chestName, { color: COLORS[t] }]}>{NAMES[t]}</Text>
               <View style={styles.chestPriceRow}>
-                <Ionicons name="diamond" size={11} color="#3498DB" />
+                <ChipIcon size={11} color="#3498DB" />
                 <Text style={[styles.chestPriceText, { color: "#3498DB" }]}>{PRICES[t]}</Text>
               </View>
             </BouncePressable>
@@ -1692,7 +1693,7 @@ function ChestConfirmModal({
             {T("chestRemainingToday").replace("{n}", String(dailyRemaining))}
           </Text>
           <View style={styles.priceRow}>
-            <Ionicons name="diamond" size={18} color="#3498DB" />
+            <ChipIcon size={18} color="#3498DB" />
             <Text style={[styles.priceText, { color: "#3498DB" }]}>{T("chestPriceFichas").replace("{n}", String(price))}</Text>
           </View>
           <View style={styles.confirmBtns}>
@@ -1789,7 +1790,7 @@ const EmoteShopCard = memo(function EmoteShopCard({
         </View>
       ) : (
         <View style={[styles.emoteShopStatus, { backgroundColor: "#3498DB22", borderColor: "#3498DB66" }]}>
-          <Ionicons name="diamond" size={11} color="#3498DB" />
+          <ChipIcon size={11} color="#3498DB" />
           <Text style={[styles.emoteShopStatusText, { color: "#3498DB" }]}>{item.price}</Text>
         </View>
       )}
@@ -1822,7 +1823,7 @@ function EmotesSection({
         <Ionicons name="happy" size={14} color={themeGold} />
         <Text style={[styles.chestShopTitle, { color: themeGold }]}>EMOTES · 3 DEL DÍA</Text>
         <View style={{ flex: 1 }} />
-        <Ionicons name="diamond" size={12} color="#3498DB" />
+        <ChipIcon size={12} color="#3498DB" />
         <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#3498DB" }}>{profile.fichas ?? 0}</Text>
       </View>
       <View style={styles.emoteGrid}>
