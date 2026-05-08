@@ -50,33 +50,97 @@ async function getAuthToken(): Promise<string | null> {
   }
 }
 
-// Uploads a locally-persisted custom stinger to the cloud. Returns the
-// resulting remote URL on success or null when the user is unauthenticated /
-// offline / the upload fails (callers should keep the local file:// URI in
-// the profile in those cases so playback still works on this device).
-export async function uploadCustomStinger(localUri: string, ext: string): Promise<string | null> {
+// Task #97 — structured upload result. Permanent reasons (too_large,
+// rate_limited, storage_full) tell the auto-retry hook to back off and
+// the settings UI to surface a specific message instead of a generic
+// "Backup failed". Transient reasons (network / 5xx / file read) are
+// safe to retry silently on the next foreground / reconnect.
+export type UploadStingerErrorReason =
+  | "no_auth"        // guest or no stored token — nothing to retry until sign-in
+  | "transient"      // network failure, 5xx, file read error → silent retry ok
+  | "unauthorized"   // 401 (token expired) → manual retry after re-auth
+  | "too_large"      // 413 → the same file will always fail; permanent
+  | "rate_limited"   // 429 → permanent for now, manual retry later may work
+  | "storage_full"   // 507 → server-side, permanent for now
+  | "bad_request";   // 400 → unsupported format / corrupt payload; permanent
+export type UploadStingerResult =
+  | { ok: true; url: string }
+  | { ok: false; reason: UploadStingerErrorReason };
+
+// Module-level coalescing: when both the manual retry from settings and
+// the silent auto-retry from _layout fire around the same foreground /
+// reconnect event, a second upload would race the first and the
+// "last write wins" state update could clobber the real outcome. We
+// share a single in-flight promise so both callers see the same result.
+let inFlightUpload: Promise<UploadStingerResult> | null = null;
+
+// Uploads a locally-persisted custom stinger to the cloud. Returns a
+// structured result so callers can distinguish permanent failures
+// (don't auto-retry) from transient ones (do).
+export async function uploadCustomStinger(localUri: string, ext: string): Promise<UploadStingerResult> {
+  if (inFlightUpload) return inFlightUpload;
+  inFlightUpload = (async (): Promise<UploadStingerResult> => {
   const token = await getAuthToken();
-  if (!token) return null;
+  if (!token) return { ok: false, reason: "no_auth" };
   let base64: string;
   try {
     const f = new File(localUri);
     base64 = await f.base64();
   } catch {
-    return null;
+    return { ok: false, reason: "transient" };
   }
+  let resp: Response;
   try {
     const url = new URL("/api/auth/profile/stinger", getApiUrl()).toString();
-    const resp = await fetch(url, {
+    resp = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ data: base64, ext }),
     });
-    if (!resp.ok) return null;
-    const json = await resp.json() as { ok?: boolean; url?: string };
-    return json.ok && json.url ? json.url : null;
   } catch {
-    return null;
+    return { ok: false, reason: "transient" };
   }
+  if (resp.ok) {
+    try {
+      const json = await resp.json() as { ok?: boolean; url?: string };
+      if (json.ok && json.url) return { ok: true, url: json.url };
+      return { ok: false, reason: "transient" };
+    } catch {
+      return { ok: false, reason: "transient" };
+    }
+  }
+  switch (resp.status) {
+    case 400: return { ok: false, reason: "bad_request" };
+    case 401: return { ok: false, reason: "unauthorized" };
+    case 413: return { ok: false, reason: "too_large" };
+    case 429: return { ok: false, reason: "rate_limited" };
+    case 507: return { ok: false, reason: "storage_full" };
+    default:  return { ok: false, reason: "transient" };
+  }
+  })();
+  try {
+    return await inFlightUpload;
+  } finally {
+    inFlightUpload = null;
+  }
+}
+
+// Reasons the auto-retry hook should treat as permanent (no point trying
+// again on the next foreground / reconnect — the same payload + the same
+// server state will fail the same way). The settings screen still allows
+// a manual retry for `storage_full` / `rate_limited` since those are
+// time-based, but the silent background retry stays out of it.
+//
+// Note: `no_auth` and `unauthorized` are deliberately *not* treated as
+// permanent here. The user may sign in / refresh their token after a
+// guest save, and the auto-retry should resume on the next foreground
+// without needing the URI to change. The upload itself short-circuits
+// cheaply on missing/invalid tokens, so retrying costs almost nothing.
+export function isPermanentUploadError(reason: UploadStingerErrorReason): boolean {
+  return reason === "too_large"
+      || reason === "rate_limited"
+      || reason === "storage_full"
+      || reason === "bad_request";
 }
 
 // Task #96 — silent retry of the cloud upload for a locally-saved custom
@@ -88,14 +152,13 @@ export async function uploadCustomStinger(localUri: string, ext: string): Promis
 // from non-React contexts.
 export async function tryAutoUploadCustomStinger(
   localUri: string | null | undefined,
-): Promise<string | null> {
+): Promise<UploadStingerResult | null> {
   if (!localUri || isRemote(localUri)) return null;
   const dotIdx = localUri.lastIndexOf(".");
   const ext = dotIdx >= 0 ? localUri.slice(dotIdx + 1).toLowerCase() : "m4a";
-  const remoteUrl = await uploadCustomStinger(localUri, ext);
-  if (!remoteUrl) return null;
-  cacheLocalCopyForRemote(remoteUrl, localUri);
-  return remoteUrl;
+  const result = await uploadCustomStinger(localUri, ext);
+  if (result.ok) cacheLocalCopyForRemote(result.url, localUri);
+  return result;
 }
 
 // Best-effort delete of the user's remote stinger copy. Silent on failure —

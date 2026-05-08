@@ -14,7 +14,7 @@ import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
-import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache } from "@/lib/customStingerCache";
+import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, type UploadStingerErrorReason } from "@/lib/customStingerCache";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import { File, Directory, Paths } from "expo-file-system";
@@ -189,20 +189,30 @@ export default function SettingsScreen() {
   // profile URI on mount: a remote https URL means we already synced, a
   // local file:// URI means the upload either never ran or failed (so the
   // clip won't roam to other devices until the player retries).
-  type StingerBackupStatus = "idle" | "uploading" | "synced" | "failed";
+  // Task #97 — failed states carry the structured server reason so the
+  // badge can show "Clip too big" / "Cloud backup is full" instead of the
+  // generic "Backup failed — tap to retry".
+  type StingerBackupStatus =
+    | { phase: "idle" }
+    | { phase: "uploading" }
+    | { phase: "synced" }
+    | { phase: "failed"; reason: UploadStingerErrorReason | "unknown" };
   const [customStingerBackupStatus, setCustomStingerBackupStatus] = useState<StingerBackupStatus>(() => {
     const uri = profile.customLogoStingerUri || "";
-    if (!uri) return "idle";
-    return /^https?:\/\//i.test(uri) ? "synced" : "failed";
+    if (!uri) return { phase: "idle" };
+    return /^https?:\/\//i.test(uri) ? { phase: "synced" } : { phase: "failed", reason: "unknown" };
   });
   // Re-derive when the profile URI changes from elsewhere (cloud sync,
-  // remove, etc.) — but never overwrite an in-flight "uploading" state.
+  // remove, etc.) — but never overwrite an in-flight "uploading" state
+  // and don't downgrade a known failure reason to "unknown".
   useEffect(() => {
     setCustomStingerBackupStatus((prev) => {
-      if (prev === "uploading") return prev;
+      if (prev.phase === "uploading") return prev;
       const uri = profile.customLogoStingerUri || "";
-      if (!uri) return "idle";
-      return /^https?:\/\//i.test(uri) ? "synced" : "failed";
+      if (!uri) return { phase: "idle" };
+      if (/^https?:\/\//i.test(uri)) return { phase: "synced" };
+      if (prev.phase === "failed") return prev;
+      return { phase: "failed", reason: "unknown" };
     });
   }, [profile.customLogoStingerUri]);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -488,16 +498,16 @@ export default function SettingsScreen() {
     // pointing at a now-missing local file. Task #94 — surface the status
     // (uploading / synced / failed) so the player knows whether the clip
     // will roam, and can retry without re-running the trim flow.
-    setCustomStingerBackupStatus("uploading");
+    setCustomStingerBackupStatus({ phase: "uploading" });
     (async () => {
-      const remoteUrl = await uploadCustomStinger(savedUri, ext);
-      if (!remoteUrl) {
-        setCustomStingerBackupStatus("failed");
+      const result = await uploadCustomStinger(savedUri, ext);
+      if (!result.ok) {
+        setCustomStingerBackupStatus({ phase: "failed", reason: result.reason });
         return;
       }
-      cacheLocalCopyForRemote(remoteUrl, savedUri);
-      updateSettings({ customLogoStingerUri: remoteUrl });
-      setCustomStingerBackupStatus("synced");
+      cacheLocalCopyForRemote(result.url, savedUri);
+      updateSettings({ customLogoStingerUri: result.url });
+      setCustomStingerBackupStatus({ phase: "synced" });
     })();
   };
 
@@ -506,19 +516,19 @@ export default function SettingsScreen() {
   const retryCustomStingerUpload = () => {
     const localUri = profile.customLogoStingerUri || "";
     if (!localUri || /^https?:\/\//i.test(localUri)) return;
-    if (customStingerBackupStatus === "uploading") return;
+    if (customStingerBackupStatus.phase === "uploading") return;
     const dotIdx = localUri.lastIndexOf(".");
     const ext = dotIdx >= 0 ? localUri.slice(dotIdx + 1).toLowerCase() : "m4a";
-    setCustomStingerBackupStatus("uploading");
+    setCustomStingerBackupStatus({ phase: "uploading" });
     (async () => {
-      const remoteUrl = await uploadCustomStinger(localUri, ext);
-      if (!remoteUrl) {
-        setCustomStingerBackupStatus("failed");
+      const result = await uploadCustomStinger(localUri, ext);
+      if (!result.ok) {
+        setCustomStingerBackupStatus({ phase: "failed", reason: result.reason });
         return;
       }
-      cacheLocalCopyForRemote(remoteUrl, localUri);
-      updateSettings({ customLogoStingerUri: remoteUrl });
-      setCustomStingerBackupStatus("synced");
+      cacheLocalCopyForRemote(result.url, localUri);
+      updateSettings({ customLogoStingerUri: result.url });
+      setCustomStingerBackupStatus({ phase: "synced" });
     })();
   };
 
@@ -1291,22 +1301,34 @@ export default function SettingsScreen() {
                     </Pressable>
                     {hasCustom && (() => {
                       const status = customStingerBackupStatus;
-                      const cfg = status === "uploading"
-                        ? { icon: "cloud-upload-outline" as const, color: "#4FC3F7", label: T("logoStingerBackupSyncing") || "Backing up…" }
-                        : status === "synced"
-                        ? { icon: "cloud-done-outline" as const, color: "#27AE60", label: T("logoStingerBackupSynced") || "Synced" }
-                        : status === "failed"
-                        ? { icon: "cloud-offline-outline" as const, color: "#E74C3C", label: T("logoStingerBackupFailed") || "Backup failed — tap to retry" }
-                        : null;
+                      // Task #97 — pick badge copy + tap-retry affordance based
+                      // on the structured server reason. "too_large" and
+                      // "bad_request" can't be fixed by retrying the same clip,
+                      // so the badge shows the message without the tap target.
+                      let cfg: { icon: "cloud-upload-outline" | "cloud-done-outline" | "cloud-offline-outline"; color: string; label: string; tapRetry: boolean } | null = null;
+                      if (status.phase === "uploading") {
+                        cfg = { icon: "cloud-upload-outline", color: "#4FC3F7", label: T("logoStingerBackupSyncing") || "Backing up…", tapRetry: false };
+                      } else if (status.phase === "synced") {
+                        cfg = { icon: "cloud-done-outline", color: "#27AE60", label: T("logoStingerBackupSynced") || "Synced", tapRetry: false };
+                      } else if (status.phase === "failed") {
+                        if (status.reason === "too_large" || status.reason === "bad_request") {
+                          cfg = { icon: "cloud-offline-outline", color: "#E74C3C", label: T("logoStingerBackupTooLarge") || "Clip is too big to back up", tapRetry: false };
+                        } else if (status.reason === "rate_limited") {
+                          cfg = { icon: "cloud-offline-outline", color: "#E67E22", label: T("logoStingerBackupRateLimited") || "Too many backups — try again later", tapRetry: true };
+                        } else if (status.reason === "storage_full") {
+                          cfg = { icon: "cloud-offline-outline", color: "#E67E22", label: T("logoStingerBackupStorageFull") || "Cloud backup is full — tap to retry", tapRetry: true };
+                        } else {
+                          cfg = { icon: "cloud-offline-outline", color: "#E74C3C", label: T("logoStingerBackupFailed") || "Backup failed — tap to retry", tapRetry: true };
+                        }
+                      }
                       if (!cfg) return null;
-                      const isFailed = status === "failed";
                       const inner = (
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                           <Ionicons name={cfg.icon} size={13} color={cfg.color} />
                           <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 11, color: cfg.color }}>{cfg.label}</Text>
                         </View>
                       );
-                      return isFailed
+                      return cfg.tapRetry
                         ? <TouchableOpacity onPress={retryCustomStingerUpload} accessibilityRole="button">{inner}</TouchableOpacity>
                         : <View>{inner}</View>;
                     })()}

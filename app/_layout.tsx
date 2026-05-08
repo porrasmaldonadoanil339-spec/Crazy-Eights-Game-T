@@ -30,7 +30,7 @@ import {
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
 import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded, playOchoLocosVoice, setLogoStingerId, setCustomStingerUri, setCustomStingerTrim, DEFAULT_LOGO_STINGER_ID } from "@/lib/audioManager";
-import { resolveCustomStingerUri, tryAutoUploadCustomStinger } from "@/lib/customStingerCache";
+import { resolveCustomStingerUri, tryAutoUploadCustomStinger, isPermanentUploadError } from "@/lib/customStingerCache";
 import NetInfo from "@react-native-community/netinfo";
 import { markSplashComplete } from "@/lib/splashState";
 import * as ScreenOrientation from "expo-screen-orientation";
@@ -574,8 +574,16 @@ function AudioManager() {
   // this silent retry also fails (no auth, server still down, etc.).
   const customStingerUriRef = useRef<string>("");
   const stingerRetryInFlight = useRef(false);
+  // Task #97 — once the server has returned a permanent failure for the
+  // currently-saved local clip, stop nagging it on every foreground /
+  // reconnect. Reset whenever the URI changes (new clip, removed clip,
+  // or successful upload) so a freshly-saved one still gets a chance.
+  const stingerPermanentFailureUri = useRef<string>("");
   useEffect(() => {
     customStingerUriRef.current = profile.customLogoStingerUri || "";
+    if (stingerPermanentFailureUri.current !== customStingerUriRef.current) {
+      stingerPermanentFailureUri.current = "";
+    }
   }, [profile.customLogoStingerUri]);
   useEffect(() => {
     if (!isLoaded) return;
@@ -583,14 +591,19 @@ function AudioManager() {
     const attempt = async () => {
       const uri = customStingerUriRef.current;
       if (!uri || /^https?:\/\//i.test(uri)) return;
+      if (stingerPermanentFailureUri.current === uri) return;
       if (stingerRetryInFlight.current) return;
       stingerRetryInFlight.current = true;
       try {
-        const remoteUrl = await tryAutoUploadCustomStinger(uri);
-        if (cancelled || !remoteUrl) return;
-        // Only swap if the URI hasn't been changed (e.g. removed) underneath us.
-        if (customStingerUriRef.current === uri) {
-          updateSettings({ customLogoStingerUri: remoteUrl });
+        const result = await tryAutoUploadCustomStinger(uri);
+        if (cancelled || !result) return;
+        if (result.ok) {
+          // Only swap if the URI hasn't been changed (e.g. removed) underneath us.
+          if (customStingerUriRef.current === uri) {
+            updateSettings({ customLogoStingerUri: result.url });
+          }
+        } else if (isPermanentUploadError(result.reason)) {
+          stingerPermanentFailureUri.current = uri;
         }
       } finally {
         stingerRetryInFlight.current = false;
