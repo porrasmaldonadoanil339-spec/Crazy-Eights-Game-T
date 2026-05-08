@@ -1720,22 +1720,31 @@ function AnimatedEmoteIcon({ icon, color, delay, size = 36 }: { icon: IoniconNam
       Animated.sequence([
         Animated.delay(delay),
         Animated.parallel([
-          Animated.timing(scale, { toValue: 1.25, duration: 450, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(rot, { toValue: 1, duration: 450, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1.18, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot, { toValue: 1, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         ]),
         Animated.parallel([
-          Animated.timing(scale, { toValue: 1, duration: 450, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-          Animated.timing(rot, { toValue: 0, duration: 450, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot, { toValue: 0, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         ]),
       ])
     );
     loop.start();
     return () => loop.stop();
   }, [delay, scale, rot]);
-  const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-12deg", "12deg"] });
+  const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-10deg", "10deg"] });
   return (
     <Animated.View style={{ transform: [{ scale }, { rotate }] }}>
-      <Ionicons name={icon} size={size} color={color} />
+      <Ionicons
+        name={icon}
+        size={size}
+        color={color}
+        style={{
+          textShadowColor: color,
+          textShadowRadius: 14,
+          textShadowOffset: { width: 0, height: 0 },
+        }}
+      />
     </Animated.View>
   );
 }
@@ -1761,13 +1770,7 @@ const EmoteShopCard = memo(function EmoteShopCard({
       { backgroundColor: themeColors.surface, borderColor: isEquipped ? Colors.gold + "AA" : rarityColor + "66" },
     ]}>
       <View style={styles.emoteShopIcon}>
-        <LinearGradient
-          colors={[item.previewColor + "44", item.previewColor + "0A"]}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-          style={[styles.emoteShopCircle, { borderColor: item.previewColor + "AA" }]}
-        >
-          <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={42} />
-        </LinearGradient>
+        <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={56} />
       </View>
       {owned ? (
         <View style={[styles.emoteShopStatus, {

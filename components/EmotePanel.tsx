@@ -32,7 +32,18 @@ interface EmoteBubbleProps {
   muted?: boolean;
 }
 
-export function EmoteBubble({ emote, side, muted = false }: EmoteBubbleProps) {
+const EMOTE_LABELS: Record<string, Record<"es" | "en" | "pt", string>> = {
+  gg:     { es: "GG",       en: "GG",        pt: "GG" },
+  draw2:  { es: "+2",       en: "+2",        pt: "+2" },
+  close:  { es: "Cerca",    en: "So close",  pt: "Quase" },
+  draw:   { es: "Roba",     en: "Draw",      pt: "Pega" },
+  no:     { es: "No",       en: "No",        pt: "Não" },
+  win:    { es: "Gané",     en: "I win",     pt: "Ganhei" },
+  luck:   { es: "Suerte",   en: "Good luck", pt: "Sorte" },
+  expert: { es: "Pro",      en: "Pro",       pt: "Pro" },
+};
+
+export function EmoteBubble({ emote, side, lang = "es", muted = false }: EmoteBubbleProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.7)).current;
@@ -64,16 +75,12 @@ export function EmoteBubble({ emote, side, muted = false }: EmoteBubbleProps) {
     loopRef.current = Animated.loop(
       Animated.sequence([
         Animated.parallel([
-          Animated.timing(iconScale, { toValue: 1.25, duration: 280, useNativeDriver: true }),
-          Animated.timing(iconRot, { toValue: 1, duration: 280, useNativeDriver: true }),
+          Animated.timing(iconScale, { toValue: 1.18, duration: 700, useNativeDriver: true }),
+          Animated.timing(iconRot, { toValue: 1, duration: 700, useNativeDriver: true }),
         ]),
         Animated.parallel([
-          Animated.timing(iconScale, { toValue: 0.9, duration: 280, useNativeDriver: true }),
-          Animated.timing(iconRot, { toValue: -1, duration: 280, useNativeDriver: true }),
-        ]),
-        Animated.parallel([
-          Animated.timing(iconScale, { toValue: 1, duration: 220, useNativeDriver: true }),
-          Animated.timing(iconRot, { toValue: 0, duration: 220, useNativeDriver: true }),
+          Animated.timing(iconScale, { toValue: 1, duration: 700, useNativeDriver: true }),
+          Animated.timing(iconRot, { toValue: 0, duration: 700, useNativeDriver: true }),
         ]),
       ]),
     );
@@ -83,25 +90,40 @@ export function EmoteBubble({ emote, side, muted = false }: EmoteBubbleProps) {
 
   if (!emote || muted) return null;
 
-  const rotate = iconRot.interpolate({ inputRange: [-1, 1], outputRange: ["-15deg", "15deg"] });
+  const rotate = iconRot.interpolate({ inputRange: [-1, 1], outputRange: ["-12deg", "12deg"] });
+  const label = EMOTE_LABELS[emote.id]?.[lang] ?? "";
 
   return (
     <Animated.View
+      pointerEvents="none"
       style={[
         styles.bubble,
-        { borderColor: emote.color + "AA", backgroundColor: emote.color + "1A" },
         side === "player" ? styles.bubblePlayer : styles.bubbleCpu,
         { opacity, transform: [{ translateY }, { scale }] },
       ]}
     >
       <Animated.View style={{ transform: [{ scale: iconScale }, { rotate }] }}>
-        <Ionicons name={emote.icon} size={28} color={emote.color} />
+        <Ionicons
+          name={emote.icon}
+          size={42}
+          color={emote.color}
+          style={{
+            textShadowColor: emote.color,
+            textShadowRadius: 14,
+            textShadowOffset: { width: 0, height: 0 },
+          }}
+        />
       </Animated.View>
+      {label ? (
+        <Text style={[styles.bubbleLabel, { color: emote.color, textShadowColor: emote.color + "55" }]} numberOfLines={1}>
+          {label}
+        </Text>
+      ) : null}
     </Animated.View>
   );
 }
 
-function AnimatedPickerIcon({ icon, color, delay }: { icon: keyof typeof Ionicons.glyphMap; color: string; delay: number }) {
+function AnimatedPickerIcon({ icon, color, delay, size = 38 }: { icon: keyof typeof Ionicons.glyphMap; color: string; delay: number; size?: number }) {
   const scale = useRef(new Animated.Value(1)).current;
   const rot = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -109,22 +131,31 @@ function AnimatedPickerIcon({ icon, color, delay }: { icon: keyof typeof Ionicon
       Animated.sequence([
         Animated.delay(delay),
         Animated.parallel([
-          Animated.timing(scale, { toValue: 1.22, duration: 460, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(rot, { toValue: 1, duration: 460, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1.18, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot, { toValue: 1, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         ]),
         Animated.parallel([
-          Animated.timing(scale, { toValue: 1, duration: 460, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-          Animated.timing(rot, { toValue: 0, duration: 460, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot, { toValue: 0, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         ]),
       ]),
     );
     loop.start();
     return () => loop.stop();
   }, [delay, scale, rot]);
-  const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-12deg", "12deg"] });
+  const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-10deg", "10deg"] });
   return (
     <Animated.View style={{ transform: [{ scale }, { rotate }] }}>
-      <Ionicons name={icon} size={30} color={color} />
+      <Ionicons
+        name={icon}
+        size={size}
+        color={color}
+        style={{
+          textShadowColor: color,
+          textShadowRadius: 12,
+          textShadowOffset: { width: 0, height: 0 },
+        }}
+      />
     </Animated.View>
   );
 }
@@ -169,7 +200,6 @@ export function EmotePanel({ onSendEmote, lastEmoteTime }: EmotePanelProps) {
                 onPress={() => handleEmote(emote)}
                 style={({ pressed }) => [
                   styles.emoteBtnCR,
-                  { backgroundColor: emote.color + "22", borderColor: emote.color + "88" },
                   pressed && { transform: [{ scale: 0.92 }] },
                 ]}
               >
@@ -212,11 +242,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6, shadowRadius: 16, elevation: 14,
   },
   emoteBtnCR: {
-    width: 60, height: 60, borderRadius: 30,
+    width: 60, height: 60,
     alignItems: "center", justifyContent: "center",
-    borderWidth: 2,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5, shadowRadius: 6, elevation: 6,
   },
   panelTitle: {
     fontFamily: "Nunito_700Bold", fontSize: 12, color: Colors.textMuted,
@@ -238,16 +265,17 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.text, textAlign: "center",
   },
   bubble: {
-    position: "absolute", alignItems: "center", justifyContent: "center",
-    width: 52, height: 52, borderRadius: 26,
-    borderWidth: 2,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5, shadowRadius: 6, elevation: 6,
+    position: "absolute",
+    alignItems: "center", justifyContent: "center",
+    gap: 4,
     zIndex: 100,
   },
-  bubblePlayer: { bottom: 84, right: 8 },
-  bubbleCpu: { top: 84, right: 8 },
-  bubbleText: {
-    fontFamily: "Nunito_700Bold", fontSize: 11,
+  bubblePlayer: { bottom: 92, right: 8 },
+  bubbleCpu: { top: 92, right: 8 },
+  bubbleLabel: {
+    fontFamily: "Nunito_800ExtraBold", fontSize: 11,
+    letterSpacing: 0.6,
+    textShadowRadius: 4,
+    textShadowOffset: { width: 0, height: 1 },
   },
 });

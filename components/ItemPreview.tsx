@@ -150,22 +150,31 @@ function AnimatedEmoteIcon({ icon, color, delay = 0, size = 36 }: { icon: IconNa
       Animated.sequence([
         Animated.delay(delay),
         Animated.parallel([
-          Animated.timing(scale, { toValue: 1.25, duration: 450, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(rot, { toValue: 1, duration: 450, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1.18, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot, { toValue: 1, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         ]),
         Animated.parallel([
-          Animated.timing(scale, { toValue: 1, duration: 450, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-          Animated.timing(rot, { toValue: 0, duration: 450, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.timing(rot, { toValue: 0, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         ]),
       ])
     );
     loop.start();
     return () => loop.stop();
   }, [delay, scale, rot]);
-  const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-12deg", "12deg"] });
+  const rotate = rot.interpolate({ inputRange: [0, 1], outputRange: ["-10deg", "10deg"] });
   return (
     <Animated.View style={{ transform: [{ scale }, { rotate }] }}>
-      <Ionicons name={icon} size={size} color={color} />
+      <Ionicons
+        name={icon}
+        size={size}
+        color={color}
+        style={{
+          textShadowColor: color,
+          textShadowRadius: 14,
+          textShadowOffset: { width: 0, height: 0 },
+        }}
+      />
     </Animated.View>
   );
 }
@@ -203,13 +212,8 @@ function EmotePreview({ item, compact }: { item: StoreItem; compact?: boolean })
   const color = item.previewColor;
   const icon = (item.preview ?? "happy") as IconName;
   return (
-    <View style={previewStyles.centerWrap}>
-      <LinearGradient
-        colors={[color + "44", color + "0A"] as [string, string]}
-        style={[compact ? previewStyles.effectCircleCompact : previewStyles.effectCircle, { borderColor: color + "88" }]}
-      >
-        <AnimatedEmoteIcon icon={icon} color={color} size={compact ? 24 : 36} />
-      </LinearGradient>
+    <View style={[previewStyles.centerWrap, compact ? previewStyles.effectCircleCompact : previewStyles.effectCircle, { borderWidth: 0 }]}>
+      <AnimatedEmoteIcon icon={icon} color={color} size={compact ? 40 : 60} />
     </View>
   );
 }
