@@ -1,5 +1,7 @@
 import { CoinIcon } from "@/components/CoinIcon";
 import { ChipIcon } from "@/components/ChipIcon";
+import ChestVisual from "@/components/ChestVisual";
+import type { ChestType } from "@/lib/chestSystem";
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   View, Text, StyleSheet, Pressable, Platform, FlatList, Alert,
@@ -99,7 +101,7 @@ export default function AchievementsScreen() {
 
   const handleUnlockPremiumBP = () => {
     Alert.alert(
-      T("confirmPremiumTitle" as any) || "¿Deseas comprar el Pase Premium?",
+      T("bpBuyPremiumConfirm" as any) || "¿Deseas comprar el Pase Premium?",
       `${premiumBattlePassCost} ${T("fichas" as any) || "fichas"}`,
       [
         { text: T("cancel" as any) || "Cancelar", style: "cancel" },
@@ -151,7 +153,7 @@ export default function AchievementsScreen() {
       setRewardPopup({
         visible: true,
         title: "¡RECOMPENSA OBTENIDA!",
-        subtitle: `${T("level")} ${tier}`,
+        subtitle: `${tier}/${seasonTiers.length}`,
         coins: free.coins,
         itemName: undefined,
         itemIcon: free.icon === "cash" ? "cash" : "cube",
@@ -161,7 +163,7 @@ export default function AchievementsScreen() {
       setRewardPopup({
         visible: true,
         title: "¡RECOMPENSA OBTENIDA!",
-        subtitle: `${T("level")} ${tier}`,
+        subtitle: `${tier}/${seasonTiers.length}`,
         coins: isCoins ? (bp!.rewardValue as number) : 0,
         itemName: bp ? getBPRewardLabel(bp, lang) : undefined,
         itemIcon: bp?.rewardType === "chest" ? "cube" : bp?.rewardType === "coins" ? "cash" : "trophy",
@@ -271,7 +273,10 @@ export default function AchievementsScreen() {
 
   const bpKeyExtractor = useCallback((tier: typeof seasonTiers[number]) => String(tier.tier), []);
   const renderBpTier = useCallback(({ item: tier }: { item: typeof seasonTiers[number] }) => {
-    const reached = profile.totalXp >= tier.xpRequired;
+    // Task #123 — compare against per-season XP (totalXp minus the snapshot
+    // taken at season start) so the reset visibly clears unlocked tiers.
+    const seasonXp = Math.max(0, (profile.totalXp ?? 0) - (profile.battlePassSeasonXpBase ?? 0));
+    const reached = seasonXp >= tier.xpRequired;
     const claimedFree = profile.claimedBattlePassTiers.includes(tier.tier);
     const claimedPremium = (profile.claimedBattlePassPremiumTiers ?? []).includes(tier.tier);
     const canClaimFree = reached && !claimedFree;
@@ -294,7 +299,9 @@ export default function AchievementsScreen() {
         <View style={styles.bpVerticalRow}>
           <View style={styles.bpVCol}>
             <View style={[styles.bpIconWrap, { backgroundColor: freeReward.iconColor + "22", width: 44, height: 44, borderRadius: 22 }]}>
-              {freeReward.icon === "cash" ? (
+              {freeReward.type === "chest" && freeReward.chestType ? (
+                <ChestVisual type={freeReward.chestType as ChestType} size={36} showShadow={false} />
+              ) : freeReward.icon === "cash" ? (
                 <CoinIcon size={22} color={reached ? freeReward.iconColor : themeColors.textDim} />
               ) : (
                 <Ionicons name={freeReward.icon as any} size={22} color={reached ? freeReward.iconColor : themeColors.textDim} />
@@ -321,7 +328,9 @@ export default function AchievementsScreen() {
           </View>
           <View style={styles.bpVCol}>
             <View style={[styles.bpIconWrap, { backgroundColor: tier.iconColor + "22", width: 44, height: 44, borderRadius: 22, opacity: isPremiumTrack ? 1 : 0.4 }]}>
-              {tier.icon === "cash" ? (
+              {tier.rewardType === "chest" ? (
+                <ChestVisual type={String(tier.rewardValue) as ChestType} size={36} showShadow={false} />
+              ) : tier.icon === "cash" ? (
                 <CoinIcon size={22} color={reached ? tier.iconColor : themeColors.textDim} />
               ) : (
                 <Ionicons name={tier.icon as any} size={22} color={reached ? tier.iconColor : themeColors.textDim} />
@@ -364,7 +373,7 @@ export default function AchievementsScreen() {
       </View>
       </BpTierGlow>
     );
-  }, [profile.totalXp, profile.claimedBattlePassTiers, profile.claimedBattlePassPremiumTiers, themeColors, themeGold, lang, T, claimLabel, isPremiumBattlePassActive, handleClaimBP, handleUnlockPremiumBP, xpRequiredLabel]);
+  }, [profile.totalXp, profile.battlePassSeasonXpBase, profile.claimedBattlePassTiers, profile.claimedBattlePassPremiumTiers, themeColors, themeGold, lang, T, claimLabel, isPremiumBattlePassActive, handleClaimBP, handleUnlockPremiumBP, xpRequiredLabel]);
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
@@ -489,13 +498,13 @@ export default function AchievementsScreen() {
                 shadowRadius: 14,
                 elevation: 8,
               }]}>
-                <BpLevelCircle level={xpProgress.level} themeGold={themeGold} themeColors={themeColors} />
+                <BpLevelCircle level={battlePassTier} maxLevel={seasonTiers.length} themeGold={themeGold} themeColors={themeColors} />
                 <View style={{ flex: 1, gap: 6 }}>
-                  <Text style={[styles.bpLevelNum, { color: themeGold }]}>{levelLabel} {xpProgress.level}</Text>
+                  <Text style={[styles.bpLevelNum, { color: themeGold }]}>{battlePassTier}/{seasonTiers.length}</Text>
                   <View style={[styles.bpXpBar, { backgroundColor: themeColors.border, overflow: "hidden" }]}>
-                    <View style={[styles.bpXpFill, { width: `${xpPct * 100}%`, backgroundColor: themeGold, shadowColor: themeGold, shadowOpacity: 0.7, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } }]} />
+                    <View style={[styles.bpXpFill, { width: `${(battlePassTier / seasonTiers.length) * 100}%`, backgroundColor: themeGold, shadowColor: themeGold, shadowOpacity: 0.7, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } }]} />
                   </View>
-                  <Text style={[styles.bpXpText, { color: themeColors.textMuted }]}>{xpProgress.current} / {xpProgress.needed} XP · {T("battlePass")} {battlePassTier}/{seasonTiers.length}</Text>
+                  <Text style={[styles.bpXpText, { color: themeColors.textMuted }]}>{xpProgress.current} / {xpProgress.needed} XP</Text>
                 </View>
               </View>
             </View>
@@ -532,8 +541,8 @@ export default function AchievementsScreen() {
                   }}
                 >
                   <ChipIcon size={20} color="#3498DB" />
-                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#fff", letterSpacing: 0.5, textShadowColor: "rgba(0,0,0,0.35)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
-                    {(T("unlockPremiumBP" as any) || "Desbloquear Premium")} · {premiumBattlePassCost}
+                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#fff", letterSpacing: 0.8, textShadowColor: "rgba(0,0,0,0.35)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
+                    {(T("bpPremiumButton" as any) || "PASE PREMIUM")}
                   </Text>
                   <ChipIcon size={14} color="#3498DB" />
                 </LinearGradient>
@@ -902,7 +911,7 @@ function SeasonThemeCard({
 
 // Task #114: pulsing level orb that mirrors the player level — the BP "level"
 // now matches the profile level so the two stay in lockstep.
-function BpLevelCircle({ level, themeGold, themeColors }: { level: number; themeGold: string; themeColors: any }) {
+function BpLevelCircle({ level, maxLevel, themeGold, themeColors }: { level: number; maxLevel?: number; themeGold: string; themeColors: any }) {
   const pulse = useSharedValue(0);
   useEffect(() => {
     pulse.value = withRepeat(
@@ -932,7 +941,9 @@ function BpLevelCircle({ level, themeGold, themeColors }: { level: number; theme
       />
       <View style={[styles.bpCircleLevel, { borderColor: themeGold, backgroundColor: themeGold + "14" }]}>
         <Text style={[styles.bpCircleLevelNum, { color: themeGold }]}>{level}</Text>
-        <Text style={[styles.bpCircleLevelMax, { color: themeColors.textMuted }]} numberOfLines={1}>NIVEL</Text>
+        {maxLevel ? (
+          <Text style={[styles.bpCircleLevelMax, { color: themeColors.textMuted }]} numberOfLines={1}>/{maxLevel}</Text>
+        ) : null}
       </View>
     </View>
   );

@@ -114,6 +114,12 @@ export interface PlayerProfile {
   premiumBattlePassSeasons: number[];
   claimedPlayerPathLevels: number[];
   battlePassSeasonNumber: number;
+  // Task #123 — XP snapshot at the moment a new BP season starts. The visible
+  // BP tier is derived from (totalXp - battlePassSeasonXpBase) so that every
+  // season the bar resets to 1/120 even though totalXp keeps accumulating
+  // (player level keeps progressing). 0 for legacy profiles (means "never
+  // snapshotted" — they will reset on the next season rollover).
+  battlePassSeasonXpBase: number;
   stats: PlayerStats;
   // Daily rewards
   lastDailyRewardDate: string;
@@ -256,6 +262,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   premiumBattlePassSeasons: [],
   claimedPlayerPathLevels: [],
   battlePassSeasonNumber: 1,
+  battlePassSeasonXpBase: 0,
   stats: DEFAULT_STATS,
   lastDailyRewardDate: "",
   dailyRewardIndex: 0,
@@ -398,7 +405,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const current = getCurrentSeason().number;
       setProfile((p) => {
         if (p.battlePassSeasonNumber === current) return p;
-        return { ...p, battlePassSeasonNumber: current, claimedBattlePassTiers: [1], claimedBattlePassPremiumTiers: [] };
+        return { ...p, battlePassSeasonNumber: current, claimedBattlePassTiers: [1], claimedBattlePassPremiumTiers: [], battlePassSeasonXpBase: p.totalXp };
       });
     }, 60_000);
     return () => clearInterval(t);
@@ -414,7 +421,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const FINAL_TIER = 120;
     const finalTierDef = BATTLE_PASS_TIERS.find((t) => t.tier === FINAL_TIER);
     if (!finalTierDef) return;
-    if ((profile.totalXp ?? 0) < finalTierDef.xpRequired) return;
+    if (((profile.totalXp ?? 0) - (profile.battlePassSeasonXpBase ?? 0)) < finalTierDef.xpRequired) return;
     if ((profile.claimedBattlePassTiers ?? []).includes(FINAL_TIER)) return;
     setProfile((p) => {
       if ((p.claimedBattlePassTiers ?? []).includes(FINAL_TIER)) return p;
@@ -519,6 +526,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             })(),
             premiumBattlePassSeasons: saved.premiumBattlePassSeasons ?? [],
             battlePassSeasonNumber: getCurrentSeason().number,
+            battlePassSeasonXpBase: (() => {
+              const savedSeason = saved.battlePassSeasonNumber ?? 1;
+              const currentSeason = getCurrentSeason().number;
+              // New season since last save → snapshot current XP so this
+              // season visibly starts at 1/120.
+              if (savedSeason !== currentSeason) return saved.totalXp ?? 0;
+              return saved.battlePassSeasonXpBase ?? 0;
+            })(),
             lastDailyRewardDate: saved.lastDailyRewardDate ?? "",
             chestPurchasesToday: saved.chestPurchasesToday ?? 0,
             lastChestPurchaseDate: saved.lastChestPurchaseDate ?? "",
@@ -1361,7 +1376,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const level = useMemo(() => getPlayerLevel(profile.totalXp), [profile.totalXp]);
   const xpProgress = useMemo(() => getXpProgress(profile.totalXp), [profile.totalXp]);
-  const battlePassTier = useMemo(() => getCurrentBattlePassTier(profile.totalXp), [profile.totalXp]);
+  // Task #123 — BP tier is computed against per-season XP (totalXp minus the
+  // snapshot taken at season start) so the bar visibly resets to 1/120 every
+  // new season while total XP keeps accumulating for player level.
+  const battlePassTier = useMemo(
+    () => getCurrentBattlePassTier(Math.max(0, (profile.totalXp ?? 0) - (profile.battlePassSeasonXpBase ?? 0))),
+    [profile.totalXp, profile.battlePassSeasonXpBase],
+  );
 
   const addOutgoingFriendRequest = useCallback((req: Omit<OutgoingRequest, "sentAt">) => {
     update((p) => ({
