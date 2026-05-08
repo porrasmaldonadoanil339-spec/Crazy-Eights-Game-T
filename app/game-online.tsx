@@ -14,6 +14,7 @@ import { Colors } from "@/constants/colors";
 import { useT } from "@/hooks/useT";
 import { t, Lang } from "@/lib/i18n";
 import { PlayingCard } from "@/components/PlayingCard";
+import { cardGlowColor, isSpecialRank } from "@/lib/cardVisuals";
 import { DealAnimation } from "@/components/DealAnimation";
 import {
   MultiGameState, Card, Suit,
@@ -30,7 +31,7 @@ import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmoteP
 import { getCurrentWeeklyEvent } from "@/lib/events";
 import { multiApplyRandomShuffle } from "@/lib/multiplayerEngine";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc } from "@/lib/eventModes";
-import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";
+import { CARD_BACKS, AVATARS, getTableDesignById, getCardDesignById } from "@/lib/storeItems";
 import { getModeById } from "@/lib/gameModes";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
 import { ChestType, ChestReward } from "@/lib/chestSystem";
@@ -46,6 +47,10 @@ function getActiveEvent(level: number) {
   if (level < 5) return null;
   return getCurrentWeeklyEvent().event;
 }
+
+// Dummy face-down card payload — PlayingCard requires a Card object even when
+// rendering the back. Fields are unused in faceDown mode.
+const DRAW_PILE_DUMMY = { id: "draw-pile", rank: "A" as const, suit: "spades" as const };
 
 interface ServerGameState {
   discardTop: Card;
@@ -806,6 +811,9 @@ export default function OnlineGameScreen() {
   const cardBack = CARD_BACKS.find(b => b.id === profile.cardBackId) ?? CARD_BACKS[0];
   const backColors = (cardBack.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];
   const backAccent = cardBack.backAccent ?? "#D4AF37";
+  const backPattern = (cardBack.backPattern ?? "diamonds") as "diamonds" | "stars" | "circles" | "crosses" | "waves" | "hexagons";
+  const cardDesign = getCardDesignById(profile.cardDesignId ?? "face_default");
+  const cardColors = cardDesign.isDefault ? undefined : (cardDesign.backColors ?? undefined) as [string, string, string] | undefined;
 
   const tableDesign = getTableDesignById(profile.tableDesignId ?? "table_casino");
   const tableBg = tableDesign.backColors?.[0] ?? "#041008";
@@ -1488,11 +1496,31 @@ export default function OnlineGameScreen() {
     setSelectedCard(null);
   }, [gameState, isOnline]);
 
+  // Draw-to-hand feedback: snap + accent glow on the draw pile when a card is
+  // pulled, mirroring the deal-flip arrival feedback for visual consistency.
+  const drawFlash = useSharedValue(0);
+  const drawScale = useSharedValue(1);
+  const drawFlashStyle = useAnimatedStyle(() => ({
+    opacity: drawFlash.value,
+    transform: [{ scale: 1 + drawFlash.value * 0.18 }],
+  }));
+  const drawScaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: drawScale.value }],
+  }));
+
   const handleDraw = useCallback(() => {
     if (!gameState || !isPlaying) return;
     lastActionTime.current = Date.now();
     playCardDraw().catch(() => {});
     cardsDrawnRef.current += 1;
+    drawScale.value = withSequence(
+      withTiming(1.10, { duration: 90, easing: Easing.out(Easing.quad) }),
+      withSpring(1, { damping: 8, stiffness: 220 }),
+    );
+    drawFlash.value = withSequence(
+      withTiming(0.9, { duration: 80 }),
+      withTiming(0, { duration: 360 }),
+    );
     if (isOnline) {
       socketRef.current?.emit("draw_card");
       setSelectedCard(null);
@@ -1598,6 +1626,8 @@ export default function OnlineGameScreen() {
               onComplete={handleDealingComplete}
               backColors={backColors}
               backAccent={backAccent}
+              backPattern={backPattern}
+              cardColors={cardColors}
               numOpponents={playerCount - 1}
             />
           </View>
@@ -1717,17 +1747,42 @@ export default function OnlineGameScreen() {
           />
           <View style={[gameStyles.tableInnerRing, { borderRadius: (tableH - 14) / 2 }]} />
           <View style={gameStyles.tableContent}>
-            {/* Draw pile */}
+            {/* Draw pile — uses PlayingCard faceDown so the deck visual matches
+                the in-hand back exactly. */}
             <BouncePressable inline onPress={handleDraw} disabled={!isPlaying} style={gameStyles.drawPileBtn}>
-              <View style={gameStyles.drawPileStack}>
+              <Animated.View style={[gameStyles.drawPileStack, drawScaleStyle]}>
+                {/* Draw flash glow — pulses with backAccent on each draw. */}
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    {
+                      position: "absolute",
+                      top: -8, left: -8, right: -8, bottom: -8,
+                      borderRadius: 14,
+                      backgroundColor: backAccent + "55",
+                      shadowColor: backAccent,
+                      shadowOpacity: 0.95,
+                      shadowRadius: 14,
+                      shadowOffset: { width: 0, height: 0 },
+                      zIndex: -1,
+                    },
+                    drawFlashStyle,
+                  ]}
+                />
                 {[2, 1, 0].map(i => (
                   <View key={i} style={[gameStyles.drawCardAbs, { top: -i * 1.5, left: i * 1.5, zIndex: 3 - i }]}>
-                    <LinearGradient colors={backColors} style={gameStyles.drawCardInner}>
-                      <Text style={[gameStyles.drawCardDot, { color: backAccent }]}>◆</Text>
-                    </LinearGradient>
+                    <PlayingCard
+                      card={DRAW_PILE_DUMMY}
+                      faceDown
+                      size="md"
+                      backColors={backColors}
+                      backAccent={backAccent}
+                      backPattern={backPattern}
+                      showEffectBadge={false}
+                    />
                   </View>
                 ))}
-              </View>
+              </Animated.View>
               {isPlaying && (
                 <View style={[gameStyles.drawLabel, { backgroundColor: gs.pendingDraw > 0 ? Colors.red : backAccent }]}>
                   <Text style={gameStyles.drawLabelText}>
@@ -1747,9 +1802,10 @@ export default function OnlineGameScreen() {
               {topCard && (
                 <DiscardBouncer
                   cardId={topCard.id}
-                  isSpecial={["8","Joker","7","2","10","J"].includes(topCard.rank)}
+                  isSpecial={isSpecialRank(topCard.rank)}
+                  glowColor={cardGlowColor(topCard)}
                 >
-                  <PlayingCard card={topCard} size="lg" />
+                  <PlayingCard card={topCard} size="lg" cardColors={cardColors} />
                 </DiscardBouncer>
               )}
             </View>
@@ -1888,6 +1944,9 @@ export default function OnlineGameScreen() {
                         isPlayable={playable}
                         isSelected={selected}
                         size="md"
+                        cardColors={cardColors}
+                        backColors={backColors}
+                        backAccent={backAccent}
                       />
                     </View>
                   );
@@ -2384,7 +2443,7 @@ const gameStyles = StyleSheet.create({
   },
   drawPileBtn: { alignItems: "center", justifyContent: "center" },
   drawPileStack: { width: 76, height: 108, position: "relative" },
-  drawCardAbs: { position: "absolute", width: 72, height: 104, borderRadius: 8, overflow: "hidden", borderWidth: 1.5, borderColor: Colors.gold + "66", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowRadius: 4, elevation: 4 },
+  drawCardAbs: { position: "absolute", width: 64, height: 92 },
   drawCardInner: { flex: 1, alignItems: "center", justifyContent: "center" },
   drawCardDot: { fontSize: 22, color: "#D4AF37", opacity: 0.55 },
   drawLabel: {

@@ -432,7 +432,7 @@ export function PlayingCard({
     ? { shadowColor: accentGlow, shadowOpacity: 0.95, shadowRadius: 14, elevation: 14 }
     : isPlayable
     ? { shadowColor: "#4ade80", shadowOpacity: 0.7, shadowRadius: 10, elevation: 10 }
-    : { shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 5, elevation: 5 };
+    : { shadowColor: "#000", shadowOpacity: 0.55, shadowRadius: 8, elevation: 8 };
 
   const inner = (
     <Animated.View style={[{ position: "relative" }, animStyle]}>
@@ -467,7 +467,7 @@ export function PlayingCard({
         />
         {/* Soft inner bottom shadow for depth */}
         <LinearGradient
-          colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.22)"]}
+          colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.14)", "rgba(0,0,0,0.28)"]}
           locations={[0, 0.55, 1]}
           pointerEvents="none"
           style={{
@@ -476,6 +476,29 @@ export function PlayingCard({
             height: Math.round(sobj.h * 0.22),
             borderBottomLeftRadius: sobj.corner,
             borderBottomRightRadius: sobj.corner,
+          }}
+        />
+        {/* Diagonal metallic sheen — thin oblique light streak across the card */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0)", "rgba(255,255,255,0.18)", "rgba(255,255,255,0)"]}
+          locations={[0.32, 0.5, 0.68]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: 0, left: 0, right: 0, bottom: 0,
+            borderRadius: sobj.corner,
+          }}
+        />
+        {/* Crisp 1px metallic edge ring */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: 0, left: 0, right: 0, bottom: 0,
+            borderRadius: sobj.corner,
+            borderWidth: 1,
+            borderColor: "rgba(255,255,255,0.18)",
           }}
         />
       </View>

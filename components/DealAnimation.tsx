@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -15,6 +14,11 @@ import { Colors } from "@/constants/colors";
 import type { Card } from "@/lib/gameEngine";
 import { playSound } from "@/lib/sounds";
 import { PlayingCard } from "@/components/PlayingCard";
+import { cardGlowColor } from "@/lib/cardVisuals";
+
+// Dummy face-down card payload — PlayingCard requires a Card object even when
+// rendering the back. The fields are unused in faceDown mode.
+const FACE_DOWN_DUMMY: Card = { id: "facedown", rank: "A", suit: "spades" };
 
 const { width: SW, height: SH } = Dimensions.get("window");
 const CARD_W = 52;
@@ -26,32 +30,27 @@ const CX = SW / 2;
 const CY = SH / 2;
 
 // ─── Card back mini render ─────────────────────────────────────────────────────
+// Delegates to PlayingCard so the back used during shuffle/deal/flip is
+// pixel-identical to the back shown in the player's hand and on the draw pile.
+type BackPattern = "diamonds" | "stars" | "circles" | "crosses" | "waves" | "hexagons";
+
 function CardBack({
-  width = CARD_W, height = CARD_H,
-  backColors, backAccent,
+  size = "sm",
+  backColors, backAccent, backPattern,
 }: {
-  width?: number; height?: number;
-  backColors: [string, string, string]; backAccent: string;
+  size?: "sm" | "md";
+  backColors: [string, string, string]; backAccent: string; backPattern?: BackPattern;
 }) {
   return (
-    <LinearGradient
-      colors={backColors}
-      style={{
-        width, height, borderRadius: 8,
-        alignItems: "center", justifyContent: "center",
-        borderWidth: 1.5, borderColor: backAccent + "44",
-      }}
-    >
-      <LinearGradient
-        colors={[backAccent + "22", "transparent"]}
-        style={{ width: width * 0.55, height: height * 0.55, borderRadius: 5,
-          borderWidth: 1, borderColor: backAccent + "33",
-          alignItems: "center", justifyContent: "center",
-        }}
-      >
-        <View style={{ width: 8, height: 8, backgroundColor: backAccent + "88", borderRadius: 2, transform: [{ rotate: "45deg" }] }} />
-      </LinearGradient>
-    </LinearGradient>
+    <PlayingCard
+      card={FACE_DOWN_DUMMY}
+      faceDown
+      size={size}
+      backColors={backColors}
+      backAccent={backAccent}
+      backPattern={backPattern}
+      showEffectBadge={false}
+    />
   );
 }
 
@@ -67,12 +66,13 @@ interface RiffleCardProps {
   onLastDone?: () => void;
   backColors: [string, string, string];
   backAccent: string;
+  backPattern?: BackPattern;
 }
 
 const HALF = 5; // cards per half
 const RIFFLE_PASSES = 2;
 
-function RiffleCard({ index, half, passIndex, totalPasses, onLastDone, backColors, backAccent }: RiffleCardProps) {
+function RiffleCard({ index, half, passIndex, totalPasses, onLastDone, backColors, backAccent, backPattern }: RiffleCardProps) {
   const x = useSharedValue(0);
   const y = useSharedValue(index * -1.5); // stacked offset
   const rotate = useSharedValue(0);
@@ -125,15 +125,15 @@ function RiffleCard({ index, half, passIndex, totalPasses, onLastDone, backColor
 
   return (
     <Animated.View style={[styles.deckCard, style]}>
-      <CardBack backColors={backColors} backAccent={backAccent} />
+      <CardBack size="sm" backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
     </Animated.View>
   );
 }
 
 function ShufflePhase({
-  backColors, backAccent, onDone
+  backColors, backAccent, backPattern, onDone
 }: {
-  backColors: [string, string, string]; backAccent: string; onDone: () => void;
+  backColors: [string, string, string]; backAccent: string; backPattern?: BackPattern; onDone: () => void;
 }) {
   return (
     <View style={styles.shuffleCenter}>
@@ -148,6 +148,7 @@ function ShufflePhase({
             totalPasses={RIFFLE_PASSES}
             backColors={backColors}
             backAccent={backAccent}
+            backPattern={backPattern}
           />
         ))
       ))}
@@ -163,6 +164,7 @@ function ShufflePhase({
             onLastDone={i === HALF - 1 && p === RIFFLE_PASSES - 1 ? onDone : undefined}
             backColors={backColors}
             backAccent={backAccent}
+            backPattern={backPattern}
           />
         ))
       ))}
@@ -171,9 +173,9 @@ function ShufflePhase({
 }
 
 // ─── Phase 2: Deal ───────────────────────────────────────────────────────────
-function DealCard({ index, totalCards, target, dealIndex, backColors, backAccent }: {
+function DealCard({ index, totalCards, target, dealIndex, backColors, backAccent, backPattern }: {
   index: number; totalCards: number; target: "player" | "ai";
-  dealIndex: number; backColors: [string, string, string]; backAccent: string;
+  dealIndex: number; backColors: [string, string, string]; backAccent: string; backPattern?: BackPattern;
 }) {
   const x = useSharedValue(0);
   const y = useSharedValue(0);
@@ -222,19 +224,23 @@ function DealCard({ index, totalCards, target, dealIndex, backColors, backAccent
 
   return (
     <Animated.View style={[styles.deckCard, style]}>
-      <CardBack backColors={backColors} backAccent={backAccent} />
+      <CardBack size="sm" backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
     </Animated.View>
   );
 }
 
 // ─── Phase 3: Flip reveal ─────────────────────────────────────────────────────
-function FlipCard({ card, index, totalCards, flipDelay, backColors, backAccent, cardColors, onLastFlipped }: {
+function FlipCard({ card, index, totalCards, flipDelay, backColors, backAccent, backPattern, cardColors, onLastFlipped }: {
   card: Card; index: number; totalCards: number; flipDelay: number;
-  backColors: [string, string, string]; backAccent: string; cardColors?: [string, string, string]; onLastFlipped?: () => void;
+  backColors: [string, string, string]; backAccent: string; backPattern?: BackPattern; cardColors?: [string, string, string]; onLastFlipped?: () => void;
 }) {
   const scaleX = useSharedValue(1);
   const [showFront, setShowFront] = useState(false);
   const liftY = useSharedValue(0);
+  // Snap (extra scale punch) + glow ring fade — fired right when the front
+  // becomes visible so the arrival of the card has tactile feedback.
+  const snap = useSharedValue(1);
+  const glowOp = useSharedValue(0);
   const didFlip = useRef(false);
 
   const N = totalCards;
@@ -257,6 +263,16 @@ function FlipCard({ card, index, totalCards, flipDelay, backColors, backAccent, 
     ));
     setTimeout(() => {
       setShowFront(true);
+      // Snap: brief overshoot then settle.
+      snap.value = withSequence(
+        withTiming(1.08, { duration: 90, easing: Easing.out(Easing.quad) }),
+        withSpring(1, { damping: 8, stiffness: 220 }),
+      );
+      // Glow ring: quick flash that fades out.
+      glowOp.value = withSequence(
+        withTiming(0.85, { duration: 80 }),
+        withTiming(0, { duration: 360 }),
+      );
       if (!didFlip.current) {
         didFlip.current = true;
         playSound("card_flip").catch(() => {});
@@ -266,8 +282,21 @@ function FlipCard({ card, index, totalCards, flipDelay, backColors, backAccent, 
   }, []);
 
   const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleX: scaleX.value }, { translateY: liftY.value }],
+    transform: [
+      { scaleX: scaleX.value * snap.value },
+      { scaleY: snap.value },
+      { translateY: liftY.value },
+    ],
   }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOp.value,
+    transform: [{ scale: 1 + glowOp.value * 0.18 }],
+  }));
+
+  // Suit/special-tinted glow on reveal; before the flip we mirror back accent
+  // so the ring matches the back chrome during the swap.
+  const glowColor = showFront ? cardGlowColor(card, "solid") : backAccent;
 
   return (
     <Animated.View
@@ -282,24 +311,43 @@ function FlipCard({ card, index, totalCards, flipDelay, backColors, backAccent, 
         animStyle,
       ]}
     >
+      {/* Snap glow ring — sits behind the card, suit/back-accent tinted. */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          {
+            position: "absolute",
+            top: -6, left: -6, right: -6, bottom: -6,
+            borderRadius: 14,
+            backgroundColor: glowColor + "55",
+            shadowColor: glowColor,
+            shadowOpacity: 0.95,
+            shadowRadius: 14,
+            shadowOffset: { width: 0, height: 0 },
+            elevation: 0,
+            zIndex: -1,
+          },
+          glowStyle,
+        ]}
+      />
       {showFront ? (
         <PlayingCard card={card} size="md" cardColors={cardColors} />
       ) : (
-        <CardBack width={FAN_CARD_W} height={FAN_CARD_H} backColors={backColors} backAccent={backAccent} />
+        <CardBack size="md" backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
       )}
     </Animated.View>
   );
 }
 
 // ─── AI placeholder at top ────────────────────────────────────────────────────
-function AiHandPlaceholder({ count, backColors, backAccent }: {
-  count: number; backColors: [string, string, string]; backAccent: string;
+function AiHandPlaceholder({ count, backColors, backAccent, backPattern }: {
+  count: number; backColors: [string, string, string]; backAccent: string; backPattern?: BackPattern;
 }) {
   const N = Math.min(count, 12);
-  const W = 40; const H = 58;
+  // Use PlayingCard "sm" intrinsic size (46x68) for consistency with the in-game back.
+  const W = 46; const H = 68;
   const OVERLAP = W * 0.6;
   const totalWidth = W + (N - 1) * (W - OVERLAP);
-  const startX = (SW - totalWidth) / 2;
 
   return (
     <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: H + 24, alignItems: "center" }}>
@@ -316,7 +364,7 @@ function AiHandPlaceholder({ count, backColors, backAccent }: {
                 transform: [{ rotate: `${t * 14}deg` }],
               }}
             >
-              <CardBack width={W} height={H} backColors={backColors} backAccent={backAccent} />
+              <CardBack size="sm" backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
             </View>
           );
         })}
@@ -326,8 +374,8 @@ function AiHandPlaceholder({ count, backColors, backAccent }: {
 }
 
 // ─── Table center: deck pile + starter card shown after flip ──────────────────
-function TableCenter({ starterCard, backColors, backAccent, cardColors, visible }: {
-  starterCard: Card | null; backColors: [string, string, string]; backAccent: string; cardColors?: [string, string, string]; visible: boolean;
+function TableCenter({ starterCard, backColors, backAccent, backPattern, cardColors, visible }: {
+  starterCard: Card | null; backColors: [string, string, string]; backAccent: string; backPattern?: BackPattern; cardColors?: [string, string, string]; visible: boolean;
 }) {
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.75);
@@ -338,7 +386,8 @@ function TableCenter({ starterCard, backColors, backAccent, cardColors, visible 
     }
   }, [visible]);
   const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
-  const DW = 44; const DH = 63;
+  // PlayingCard "sm" intrinsic size used for the deck pile.
+  const DW = 46; const DH = 68;
   return (
     <Animated.View style={[style, {
       position: "absolute", top: "33%", left: 0, right: 0,
@@ -349,7 +398,7 @@ function TableCenter({ starterCard, backColors, backAccent, cardColors, visible 
       <View style={{ position: "relative", width: DW, height: DH }}>
         {[3, 2, 1, 0].map(off => (
           <View key={off} style={{ position: "absolute", top: -off * 1.5, left: off, zIndex: 4 - off }}>
-            <CardBack width={DW} height={DH} backColors={backColors} backAccent={backAccent} />
+            <CardBack size="sm" backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
           </View>
         ))}
       </View>
@@ -364,9 +413,9 @@ function TableCenter({ starterCard, backColors, backAccent, cardColors, visible 
 }
 
 // ─── Flip phase wrapper ───────────────────────────────────────────────────────
-function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backAccent, cardColors, onDone, numOpponents }: {
+function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backAccent, backPattern, cardColors, onDone, numOpponents }: {
   playerCards: Card[]; cardsPerPlayer: number; starterCard: Card | null;
-  backColors: [string, string, string]; backAccent: string; cardColors?: [string, string, string]; onDone: () => void;
+  backColors: [string, string, string]; backAccent: string; backPattern?: BackPattern; cardColors?: [string, string, string]; onDone: () => void;
   numOpponents: number;
 }) {
   const STAGGER = 110;
@@ -400,11 +449,11 @@ function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backA
     <View style={StyleSheet.absoluteFill}>
       {aiPositions.map((posStyle, idx) => (
         <View key={idx} style={posStyle as object}>
-          <AiHandPlaceholder count={cardsPerPlayer} backColors={backColors} backAccent={backAccent} />
+          <AiHandPlaceholder count={cardsPerPlayer} backColors={backColors} backAccent={backAccent} backPattern={backPattern} />
         </View>
       ))}
       {/* Deck pile + starter card appear after last card flips */}
-      <TableCenter starterCard={starterCard} backColors={backColors} backAccent={backAccent} cardColors={cardColors} visible={tableVisible} />
+      <TableCenter starterCard={starterCard} backColors={backColors} backAccent={backAccent} backPattern={backPattern} cardColors={cardColors} visible={tableVisible} />
       {/* Fan centered at screen bottom */}
       <View style={{ position: "absolute", bottom: 24, left: 0, right: 0, height: FAN_CARD_H + 48 }}>
         {playerCards.map((card, i) => (
@@ -416,6 +465,7 @@ function FlipPhase({ playerCards, cardsPerPlayer, starterCard, backColors, backA
             flipDelay={i * STAGGER}
             backColors={backColors}
             backAccent={backAccent}
+            backPattern={backPattern}
             cardColors={cardColors}
             onLastFlipped={i === N - 1 ? handleLastFlip : undefined}
           />
@@ -432,11 +482,13 @@ export function DealAnimation({
   cardsPerPlayer, playerCards, starterCard = null, onComplete,
   backColors = ["#1E4080", "#0e2248", "#0a1832"],
   backAccent = Colors.gold,
+  backPattern,
   cardColors,
   numOpponents = 1,
 }: {
   cardsPerPlayer: number; playerCards: Card[]; starterCard?: Card | null; onComplete: () => void;
   backColors?: [string, string, string]; backAccent?: string;
+  backPattern?: BackPattern;
   cardColors?: [string, string, string];
   numOpponents?: number;
 }) {
@@ -474,6 +526,7 @@ export function DealAnimation({
         <ShufflePhase
           backColors={backColors}
           backAccent={backAccent}
+          backPattern={backPattern}
           onDone={() => setPhase("deal")}
         />
       )}
@@ -489,6 +542,7 @@ export function DealAnimation({
               dealIndex={item.dealIndex}
               backColors={backColors}
               backAccent={backAccent}
+              backPattern={backPattern}
             />
           ))}
         </View>
@@ -501,6 +555,8 @@ export function DealAnimation({
           starterCard={starterCard ?? null}
           backColors={backColors}
           backAccent={backAccent}
+          backPattern={backPattern}
+          cardColors={cardColors}
           onDone={handleFlipDone}
           numOpponents={numOpponents}
         />

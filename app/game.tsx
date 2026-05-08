@@ -20,6 +20,7 @@ import { t, Lang } from "@/lib/i18n";
 import { useGame } from "@/context/GameContext";
 import { useProfile } from "@/context/ProfileContext";
 import { PlayingCard } from "@/components/PlayingCard";
+import { cardGlowColor, isSpecialRank } from "@/lib/cardVisuals";
 import { DealAnimation } from "@/components/DealAnimation";
 import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { MatchmakingScreen } from "@/components/MatchmakingScreen";
@@ -45,6 +46,10 @@ import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/ch
 import { getEventConfig, getEventName, getEventShortName, getEventDesc, pickRandomSuit, type EventId } from "@/lib/eventModes";
 
 const { width: SW, height: SH } = Dimensions.get("window");
+
+// Dummy face-down card payload — PlayingCard requires a Card object even when
+// rendering the back. Fields are unused in faceDown mode.
+const DRAW_PILE_DUMMY = { id: "draw-pile", rank: "A" as const, suit: "spades" as const };
 
 // ─── Background Animation ──────────────────────────────────────────────────
 function AnimatedBackground() {
@@ -1363,6 +1368,18 @@ export default function GameScreen() {
   const tableBg = tableDesign.backColors?.[0] ?? "#061510";
   const tableAccent = tableDesign.backColors?.[1] ?? "#08180d";
 
+  // Draw-to-hand feedback: pulse a glow on the draw pile when the player
+  // draws a card, giving the action a tactile "snap" + back-accent flash.
+  const drawFlash = useSharedValue(0);
+  const drawFlashStyle = useAnimatedStyle(() => ({
+    opacity: drawFlash.value,
+    transform: [{ scale: 1 + drawFlash.value * 0.18 }],
+  }));
+  const drawScale = useSharedValue(1);
+  const drawScaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: drawScale.value }],
+  }));
+
   const aiThinking = useRef(false);
   const resultRecorded = useRef(false);
   const gameStartTimeRef = useRef<number>(Date.now());
@@ -1583,6 +1600,9 @@ export default function GameScreen() {
 
   const [lastPlayedCardId, setLastPlayedCardId] = useState<string | null>(null);
   const [specialFlashColor, setSpecialFlashColor] = useState<string>("rgba(255,255,255,0.2)");
+  // Suit-tinted impact glow color shown behind the discard pile when any card
+  // is played. Special cards override with their bespoke flash color.
+  const [discardGlowColor, setDiscardGlowColor] = useState<string>("rgba(255,255,255,0.25)");
   const playRippleAnim = useSharedValue(0);
   const discardBounce = useSharedValue(1);
   const discardRotate = useSharedValue(0);
@@ -1617,17 +1637,11 @@ export default function GameScreen() {
     if (gameState?.lastPlayedCard && gameState.lastPlayedCard.id !== lastPlayedCardId) {
       setLastPlayedCardId(gameState.lastPlayedCard.id);
       const card = gameState.lastPlayedCard;
-      // Special-card detection — same set the engine treats as power cards.
-      const SPECIAL_COLORS: Record<string, string> = {
-        "8": "rgba(212,175,55,0.55)",     // gold (wild / suit picker)
-        "Joker": "rgba(155,89,182,0.55)", // purple (wild / steal)
-        "7": "rgba(231,76,60,0.55)",      // red (skip)
-        "2": "rgba(46,134,222,0.55)",     // blue (+2 stack)
-        "10": "rgba(0,255,255,0.55)",     // cyan (reverse)
-        "J": "rgba(241,196,15,0.55)",     // yellow (jump)
-      };
-      const isSpecial = card.rank in SPECIAL_COLORS;
-      setSpecialFlashColor(isSpecial ? SPECIAL_COLORS[card.rank] : "rgba(255,255,255,0.2)");
+      // Color-coded feedback via shared resolver (see lib/cardVisuals).
+      const isSpecial = isSpecialRank(card.rank);
+      const glow = cardGlowColor(card);
+      setSpecialFlashColor(isSpecial ? glow : "rgba(255,255,255,0.2)");
+      setDiscardGlowColor(glow);
       playRippleAnim.value = withSequence(
         withTiming(1, { duration: 150 }),
         withTiming(0, { duration: 150 })
@@ -2392,6 +2406,15 @@ export default function GameScreen() {
     // ─────────────────────────────────────────────────────────────────────
 
     await playSound("card_draw").catch(() => {});
+    // Snap + glow flash on the draw pile to signal arrival in hand.
+    drawScale.value = withSequence(
+      withTiming(1.10, { duration: 90, easing: Easing.out(Easing.quad) }),
+      withSpring(1, { damping: 8, stiffness: 220 }),
+    );
+    drawFlash.value = withSequence(
+      withTiming(0.9, { duration: 80 }),
+      withTiming(0, { duration: 360 }),
+    );
     handleDraw();
 
     // ── Challenge: mirror — AI also draws ─────────────────────────────────
@@ -2622,18 +2645,37 @@ export default function GameScreen() {
         <View style={styles.cardsRow}>
           {/* Draw pile */}
           <BouncePressable inline onPress={handleDrawPress} disabled={!isPlayerTurn}>
-            <View style={styles.drawPile}>
+            <Animated.View style={[styles.drawPile, drawScaleStyle]}>
+              {/* Draw flash glow — pulses with backAccent on each successful draw. */}
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  {
+                    position: "absolute",
+                    top: -8, left: -8, right: -8, bottom: -8,
+                    borderRadius: 14,
+                    backgroundColor: backAccent + "55",
+                    shadowColor: backAccent,
+                    shadowOpacity: 0.95,
+                    shadowRadius: 14,
+                    shadowOffset: { width: 0, height: 0 },
+                    zIndex: -1,
+                  },
+                  drawFlashStyle,
+                ]}
+              />
               {[3,2,1,0].map(i => (
                 <View key={i} style={[styles.deckCardAbs, {
                   top: -i * 1.5, left: i * 1.5, zIndex: 4 - i,
                 }]}>
-                  <LinearGradient colors={backColors} style={styles.deckCardInner}>
-                    <View style={styles.deckPattern}>
-                      {[0,1].map(r=><View key={r} style={{flexDirection:"row",gap:3}}>
-                        {[0,1,2].map(c=><Text key={c} style={{fontSize:7,color:backAccent,opacity:0.25}}>◆</Text>)}
-                      </View>)}
-                    </View>
-                  </LinearGradient>
+                  <PlayingCard
+                    card={DRAW_PILE_DUMMY}
+                    faceDown
+                    size="md"
+                    backColors={backColors}
+                    backAccent={backAccent}
+                    backPattern={backPattern}
+                  />
                 </View>
               ))}
               {isPlayerTurn && (playableCount === 0 || gameState.pendingDraw > 0) && (
@@ -2643,7 +2685,7 @@ export default function GameScreen() {
                   </Text>
                 </LinearGradient>
               )}
-            </View>
+            </Animated.View>
           </BouncePressable>
 
           {/* VS divider */}
@@ -2657,7 +2699,12 @@ export default function GameScreen() {
           <View style={styles.discardPile}>
             <Animated.View style={[discardBounceStyle, { position: "relative" }]}>
               <Animated.View style={[
-                { position: "absolute", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.25)", zIndex: -1 },
+                {
+                  position: "absolute", borderRadius: 14, zIndex: -1,
+                  backgroundColor: discardGlowColor,
+                  shadowColor: discardGlowColor,
+                  shadowOpacity: 0.9, shadowRadius: 16, shadowOffset: { width: 0, height: 0 },
+                },
                 { top: -8, left: -8, right: -8, bottom: -8 },
                 discardGlowStyle,
                 { pointerEvents: "none" } as any,
@@ -2815,6 +2862,7 @@ export default function GameScreen() {
           onComplete={() => setDealAnimationDone(true)}
           backColors={backColors}
           backAccent={backAccent}
+          backPattern={backPattern}
           cardColors={cardColors}
         />
       )}
@@ -3071,8 +3119,8 @@ export default function GameScreen() {
   );
 }
 
-const CARD_BACK_W = 72;
-const CARD_BACK_H = 104;
+const CARD_BACK_W = 64;
+const CARD_BACK_H = 92;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#061510" },
@@ -3199,12 +3247,7 @@ const styles = StyleSheet.create({
   drawPile: { width: CARD_BACK_W + 6, height: CARD_BACK_H + 6, position: "relative" },
   deckCardAbs: {
     position: "absolute", width: CARD_BACK_W, height: CARD_BACK_H,
-    borderRadius: 10, overflow: "hidden",
-    borderWidth: 1.5, borderColor: Colors.gold + "66",
-    shadowColor: "#000", shadowOffset: { width: 2, height: 4 }, shadowRadius: 5, elevation: 5,
   },
-  deckCardInner: { flex: 1, alignItems: "center", justifyContent: "center" },
-  deckPattern: { gap: 2, alignItems: "center" },
   drawLabel: {
     position: "absolute", bottom: -20, left: 0, right: 0,
     borderRadius: 6, paddingVertical: 3, alignItems: "center",

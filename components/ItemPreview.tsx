@@ -6,6 +6,15 @@ import { Colors } from "@/constants/colors";
 import { StoreItem, localizeItem } from "@/lib/storeItems";
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { PlayingCard } from "@/components/PlayingCard";
+import type { Card } from "@/lib/gameEngine";
+
+// Dummy card used purely so PlayingCard can render its faceDown skin in store
+// previews. Fields are unused in faceDown mode.
+const PREVIEW_FACE_DOWN: Card = { id: "preview-back", rank: "A", suit: "spades" };
+// Sample face-up card shown in card_design previews — 8 of hearts is the
+// signature card of the game, so it doubles as a brand cue.
+const PREVIEW_FACE_UP: Card = { id: "preview-front", rank: "8", suit: "hearts" };
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -21,77 +30,57 @@ const RARITY_BORDER_W: Record<string, number> = {
   common: 1.5, rare: 2, epic: 2.5, event: 2.5, legendary: 3,
 };
 
-const PATTERN_SYMBOL: Record<string, string> = {
-  diamonds: "◆", stars: "★", circles: "●", crosses: "✚", waves: "〜", hexagons: "⬡",
-};
+// Both card-back and card-design previews delegate to PlayingCard so the store
+// preview is pixel-identical to what the player sees in their hand. A thin
+// rarity-tinted ring is drawn around the card to retain the rarity cue without
+// duplicating the card chrome itself.
+function PreviewFrame({ rarity, compact, children }: {
+  rarity: string; compact?: boolean; children: React.ReactNode;
+}) {
+  const ringColor = (RARITY_COLOR[rarity] ?? "#95A5A6") + "AA";
+  const ringWidth = RARITY_BORDER_W[rarity] ?? 1.5;
+  const pad = ringWidth + 4;
+  return (
+    <View style={[
+      compact ? previewStyles.cardFrameCompact : previewStyles.cardFrame,
+      { borderColor: ringColor, borderWidth: ringWidth, padding: pad },
+    ]}>
+      {children}
+    </View>
+  );
+}
 
 function CardBackPreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
-  const colors = (item.backColors?.slice(0, 2) ?? [item.previewColor, item.previewColor + "88"]) as [string, string];
-  const accent = item.backAccent ?? Colors.gold;
-  const rarity = item.rarity;
+  const backColors = (item.backColors ?? ["#1E4080", "#0e2248", "#0a1832"]) as [string, string, string];
+  const backAccent = item.backAccent ?? Colors.gold;
+  const backPattern = (item.backPattern ?? "diamonds") as
+    "diamonds" | "stars" | "circles" | "crosses" | "waves" | "hexagons";
   return (
-    <LinearGradient
-      colors={colors}
-      style={[compact ? previewStyles.cardShapeCompact : previewStyles.cardShape, {
-        borderWidth: RARITY_BORDER_W[rarity] ?? 1.5,
-        borderColor: (RARITY_COLOR[rarity] ?? "#95A5A6") + "AA",
-      }]}
-    >
-      <View style={previewStyles.backPatternWrap}>
-        {[0, 1, 2, 3].map((row) => (
-          <View key={row} style={{ flexDirection: "row", gap: 5 }}>
-            {[0, 1, 2, 3, 4].map((col) => (
-              <Text key={col} style={{ fontSize: 11, color: accent, opacity: 0.45 }}>
-                {PATTERN_SYMBOL[item.backPattern ?? "diamonds"] ?? "◆"}
-              </Text>
-            ))}
-          </View>
-        ))}
-      </View>
-      <View style={[previewStyles.backEmblem, { backgroundColor: accent + "33", borderColor: accent + "88" }]}>
-        <Text style={{ fontSize: 18, color: accent, fontWeight: "900" }}>
-          {rarity === "legendary" ? "★" : rarity === "epic" ? "⬡" : "◆"}
-        </Text>
-      </View>
-      <View style={[previewStyles.innerBorder, { borderColor: accent + "55" }]} />
-    </LinearGradient>
+    <PreviewFrame rarity={item.rarity} compact={compact}>
+      <PlayingCard
+        card={PREVIEW_FACE_DOWN}
+        faceDown
+        size={compact ? "sm" : "md"}
+        backColors={backColors}
+        backAccent={backAccent}
+        backPattern={backPattern}
+        showEffectBadge={false}
+      />
+    </PreviewFrame>
   );
 }
 
 function CardDesignPreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
-  const bg = item.backColors?.[0] ?? "#FEFDF4";
-  const tc = item.backColors?.[1] ?? "#333333";
-  const ac = item.backColors?.[2] ?? Colors.gold;
-  const rarity = item.rarity;
+  const cardColors = (item.backColors ?? undefined) as [string, string, string] | undefined;
   return (
-    <View style={[compact ? previewStyles.cardShapeCompact : previewStyles.cardShape, {
-      borderWidth: RARITY_BORDER_W[rarity] ?? 1.5,
-      borderColor: (RARITY_COLOR[rarity] ?? "#95A5A6") + "AA",
-      overflow: "hidden",
-    }]}>
-      <LinearGradient
-        colors={rarity === "legendary" ? [bg, tc + "33", ac + "22", bg] as [string, string, string, string]
-          : rarity === "epic" ? [bg, ac + "44", bg] as [string, string, string]
-          : rarity === "rare" ? [bg, ac + "18"] as [string, string]
-          : [bg, bg] as [string, string]}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
+    <PreviewFrame rarity={item.rarity} compact={compact}>
+      <PlayingCard
+        card={PREVIEW_FACE_UP}
+        size={compact ? "sm" : "md"}
+        cardColors={cardColors}
+        showEffectBadge={false}
       />
-      <View style={previewStyles.cardCornerTL}>
-        <Text style={[previewStyles.cardRank, { color: tc }]}>8</Text>
-        <Text style={[previewStyles.cardSuit, { color: rarity === "legendary" ? ac : tc }]}>♥</Text>
-      </View>
-      <View style={previewStyles.cardCenter}>
-        <View style={[previewStyles.cardCenterBadge, { backgroundColor: tc + "DD" }]}>
-          <Text style={{ fontSize: 22, color: bg, fontWeight: "900" }}>♥</Text>
-        </View>
-      </View>
-      <View style={previewStyles.cardCornerBR}>
-        <Text style={[previewStyles.cardRank, { color: tc, transform: [{ rotate: "180deg" }] }]}>8</Text>
-        <Text style={[previewStyles.cardSuit, { color: rarity === "legendary" ? ac : tc, transform: [{ rotate: "180deg" }] }]}>♥</Text>
-      </View>
-      <View style={[previewStyles.innerBorder, { borderColor: ac + "44" }]} />
-    </View>
+    </PreviewFrame>
   );
 }
 
@@ -233,6 +222,20 @@ export const previewStyles = StyleSheet.create({
   cardShapeCompact: {
     width: 56, height: 78, borderRadius: 7,
     alignItems: "center", justifyContent: "center", position: "relative",
+  },
+  // Frame around the unified PlayingCard preview — provides the rarity ring
+  // without redrawing card chrome.
+  cardFrame: {
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  },
+  cardFrameCompact: {
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
   },
   backPatternWrap: {
     ...StyleSheet.absoluteFillObject,
