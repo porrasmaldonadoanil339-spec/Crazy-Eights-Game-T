@@ -1345,7 +1345,7 @@ export default function GameScreen() {
     startNextTournamentRound, startGame, getGameResult, forceGameOver, forceAiDraw, forcePlayerWin,
     setCurrentSuit,
   } = useGame();
-  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
+  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins, addFichas, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
   const T = useT();
   const gameStateRef = useRef(gameState);
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
@@ -2112,7 +2112,8 @@ export default function GameScreen() {
       if (wasFichasRun) {
         recordFichasWin().then(({ tierJustCleared }) => {
           if (!tierJustCleared) return;
-          addCoins(tierJustCleared.fichasReward + tierJustCleared.bonusCoins);
+          addFichas(tierJustCleared.fichasReward);
+          addCoins(tierJustCleared.bonusCoins);
           if (tierJustCleared.chest) {
             const chest = tierJustCleared.chest;
             const result = addChestToInventory(chest, "win");

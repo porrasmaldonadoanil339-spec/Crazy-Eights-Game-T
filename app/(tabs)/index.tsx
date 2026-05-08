@@ -689,6 +689,42 @@ function PrimaryPlayCard({ onPress, theme, T }: { onPress: () => void; theme: an
   );
 }
 
+function EventLiveBadge({ level }: { level: number }) {
+  const { startGame } = useGame();
+  const entryStyle = useEntryAnimation({ delay: 60, fromTranslateY: 12 });
+  const slot = getCurrentWeeklyEvent();
+  const ev = slot.event;
+  const iconName = (ev.icon || "flash") as React.ComponentProps<typeof Ionicons>["name"];
+  return (
+    <Animated.View style={entryStyle}>
+      <BouncePressable
+        onPress={() => {
+          if (level < 5) return;
+          playSound("mode_select").catch(() => {});
+          startGame("classic", "normal", undefined, ev.id);
+          router.push("/game");
+        }}
+        style={styles.bpShortcut}
+        sound
+        glowColor={(ev.color || "#A855F7") + "55"}
+      >
+        <LinearGradient
+          colors={[ev.color || "#7B2FBE", (ev.color || "#A855F7") + "CC", ev.color || "#7B2FBE"]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+          style={styles.bpShortcutGrad}
+        >
+          <Ionicons name={iconName} size={20} color="#FFD700" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bpShortcutTitle}>{ev.name} · EN VIVO</Text>
+            <Text style={styles.bpShortcutSub}>Termina en {slot.daysLeft}d</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#FFD700" />
+        </LinearGradient>
+      </BouncePressable>
+    </Animated.View>
+  );
+}
+
 function ModesGridSection({
   lang, theme, fichasRemaining, onFichasPress, onModePress,
 }: {
@@ -1408,40 +1444,10 @@ export default function PlayScreen() {
         </View>
 
         {/* Active event badge — surfaces the current weekly rotation slot
-            from lib/events.ts so the home screen highlights what's "live"
-            without the player having to scroll to the events card. */}
-        {(() => {
-          const slot = getCurrentWeeklyEvent();
-          const ev = slot.event;
-          return (
-            <Animated.View style={useEntryAnimation({ delay: 60, fromTranslateY: 12 })}>
-              <BouncePressable
-                onPress={() => {
-                  if (level < 5) return;
-                  playSound("mode_select").catch(() => {});
-                  startGame("classic", "normal", undefined, ev.id);
-                  router.push("/game");
-                }}
-                style={styles.bpShortcut}
-                sound
-                glowColor={(ev.color || "#A855F7") + "55"}
-              >
-                <LinearGradient
-                  colors={[ev.color || "#7B2FBE", (ev.color || "#A855F7") + "CC", ev.color || "#7B2FBE"]}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                  style={styles.bpShortcutGrad}
-                >
-                  <Ionicons name={(ev.icon || "flash") as React.ComponentProps<typeof Ionicons>["name"]} size={20} color="#FFD700" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.bpShortcutTitle}>{ev.name} · EN VIVO</Text>
-                    <Text style={styles.bpShortcutSub}>Termina en {slot.daysLeft}d</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#FFD700" />
-                </LinearGradient>
-              </BouncePressable>
-            </Animated.View>
-          );
-        })()}
+            from lib/events.ts. Hooks are called at top-level render scope
+            (not inside an IIFE) to satisfy the rules-of-hooks. */}
+        <EventLiveBadge level={level} />
+
 
         {/* Battle Pass shortcut — minimized by default (single compact row,
             no expanded reward preview) so the new event badge above can
