@@ -213,6 +213,11 @@ export default function RankingScreen() {
 
   const openPlayerProfile = (entry: RankEntry) => {
     if (entry.isPlayer) return;
+    // Task #120 — deterministic prestige metrics derived from entry data.
+    const winRate = Math.min(92, 30 + Math.floor(entry.level * 0.5));
+    const totalGames = Math.round(entry.wins / Math.max(0.2, winRate / 100));
+    const bestStreak = 4 + Math.floor((entry.level * 7) % 22);
+    const achievementsUnlocked = Math.min(981, 30 + entry.level * 4);
     setSelectedPlayer({
       name: entry.name,
       level: entry.level,
@@ -222,7 +227,10 @@ export default function RankingScreen() {
       avatarColor: entry.avatarColor,
       photoUrl: entry.photoUrl,
       rank: entry.rank,
-      winRate: Math.min(92, 30 + Math.floor(entry.level * 0.5)),
+      winRate,
+      bestStreak,
+      achievementsUnlocked,
+      totalGames,
       requestSent: sentRequests.has(entry.name),
     });
   };

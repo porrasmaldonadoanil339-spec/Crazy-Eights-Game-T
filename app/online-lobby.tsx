@@ -111,7 +111,7 @@ function RankedSearchHero({ rank, color }: { rank: number; color: string }) {
         }, ringStyle]}
       />
       <Animated.View style={shieldStyle}>
-        <RankShield rank={rank} size={104} showGlow />
+        <RankShield rank={rank} size={104} showGlow animated />
       </Animated.View>
     </View>
   );

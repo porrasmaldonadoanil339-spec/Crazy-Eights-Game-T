@@ -26,7 +26,7 @@ function shade(hex: string, pct: number): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
-export function RankShield({ rank, size = 80, style, showGlow = true, animated = true }: RankShieldProps) {
+export function RankShield({ rank, size = 80, style, showGlow = true, animated = false }: RankShieldProps) {
   const baseColor = RANK_COLORS[rank] || "#8B7355";
   const lighter = shade(baseColor, 0.55);
   const lightest = shade(baseColor, 0.8);

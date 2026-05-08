@@ -188,6 +188,10 @@ export default function RankedScreen() {
     const wins = Math.floor(50 + seededRand(seed * 100) * 800);
     const winRate = Math.round(40 + seededRand(seed * 200) * 45);
     const alreadySent = sentFriendIds.has(item.id);
+    // Task #120 — deterministic prestige metrics derived from the same seed.
+    const totalGames = Math.round(wins / Math.max(0.2, winRate / 100));
+    const bestStreak = 3 + Math.floor(seededRand(seed * 300) * 18);
+    const achievementsUnlocked = 20 + Math.floor(seededRand(seed * 400) * 180);
     const data: PlayerProfileData = {
       name: item.name,
       level: item.level,
@@ -199,8 +203,12 @@ export default function RankedScreen() {
       titleName: rankLabel,
       rank: item.position,
       rankName: rankLabel,
+      topRankName: rankLabel,
       country: item.country,
       winRate,
+      bestStreak,
+      achievementsUnlocked,
+      totalGames,
       isFriend: false,
       requestSent: alreadySent,
     };
@@ -344,7 +352,7 @@ export default function RankedScreen() {
             />
           </View>
           <View style={styles.rankBadgeContainer}>
-            <RankShield rank={profile.rankedProfile.rank} size={92} />
+            <RankShield rank={profile.rankedProfile.rank} size={92} animated />
           </View>
         </View>
 

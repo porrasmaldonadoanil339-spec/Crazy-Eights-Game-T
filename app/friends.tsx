@@ -404,6 +404,11 @@ export default function FriendsScreen() {
   };
 
   const openProfile = (f: Friend) => {
+    // Task #120 — deterministic prestige metrics derived from friend data.
+    const winRate = Math.min(90, 35 + Math.floor(f.level * 0.6));
+    const totalGames = Math.round(f.wins / Math.max(0.2, winRate / 100));
+    const bestStreak = 3 + Math.floor((f.level * 5) % 20);
+    const achievementsUnlocked = Math.min(981, 25 + f.level * 5);
     setProfileModal({
       name: f.name,
       level: f.level,
@@ -413,6 +418,10 @@ export default function FriendsScreen() {
       avatarColor: f.avatarColor,
       photoUrl: f.photoUrl,
       titleName: f.titleName,
+      winRate,
+      bestStreak,
+      achievementsUnlocked,
+      totalGames,
       isFriend: true,
     });
   };
@@ -632,11 +641,19 @@ export default function FriendsScreen() {
     return (
       <Pressable
         style={({ pressed }) => [styles.friendRow, { backgroundColor: surfaceColor, borderColor }, pressed && { opacity: 0.85 }]}
-        onPress={() => setProfileModal({
-          name: item.name, level: item.level, wins: item.wins, score: item.wins * 10,
-          avatarIcon: item.avatarIcon, avatarColor: item.avatarColor, photoUrl: item.photoUrl,
-          isFriend: alreadyFriend, requestSent: sent,
-        })}
+        onPress={() => {
+          // Task #120 — deterministic prestige metrics for search results.
+          const winRate = Math.min(90, 35 + Math.floor(item.level * 0.6));
+          const totalGames = Math.round(item.wins / Math.max(0.2, winRate / 100));
+          const bestStreak = 3 + Math.floor((item.level * 5) % 20);
+          const achievementsUnlocked = Math.min(981, 25 + item.level * 5);
+          setProfileModal({
+            name: item.name, level: item.level, wins: item.wins, score: item.wins * 10,
+            avatarIcon: item.avatarIcon, avatarColor: item.avatarColor, photoUrl: item.photoUrl,
+            winRate, bestStreak, achievementsUnlocked, totalGames,
+            isFriend: alreadyFriend, requestSent: sent,
+          });
+        }}
       >
         <View style={styles.friendLeft}>
           <View style={styles.avatarWrap}>
