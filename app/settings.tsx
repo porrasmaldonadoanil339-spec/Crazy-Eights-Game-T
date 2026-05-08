@@ -236,6 +236,12 @@ export default function SettingsScreen() {
   // Task #104 — busy flag while the server-side shrink is running so the
   // button can show a spinner-style label and avoid duplicate taps.
   const [isShrinkingDraft, setIsShrinkingDraft] = useState(false);
+  // Task #99 — show players a "Trimming…" spinner while the server's
+  // ffmpeg endpoint is round-tripping the source clip, and surface a
+  // distinct retry-able error if that specific call fails (vs. the
+  // generic "could not load" alert used elsewhere).
+  const [isTrimmingDraft, setIsTrimmingDraft] = useState(false);
+  const [trimError, setTrimError] = useState(false);
   // Task #104 — epoch counter incremented every time the trim modal opens
   // (or closes) so an in-flight shrink whose result lands after the
   // player cancels doesn't re-open the modal with the shrunk clip.
@@ -610,10 +616,13 @@ export default function SettingsScreen() {
     // the previous source can't land on the next modal open.
     waveformRequestId.current++;
     setWaveformBars(null);
+    setTrimError(false);
+    setIsTrimmingDraft(false);
   };
 
   const saveStingerTrim = () => {
     if (!stingerDraft) return;
+    if (isTrimmingDraft) return;
     // Task #101 — server-side ffmpeg trim rejects sources over the upload
     // limit with 413, so there's no path to save an oversized clip (we
     // don't have a local trimmer). Bail out early with a clear message
@@ -633,6 +642,8 @@ export default function SettingsScreen() {
     );
     teardownDraftPreview();
     setCustomStingerBusy(true);
+    setTrimError(false);
+    setIsTrimmingDraft(true);
 
     // Task #91 — re-encode the trimmed [startMs, endMs] window into a real
     // standalone m4a file via the server's ffmpeg endpoint, then save that
@@ -648,8 +659,11 @@ export default function SettingsScreen() {
     (async () => {
       try {
         const trimmed = await trimCustomStingerToFile(draft.srcUri, draft.ext, startMs, endMs);
+        setIsTrimmingDraft(false);
         if (!trimmed) {
-          Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
+          // Task #99 — distinct inline error so the player can retry the
+          // trim call without re-opening the modal / re-recording.
+          setTrimError(true);
           return;
         }
         const savedUri = trimmed.uri;
@@ -705,6 +719,7 @@ export default function SettingsScreen() {
         setCustomStingerBackupStatus({ phase: "synced" });
       } finally {
         setCustomStingerBusy(false);
+        setIsTrimmingDraft(false);
       }
     })();
   };
@@ -1811,10 +1826,32 @@ export default function SettingsScreen() {
                     </Text>
                   </View>
 
+                  {/* Task #99 — distinct, retry-able error surface for the
+                      trim endpoint failing (vs. the generic load alert). */}
+                  {trimError && !isTrimmingDraft && (
+                    <View style={styles.trimErrorRow}>
+                      <Ionicons name="alert-circle" size={16} color="#E74C3C" />
+                      <Text style={styles.trimErrorText}>
+                        {T("logoStingerTrimFailed")
+                          || "Couldn't trim the audio. Check your connection and try again."}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={saveStingerTrim}
+                        style={styles.trimErrorAction}
+                      >
+                        <Ionicons name="refresh" size={14} color="#E74C3C" />
+                        <Text style={styles.trimErrorActionText}>
+                          {T("logoStingerTrimRetry") || "Retry"}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
                   <View style={styles.trimButtonRow}>
                     <TouchableOpacity
                       onPress={isPreviewingDraft ? stopDraftPreview : previewDraftWindow}
-                      style={[styles.customStingerBtn, { borderColor: "#4FC3F7", flex: 1 }]}
+                      disabled={isTrimmingDraft}
+                      style={[styles.customStingerBtn, { borderColor: "#4FC3F7", flex: 1, opacity: isTrimmingDraft ? 0.45 : 1 }]}
                     >
                       <Ionicons
                         name={isPreviewingDraft ? "stop-circle" : "play-circle"}
@@ -1829,7 +1866,8 @@ export default function SettingsScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={cancelStingerTrim}
-                      style={[styles.customStingerBtn, { borderColor: "#6B7A5C", flex: 1 }]}
+                      disabled={isTrimmingDraft}
+                      style={[styles.customStingerBtn, { borderColor: "#6B7A5C", flex: 1, opacity: isTrimmingDraft ? 0.45 : 1 }]}
                     >
                       <Ionicons name="close-circle" size={18} color="#6B7A5C" />
                       <Text style={[styles.customStingerBtnText, { color: "#6B7A5C" }]}>
@@ -1840,16 +1878,26 @@ export default function SettingsScreen() {
                       // Task #101 — disable Save when the source clip exceeds
                       // the server's upload limit; trim would just 413.
                       const tooBig = stingerDraft.srcSizeBytes > CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES;
+                      // Task #99 — while the server is trimming, swap the
+                      // checkmark for a spinner + "Trimming…" so players know
+                      // the app isn't frozen on a slow connection.
+                      const trimming = isTrimmingDraft;
                       const color = tooBig ? "#6B7A5C" : "#27AE60";
                       return (
                         <TouchableOpacity
                           onPress={saveStingerTrim}
-                          disabled={tooBig}
+                          disabled={tooBig || trimming}
                           style={[styles.customStingerBtn, { borderColor: color, flex: 1, backgroundColor: tooBig ? "rgba(0,0,0,0.15)" : "rgba(39,174,96,0.12)", opacity: tooBig ? 0.55 : 1 }]}
                         >
-                          <Ionicons name="checkmark-circle" size={18} color={color} />
+                          {trimming ? (
+                            <ActivityIndicator size="small" color={color} />
+                          ) : (
+                            <Ionicons name="checkmark-circle" size={18} color={color} />
+                          )}
                           <Text style={[styles.customStingerBtnText, { color }]}>
-                            {T("logoStingerTrimSave") || "Save"}
+                            {trimming
+                              ? (T("logoStingerTrimming") || "Trimming…")
+                              : (T("logoStingerTrimSave") || "Save")}
                           </Text>
                         </TouchableOpacity>
                       );
@@ -1940,6 +1988,10 @@ const styles = StyleSheet.create({
   trimWindowText: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#D4AF37" },
   trimWarnRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10, paddingHorizontal: 6, paddingVertical: 6, borderRadius: 6, backgroundColor: "rgba(230,126,34,0.12)", borderWidth: 1, borderColor: "rgba(230,126,34,0.3)" },
   trimWarnText: { fontFamily: "Nunito_600SemiBold", fontSize: 11, color: "#E67E22", flex: 1 },
+  trimErrorRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10, paddingHorizontal: 8, paddingVertical: 8, borderRadius: 6, backgroundColor: "rgba(231,76,60,0.12)", borderWidth: 1, borderColor: "rgba(231,76,60,0.35)" },
+  trimErrorText: { fontFamily: "Nunito_600SemiBold", fontSize: 11, color: "#E74C3C", flex: 1 },
+  trimErrorAction: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: "#E74C3C", backgroundColor: "rgba(231,76,60,0.18)" },
+  trimErrorActionText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#E74C3C" },
   trimWarnAction: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: "#E67E22", backgroundColor: "rgba(230,126,34,0.18)" },
   trimWarnActionText: { fontFamily: "Nunito_700Bold", fontSize: 11, color: "#E67E22" },
   trimTrack: {
