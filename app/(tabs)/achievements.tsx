@@ -1,8 +1,12 @@
 import { CoinIcon } from "@/components/CoinIcon";
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   View, Text, StyleSheet, Pressable, Platform, FlatList, Alert,
 } from "react-native";
+import Animated, {
+  FadeIn, FadeOut,
+  useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing,
+} from "react-native-reanimated";
 import {
   MAX_PLAYER_PATH_LEVEL,
   getPlayerPathProgress,
@@ -129,7 +133,7 @@ export default function AchievementsScreen() {
   };
 
   const handleClaimBP = async (tier: number, track: "free" | "premium" = "free") => {
-    await playSound("achievement");
+    await playSound("battle_pass_unlock");
     const result = claimBattlePassTier(tier, track);
     if (result === "inventory_full") {
       showToast(T("dailyChestInventoryFull"));
@@ -274,7 +278,9 @@ export default function AchievementsScreen() {
     const freeReward = getFreeReward(tier.tier);
     const isPremiumTrack = ["item","avatar","frame","effect","chest","title"].includes(tier.rewardType) || (tier.rewardType === "coins" && Number(tier.rewardValue) >= 200);
     const premiumLabel = getBPRewardLabel(tier, lang);
+    const claimableActive = canClaimFree || (canClaimPremium && isPremiumBattlePassActive);
     return (
+      <BpTierGlow color={themeGold} active={claimableActive}>
       <View
         style={[
           styles.bpBlock,
@@ -355,6 +361,7 @@ export default function AchievementsScreen() {
         </View>
         <Text style={[styles.bpTierXp, { color: themeColors.textDim, textAlign: "center", marginTop: 4 }]}>{tier.xpRequired} {xpRequiredLabel}</Text>
       </View>
+      </BpTierGlow>
     );
   }, [profile.totalXp, profile.claimedBattlePassTiers, profile.claimedBattlePassPremiumTiers, themeColors, themeGold, lang, T, claimLabel, isPremiumBattlePassActive, handleClaimBP, handleUnlockPremiumBP, xpRequiredLabel]);
 
@@ -471,17 +478,23 @@ export default function AchievementsScreen() {
               T={T}
             />
             <View style={styles.bpHeader}>
-              <View style={[styles.bpLevelBig, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "row", alignItems: "center", gap: 14 }]}>
-                <View style={[styles.bpCircleLevel, { borderColor: themeGold }]}>
-                  <Text style={[styles.bpCircleLevelNum, { color: themeGold }]}>{battlePassTier}</Text>
-                  <Text style={[styles.bpCircleLevelMax, { color: themeColors.textMuted }]}>/ {seasonTiers.length}</Text>
-                </View>
+              <View style={[styles.bpLevelBig, {
+                backgroundColor: themeColors.surface,
+                borderColor: themeGold + "66",
+                flexDirection: "row", alignItems: "center", gap: 14,
+                shadowColor: themeGold,
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.45,
+                shadowRadius: 14,
+                elevation: 8,
+              }]}>
+                <BpLevelCircle level={xpProgress.level} themeGold={themeGold} themeColors={themeColors} />
                 <View style={{ flex: 1, gap: 6 }}>
                   <Text style={[styles.bpLevelNum, { color: themeGold }]}>{levelLabel} {xpProgress.level}</Text>
-                  <View style={[styles.bpXpBar, { backgroundColor: themeColors.border }]}>
-                    <View style={[styles.bpXpFill, { width: `${xpPct * 100}%`, backgroundColor: themeGold }]} />
+                  <View style={[styles.bpXpBar, { backgroundColor: themeColors.border, overflow: "hidden" }]}>
+                    <View style={[styles.bpXpFill, { width: `${xpPct * 100}%`, backgroundColor: themeGold, shadowColor: themeGold, shadowOpacity: 0.7, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } }]} />
                   </View>
-                  <Text style={[styles.bpXpText, { color: themeColors.textMuted }]}>{xpProgress.current} / {xpProgress.needed} XP</Text>
+                  <Text style={[styles.bpXpText, { color: themeColors.textMuted }]}>{xpProgress.current} / {xpProgress.needed} XP · {T("battlePass")} {battlePassTier}/{seasonTiers.length}</Text>
                 </View>
               </View>
             </View>
@@ -774,7 +787,8 @@ function SeasonThemeCard({
   lang: Lang;
   T: (k: any) => string;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  // Task #114: start collapsed so the BP doesn't feel saturated; opens with a smooth fade.
+  const [expanded, setExpanded] = useState(false);
   const [showNext, setShowNext] = useState(false);
   // Only the first 2 exclusives per theme are actually earnable (slotted at
   // tiers 27 & 35 — see EXCLUSIVE_SLOTS in lib/battlePass.ts). Cap the
@@ -847,7 +861,11 @@ function SeasonThemeCard({
       </Pressable>
 
       {expanded && (
-        <View style={styles.stBody}>
+        <Animated.View
+          entering={FadeIn.duration(240)}
+          exiting={FadeOut.duration(160)}
+          style={styles.stBody}
+        >
           <Text style={[styles.stSectionLabel, { color: themeColors.textMuted }]}>
             {T("thisSeasonExclusives")}
           </Text>
@@ -867,13 +885,93 @@ function SeasonThemeCard({
           </Pressable>
 
           {showNext && (
-            <View style={styles.stExclusiveList}>
+            <Animated.View
+              entering={FadeIn.duration(220)}
+              exiting={FadeOut.duration(140)}
+              style={styles.stExclusiveList}
+            >
               {nextExclusives.map((e) => renderExclusive(e, true))}
-            </View>
+            </Animated.View>
           )}
-        </View>
+        </Animated.View>
       )}
     </View>
+  );
+}
+
+// Task #114: pulsing level orb that mirrors the player level — the BP "level"
+// now matches the profile level so the two stay in lockstep.
+function BpLevelCircle({ level, themeGold, themeColors }: { level: number; themeGold: string; themeColors: any }) {
+  const pulse = useSharedValue(0);
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
+      ), -1, false,
+    );
+  }, []);
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: 0.35 + pulse.value * 0.55,
+    transform: [{ scale: 1 + pulse.value * 0.12 }],
+  }));
+  return (
+    <View style={{ width: 78, height: 78, alignItems: "center", justifyContent: "center" }}>
+      <Animated.View
+        pointerEvents="none"
+        style={[{
+          position: "absolute",
+          width: 78, height: 78, borderRadius: 39,
+          borderWidth: 2, borderColor: themeGold,
+          shadowColor: themeGold,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.95,
+          shadowRadius: 18,
+        }, glowStyle]}
+      />
+      <View style={[styles.bpCircleLevel, { borderColor: themeGold, backgroundColor: themeGold + "14" }]}>
+        <Text style={[styles.bpCircleLevelNum, { color: themeGold }]}>{level}</Text>
+        <Text style={[styles.bpCircleLevelMax, { color: themeColors.textMuted }]} numberOfLines={1}>NIVEL</Text>
+      </View>
+    </View>
+  );
+}
+
+// Task #114: breathing glow wrapper for claimable tier blocks — gives the
+// "ready to unlock" rows a premium pulsing aura.
+function BpTierGlow({ children, color, active, claimedStyle }: { children: React.ReactNode; color: string; active: boolean; claimedStyle?: any }) {
+  const pulse = useSharedValue(0);
+  useEffect(() => {
+    if (active) {
+      pulse.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0, { duration: 1100, easing: Easing.inOut(Easing.sin) }),
+        ), -1, false,
+      );
+    } else {
+      pulse.value = 0;
+    }
+  }, [active]);
+  const wrapStyle = useAnimatedStyle(() => ({
+    shadowOpacity: active ? 0.35 + pulse.value * 0.45 : 0,
+    shadowRadius: active ? 8 + pulse.value * 10 : 0,
+  }));
+  return (
+    <Animated.View
+      style={[
+        {
+          shadowColor: color,
+          shadowOffset: { width: 0, height: 0 },
+          elevation: active ? 6 : 0,
+          borderRadius: 14,
+        },
+        wrapStyle,
+        claimedStyle,
+      ]}
+    >
+      {children}
+    </Animated.View>
   );
 }
 

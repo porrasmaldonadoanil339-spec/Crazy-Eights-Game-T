@@ -1635,7 +1635,7 @@ export default function PlayScreen() {
             <Ionicons name="sparkles" size={20} color="#FFD700" />
             <View style={{ flex: 1 }}>
               <Text style={styles.bpShortcutTitle}>{T("battlePassShortcut")}</Text>
-              <Text style={styles.bpShortcutSub}>Nivel BP {Math.min(90, battlePassTier)}/90</Text>
+              <Text style={styles.bpShortcutSub}>{T("level")} {level}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#FFD700" />
           </LinearGradient>
