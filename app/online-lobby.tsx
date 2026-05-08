@@ -22,6 +22,7 @@ import { CPU_PROFILES } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
 import { TipRotator, FloatingCardField } from "@/components/LiveLoader";
 import { RankShield } from "@/components/RankShield";
+import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 const ACCENT = Colors.gold;
 
@@ -35,6 +36,8 @@ interface PlayerInfo {
   rankColor: string;
   rankIcon: string;
   rankName: string;
+  avatarId?: string;
+  frameId?: string;
 }
 
 type Phase =
@@ -142,7 +145,15 @@ function PlayerSlot({ player, isSelf, delay = 0 }: { player: PlayerInfo | null; 
   return (
     <Animated.View entering={FadeInDown.delay(delay).duration(400)} style={styles.playerSlot}>
       <View style={[styles.slotAvatarWrap, { borderColor: isSelf ? ACCENT : player.avatarColor }]}>
-        {player.photoUrl ? (
+        {isSelf && (player.avatarId || player.frameId || player.photoUrl) ? (
+          <AvatarDisplay
+            avatarId={player.avatarId ?? "avatar_knight"}
+            frameId={player.frameId}
+            photoUri={player.photoUrl}
+            size={42}
+            iconSize={22}
+          />
+        ) : player.photoUrl ? (
           <Image source={{ uri: player.photoUrl }} style={styles.slotAvatarPhoto} />
         ) : (
           <Ionicons name={player.avatarIcon as any} size={22} color={isSelf ? ACCENT : player.avatarColor} />
@@ -159,15 +170,25 @@ function PlayerSlot({ player, isSelf, delay = 0 }: { player: PlayerInfo | null; 
   );
 }
 
-function PreMatchTeamCard({ players, teamName, isMyTeam }: { players: PlayerInfo[]; teamName: string; isMyTeam: boolean }) {
+function PreMatchTeamCard({ players, teamName, isMyTeam, selfIndex }: { players: PlayerInfo[]; teamName: string; isMyTeam: boolean; selfIndex?: number }) {
   const T = useT();
   return (
     <Animated.View entering={FadeInDown.duration(500)} style={[styles.teamCard, isMyTeam && styles.teamCardSelf]}>
       <Text style={[styles.teamLabel, { color: isMyTeam ? ACCENT : "#E74C3C" }]}>{teamName}</Text>
-      {players.map((p, i) => (
+      {players.map((p, i) => {
+        const isSelf = isMyTeam && i === (selfIndex ?? 0);
+        return (
         <View key={i} style={styles.preMatchSlot}>
           <View style={[styles.preMatchAvatar, { borderColor: p.avatarColor }]}>
-            {p.photoUrl ? (
+            {isSelf && (p.avatarId || p.frameId || p.photoUrl) ? (
+              <AvatarDisplay
+                avatarId={p.avatarId ?? "avatar_knight"}
+                frameId={p.frameId}
+                photoUri={p.photoUrl}
+                size={32}
+                iconSize={18}
+              />
+            ) : p.photoUrl ? (
               <Image source={{ uri: p.photoUrl }} style={{ width: 32, height: 32, borderRadius: 16 }} />
             ) : (
               <Ionicons name={p.avatarIcon as any} size={18} color={p.avatarColor} />
@@ -178,7 +199,8 @@ function PreMatchTeamCard({ players, teamName, isMyTeam }: { players: PlayerInfo
             <Text style={styles.preMatchSub}>{T("levelAbbr" as any)}{p.level} · {p.rankName}</Text>
           </View>
         </View>
-      ))}
+        );
+      })}
     </Animated.View>
   );
 }
@@ -208,6 +230,8 @@ export default function OnlineLobbyScreen() {
     rankColor: rankInfo.color,
     rankIcon: rankInfo.icon,
     rankName: rankInfo.displayName,
+    avatarId: profile.avatarId,
+    frameId: profile.selectedFrameId,
   };
 
   const [phase, setPhase] = useState<Phase>(directSearch ? "direct_search" : "select");
@@ -516,6 +540,7 @@ export default function OnlineLobbyScreen() {
             players={team1}
             teamName={T("playersCount" as any)}
             isMyTeam={myTeam === 1}
+            selfIndex={team1.findIndex(p => p.playerIndex === myPlayerIndex)}
           />
         </View>
 
@@ -821,9 +846,13 @@ export default function OnlineLobbyScreen() {
       <View style={styles.selectContent}>
         <Animated.View entering={FadeInDown.duration(500)}>
           <View style={styles.myCard}>
-            <View style={[styles.myAvatar, { borderColor: rankInfo.color }]}>
-              <Ionicons name={(profile.avatarId ?? "person") as any} size={28} color={rankInfo.color} />
-            </View>
+            <AvatarDisplay
+              avatarId={profile.avatarId ?? "avatar_knight"}
+              frameId={profile.selectedFrameId}
+              photoUri={profile.photoUri}
+              size={48}
+              iconSize={26}
+            />
             <View>
               <Text style={styles.myName}>{profile.name || T("player" as any)}</Text>
               <Text style={[styles.myRank, { color: rankInfo.color }]}>

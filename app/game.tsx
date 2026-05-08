@@ -1661,7 +1661,7 @@ export default function GameScreen() {
       }
     }
   }, [gameState?.lastPlayedCard]);
-  const [muteCpuEmotes, setMuteCpuEmotes] = useState(() => profile.muteEmotes ?? false);
+  const [muteCpuEmotes, setMuteCpuEmotes] = useState(false);
   const [showGameMenu, setShowGameMenu] = useState(false);
   const [menuCountdown, setMenuCountdown] = useState(10);
   const menuCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);

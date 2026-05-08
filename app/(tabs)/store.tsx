@@ -1480,6 +1480,12 @@ const styles = StyleSheet.create({
   emoteShopIcon: {
     width: 72, height: 72, alignItems: "center", justifyContent: "center",
   },
+  emoteShopCircle: {
+    width: 64, height: 64, borderRadius: 32,
+    borderWidth: 2, alignItems: "center", justifyContent: "center",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4, shadowRadius: 5, elevation: 5,
+  },
   emoteShopName: {
     fontFamily: "Nunito_700Bold", fontSize: 10, textAlign: "center",
     minHeight: 24, lineHeight: 12, paddingHorizontal: 2,
@@ -1506,6 +1512,33 @@ const styles = StyleSheet.create({
 });
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
+
+function MiniChest({ color, size = 44 }: { color: string; size?: number }) {
+  const w = size;
+  const h = Math.round(size * 0.86);
+  const lidH = Math.round(h * 0.36);
+  return (
+    <View style={{ width: w, height: h, borderRadius: 7, overflow: "hidden", borderWidth: 1, borderColor: color, shadowColor: color, shadowOpacity: 0.45, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 5 }}>
+      <LinearGradient
+        colors={[color + "EE", color + "AA", color + "66"]}
+        start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+        style={{ flex: 1 }}
+      >
+        <LinearGradient
+          colors={[color, color + "BB"]}
+          start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, height: lidH, borderBottomWidth: 1, borderColor: "rgba(0,0,0,0.35)" }}
+        />
+        <View style={{ position: "absolute", left: 4, top: 2, right: 4, height: 2, borderRadius: 1, backgroundColor: "rgba(255,255,255,0.55)" }} />
+        <View style={{ position: "absolute", left: 3, top: 0, bottom: 0, width: 3, backgroundColor: color + "33" }} />
+        <View style={{ position: "absolute", right: 3, top: 0, bottom: 0, width: 3, backgroundColor: color + "33" }} />
+        <View style={{ position: "absolute", top: lidH - 5, left: w / 2 - 5, width: 10, height: 10, borderRadius: 5, backgroundColor: "rgba(0,0,0,0.55)", borderWidth: 1, borderColor: color, alignItems: "center", justifyContent: "center" }}>
+          <View style={{ width: 3, height: 4, borderRadius: 1, backgroundColor: color }} />
+        </View>
+      </LinearGradient>
+    </View>
+  );
+}
 
 type ShopChestType = "common" | "rare" | "epic" | "legendary";
 
@@ -1583,7 +1616,7 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
               sound
               glowColor={COLORS[t] + "55"}
             >
-              <Ionicons name={ICONS[t]} size={28} color={COLORS[t]} />
+              <MiniChest color={COLORS[t]} />
               <Text style={[styles.chestName, { color: COLORS[t] }]}>{NAMES[t]}</Text>
               <View style={styles.chestPriceRow}>
                 <Ionicons name="diamond" size={11} color="#3498DB" />
@@ -1707,7 +1740,13 @@ const EmoteShopCard = memo(function EmoteShopCard({
       { backgroundColor: themeColors.surface, borderColor: isEquipped ? Colors.gold + "AA" : rarityColor + "66" },
     ]}>
       <View style={styles.emoteShopIcon}>
-        <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={60} />
+        <LinearGradient
+          colors={[item.previewColor + "44", item.previewColor + "0A"]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={[styles.emoteShopCircle, { borderColor: item.previewColor + "AA" }]}
+        >
+          <AnimatedEmoteIcon icon={item.preview as IoniconName} color={item.previewColor} delay={delay} size={42} />
+        </LinearGradient>
       </View>
       {owned ? (
         <View style={[styles.emoteShopStatus, {

@@ -28,6 +28,20 @@ import { CHEST_CONFIG, ChestType, ChestReward } from "@/lib/chestSystem";
 import { pickLocalized } from "@/lib/storeItems";
 import { useProfile } from "@/context/ProfileContext";
 import { t as i18nT, type Lang, type TranslationKey } from "@/lib/i18n";
+import { playSound } from "@/lib/sounds";
+
+import type { SoundEvent } from "@/lib/sounds";
+const RARITY_OPEN_SFX: Record<ChestType, SoundEvent> = {
+  common: "purchase",
+  rare: "achievement",
+  magic: "equip",
+  epic: "level_up",
+  event: "dramatic_drum",
+  fichas: "coin_earn",
+  giant: "applause",
+  legendary: "victory_fanfare",
+  supreme: "battle_pass_unlock",
+};
 
 const CHEST_NAME_KEY: Record<ChestType, TranslationKey> = {
   common: "chestNameCommon", rare: "chestNameRare",
@@ -168,6 +182,7 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
   function startOpening() {
     setPhase("opening");
     setFlashColor(rc.flashColor);
+    playSound(RARITY_OPEN_SFX[chestType] ?? "chestCommon").catch(() => {});
     shakeX.value = withTiming(0, { duration: 100 });
     shakeY.value = withTiming(0, { duration: 100 });
 
@@ -426,6 +441,21 @@ function RewardDisplay({ reward, config, chestType }: {
 }) {
   const { profile } = useProfile();
   const lang = (profile.language ?? "es") as Lang;
+  const xpPopY = useSharedValue(20);
+  const xpPopOp = useSharedValue(0);
+  const xpPopScale = useSharedValue(0.6);
+  useEffect(() => {
+    xpPopOp.value = withSequence(
+      withTiming(1, { duration: 220 }),
+      withDelay(900, withTiming(0, { duration: 400 })),
+    );
+    xpPopY.value = withTiming(-44, { duration: 1300, easing: Easing.out(Easing.quad) });
+    xpPopScale.value = withSpring(1.1, { damping: 6, stiffness: 160 });
+  }, []);
+  const xpPopStyle = useAnimatedStyle(() => ({
+    opacity: xpPopOp.value,
+    transform: [{ translateY: xpPopY.value }, { scale: xpPopScale.value }],
+  }));
   const itemRarityLabel = (rarity: string | undefined) => {
     if (rarity === "legendary") return "✦ " + i18nT("chestRarityLegendary", lang);
     if (rarity === "epic") return i18nT("chestRarityEpic", lang);
@@ -434,6 +464,10 @@ function RewardDisplay({ reward, config, chestType }: {
   };
   return (
     <View style={styles.rewardInner}>
+      <Animated.View pointerEvents="none" style={[styles.xpPopup, xpPopStyle]}>
+        <Ionicons name="flash" size={16} color="#4A9AE8" />
+        <Text style={styles.xpPopupText}>+{reward.xp} XP</Text>
+      </Animated.View>
       <Text style={[styles.rewTitle, { color: config.glowColor }]}>{i18nT("chestRewardsTitle", lang)}</Text>
 
       <View style={styles.rewardRow}>
@@ -662,6 +696,27 @@ const styles = StyleSheet.create({
     gap: 16,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
+  },
+  xpPopup: {
+    position: "absolute",
+    top: -8,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(74,154,232,0.18)",
+    borderWidth: 1,
+    borderColor: "#4A9AE8",
+    zIndex: 5,
+  },
+  xpPopupText: {
+    color: "#4A9AE8",
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 14,
+    letterSpacing: 0.5,
   },
   rewTitle: {
     fontSize: 20,

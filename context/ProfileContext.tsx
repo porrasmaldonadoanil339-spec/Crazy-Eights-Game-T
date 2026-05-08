@@ -808,6 +808,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return success;
   }, [update]);
 
+  // Daily SHOP free cosmetic (rotating item) — independent of the daily LOGIN
+  // reward below (claimDailyReward / lastDailyRewardDate). Both can be claimed
+  // on the same day; they use separate state keys and separate UI surfaces.
   const claimDailyShopFree = useCallback((itemId: string): boolean => {
     let success = false;
     update((p) => {
@@ -1097,6 +1100,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return { ok: unlocked, queuedChests, skippedChests };
   }, [profile.premiumBattlePassSeasons, profile.fichas, update]);
 
+  // Daily LOGIN reward (coins / XP / chest) — independent of the daily SHOP
+  // free gift above. Tracked under lastDailyRewardDate; surfaces in the home
+  // DailyRewardModal, not in the store.
   const claimDailyReward = useCallback((): { reward: DailyReward; queued: boolean } | null => {
     const today = new Date().toDateString();
     if (profile.lastDailyRewardDate === today) return null;

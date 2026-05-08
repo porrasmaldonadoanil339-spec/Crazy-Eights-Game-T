@@ -358,13 +358,35 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFul
       <ModalBackdrop intensity={32} dimOpacity={0.6} style={styles.dailyOverlay}>
         <Animated.View style={[styles.dailyModal, animStyle]}>
           <LinearGradient colors={["#1a1200", "#2a1f00"]} style={styles.dailyGrad}>
-            <Text style={styles.dailyTitle}>{T("dailyReward")}</Text>
+            <View style={{ alignItems: "center", gap: 2 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: mysteryColor + "22", borderWidth: 1, borderColor: mysteryColor + "55" }}>
+                <Ionicons name="log-in-outline" size={11} color={mysteryColor} />
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 10, color: mysteryColor, letterSpacing: 1.4 }}>LOGIN</Text>
+              </View>
+              <Text style={styles.dailyTitle}>{T("dailyReward")}</Text>
+            </View>
             <Animated.View style={[styles.dailyIconWrap, { borderColor: mysteryColor + "AA", backgroundColor: mysteryColor + "1A", borderWidth: 3 }, chestStyle]}>
               <Ionicons name="gift" size={56} color={mysteryColor} />
               <View style={{ position: "absolute", bottom: -6, right: -6, backgroundColor: mysteryColor, borderRadius: 14, width: 26, height: 26, alignItems: "center", justifyContent: "center" }}>
                 <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#000" }}>?</Text>
               </View>
             </Animated.View>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: -4 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: "#F1C40F22", borderWidth: 1, borderColor: "#F1C40F55" }}>
+                <CoinIcon size={12} color="#F1C40F" />
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#F1C40F" }}>+{reward.coins}</Text>
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: "#4A9AE822", borderWidth: 1, borderColor: "#4A9AE855" }}>
+                <Ionicons name="flash" size={12} color="#4A9AE8" />
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#4A9AE8" }}>+{reward.xp} XP</Text>
+              </View>
+              {reward.chestType && (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: (CHEST_COLORS[reward.chestType] ?? mysteryColor) + "22", borderWidth: 1, borderColor: (CHEST_COLORS[reward.chestType] ?? mysteryColor) + "66" }}>
+                  <Ionicons name="cube" size={12} color={CHEST_COLORS[reward.chestType] ?? mysteryColor} />
+                  <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: CHEST_COLORS[reward.chestType] ?? mysteryColor, textTransform: "uppercase" }}>{reward.chestType}</Text>
+                </View>
+              )}
+            </View>
             <Text style={[styles.dailyLabel, { color: mysteryColor, fontSize: 15, textAlign: "center", paddingHorizontal: 12 }]}>
               {blocked
                 ? T("chestDailyBlockedAlert" as any)

@@ -6,7 +6,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { playSound } from "@/lib/sounds";
 import { useProfile } from "@/context/ProfileContext";
-import { emoteLabel } from "@/lib/achTranslations";
 
 export interface Emote {
   id: string;
@@ -33,7 +32,7 @@ interface EmoteBubbleProps {
   muted?: boolean;
 }
 
-export function EmoteBubble({ emote, side, lang = "es", muted = false }: EmoteBubbleProps) {
+export function EmoteBubble({ emote, side, muted = false }: EmoteBubbleProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.7)).current;
@@ -84,21 +83,20 @@ export function EmoteBubble({ emote, side, lang = "es", muted = false }: EmoteBu
 
   if (!emote || muted) return null;
 
-  const label = emoteLabel(emote.id, lang);
   const rotate = iconRot.interpolate({ inputRange: [-1, 1], outputRange: ["-15deg", "15deg"] });
 
   return (
     <Animated.View
       style={[
         styles.bubble,
+        { borderColor: emote.color + "AA", backgroundColor: emote.color + "1A" },
         side === "player" ? styles.bubblePlayer : styles.bubbleCpu,
         { opacity, transform: [{ translateY }, { scale }] },
       ]}
     >
       <Animated.View style={{ transform: [{ scale: iconScale }, { rotate }] }}>
-        <Ionicons name={emote.icon} size={18} color={emote.color} />
+        <Ionicons name={emote.icon} size={28} color={emote.color} />
       </Animated.View>
-      <Text style={[styles.bubbleText, { color: emote.color }]}>{label}</Text>
     </Animated.View>
   );
 }
@@ -240,10 +238,11 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_700Bold", fontSize: 10, color: Colors.text, textAlign: "center",
   },
   bubble: {
-    position: "absolute", flexDirection: "row", alignItems: "center", gap: 5,
-    backgroundColor: Colors.surface + "f0",
-    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14,
-    borderWidth: 1, borderColor: Colors.border,
+    position: "absolute", alignItems: "center", justifyContent: "center",
+    width: 52, height: 52, borderRadius: 26,
+    borderWidth: 2,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5, shadowRadius: 6, elevation: 6,
     zIndex: 100,
   },
   bubblePlayer: { bottom: 84, right: 8 },

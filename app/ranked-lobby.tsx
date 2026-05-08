@@ -156,10 +156,22 @@ export default function RankedLobbyScreen() {
       return (
         <Animated.View key={idx} entering={FadeIn.duration(300)} style={styles.playerCard}>
           <LinearGradient colors={[slot.avatarColor + "22", slot.avatarColor + "08"]} style={StyleSheet.absoluteFill} />
-          <View style={[styles.playerAvatar, { backgroundColor: slot.avatarColor + "33", borderColor: slot.avatarColor }]}>
-            <Ionicons name={slot.avatarIcon as any} size={22} color={slot.avatarColor} />
-            {slot.isMe && <View style={styles.meTag}><Text style={styles.meTxt}>TÚ</Text></View>}
-          </View>
+          {slot.isMe ? (
+            <View style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
+              <AvatarDisplay
+                avatarId={profile.avatarId ?? "avatar_knight"}
+                frameId={profile.selectedFrameId}
+                photoUri={profile.photoUri || undefined}
+                size={44}
+                iconSize={22}
+              />
+              <View style={styles.meTag}><Text style={styles.meTxt}>TÚ</Text></View>
+            </View>
+          ) : (
+            <View style={[styles.playerAvatar, { backgroundColor: slot.avatarColor + "33", borderColor: slot.avatarColor }]}>
+              <Ionicons name={slot.avatarIcon as any} size={22} color={slot.avatarColor} />
+            </View>
+          )}
           <Text style={styles.playerName} numberOfLines={1}>{slot.name}</Text>
           <Text style={styles.playerLevel}>Nv. {slot.level} · {slot.winRate}%WR</Text>
           {!slot.isMe && (

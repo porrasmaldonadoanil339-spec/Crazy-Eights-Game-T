@@ -1,5 +1,15 @@
 import { STORE_ITEMS, StoreItem } from "@/lib/storeItems";
 
+/**
+ * Daily Shop free gift = a rotating cosmetic item, distinct from the daily
+ * LOGIN reward (coins / chests / XP) which lives in lib/dailyRewards.ts and
+ * is claimed via ProfileContext.claimDailyReward + lastDailyRewardDate.
+ *
+ * The store free gift is claimed via ProfileContext.claimDailyShopFree and
+ * is persisted under lastDailyShopFreeDate. The two flows never share state
+ * keys nor claim timers, so a player can claim both on the same day.
+ */
+
 const RARITY_PRICE_MULT: Record<string, number> = {
   common: 3, rare: 5, epic: 8, legendary: 15,
 };
