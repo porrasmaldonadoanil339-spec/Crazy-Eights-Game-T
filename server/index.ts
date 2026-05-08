@@ -53,8 +53,17 @@ function setupCors(app: express.Application) {
 }
 
 function setupBodyParsing(app: express.Application) {
+  // Task #104 — raise the global JSON limit to 40 MB so the stinger
+  // trim/shrink/backup routes (which carry base64-encoded audio of up to
+  // ~28 MB raw / ~37 MB on the wire) aren't rejected by the parser
+  // before reaching their route-level handlers. The default 100 KB cap
+  // was previously enough only because trim/backup payloads happened to
+  // be tiny; the new shrink endpoint accepts much larger sources. The
+  // route-level express.json calls in server/auth.ts still set their own
+  // (equal or smaller) limits as a defense in depth.
   app.use(
     express.json({
+      limit: "40mb",
       verify: (req, _res, buf) => {
         req.rawBody = buf;
       },
