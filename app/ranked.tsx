@@ -209,6 +209,7 @@ export default function RankedScreen() {
       winRate: prestige.winRate,
       bestStreak: prestige.bestStreak,
       achievementsUnlocked: prestige.achievementsUnlocked,
+      titlesUnlocked: prestige.titlesUnlocked,
       totalGames: prestige.totalGames,
       isFriend: false,
       requestSent: alreadySent,

@@ -14,6 +14,7 @@ export interface PrestigeFields {
   totalGames: number;
   bestStreak: number;
   achievementsUnlocked: number;
+  titlesUnlocked: number;
   rankName: string;
   topRankName: string;
 }
@@ -42,6 +43,7 @@ export function buildPrestigeFields(src: PrestigeSourceFields, lang: string = "e
   const totalGames = Math.max(src.wins, Math.round(src.wins / Math.max(0.2, winRate / 100)));
   const bestStreak = 3 + Math.floor(r2 * 22);
   const achievementsUnlocked = Math.min(981, 25 + src.level * 4 + Math.floor(r1 * 60));
+  const titlesUnlocked = Math.min(150, 2 + Math.floor(src.level / 3) + Math.floor(r2 * 8));
 
   const rank = src.rank ?? 0;
   const division = src.division ?? 0;
@@ -65,6 +67,7 @@ export function buildPrestigeFields(src: PrestigeSourceFields, lang: string = "e
     totalGames,
     bestStreak,
     achievementsUnlocked,
+    titlesUnlocked,
     rankName,
     topRankName: topInfo.displayName,
   };

@@ -232,6 +232,7 @@ export default function RankingScreen() {
       winRate: prestige.winRate,
       bestStreak: prestige.bestStreak,
       achievementsUnlocked: prestige.achievementsUnlocked,
+      titlesUnlocked: prestige.titlesUnlocked,
       totalGames: prestige.totalGames,
       requestSent: sentRequests.has(entry.name),
     });

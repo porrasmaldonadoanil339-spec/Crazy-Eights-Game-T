@@ -423,6 +423,7 @@ export default function FriendsScreen() {
       winRate: prestige.winRate,
       bestStreak: prestige.bestStreak,
       achievementsUnlocked: prestige.achievementsUnlocked,
+      titlesUnlocked: prestige.titlesUnlocked,
       totalGames: prestige.totalGames,
       isFriend: true,
     });
@@ -653,7 +654,7 @@ export default function FriendsScreen() {
             avatarIcon: item.avatarIcon, avatarColor: item.avatarColor, photoUrl: item.photoUrl,
             rankName: prestige.rankName, topRankName: prestige.topRankName,
             winRate: prestige.winRate, bestStreak: prestige.bestStreak,
-            achievementsUnlocked: prestige.achievementsUnlocked, totalGames: prestige.totalGames,
+            achievementsUnlocked: prestige.achievementsUnlocked, titlesUnlocked: prestige.titlesUnlocked, totalGames: prestige.totalGames,
             isFriend: alreadyFriend, requestSent: sent,
           });
         }}

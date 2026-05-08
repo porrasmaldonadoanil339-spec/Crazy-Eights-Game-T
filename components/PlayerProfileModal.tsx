@@ -27,6 +27,7 @@ export interface PlayerProfileData {
   bestStreak?: number;
   topRankName?: string;
   achievementsUnlocked?: number;
+  titlesUnlocked?: number;
   totalGames?: number;
 }
 
@@ -138,30 +139,41 @@ export function PlayerProfileModal({ visible, player, onClose, onAddFriend, onIn
             </View>
 
             {/* Prestige extras — Task #120 */}
-            {(player.bestStreak !== undefined || player.topRankName || player.achievementsUnlocked !== undefined) && (
-              <View style={[styles.statsGrid, { marginTop: 8 }]}>
-                <View style={styles.statBox}>
-                  <LinearGradient colors={["#2a1a1a", "#1f0d0d"]} style={styles.statGrad}>
-                    <Ionicons name="flame" size={18} color="#E74C3C" />
-                    <Text style={styles.statValue}>{player.bestStreak ?? 0}</Text>
-                    <Text style={styles.statLabel}>MEJOR RACHA</Text>
-                  </LinearGradient>
+            {(player.bestStreak !== undefined || player.topRankName || player.achievementsUnlocked !== undefined || player.titlesUnlocked !== undefined) && (
+              <>
+                <View style={[styles.statsGrid, { marginTop: 8 }]}>
+                  <View style={styles.statBox}>
+                    <LinearGradient colors={["#2a1a1a", "#1f0d0d"]} style={styles.statGrad}>
+                      <Ionicons name="flame" size={18} color="#E74C3C" />
+                      <Text style={styles.statValue}>{player.bestStreak ?? 0}</Text>
+                      <Text style={styles.statLabel}>MEJOR RACHA</Text>
+                    </LinearGradient>
+                  </View>
+                  <View style={styles.statBox}>
+                    <LinearGradient colors={["#1a1a2f", "#0d0d1f"]} style={styles.statGrad}>
+                      <Ionicons name="shield" size={18} color={Colors.gold} />
+                      <Text style={styles.statValue} numberOfLines={1}>{player.topRankName ?? player.rankName ?? "—"}</Text>
+                      <Text style={styles.statLabel}>MEJOR RANGO</Text>
+                    </LinearGradient>
+                  </View>
+                  <View style={styles.statBox}>
+                    <LinearGradient colors={["#2a1a2f", "#1f0d1f"]} style={styles.statGrad}>
+                      <Ionicons name="medal" size={18} color="#9B59B6" />
+                      <Text style={styles.statValue}>{player.achievementsUnlocked ?? 0}</Text>
+                      <Text style={styles.statLabel}>INSIGNIAS</Text>
+                    </LinearGradient>
+                  </View>
                 </View>
-                <View style={styles.statBox}>
-                  <LinearGradient colors={["#1a1a2f", "#0d0d1f"]} style={styles.statGrad}>
-                    <Ionicons name="ribbon" size={18} color={Colors.gold} />
-                    <Text style={styles.statValue} numberOfLines={1}>{player.topRankName ?? player.rankName ?? "—"}</Text>
-                    <Text style={styles.statLabel}>MEJOR RANGO</Text>
-                  </LinearGradient>
+                <View style={[styles.statsGrid, { marginTop: 8 }]}>
+                  <View style={styles.statBox}>
+                    <LinearGradient colors={["#2a2a1a", "#1f1f0d"]} style={styles.statGrad}>
+                      <Ionicons name="ribbon" size={18} color={Colors.gold} />
+                      <Text style={styles.statValue}>{player.titlesUnlocked ?? 0}</Text>
+                      <Text style={styles.statLabel}>TÍTULOS</Text>
+                    </LinearGradient>
+                  </View>
                 </View>
-                <View style={styles.statBox}>
-                  <LinearGradient colors={["#2a1a2f", "#1f0d1f"]} style={styles.statGrad}>
-                    <Ionicons name="medal" size={18} color="#9B59B6" />
-                    <Text style={styles.statValue}>{player.achievementsUnlocked ?? 0}</Text>
-                    <Text style={styles.statLabel}>INSIGNIAS</Text>
-                  </LinearGradient>
-                </View>
-              </View>
+              </>
             )}
 
             {/* XP bar */}
