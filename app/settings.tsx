@@ -1650,6 +1650,28 @@ export default function SettingsScreen() {
                       </View>
                       {isSelected && <Ionicons name="checkmark-circle" size={20} color="#D4AF37" />}
                     </Pressable>
+                    {/* Task #107 — show which slice of the original source the
+                        saved custom intro currently corresponds to, so players
+                        know whether to nudge the trim window left or right
+                        next time. Hidden when no source memo exists (e.g.
+                        fresh install before any Save). */}
+                    {hasCustom && stingerSourceMemo && (() => {
+                      const fmt = (ms: number) => (Math.max(0, ms) / 1000).toFixed(1);
+                      const startStr = fmt(stingerSourceMemo.startMs);
+                      const endStr = fmt(stingerSourceMemo.endMs);
+                      const durStr = fmt(stingerSourceMemo.durationMs);
+                      const tpl = T("logoStingerTrimmedSliceHint") || "Trimmed {start}s–{end}s of {duration}s";
+                      const label = tpl
+                        .replace("{start}", startStr)
+                        .replace("{end}", endStr)
+                        .replace("{duration}", durStr);
+                      return (
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                          <Ionicons name="cut-outline" size={13} color="#F1C40F" />
+                          <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 11, color: "#F1C40F" }}>{label}</Text>
+                        </View>
+                      );
+                    })()}
                     {hasCustom && (() => {
                       const status = customStingerBackupStatus;
                       // Task #97 — pick badge copy + tap-retry affordance based
