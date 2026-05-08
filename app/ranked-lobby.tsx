@@ -137,8 +137,12 @@ export default function RankedLobbyScreen() {
     startSearchMusic().catch(() => {});
     // Pick the rivals up front so the "found" screen shows the same faces the
     // player will see at the table. Indices flow to /game-online via params.
-    const cpuRivalsNeeded = Math.max(0, 3 - filledSlots);
-    const { rivals, indices } = pickRivalsWithIndices(cpuRivalsNeeded, level || 1);
+    // Always pick 3 (game seats are 1 player + 3 opponents). Invited friends
+    // are simulated and currently surface in-game as CPUs (see follow-up
+    // task #131); generating 3 CPU rivals always keeps the rival count in
+    // game-online aligned with `count: "4"` so the rivalIndices fast-path is
+    // taken in every ranked start.
+    const { rivals, indices } = pickRivalsWithIndices(3, level || 1);
     setMatchRivals(rivals);
     setMatchRivalIndices(indices);
     let progress = 0;

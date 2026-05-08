@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect, memo } from "react";
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image, ActivityIndicator, Alert,
+  View, Text, StyleSheet, Pressable, ScrollView, Platform, useWindowDimensions, Image, ActivityIndicator, Alert, AppState,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -887,6 +887,9 @@ export default function OnlineGameScreen() {
   const [countdown, setCountdown] = useState(3);
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  // Task #125 — guard so a single match can only register one abandono no
+  // matter how many paths trip it (exit modal, app background, disconnect).
+  const rankedAbandonRecordedRef = useRef(false);
   const [disconnectedPlayerMsg, setDisconnectedPlayerMsg] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<"connected" | "reconnecting" | "reconnected">("connected");
 
@@ -936,6 +939,44 @@ export default function OnlineGameScreen() {
 
   // Game state
   const [gameState, setGameState] = useState<MultiGameState | null>(null);
+
+  // Task #125 — abandono ranked also fires when the player backgrounds /
+  // kills the app or loses connection mid-match. Mirrors the exit-modal
+  // path: -1 star, counts as a loss, escalates the matchmaking cooldown.
+  // Single-fire per match via rankedAbandonRecordedRef.
+  const recordRankedAbandonRef = useRef(recordRankedAbandon);
+  useEffect(() => { recordRankedAbandonRef.current = recordRankedAbandon; }, [recordRankedAbandon]);
+  useEffect(() => {
+    if (modeParam !== "ranked") return;
+    const tryRecordAbandon = () => {
+      if (rankedAbandonRecordedRef.current) return;
+      const inProgress = gameState
+        && (gameState.phase === "playing" || gameState.phase === "choosing_suit")
+        && !rivalAbandoned
+        && lobbyPhase === "game";
+      if (!inProgress) return;
+      rankedAbandonRecordedRef.current = true;
+      try { recordRankedAbandonRef.current(); } catch {}
+      // Mark game as resolved so reopening the app doesn't double-count.
+      setRivalAbandoned(true);
+    };
+    const sub = AppState.addEventListener("change", (next) => {
+      if (next === "background" || next === "inactive") tryRecordAbandon();
+    });
+    let socket: ReturnType<typeof getSocket> | null = null;
+    if (isOnline) {
+      try {
+        socket = getSocket();
+        socket.on("disconnect", tryRecordAbandon);
+      } catch {}
+    }
+    return () => {
+      sub.remove();
+      if (socket) {
+        try { socket.off("disconnect", tryRecordAbandon); } catch {}
+      }
+    };
+  }, [modeParam, gameState, lobbyPhase, rivalAbandoned, isOnline]);
   // Daily-challenge counters scoped to the local player's actions only.
   // These mirror `cardsPlayedThisGame` / `eightsPlayedThisGame` from the
   // single-player session in context/GameContext.tsx.
@@ -2398,7 +2439,8 @@ export default function OnlineGameScreen() {
                     && (gameState.phase === "playing" || gameState.phase === "choosing_suit")
                     && !rivalAbandoned
                     && lobbyPhase === "game";
-                  if (modeParam === "ranked" && inProgress) {
+                  if (modeParam === "ranked" && inProgress && !rankedAbandonRecordedRef.current) {
+                    rankedAbandonRecordedRef.current = true;
                     const r = recordRankedAbandon();
                     if (r.cooldownMs > 0) {
                       const mins = Math.round(r.cooldownMs / 60000);

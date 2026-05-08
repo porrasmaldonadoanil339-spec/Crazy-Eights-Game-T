@@ -268,10 +268,19 @@ export function pickRivals(
     // can succeed without falling back to undeduped rivals.
     _sessionUsedAvatars.clear();
   }
-  // Stash indices alongside the results for callers that want to round-trip
-  // the exact same profiles into another screen (see pickRivalsWithIndices).
-  (results as any).__indices = resultIndices;
+  // Cache the parallel index list keyed by the result array so the
+  // pickRivalsWithIndices wrapper can recover it without typing escapes.
+  _lastBatchIndices.set(results, resultIndices);
   return results;
+}
+
+// Map result-array → its parallel index list. WeakMap so GC reclaims entries
+// once the caller drops the result reference; no need for manual cleanup.
+const _lastBatchIndices = new WeakMap<RivalProfile[], number[]>();
+
+export interface RivalPickResult {
+  rivals: RivalProfile[];
+  indices: number[];
 }
 
 // Variant that returns parallel arrays of rivals + indices so a caller can
@@ -282,9 +291,9 @@ export function pickRivalsWithIndices(
   n: number,
   playerLevel: number,
   excludeIndices?: Set<number>,
-): { rivals: RivalProfile[]; indices: number[] } {
+): RivalPickResult {
   const rivals = pickRivals(n, playerLevel, excludeIndices);
-  const indices = ((rivals as any).__indices as number[] | undefined) ?? [];
+  const indices = _lastBatchIndices.get(rivals) ?? [];
   return { rivals, indices };
 }
 

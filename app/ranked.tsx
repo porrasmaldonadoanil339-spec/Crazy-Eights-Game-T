@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import {
   View, Text, StyleSheet, Pressable, Platform, Dimensions, Modal, FlatList, ActivityIndicator, Image,
 } from "react-native";
@@ -52,7 +52,25 @@ const COUNTRIES = [
 // component (see RankedScreen) so reopening the tab yields fresh movement
 // without requiring a full reload — and HMR doesn't pin a stale value.
 
-function generatePlayer(index: number, sessionEpoch: number) {
+interface LeaderboardEntry {
+  id: string;
+  name: string;
+  avatarIcon: string;
+  avatarColor: string;
+  photoUrl?: string;
+  country: { code: string; name: string };
+  rank: number;
+  division: number;
+  stars: number;
+  level: number;
+  position: number;
+  isMe: boolean;
+  drift: number;
+  myAvatarId?: string;
+  myFrameId?: string;
+}
+
+function generatePlayer(index: number, sessionEpoch: number): LeaderboardEntry {
   // Mixing the epoch into the seed shifts the score deltas (and therefore
   // the final position) between sessions while keeping name/avatar stable.
   const seed = index + 12345;
@@ -110,15 +128,7 @@ function generatePlayer(index: number, sessionEpoch: number) {
     level,
     position: index + 1,
     isMe: false,
-    __drift: drift,
-  } as ReturnType<typeof _playerShape>;
-}
-// Phantom shape helper so TypeScript infers the __drift field above.
-function _playerShape() {
-  return {
-    id: "", name: "", avatarIcon: "", avatarColor: "", photoUrl: undefined as string | undefined,
-    country: { code: "", name: "" }, rank: 0, division: 0, stars: 0, level: 0,
-    position: 0, isMe: false as boolean, __drift: 0,
+    drift,
   };
 }
 
@@ -139,10 +149,26 @@ export default function RankedScreen() {
   
   const [visibleCount, setVisibleCount] = useState(50);
   const totalPlayers = 10000;
-  // Per-mount drift epoch: each time the screen opens, the leaderboard
-  // shuffles slightly (Free Fire-style). Captured once per mount so scrolling
-  // doesn't reorder rows mid-session.
-  const [sessionEpoch] = useState(() => Math.floor(Date.now() / 90000));
+  // Per-mount drift epoch + in-session tick: the leaderboard reshuffles
+  // slightly when the screen opens AND continues to drift over time while
+  // it's open (Free Fire-style "live" feel). The tick advances every 60s
+  // and also bumps when the player's own ranked stats change (post-match).
+  const [sessionEpoch, setSessionEpoch] = useState(() => Math.floor(Date.now() / 90000));
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setSessionEpoch(prev => prev + 1);
+    }, 60000);
+    return () => clearInterval(iv);
+  }, []);
+  // Bump epoch after the player completes a match so neighbors visibly shift.
+  const lastRankSig = React.useRef<string>("");
+  useEffect(() => {
+    const sig = `${profile.rankedProfile.rank}.${profile.rankedProfile.division}.${profile.rankedProfile.stars}.${profile.rankedProfile.totalWins}.${profile.rankedProfile.totalLosses}`;
+    if (lastRankSig.current && lastRankSig.current !== sig) {
+      setSessionEpoch(prev => prev + 1);
+    }
+    lastRankSig.current = sig;
+  }, [profile.rankedProfile.rank, profile.rankedProfile.division, profile.rankedProfile.stars, profile.rankedProfile.totalWins, profile.rankedProfile.totalLosses]);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const botPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -159,10 +185,11 @@ export default function RankedScreen() {
 
     // Sort highest score first so División 1 appears above División 5,
     // and within the same division more stars ranks higher. Per-epoch drift
-    // is added so neighbors gently swap places between sessions.
+    // is added so neighbors gently swap places between sessions and over
+    // time within the open session.
     players.sort((a, b) =>
-      (rankScore(b.rank, b.division, b.stars) + ((b as any).__drift ?? 0)) -
-      (rankScore(a.rank, a.division, a.stars) + ((a as any).__drift ?? 0))
+      (rankScore(b.rank, b.division, b.stars) + b.drift) -
+      (rankScore(a.rank, a.division, a.stars) + a.drift)
     );
 
     // Re-assign sequential positions after sorting
@@ -183,9 +210,11 @@ export default function RankedScreen() {
         level: level ?? 1,
         position: MY_POSITION + 1,
         isMe: true,
+        drift: 0,
         // Real equipped avatar/frame so the row uses AvatarDisplay (matches the
         // top "Mi rango" card) instead of a generic person silhouette.
-        ...({ myAvatarId: profile.avatarId, myFrameId: profile.selectedFrameId } as any),
+        myAvatarId: profile.avatarId,
+        myFrameId: profile.selectedFrameId,
       };
     }
     return players;
