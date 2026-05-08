@@ -29,10 +29,10 @@ import {
   Nunito_800ExtraBold as Nunito_800ExtraBold_Asset,
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
-import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded, playOchoLocosVoice, setLogoStingerId, setCustomStingerUri, setCustomStingerTrim, DEFAULT_LOGO_STINGER_ID } from "@/lib/audioManager";
+import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded, playBiyisStinger, setLogoStingerId, setCustomStingerUri, setCustomStingerTrim, DEFAULT_LOGO_STINGER_ID } from "@/lib/audioManager";
 import { resolveCustomStingerUri, tryAutoUploadCustomStinger, isPermanentUploadError } from "@/lib/customStingerCache";
 import NetInfo from "@react-native-community/netinfo";
-import { markSplashComplete } from "@/lib/splashState";
+import { markSplashComplete, markStudioPhaseStart, markStudioPhaseEnd, isStudioPhaseActive, onStudioPhaseEnd } from "@/lib/splashState";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useProfile } from "@/context/ProfileContext";
 import { useT } from "@/hooks/useT";
@@ -45,6 +45,14 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 SplashScreen.preventAutoHideAsync();
 
 let splashShownThisSession = false;
+
+// Task #119 — Open the studio-phase gate at module load so the AudioManager
+// (which mounts before the splash inside RootLayoutNav) knows to defer the
+// menu music start until the cinematic logo begins fading out. Skipped on
+// hot-reloads where the splash has already played in-session.
+if (!splashShownThisSession) {
+  markStudioPhaseStart();
+}
 
 function Particle({ delay }: { delay: number }) {
   const moveAnim = useRef(new Animated.Value(0)).current;
@@ -229,6 +237,14 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
   const studioFade = useRef(new Animated.Value(0)).current;
   const studioScale = useRef(new Animated.Value(0.82)).current;
   const glowAnim = useRef(new Animated.Value(1)).current;
+  // Task #119 — extra cinematic motion: outer ring rotation, breathing inner
+  // halo, sweeping reflection across the logo, and a subtle idle pulse on
+  // the disc itself so the logo never feels static during the 5s hold.
+  const ringRotate = useRef(new Animated.Value(0)).current;
+  const haloPulse = useRef(new Animated.Value(0)).current;
+  const sheenSweep = useRef(new Animated.Value(0)).current;
+  const idlePulse = useRef(new Animated.Value(0)).current;
+  const brandReveal = useRef(new Animated.Value(0)).current;
 
   // Phase 2 — Loading
   const loadingFade = useRef(new Animated.Value(0)).current;
@@ -249,40 +265,70 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
       Animated.spring(studioScale, { toValue: 1, friction: 7, tension: 45, useNativeDriver: nativeDriver }),
     ]).start();
 
+    // Breathing inner glow — slow, soft pulse around the logo disc.
     Animated.loop(Animated.sequence([
-      Animated.timing(glowAnim, { toValue: 1.45, duration: 1200, useNativeDriver: nativeDriver }),
-      Animated.timing(glowAnim, { toValue: 1, duration: 1200, useNativeDriver: nativeDriver }),
+      Animated.timing(glowAnim, { toValue: 1.45, duration: 1400, useNativeDriver: nativeDriver }),
+      Animated.timing(glowAnim, { toValue: 1, duration: 1400, useNativeDriver: nativeDriver }),
     ])).start();
 
-    // Startup fanfare — synthesized "Ocho Locos" voice over the studio logo.
-    // Two guards (Task #74 review):
-    //   (a) Honour the persisted voiceFxEnabled flag *before* in-memory
-    //       syncSettings() has had a chance to run (cold start).
-    //   (b) Only play once per calendar day — avoid voice fatigue from rapid
-    //       relaunches.
+    // Outer halo respiration (separate cadence so it doesn't beat-lock with
+    // the inner glow — gives the depth a more organic feel).
+    Animated.loop(Animated.sequence([
+      Animated.timing(haloPulse, { toValue: 1, duration: 2200, useNativeDriver: nativeDriver }),
+      Animated.timing(haloPulse, { toValue: 0, duration: 2200, useNativeDriver: nativeDriver }),
+    ])).start();
+
+    // Outer gold ring slowly rotates — used to drive a subtle conic shimmer.
+    Animated.loop(
+      Animated.timing(ringRotate, { toValue: 1, duration: 14000, useNativeDriver: nativeDriver })
+    ).start();
+
+    // Diagonal reflective sheen sweep across the disc, every ~3.5s.
+    Animated.loop(Animated.sequence([
+      Animated.delay(800),
+      Animated.timing(sheenSweep, { toValue: 1, duration: 1100, useNativeDriver: nativeDriver }),
+      Animated.timing(sheenSweep, { toValue: 0, duration: 0, useNativeDriver: nativeDriver }),
+      Animated.delay(1600),
+    ])).start();
+
+    // Tiny idle scale pulse — keeps the disc breathing while it holds.
+    Animated.loop(Animated.sequence([
+      Animated.timing(idlePulse, { toValue: 1, duration: 1800, useNativeDriver: nativeDriver }),
+      Animated.timing(idlePulse, { toValue: 0, duration: 1800, useNativeDriver: nativeDriver }),
+    ])).start();
+
+    // Cinematic reveal of the BIYIS PRIME STUDIOS wordmark + "PRESENTA"
+    // tagline a beat after the disc lands, so the type doesn't just appear
+    // with the logo.
+    Animated.timing(brandReveal, { toValue: 1, duration: 900, delay: 650, useNativeDriver: nativeDriver }).start();
+
+    // Task #119 — premium cinematic stinger replaces the per-day voice cue
+    // as the BIYIS PRIME STUDIOS sonic identity. Plays every cold start so
+    // the brand always lands the same way. Honours the persisted SFX flag
+    // before in-memory syncSettings has had a chance to run (cold start).
     setTimeout(() => {
       (async () => {
         try {
           const raw = await AsyncStorage.getItem("ocho_profile_v3");
           if (raw) {
             const parsed = JSON.parse(raw);
-            if (parsed?.voiceFxEnabled === false) return;
+            if (parsed?.sfxEnabled === false) return;
           }
-          const today = new Date().toISOString().slice(0, 10);
-          const lastDay = await AsyncStorage.getItem("ocho_voice_splash_day");
-          if (lastDay === today) return;
-          await AsyncStorage.setItem("ocho_voice_splash_day", today);
-          playOchoLocosVoice().catch(() => {});
+          playBiyisStinger().catch(() => {});
         } catch {
-          // Best-effort: if storage fails, fall back to the in-memory gate.
-          playOchoLocosVoice().catch(() => {});
+          playBiyisStinger().catch(() => {});
         }
       })();
-    }, 300);
+    }, 250);
 
     // ── Transition to Phase 2 ─────────────────────────────────────────────
     const studioTimer = setTimeout(() => {
-      Animated.timing(studioFade, { toValue: 0, duration: 600, useNativeDriver: nativeDriver }).start(() => {
+      // Open the menu music gate slightly *before* the visual fade-out
+      // begins so the AudioManager can start crossfading the menu loop in
+      // underneath the tail of the cinematic stinger — the player never
+      // hears a hard cut between silence and music.
+      markStudioPhaseEnd();
+      Animated.timing(studioFade, { toValue: 0, duration: 900, useNativeDriver: nativeDriver }).start(() => {
         setPhase("loading");
 
         // Fade in loading screen
@@ -343,15 +389,119 @@ function CustomSplashScreen({ onComplete, authProps }: { onComplete: () => void;
 
         <Animated.View style={[styles.studioCenterWrap, { transform: [{ scale: studioScale }] }]}>
           <View style={styles.logoContainer}>
-            <Animated.View style={[styles.glow, { transform: [{ scale: glowAnim }], opacity: Animated.multiply(glowAnim, 0.28) }]} />
-            <Image
-              source={require("@/assets/images/biyis-logo.png")}
-              resizeMode="contain"
-              style={{ width: 200, height: 200 }}
-            />
+            {/* Outer ambient halo — slow respiration, sits furthest back */}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.haloOuter,
+                {
+                  opacity: haloPulse.interpolate({ inputRange: [0, 1], outputRange: [0.10, 0.22] }),
+                  transform: [{ scale: haloPulse.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1.08] }) }],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={["rgba(212,175,55,0.55)", "rgba(212,175,55,0.0)"]}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0.5, y: 0.5 }}
+                end={{ x: 1, y: 1 }}
+              />
+            </Animated.View>
+            {/* Slowly rotating gold rim — gives the disc a living shimmer */}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.rotatingRim,
+                {
+                  transform: [
+                    { rotate: ringRotate.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] }) },
+                  ],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={["#7B5800", "#F5D76E", "#D4AF37", "#7B5800", "#F5D76E", "#D4AF37", "#7B5800"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
+            {/* Breathing inner glow */}
+            <Animated.View style={[styles.glow, { transform: [{ scale: glowAnim }], opacity: Animated.multiply(glowAnim, 0.30) }]} />
+            {/* Circular logo disc with subtle idle scale pulse */}
+            <Animated.View
+              style={[
+                styles.logoDisc,
+                {
+                  transform: [
+                    { scale: idlePulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.025] }) },
+                  ],
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={["#1A1208", "#0A0A0F", "#000000"]}
+                start={{ x: 0.2, y: 0 }}
+                end={{ x: 0.8, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <Image
+                source={require("@/assets/images/biyis-logo.png")}
+                resizeMode="contain"
+                style={styles.logoImage}
+              />
+              {/* Top inner gloss highlight — gives the disc depth */}
+              <LinearGradient
+                pointerEvents="none"
+                colors={["rgba(255,255,255,0.18)", "rgba(255,255,255,0)"]}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 0.55 }}
+                style={styles.logoGloss}
+              />
+              {/* Diagonal sweeping reflection — periodic, lasts ~1.1s */}
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.sheen,
+                  {
+                    opacity: sheenSweep.interpolate({ inputRange: [0, 0.15, 0.85, 1], outputRange: [0, 0.55, 0.35, 0] }),
+                    transform: [
+                      { rotate: "20deg" },
+                      { translateX: sheenSweep.interpolate({ inputRange: [0, 1], outputRange: [-260, 260] }) },
+                    ],
+                  },
+                ]}
+              >
+                <LinearGradient
+                  colors={["rgba(255,255,255,0)", "rgba(255,255,255,0.55)", "rgba(255,255,255,0)"]}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={StyleSheet.absoluteFill}
+                />
+              </Animated.View>
+            </Animated.View>
           </View>
-          <Text style={styles.splashBrand}>BIYIS PRIME STUDIOS</Text>
-          <Text style={styles.splashPresenta}>PRESENTA</Text>
+          <Animated.Text
+            style={[
+              styles.splashBrand,
+              {
+                opacity: brandReveal,
+                transform: [{ translateY: brandReveal.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+              },
+            ]}
+          >
+            BIYIS PRIME STUDIOS
+          </Animated.Text>
+          <Animated.Text
+            style={[
+              styles.splashPresenta,
+              {
+                opacity: brandReveal.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0, 0.7] }),
+              },
+            ]}
+          >
+            PRESENTA
+          </Animated.Text>
         </Animated.View>
       </Animated.View>
 
@@ -515,6 +665,13 @@ function AudioManager() {
       const inGame = isGameRoute(segments as string[]);
       if (inGame) {
         startGameMusic().catch(() => {});
+      } else if (isStudioPhaseActive()) {
+        // Task #119 — defer menu music until the cinematic BIYIS logo has
+        // begun fading out so the boot stinger plays in clean silence and
+        // then crossfades into the menu loop. onStudioPhaseEnd fires
+        // synchronously if the gate is already open (hot-reload, splash
+        // already shown).
+        onStudioPhaseEnd(() => { startMenuMusic().catch(() => {}); });
       } else {
         startMenuMusic().catch(() => {});
       }
@@ -1034,6 +1191,17 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
+  // Task #119 — defensive gate close. The studio-phase gate is opened at
+  // module load (so AudioManager, which mounts before the splash, knows to
+  // wait). On Fast Refresh the module re-runs and re-opens the gate, but
+  // React state preserves `showSplash = false` so the splash never re-mounts
+  // to call markStudioPhaseEnd(). Without this effect the menu music would
+  // stay permanently silent after a hot reload. Same logic protects any path
+  // where the splash is otherwise skipped.
+  useEffect(() => {
+    if (!showSplash) markStudioPhaseEnd();
+  }, [showSplash]);
+
   if (!fontsLoaded && !fontError) return null;
 
   const handleSplashComplete = () => {
@@ -1091,23 +1259,69 @@ const styles = StyleSheet.create({
     bottom: "20%",
   },
   logoContainer: {
-    width: 240,
-    height: 240,
+    width: 280,
+    height: 280,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 24,
+  },
+  haloOuter: {
+    position: "absolute",
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    overflow: "hidden",
+  },
+  rotatingRim: {
+    position: "absolute",
+    width: 224,
+    height: 224,
+    borderRadius: 112,
+    overflow: "hidden",
+    opacity: 0.55,
   },
   glow: {
     position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
     backgroundColor: "#D4AF37",
     shadowColor: "#D4AF37",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
-    shadowRadius: 50,
+    shadowRadius: 60,
     elevation: 20,
+  },
+  logoDisc: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(212,175,55,0.7)",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.6,
+    shadowRadius: 18,
+    elevation: 18,
+  },
+  logoImage: {
+    width: 168,
+    height: 168,
+  },
+  logoGloss: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "55%",
+  },
+  sheen: {
+    position: "absolute",
+    width: 90,
+    height: 320,
   },
   splashBrand: {
     fontFamily: "Nunito_800ExtraBold",
