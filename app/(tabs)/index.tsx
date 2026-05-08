@@ -634,7 +634,7 @@ function PrimaryPlayCard({ onPress, theme, T }: { onPress: () => void; theme: an
   const arrowStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: pulse.value * 4 }],
   }));
-  const playLabel = (T("play") || "JUGAR").toString().toUpperCase();
+  const playLabel = (T("modeClassic") || "Modo Clásico").toString().toUpperCase();
   // Task #74 — premium feedback (click + haptic + microglow) on the main JUGAR button.
   const premium = usePressFeedback({ intensity: "premium" });
   return (
