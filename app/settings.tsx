@@ -12,8 +12,12 @@ import { reloadAppAsync } from "expo";
 import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
-import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, previewLogoStinger, type LogoStingerId } from "@/lib/audioManager";
+import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, previewLogoStinger, setCustomStingerUri, type LogoStingerId } from "@/lib/audioManager";
+import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
+import * as DocumentPicker from "expo-document-picker";
+import { File, Directory, Paths } from "expo-file-system";
 import { useT } from "@/hooks/useT";
+import type { TranslationKey } from "@/lib/i18n";
 import { playSound } from "@/lib/sounds";
 import { Colors } from "@/constants/colors";
 
@@ -170,6 +174,10 @@ export default function SettingsScreen() {
   const T = useT();
   const [showLangModal, setShowLangModal] = useState(false);
   const [showStingerModal, setShowStingerModal] = useState(false);
+  // Task #85 — busy flags for the custom intro slot (file picker + recorder).
+  const [customStingerBusy, setCustomStingerBusy] = useState(false);
+  const [isRecordingStinger, setIsRecordingStinger] = useState(false);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [langSearch, setLangSearch] = useState("");
   const [showFaqModal, setShowFaqModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -237,7 +245,15 @@ export default function SettingsScreen() {
   };
 
   const selectLogoStinger = (id: LogoStingerId) => {
-    updateSettings({ logoStingerId: id });
+    // Task #85 — block selecting "custom" if no clip exists yet; the upload /
+    // record buttons handle setting it. Also remember the last built-in pick
+    // so removing a custom clip can revert to it.
+    if (id === "custom" && !(profile.customLogoStingerUri || "")) return;
+    if (id === "custom") {
+      updateSettings({ logoStingerId: id });
+    } else {
+      updateSettings({ logoStingerId: id, lastBuiltInLogoStingerId: id });
+    }
     if (profile.sfxEnabled) {
       previewLogoStinger(id).catch(() => {});
     }
@@ -247,6 +263,160 @@ export default function SettingsScreen() {
   const previewCurrentStinger = () => {
     if (!profile.sfxEnabled) return;
     previewLogoStinger(profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID).catch(() => {});
+  };
+
+  // Task #85 — measure clip duration by briefly opening it as an AudioPlayer
+  // and polling `duration` until it's a positive number (or the timeout
+  // expires). Returns ms.
+  const measureClipDurationMs = async (uri: string): Promise<number> => {
+    let player: ReturnType<typeof createAudioPlayer> | null = null;
+    try {
+      player = createAudioPlayer({ uri });
+      const start = Date.now();
+      while (Date.now() - start < 2500) {
+        const d = player.duration;
+        if (typeof d === "number" && isFinite(d) && d > 0) {
+          return Math.round(d * 1000);
+        }
+        await new Promise((r) => setTimeout(r, 80));
+      }
+      const d = player.duration;
+      return typeof d === "number" && isFinite(d) ? Math.round(d * 1000) : 0;
+    } finally {
+      if (player) {
+        try { player.remove(); } catch {}
+      }
+    }
+  };
+
+  // Persist `srcUri` to the app's document directory under a deterministic
+  // filename so the saved profile URI keeps working across launches. Returns
+  // the destination file:// URI.
+  const persistCustomClip = (srcUri: string, ext: string): string => {
+    const dirName = "custom-stingers";
+    const safeExt = ext.replace(/[^a-z0-9]/gi, "").toLowerCase() || "audio";
+    // Use a timestamp suffix so cached AudioPlayers (keyed by URI) for any
+    // previously-stored clip don't keep playing the old buffer.
+    const fileName = `intro-${Date.now()}.${safeExt}`;
+    const dir = new Directory(Paths.document, dirName);
+    try { dir.create({ intermediates: true, idempotent: true }); } catch {}
+    const dest = new File(dir, fileName);
+    if (dest.exists) { try { dest.delete(); } catch {} }
+    const src = new File(srcUri);
+    src.copy(dest);
+    return dest.uri;
+  };
+
+  // Best-effort cleanup of the previously-stored custom clip (if any) so the
+  // document directory doesn't accumulate orphaned audio files.
+  const cleanupOldCustomClip = (uri: string | undefined | null) => {
+    if (!uri) return;
+    try {
+      const f = new File(uri);
+      if (f.exists) f.delete();
+    } catch {}
+  };
+
+  const stingerTitle = (): string => T("logoStinger") || "Sonido del logo";
+  const errorMessage = (err: unknown, fallbackKey: TranslationKey, fallback: string): string => {
+    const msg = err instanceof Error ? err.message : "";
+    return msg || T(fallbackKey) || fallback;
+  };
+
+  const applyNewCustomClip = async (srcUri: string, ext: string) => {
+    const durationMs = await measureClipDurationMs(srcUri);
+    if (!durationMs) {
+      Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
+      return;
+    }
+    if (durationMs > CUSTOM_LOGO_STINGER_MAX_MS + 150) {
+      Alert.alert(stingerTitle(), T("logoStingerTooLong") || "Clip must be 2 seconds or less");
+      return;
+    }
+    let savedUri: string;
+    try {
+      savedUri = persistCustomClip(srcUri, ext);
+    } catch {
+      Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
+      return;
+    }
+    const previousUri = profile.customLogoStingerUri || "";
+    setCustomStingerUri(savedUri);
+    updateSettings({ customLogoStingerUri: savedUri, logoStingerId: "custom" });
+    if (previousUri && previousUri !== savedUri) cleanupOldCustomClip(previousUri);
+    if (profile.sfxEnabled) previewLogoStinger("custom").catch(() => {});
+    if (profile.vibrationEnabled) Vibration.vibrate(30);
+  };
+
+  const pickCustomStingerFile = async () => {
+    if (customStingerBusy || isRecordingStinger) return;
+    setCustomStingerBusy(true);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "audio/*",
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+      const dotIdx = asset.name?.lastIndexOf(".") ?? -1;
+      const ext = dotIdx >= 0 ? asset.name.slice(dotIdx + 1) : "m4a";
+      await applyNewCustomClip(asset.uri, ext);
+    } catch (err) {
+      Alert.alert(stingerTitle(), errorMessage(err, "logoStingerLoadFailed", "Could not load the audio"));
+    } finally {
+      setCustomStingerBusy(false);
+    }
+  };
+
+  const recordCustomStinger = async () => {
+    if (customStingerBusy || isRecordingStinger) return;
+    if (Platform.OS === "web") {
+      Alert.alert(stingerTitle(), "Recording is not supported on web. Upload a file instead.");
+      return;
+    }
+    setCustomStingerBusy(true);
+    try {
+      const perm = await AudioModule.requestRecordingPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(stingerTitle(), T("logoStingerMicDenied") || "Microphone permission denied");
+        return;
+      }
+      await recorder.prepareToRecordAsync();
+      setIsRecordingStinger(true);
+      if (profile.vibrationEnabled) Vibration.vibrate(40);
+      recorder.record();
+      // Auto-stop at the 2-second cap.
+      await new Promise<void>((r) => setTimeout(r, CUSTOM_LOGO_STINGER_MAX_MS));
+      try { await recorder.stop(); } catch {}
+      setIsRecordingStinger(false);
+      const uri = recorder.uri;
+      if (!uri) {
+        Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
+        return;
+      }
+      await applyNewCustomClip(uri, "m4a");
+    } catch (err) {
+      setIsRecordingStinger(false);
+      Alert.alert(stingerTitle(), errorMessage(err, "logoStingerLoadFailed", "Could not load the audio"));
+    } finally {
+      setCustomStingerBusy(false);
+    }
+  };
+
+  const removeCustomStinger = () => {
+    const prevUri = profile.customLogoStingerUri || "";
+    setCustomStingerUri(null);
+    // Fall back to the *previously selected* built-in stinger if Custom was
+    // the active pick, not the global default.
+    if ((profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID) === "custom") {
+      const fallbackId: LogoStingerId = profile.lastBuiltInLogoStingerId ?? DEFAULT_LOGO_STINGER_ID;
+      updateSettings({ customLogoStingerUri: "", logoStingerId: fallbackId });
+    } else {
+      updateSettings({ customLogoStingerUri: "" });
+    }
+    cleanupOldCustomClip(prevUri);
+    if (profile.vibrationEnabled) Vibration.vibrate(30);
   };
 
   const toggleMuteEmotes = () => {
@@ -809,6 +979,77 @@ export default function SettingsScreen() {
                   </Pressable>
                 );
               })}
+
+              {/* Task #85 — Custom intro clip slot */}
+              {(() => {
+                const hasCustom = !!(profile.customLogoStingerUri || "");
+                const isSelected = hasCustom && (profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID) === "custom";
+                return (
+                  <View
+                    style={[
+                      styles.langOption,
+                      isSelected && styles.langOptionSelected,
+                      { flexDirection: "column", alignItems: "stretch", gap: 10 },
+                    ]}
+                  >
+                    <Pressable
+                      onPress={() => { if (hasCustom) selectLogoStinger("custom"); }}
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <View style={[styles.iconCircle, { backgroundColor: "#2a1a3a", marginRight: 12 }]}>
+                        <Ionicons name={hasCustom ? (isSelected ? "musical-notes" : "play") : "cloud-upload"} size={18} color="#9B59B6" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.langOptionName, isSelected && { color: "#D4AF37" }]}>
+                          {T("logoStingerCustom") || "Custom"}
+                        </Text>
+                        <Text style={styles.langOptionSub}>
+                          {hasCustom
+                            ? `≤${(CUSTOM_LOGO_STINGER_MAX_MS / 1000).toFixed(0)}s`
+                            : (T("logoStingerCustomEmpty") || "Upload or record your own clip (max 2s)")}
+                        </Text>
+                      </View>
+                      {isSelected && <Ionicons name="checkmark-circle" size={20} color="#D4AF37" />}
+                    </Pressable>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <TouchableOpacity
+                        onPress={pickCustomStingerFile}
+                        disabled={customStingerBusy || isRecordingStinger}
+                        style={[styles.customStingerBtn, { borderColor: "#4FC3F7", opacity: customStingerBusy || isRecordingStinger ? 0.5 : 1 }]}
+                      >
+                        <Ionicons name="cloud-upload" size={16} color="#4FC3F7" />
+                        <Text style={[styles.customStingerBtnText, { color: "#4FC3F7" }]}>
+                          {T("logoStingerUpload") || "Upload"}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={recordCustomStinger}
+                        disabled={customStingerBusy || isRecordingStinger}
+                        style={[styles.customStingerBtn, { borderColor: "#E74C3C", opacity: customStingerBusy && !isRecordingStinger ? 0.5 : 1 }]}
+                      >
+                        <Ionicons name={isRecordingStinger ? "stop-circle" : "mic"} size={16} color="#E74C3C" />
+                        <Text style={[styles.customStingerBtnText, { color: "#E74C3C" }]}>
+                          {isRecordingStinger
+                            ? (T("logoStingerRecording") || "Recording…")
+                            : (T("logoStingerRecord") || "Record")}
+                        </Text>
+                      </TouchableOpacity>
+                      {hasCustom && (
+                        <TouchableOpacity
+                          onPress={removeCustomStinger}
+                          disabled={customStingerBusy || isRecordingStinger}
+                          style={[styles.customStingerBtn, { borderColor: "#6B7A5C", opacity: customStingerBusy || isRecordingStinger ? 0.5 : 1 }]}
+                        >
+                          <Ionicons name="trash" size={16} color="#6B7A5C" />
+                          <Text style={[styles.customStingerBtnText, { color: "#6B7A5C" }]}>
+                            {T("logoStingerRemove") || "Remove"}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                );
+              })()}
             </ScrollView>
           </View>
         </View>
@@ -879,6 +1120,13 @@ const styles = StyleSheet.create({
   langFlag: { fontSize: 26 },
   langOptionName: { fontFamily: "Nunito_700Bold", fontSize: 15, color: "#E8DCC8" },
   langOptionSub: { fontFamily: "Nunito_400Regular", fontSize: 11, color: "#6B7A5C", marginTop: 1 },
+  // Task #85 — buttons under the Custom intro slot in the stinger picker.
+  customStingerBtn: {
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+    paddingVertical: 8, paddingHorizontal: 8, borderRadius: 10, borderWidth: 1.5,
+    backgroundColor: "rgba(0,0,0,0.2)",
+  },
+  customStingerBtnText: { fontFamily: "Nunito_700Bold", fontSize: 12 },
   // FAQ
   faqModal: {
     borderTopLeftRadius: 28, borderTopRightRadius: 28,

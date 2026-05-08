@@ -141,6 +141,14 @@ export interface PlayerProfile {
   voiceFxEnabled: boolean;
   // Task #82 — selected logo intro stinger id (player picks one in Settings).
   logoStingerId: LogoStingerId;
+  // Task #85 — local file:// URI of the player's custom intro clip (uploaded
+  // or recorded). Empty string when none. Cloud-synced as part of the profile
+  // (the URI is device-local, same pattern as photoUri).
+  customLogoStingerUri?: string;
+  // Task #85 — remembers the last built-in stinger id the player explicitly
+  // picked, so removing the custom clip falls back to that selection (rather
+  // than the global default).
+  lastBuiltInLogoStingerId?: LogoStingerId;
   muteEmotes: boolean;
   language: string;
   darkMode: boolean;
@@ -247,6 +255,8 @@ const DEFAULT_PROFILE: PlayerProfile = {
   vibrationEnabled: true,
   voiceFxEnabled: true,
   logoStingerId: DEFAULT_LOGO_STINGER_ID,
+  customLogoStingerUri: "",
+  lastBuiltInLogoStingerId: DEFAULT_LOGO_STINGER_ID,
   muteEmotes: false,
   language: "es",
   darkMode: true,
@@ -319,7 +329,7 @@ interface ProfileContextValue {
   claimDailyReward: () => { reward: DailyReward; queued: boolean } | null;
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
-  updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "voiceFxEnabled" | "logoStingerId" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
+  updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "voiceFxEnabled" | "logoStingerId" | "customLogoStingerUri" | "lastBuiltInLogoStingerId" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
   updateEquippedEmotes: (emoteIds: string[]) => void;
   updateRanked: (delta: number) => void;
   recordRankedAbandon: () => { totalStarLoss: number; cooldownMs: number; abandonsInWindow: number };
@@ -1144,7 +1154,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return { reward, queued: willQueue };
   }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, profile.chestInventory, profile.chestOverflow, update]);
 
-  const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "voiceFxEnabled" | "logoStingerId" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
+  const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "voiceFxEnabled" | "logoStingerId" | "customLogoStingerUri" | "lastBuiltInLogoStingerId" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
     update((p) => ({ ...p, ...settings }));
   }, [update]);
 

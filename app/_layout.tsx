@@ -29,7 +29,7 @@ import {
   Nunito_800ExtraBold as Nunito_800ExtraBold_Asset,
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
-import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded, playOchoLocosVoice, setLogoStingerId, DEFAULT_LOGO_STINGER_ID } from "@/lib/audioManager";
+import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded, playOchoLocosVoice, setLogoStingerId, setCustomStingerUri, DEFAULT_LOGO_STINGER_ID } from "@/lib/audioManager";
 import { markSplashComplete } from "@/lib/splashState";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useProfile } from "@/context/ProfileContext";
@@ -487,6 +487,9 @@ function AudioManager() {
       // Task #82 — apply the player's chosen logo stinger before the menu mounts
       // so the boot stinger plays the selected variant on cold start.
       setLogoStingerId(profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID);
+      // Task #85 — register the player's custom intro clip URI (if any) so the
+      // boot stinger can use it on cold start.
+      setCustomStingerUri(profile.customLogoStingerUri || null);
       preloadSounds().catch(() => {});
       const inGame = isGameRoute(segments as string[]);
       if (inGame) {
@@ -509,6 +512,14 @@ function AudioManager() {
     if (!isLoaded) return;
     setLogoStingerId(profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID);
   }, [profile.logoStingerId, isLoaded]);
+
+  // Task #85 — keep the audio manager in sync with the player's custom intro
+  // clip so picking / removing one takes effect immediately for previews and
+  // for the next boot.
+  useEffect(() => {
+    if (!isLoaded) return;
+    setCustomStingerUri(profile.customLogoStingerUri || null);
+  }, [profile.customLogoStingerUri, isLoaded]);
 
   // React to route changes — skip the very first run (handled by init above).
   // Use sequential (non-overlapping) fade when entering a game route so menu

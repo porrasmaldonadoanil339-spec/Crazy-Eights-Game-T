@@ -57,7 +57,10 @@ const SOUNDS = {
 type SoundKey = keyof typeof SOUNDS;
 
 // Task #82 — registry of selectable logo intro stingers.
-export type LogoStingerId = "casino" | "fanfare" | "cinematic" | "arcade" | "elegant";
+// Task #85 — added "custom" slot for player-provided clips (uploaded or
+// recorded). The custom slot has no bundled asset; its source is a runtime
+// file:// URI managed via setCustomStingerUri().
+export type LogoStingerId = "casino" | "fanfare" | "cinematic" | "arcade" | "elegant" | "custom";
 export const LOGO_STINGERS: { id: LogoStingerId; sfxKey: SoundKey; durationMs: number }[] = [
   { id: "casino",    sfxKey: "logoStingerCasino",    durationMs: 1400 },
   { id: "fanfare",   sfxKey: "logoStingerFanfare",   durationMs: 1500 },
@@ -66,6 +69,8 @@ export const LOGO_STINGERS: { id: LogoStingerId; sfxKey: SoundKey; durationMs: n
   { id: "elegant",   sfxKey: "logoStingerElegant",   durationMs: 1600 },
 ];
 export const DEFAULT_LOGO_STINGER_ID: LogoStingerId = "casino";
+// Hard cap enforced when picking/recording a custom intro clip.
+export const CUSTOM_LOGO_STINGER_MAX_MS = 2000;
 
 type MusicTrack = "menu" | "search" | "game";
 
@@ -749,6 +754,11 @@ export async function playOchoLocosVoice() {
 let logoStingerPlayedThisSession = false;
 let selectedLogoStingerId: LogoStingerId = DEFAULT_LOGO_STINGER_ID;
 
+// Task #85 — runtime-loaded custom logo stinger (from a file:// URI). We keep
+// the player cached so repeated previews / boot don't decode the file twice.
+let customStingerUri: string | null = null;
+let customStingerPlayer: AudioPlayer | null = null;
+
 function sfxKeyForStinger(id: LogoStingerId): SoundKey {
   const entry = LOGO_STINGERS.find((s) => s.id === id);
   return entry?.sfxKey ?? "logoStingerCasino";
@@ -762,10 +772,58 @@ export function getLogoStingerId(): LogoStingerId {
   return selectedLogoStingerId;
 }
 
+// Task #85 — register/clear the URI of the user's custom intro clip. Pass
+// null to drop the cached player (e.g. when the user removes their clip or
+// picks a new file).
+export function setCustomStingerUri(uri: string | null) {
+  if (uri === customStingerUri) return;
+  if (customStingerPlayer) {
+    try { customStingerPlayer.pause(); customStingerPlayer.remove(); } catch {}
+    customStingerPlayer = null;
+  }
+  customStingerUri = uri;
+}
+
+export function getCustomStingerUri(): string | null {
+  return customStingerUri;
+}
+
+function getOrCreateCustomStingerPlayer(): AudioPlayer | null {
+  if (!customStingerUri) return null;
+  if (customStingerPlayer) return customStingerPlayer;
+  try {
+    const p = createAudioPlayer({ uri: customStingerUri });
+    p.volume = sfxVolume * 0.95;
+    customStingerPlayer = p;
+  } catch { customStingerPlayer = null; }
+  return customStingerPlayer;
+}
+
+async function playStingerById(id: LogoStingerId, volume: number): Promise<boolean> {
+  if (isSfxMuted || isBackgrounded) return false;
+  if (id === "custom") {
+    const p = getOrCreateCustomStingerPlayer();
+    if (!p) return false;
+    await safe(async () => {
+      p.volume = volume;
+      p.seekTo(0);
+      p.play();
+    });
+    return true;
+  }
+  await playSfx(sfxKeyForStinger(id), volume);
+  return true;
+}
+
 export async function playLogoStinger() {
   if (logoStingerPlayedThisSession) return;
   logoStingerPlayedThisSession = true;
-  await playSfx(sfxKeyForStinger(selectedLogoStingerId), sfxVolume * 0.95);
+  // If the player picked the custom slot but their clip is missing (e.g. the
+  // file was deleted), silently fall back to the default built-in stinger.
+  const played = await playStingerById(selectedLogoStingerId, sfxVolume * 0.95);
+  if (!played && selectedLogoStingerId === "custom") {
+    await playStingerById(DEFAULT_LOGO_STINGER_ID, sfxVolume * 0.95);
+  }
 }
 
 // Task #82 — preview a stinger from the Settings picker. Bypasses the
@@ -774,7 +832,7 @@ export async function playLogoStinger() {
 // check via playSfx.
 export async function previewLogoStinger(id: LogoStingerId) {
   if (isSfxMuted) return;
-  await playSfx(sfxKeyForStinger(id), sfxVolume * 0.95);
+  await playStingerById(id, sfxVolume * 0.95);
 }
 
 // ─── Settings ────────────────────────────────────────────────────────────────
