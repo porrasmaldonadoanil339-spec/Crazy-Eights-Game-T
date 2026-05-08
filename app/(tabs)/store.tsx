@@ -15,6 +15,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { STORE_ITEMS, StoreItem, StoreItemCategory, CARD_BACKS, AVATARS, AVATAR_FRAMES, TITLES, EFFECTS, EMOTES, localizeItem, pickLocalized } from "@/lib/storeItems";
 import type { Lang } from "@/lib/i18n";
 import { ItemPreview } from "@/components/ItemPreview";
+import ChestVisual from "@/components/ChestVisual";
 import { playSound } from "@/lib/sounds";
 import { useT } from "@/hooks/useT";
 import { router, useLocalSearchParams } from "expo-router";
@@ -1554,31 +1555,10 @@ const styles = StyleSheet.create({
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
-function MiniChest({ color, size = 44 }: { color: string; size?: number }) {
-  const w = size;
-  const h = Math.round(size * 0.86);
-  const lidH = Math.round(h * 0.36);
-  return (
-    <View style={{ width: w, height: h, borderRadius: 7, overflow: "hidden", borderWidth: 1, borderColor: color, shadowColor: color, shadowOpacity: 0.45, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 5 }}>
-      <LinearGradient
-        colors={[color + "EE", color + "AA", color + "66"]}
-        start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-        style={{ flex: 1 }}
-      >
-        <LinearGradient
-          colors={[color, color + "BB"]}
-          start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, height: lidH, borderBottomWidth: 1, borderColor: "rgba(0,0,0,0.35)" }}
-        />
-        <View style={{ position: "absolute", left: 4, top: 2, right: 4, height: 2, borderRadius: 1, backgroundColor: "rgba(255,255,255,0.55)" }} />
-        <View style={{ position: "absolute", left: 3, top: 0, bottom: 0, width: 3, backgroundColor: color + "33" }} />
-        <View style={{ position: "absolute", right: 3, top: 0, bottom: 0, width: 3, backgroundColor: color + "33" }} />
-        <View style={{ position: "absolute", top: lidH - 5, left: w / 2 - 5, width: 10, height: 10, borderRadius: 5, backgroundColor: "rgba(0,0,0,0.55)", borderWidth: 1, borderColor: color, alignItems: "center", justifyContent: "center" }}>
-          <View style={{ width: 3, height: 4, borderRadius: 1, backgroundColor: color }} />
-        </View>
-      </LinearGradient>
-    </View>
-  );
+// Task #112 — MiniChest now delegates to the shared ChestVisual so the store
+// fichas tiles match the inventory / reward / opening surfaces.
+function MiniChest({ type, size = 44 }: { type: ShopChestType; size?: number }) {
+  return <ChestVisual type={type} size={size} />;
 }
 
 type ShopChestType = "common" | "rare" | "epic" | "legendary";
@@ -1657,7 +1637,7 @@ function ChestShop({ themeColors, themeGold, showToast, T }: { themeColors: any;
               sound
               glowColor={COLORS[t] + "55"}
             >
-              <MiniChest color={COLORS[t]} />
+              <MiniChest type={t} size={50} />
               <Text style={[styles.chestName, { color: COLORS[t] }]}>{NAMES[t]}</Text>
               <View style={styles.chestPriceRow}>
                 <Ionicons name="diamond" size={11} color="#3498DB" />
@@ -1705,7 +1685,7 @@ function ChestConfirmModal({
         <View style={[styles.confirmModal, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <LinearGradient colors={modalGrad} style={StyleSheet.absoluteFill} />
           <View style={[styles.confirmIconWrap, { backgroundColor: color + "33", borderColor: color + "66", borderWidth: 1.5 }]}>
-            <Ionicons name={icon} size={32} color={color} />
+            <ChestVisual type={chestType} size={56} />
           </View>
           <Text style={[styles.confirmName, { color: theme.text }]}>{T("chestNamed").replace("{name}", name)}</Text>
           <Text style={[styles.confirmDesc, { color: theme.textMuted, textAlign: "center" }]}>

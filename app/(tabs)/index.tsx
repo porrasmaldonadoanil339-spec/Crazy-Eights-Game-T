@@ -37,6 +37,7 @@ import { getDailyDateKey } from "@/lib/dailyShop";
 import { getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
 import { FlatList } from "react-native";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
+import ChestVisual from "@/components/ChestVisual";
 import { ChestType, ChestReward, CHEST_CONFIG, getChestProgress } from "@/lib/chestSystem";
 import type { Chest } from "@/lib/chestSystem";
 import { ModeInfoModal } from "@/components/ModeInfoModal";
@@ -318,6 +319,40 @@ function DifficultyModal({ visible, onClose, onSelect, modeName }: {
 
 const CHEST_COLORS: Record<string, string> = { common: "#A0522D", rare: "#4A90E2", epic: "#9B59B6", legendary: "#D4AF37" };
 
+// Task #112 — Tiny particle that flies outward from the chest center on entrance.
+function DailyBurstParticle({ progress, angle, dist, color }: { progress: { value: number }; angle: number; dist: number; color: string }) {
+  const style = useAnimatedStyle(() => {
+    const p = progress.value;
+    return {
+      transform: [
+        { translateX: Math.cos(angle) * dist * p },
+        { translateY: Math.sin(angle) * dist * p },
+        { scale: 1 - p * 0.7 },
+      ],
+      opacity: p < 0.1 ? p * 10 : 1 - (p - 0.1) / 0.9,
+    };
+  });
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        {
+          position: "absolute",
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: color,
+          shadowColor: color,
+          shadowOpacity: 0.9,
+          shadowRadius: 4,
+          shadowOffset: { width: 0, height: 0 },
+        },
+        style,
+      ]}
+    />
+  );
+}
+
 // Daily reward modal
 function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFull, onClose }: {
   visible: boolean;
@@ -330,6 +365,22 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFul
   const T = useT();
   const sc = useSharedValue(0.7);
   const chestPulse = useSharedValue(1);
+  // Task #112 — Premium daily reward polish: glow ring + particle burst + bouncy
+  // entrance + sound. Replaces the static gift icon with a real ChestVisual when
+  // the reward includes a chest so the daily flow no longer feels like the
+  // "antiguo" design relative to the inventory & opening animation.
+  const glowRing = useSharedValue(0);
+  const bounce = useSharedValue(0);
+  const burst = useSharedValue(0);
+  const PARTICLE_COUNT = 12;
+  const particles = useRef(
+    Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
+      angle: (i / PARTICLE_COUNT) * Math.PI * 2,
+      dist: 70 + Math.random() * 30,
+      delay: Math.random() * 200,
+    }))
+  ).current;
+  const playedRef = useRef(false);
 
   useEffect(() => {
     if (visible) {
@@ -338,13 +389,34 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFul
         withTiming(1.12, { duration: 700, easing: Easing.inOut(Easing.sin) }),
         withTiming(1, { duration: 700, easing: Easing.inOut(Easing.sin) })
       ), -1, true);
+      bounce.value = withRepeat(withSequence(
+        withTiming(-5, { duration: 600, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 600, easing: Easing.inOut(Easing.sin) })
+      ), -1, true);
+      glowRing.value = withRepeat(withSequence(
+        withTiming(1, { duration: 900, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.3, { duration: 900, easing: Easing.inOut(Easing.sin) })
+      ), -1, true);
+      burst.value = 0;
+      burst.value = withTiming(1, { duration: 1100, easing: Easing.out(Easing.cubic) });
+      if (!playedRef.current) {
+        playedRef.current = true;
+        playSound("daily_reward").catch(() => {});
+      }
     } else {
       sc.value = 0.7;
+      playedRef.current = false;
     }
   }, [visible]);
 
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
-  const chestStyle = useAnimatedStyle(() => ({ transform: [{ scale: chestPulse.value }] }));
+  const chestStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: chestPulse.value }, { translateY: bounce.value }],
+  }));
+  const glowRingStyle = useAnimatedStyle(() => ({
+    opacity: glowRing.value * 0.7,
+    transform: [{ scale: 1 + glowRing.value * 0.18 }],
+  }));
 
   if (!reward) return null;
 
@@ -353,6 +425,7 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFul
   const blocked = !!inventoryFull && !!overflowFull && !!reward.chestType;
   const willQueue = !!inventoryFull && !overflowFull && !!reward.chestType;
   const mysteryColor = "#D4AF37";
+  const accentColor = reward.chestType ? (CHEST_COLORS[reward.chestType] ?? mysteryColor) : mysteryColor;
 
   return (
     <Modal transparent animationType="fade" visible={visible}>
@@ -366,12 +439,44 @@ function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFul
               </View>
               <Text style={styles.dailyTitle}>{T("dailyReward")}</Text>
             </View>
-            <Animated.View style={[styles.dailyIconWrap, { borderColor: mysteryColor + "AA", backgroundColor: mysteryColor + "1A", borderWidth: 3 }, chestStyle]}>
-              <Ionicons name="gift" size={56} color={mysteryColor} />
-              <View style={{ position: "absolute", bottom: -6, right: -6, backgroundColor: mysteryColor, borderRadius: 14, width: 26, height: 26, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#000" }}>?</Text>
-              </View>
-            </Animated.View>
+            <View style={{ alignItems: "center", justifyContent: "center", height: 130, width: 200 }}>
+              {/* Outer pulsing glow ring */}
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  {
+                    position: "absolute",
+                    width: 140,
+                    height: 140,
+                    borderRadius: 70,
+                    borderWidth: 3,
+                    borderColor: accentColor,
+                    shadowColor: accentColor,
+                    shadowOpacity: 0.9,
+                    shadowRadius: 20,
+                    shadowOffset: { width: 0, height: 0 },
+                  },
+                  glowRingStyle,
+                ]}
+              />
+              {/* Particle burst */}
+              {particles.map((p, i) => (
+                <DailyBurstParticle key={i} progress={burst} angle={p.angle} dist={p.dist} color={accentColor} />
+              ))}
+              {/* The chest (or gift if no chest type) */}
+              <Animated.View style={[{ alignItems: "center", justifyContent: "center" }, chestStyle]}>
+                {reward.chestType ? (
+                  <ChestVisual type={reward.chestType as any} size={92} />
+                ) : (
+                  <View style={[styles.dailyIconWrap, { borderColor: mysteryColor + "AA", backgroundColor: mysteryColor + "1A", borderWidth: 3 }]}>
+                    <Ionicons name="gift" size={56} color={mysteryColor} />
+                    <View style={{ position: "absolute", bottom: -6, right: -6, backgroundColor: mysteryColor, borderRadius: 14, width: 26, height: 26, alignItems: "center", justifyContent: "center" }}>
+                      <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: "#000" }}>?</Text>
+                    </View>
+                  </View>
+                )}
+              </Animated.View>
+            </View>
             <View style={{ flexDirection: "row", gap: 10, marginTop: -4 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: "#F1C40F22", borderWidth: 1, borderColor: "#F1C40F55" }}>
                 <CoinIcon size={12} color="#F1C40F" />
@@ -2574,9 +2679,6 @@ const styles = StyleSheet.create({
 function ChestInventoryItem({ chest, onTap }: { chest: Chest; onTap: () => void }) {
   const T = useT();
   const cfg = CHEST_CONFIG[chest.type];
-  const chestIcon = chest.type === "legendary" ? "star" :
-    chest.type === "epic" ? "diamond" :
-    chest.type === "rare" ? "cube-outline" : "cube";
   const bounce = useSharedValue(0);
   const glow = useSharedValue(0);
   useEffect(() => {
@@ -2603,7 +2705,7 @@ function ChestInventoryItem({ chest, onTap }: { chest: Chest; onTap: () => void 
         shadowColor: cfg.glowColor, shadowOffset: { width: 0, height: 0 }, elevation: 6,
       }, glowStyle]}>
         <Animated.View style={bounceStyle}>
-          <Ionicons name={chestIcon as any} size={28} color={cfg.glowColor} />
+          <ChestVisual type={chest.type} size={48} />
         </Animated.View>
         <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 10, color: cfg.glowColor, textAlign: "center" }}>
           {T(CHEST_RARITY_KEY[chest.type])}

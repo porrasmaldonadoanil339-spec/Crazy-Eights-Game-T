@@ -41,6 +41,7 @@ import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } fro
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import { getCpuPhrase, type CpuPhraseEvent } from "@/lib/cpuPhrases";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
+import ChestVisual from "@/components/ChestVisual";
 import RoundTransition from "@/components/RoundTransition";
 import { consumeFichasRunActive, recordFichasWin } from "@/lib/fichasChallenge";
 import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
@@ -960,9 +961,6 @@ function ChestEarnedBadge({ chestType, onTap }: { chestType: ChestType; onTap: (
     shadowRadius: glow.value * 18,
   }));
   const bounceStyle = useAnimatedStyle(() => ({ transform: [{ translateY: bounce.value }] }));
-  const chestIcon = chestType === "legendary" ? "star" :
-    chestType === "epic" ? "diamond" :
-    chestType === "rare" ? "cube-outline" : "cube";
   return (
     <BouncePressable inline onPress={onTap}>
       <Animated.View style={[{
@@ -973,7 +971,7 @@ function ChestEarnedBadge({ chestType, onTap }: { chestType: ChestType; onTap: (
         shadowColor: config.glowColor, shadowOffset: { width: 0, height: 0 }, elevation: 8,
       }, wrapStyle, glowStyle]}>
         <Animated.View style={bounceStyle}>
-          <Ionicons name={chestIcon as any} size={30} color={config.glowColor} />
+          <ChestVisual type={chestType} size={44} />
         </Animated.View>
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, color: config.glowColor }}>
