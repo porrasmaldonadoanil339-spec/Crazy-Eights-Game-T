@@ -69,17 +69,22 @@ export type UploadStingerResult =
 
 // Module-level coalescing: when both the manual retry from settings and
 // the silent auto-retry from _layout fire around the same foreground /
-// reconnect event, a second upload would race the first and the
-// "last write wins" state update could clobber the real outcome. We
-// share a single in-flight promise so both callers see the same result.
-let inFlightUpload: Promise<UploadStingerResult> | null = null;
+// reconnect event for the *same* clip, a second upload would race the
+// first and the "last write wins" state update could clobber the real
+// outcome. We key by (localUri, ext) so duplicate requests share one
+// promise — but a brand-new clip (different URI) always starts its own
+// upload, so saving clip B while clip A is still in flight doesn't end
+// up with the profile pointing at clip A's URL.
+const inFlightUploads = new Map<string, Promise<UploadStingerResult>>();
 
 // Uploads a locally-persisted custom stinger to the cloud. Returns a
 // structured result so callers can distinguish permanent failures
 // (don't auto-retry) from transient ones (do).
 export async function uploadCustomStinger(localUri: string, ext: string): Promise<UploadStingerResult> {
-  if (inFlightUpload) return inFlightUpload;
-  inFlightUpload = (async (): Promise<UploadStingerResult> => {
+  const key = `${localUri}\u0000${ext}`;
+  const existing = inFlightUploads.get(key);
+  if (existing) return existing;
+  const pending = (async (): Promise<UploadStingerResult> => {
   const token = await getAuthToken();
   if (!token) return { ok: false, reason: "no_auth" };
   let base64: string;
@@ -118,10 +123,11 @@ export async function uploadCustomStinger(localUri: string, ext: string): Promis
     default:  return { ok: false, reason: "transient" };
   }
   })();
+  inFlightUploads.set(key, pending);
   try {
-    return await inFlightUpload;
+    return await pending;
   } finally {
-    inFlightUpload = null;
+    inFlightUploads.delete(key);
   }
 }
 
