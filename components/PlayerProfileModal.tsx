@@ -23,6 +23,11 @@ export interface PlayerProfileData {
   winRate?: number;
   isFriend?: boolean;
   requestSent?: boolean;
+  // Task #120 — optional prestige metrics for the modal.
+  bestStreak?: number;
+  topRankName?: string;
+  achievementsUnlocked?: number;
+  totalGames?: number;
 }
 
 interface PlayerProfileModalProps {
@@ -126,11 +131,38 @@ export function PlayerProfileModal({ visible, player, onClose, onAddFriend, onIn
               <View style={styles.statBox}>
                 <LinearGradient colors={["#1a2f1a", "#0d1f0f"]} style={styles.statGrad}>
                   <Ionicons name="game-controller" size={18} color="#4A90E2" />
-                  <Text style={styles.statValue}>{gamesPlayed.toLocaleString()}</Text>
+                  <Text style={styles.statValue}>{(player.totalGames ?? gamesPlayed).toLocaleString()}</Text>
                   <Text style={styles.statLabel}>{T("statsGames") || "Games"}</Text>
                 </LinearGradient>
               </View>
             </View>
+
+            {/* Prestige extras — Task #120 */}
+            {(player.bestStreak !== undefined || player.topRankName || player.achievementsUnlocked !== undefined) && (
+              <View style={[styles.statsGrid, { marginTop: 8 }]}>
+                <View style={styles.statBox}>
+                  <LinearGradient colors={["#2a1a1a", "#1f0d0d"]} style={styles.statGrad}>
+                    <Ionicons name="flame" size={18} color="#E74C3C" />
+                    <Text style={styles.statValue}>{player.bestStreak ?? 0}</Text>
+                    <Text style={styles.statLabel}>MEJOR RACHA</Text>
+                  </LinearGradient>
+                </View>
+                <View style={styles.statBox}>
+                  <LinearGradient colors={["#1a1a2f", "#0d0d1f"]} style={styles.statGrad}>
+                    <Ionicons name="ribbon" size={18} color={Colors.gold} />
+                    <Text style={styles.statValue} numberOfLines={1}>{player.topRankName ?? player.rankName ?? "—"}</Text>
+                    <Text style={styles.statLabel}>MEJOR RANGO</Text>
+                  </LinearGradient>
+                </View>
+                <View style={styles.statBox}>
+                  <LinearGradient colors={["#2a1a2f", "#1f0d1f"]} style={styles.statGrad}>
+                    <Ionicons name="medal" size={18} color="#9B59B6" />
+                    <Text style={styles.statValue}>{player.achievementsUnlocked ?? 0}</Text>
+                    <Text style={styles.statLabel}>INSIGNIAS</Text>
+                  </LinearGradient>
+                </View>
+              </View>
+            )}
 
             {/* XP bar */}
             <View style={styles.xpSection}>

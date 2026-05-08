@@ -22,7 +22,7 @@ import { playSound } from "@/lib/sounds";
 import { GAME_MODES } from "@/lib/gameModes";
 import { EVENT_ORDER, EVENT_CONFIGS, getEventName } from "@/lib/eventModes";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
-import { RankShield } from "@/components/RankShield";
+import { RankShield, ShiningStar } from "@/components/RankShield";
 import { Lang, t } from "@/lib/i18n";
 
 const TITLE_ITEMS = STORE_ITEMS.filter((i) => i.category === "title");
@@ -445,6 +445,24 @@ export default function ProfileScreen() {
   const winRate = profile.stats.totalGames > 0
     ? Math.round((profile.stats.totalWins / profile.stats.totalGames) * 100) : 0;
 
+  // Task #120 — prestige metrics derived from real profile state.
+  const achievementsUnlocked = React.useMemo(
+    () => profile.achievementProgress.filter((a) => a.unlocked).length,
+    [profile.achievementProgress],
+  );
+  const titlesUnlocked = React.useMemo(
+    () => profile.ownedItems.filter((id) => STORE_ITEMS.some((i) => i.id === id && i.category === "title")).length
+      + ownedExclusiveTitles.length,
+    [profile.ownedItems, ownedExclusiveTitles.length],
+  );
+  const bestWinStreak = profile.stats.bestWinStreak ?? profile.stats.winStreak ?? 0;
+  const topRankIdx = profile.rankedProfile.topRankReached ?? profile.rankedProfile.rank;
+  const topDivIdx = profile.rankedProfile.topDivisionReached ?? profile.rankedProfile.division;
+  const topRankInfo = getLocalizedRankInfo(
+    { rank: topRankIdx, division: topDivIdx, stars: 0, maxStars: 5, totalWins: 0, totalLosses: 0 },
+    lang,
+  );
+
   const handleTakePhoto = async () => {
     if (Platform.OS === "web") {
       Alert.alert("No disponible", "La cámara no está disponible en la versión web.");
@@ -595,15 +613,18 @@ export default function ProfileScreen() {
             <View style={styles.rankSubHeader}>
               <Text style={[styles.rankDisplayText, { color: rankInfo.color }]}>
                 {rankInfo.displayName}{" "}
+              </Text>
+              <View style={{ flexDirection: "row", gap: 2, marginLeft: 6 }}>
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Ionicons
+                  <ShiningStar
                     key={i}
-                    name={i < profile.rankedProfile.stars ? "star" : "star-outline"}
-                    size={16}
+                    filled={i < profile.rankedProfile.stars}
                     color={i < profile.rankedProfile.stars ? rankInfo.color : Colors.gold + "66"}
+                    size={16}
+                    delay={i * 220}
                   />
                 ))}
-              </Text>
+              </View>
             </View>
 
             <View style={styles.badgeRow}>
@@ -653,6 +674,72 @@ export default function ProfileScreen() {
             </View>
             <Text style={[styles.resourceVal, { color: themeGold, fontSize: 12 }]} numberOfLines={1}>{cardBackItem ? pickLocalized(cardBackItem.name, lang) : (cardBackExclusive?.name ?? T("default"))}</Text>
             <Text style={[styles.resourceLbl, { color: textMuted }]}>{T("cardBackLabel")}</Text>
+          </View>
+        </View>
+
+        {/* Prestige Section — Task #120 */}
+        <Text style={[styles.sectionLabel, { color: themeGold, marginTop: 14 }]}>PRESTIGIO</Text>
+        <View style={[styles.prestigeBlock, { backgroundColor: surfaceColor + "cc", borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+          {/* Top row: hero rank shield + title + headline */}
+          <View style={styles.prestigeHeader}>
+            <RankShield rank={topRankIdx} size={62} animated />
+            <View style={{ flex: 1, marginLeft: 14 }}>
+              <Text style={[styles.prestigeKicker, { color: textMuted }]} numberOfLines={1}>
+                MEJOR RANGO
+              </Text>
+              <Text style={[styles.prestigeTopRank, { color: topRankInfo.color }]} numberOfLines={1}>
+                {topRankInfo.displayName}
+              </Text>
+              {(titleItem || titleExclusive) && (
+                <View style={styles.prestigeTitleRow}>
+                  <Ionicons
+                    name={(titleItem?.preview ?? titleExclusive?.icon ?? "ribbon") as any}
+                    size={11}
+                    color={titleExclusive?.iconColor ?? themeGold}
+                  />
+                  <Text
+                    style={[styles.prestigeTitleTxt, { color: themeGold }]}
+                    numberOfLines={1}
+                  >
+                    {titleItem ? pickLocalized(titleItem.name, lang) : titleExclusive?.name}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Metrics grid 2x3 */}
+          <View style={styles.prestigeGrid}>
+            <View style={[styles.prestigeTile, { borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+              <Ionicons name="trending-up" size={18} color="#27AE60" />
+              <Text style={[styles.prestigeVal, { color: textColor }]}>{winRate}%</Text>
+              <Text style={[styles.prestigeLbl, { color: textMuted }]}>WIN RATE</Text>
+            </View>
+            <View style={[styles.prestigeTile, { borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+              <Ionicons name="flame" size={18} color="#E74C3C" />
+              <Text style={[styles.prestigeVal, { color: textColor }]}>{bestWinStreak}</Text>
+              <Text style={[styles.prestigeLbl, { color: textMuted }]}>MEJOR RACHA</Text>
+            </View>
+            <View style={[styles.prestigeTile, { borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+              <Ionicons name="game-controller" size={18} color="#4A90E2" />
+              <Text style={[styles.prestigeVal, { color: textColor }]}>{profile.stats.totalGames}</Text>
+              <Text style={[styles.prestigeLbl, { color: textMuted }]}>PARTIDAS</Text>
+            </View>
+            <View style={[styles.prestigeTile, { borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+              <Ionicons name="trophy" size={18} color={themeGold} />
+              <Text style={[styles.prestigeVal, { color: textColor }]}>{profile.stats.totalWins}</Text>
+              <Text style={[styles.prestigeLbl, { color: textMuted }]}>VICTORIAS</Text>
+            </View>
+            <View style={[styles.prestigeTile, { borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+              <Ionicons name="medal" size={18} color="#9B59B6" />
+              <Text style={[styles.prestigeVal, { color: textColor }]}>{achievementsUnlocked}</Text>
+              <Text style={[styles.prestigeLbl, { color: textMuted }]}>INSIGNIAS</Text>
+            </View>
+            <View style={[styles.prestigeTile, { borderColor: isDark ? Colors.border : "#aacfa0" }]}>
+              <Ionicons name="ribbon" size={18} color={themeGold} />
+              <Text style={[styles.prestigeVal, { color: textColor }]}>{titlesUnlocked}</Text>
+              <Text style={[styles.prestigeLbl, { color: textMuted }]}>TÍTULOS</Text>
+            </View>
           </View>
         </View>
 
@@ -1161,7 +1248,66 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_700Bold", fontSize: 15, flex: 1,
   },
   rankSubHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 4,
+  },
+  prestigeBlock: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 12,
+    gap: 12,
+  },
+  prestigeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    paddingTop: 2,
+  },
+  prestigeKicker: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 9,
+    letterSpacing: 1,
+  },
+  prestigeTopRank: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 18,
+    letterSpacing: 0.4,
+    marginTop: 1,
+  },
+  prestigeTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  prestigeTitleTxt: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 11,
+    flexShrink: 1,
+  },
+  prestigeGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  prestigeTile: {
+    width: "31.5%",
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    gap: 3,
+  },
+  prestigeVal: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 16,
+  },
+  prestigeLbl: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 9,
+    letterSpacing: 0.5,
   },
   rankDisplayText: {
     fontFamily: "Nunito_700Bold",

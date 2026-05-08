@@ -43,6 +43,8 @@ export interface PlayerStats {
   comebackWins: number;
   dailyStreak: number;
   winStreak: number;
+  // Task #120 — best (longest) win streak ever achieved.
+  bestWinStreak: number;
   lastPlayedDate: string;
   challengesCompleted: number;
   tournamentsWon: number;
@@ -213,6 +215,7 @@ const DEFAULT_STATS: PlayerStats = {
   comebackWins: 0,
   dailyStreak: 0,
   winStreak: 0,
+  bestWinStreak: 0,
   lastPlayedDate: "",
   challengesCompleted: 0,
   tournamentsWon: 0,
@@ -291,7 +294,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   graphicsQuality: "high" as "low" | "medium" | "high",
   specialEffectsEnabled: true,
   animationsEnabled: true,
-  rankedProfile: { rank: 0, division: 0, stars: 0, maxStars: 5, totalWins: 0, totalLosses: 0 },
+  rankedProfile: { rank: 0, division: 0, stars: 0, maxStars: 5, totalWins: 0, totalLosses: 0, topRankReached: 0, topDivisionReached: 0 },
   chestInventory: [],
   chestOverflow: [],
   recentRankedAbandons: [],
@@ -464,6 +467,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             mergedRanked.rankedProfileVersion = 2;
           }
 
+          // Task #120 — backfill prestige peak rank/division for legacy profiles.
+          if (savedRanked.topRankReached === undefined || savedRanked.topRankReached === null) {
+            mergedRanked.topRankReached = mergedRanked.rank;
+          }
+          if (savedRanked.topDivisionReached === undefined || savedRanked.topDivisionReached === null) {
+            mergedRanked.topDivisionReached = mergedRanked.division;
+          }
+
           // Task #86 — older profiles may have a premium stinger selected
           // from before unlock gating existed. Reset to the default free
           // stinger if the saved selection isn't actually unlocked.
@@ -478,7 +489,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             ...DEFAULT_PROFILE,
             ...saved,
             logoStingerId: safeStingerId,
-            stats: { ...DEFAULT_STATS, ...saved.stats },
+            stats: (() => {
+              const mergedStats = { ...DEFAULT_STATS, ...saved.stats };
+              // Task #120 — backfill bestWinStreak from current winStreak for legacy profiles.
+              if (saved.stats?.bestWinStreak === undefined || saved.stats?.bestWinStreak === null) {
+                mergedStats.bestWinStreak = Math.max(0, saved.stats?.winStreak ?? 0);
+              }
+              return mergedStats;
+            })(),
             rankedProfile: mergedRanked,
             achievementProgress: ACHIEVEMENTS.map((a) => {
               const existing = saved.achievementProgress?.find((p) => p.id === a.id);
@@ -642,9 +660,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         });
       }
 
+      // Task #120 — track peak rank/division ever achieved.
+      const prevTopRank = p.rankedProfile.topRankReached ?? p.rankedProfile.rank;
+      const prevTopDiv = p.rankedProfile.topDivisionReached ?? p.rankedProfile.division;
+      let newTopRank = prevTopRank;
+      let newTopDiv = prevTopDiv;
+      if (nextRanked.rank > prevTopRank) {
+        newTopRank = nextRanked.rank;
+        newTopDiv = nextRanked.division;
+      } else if (nextRanked.rank === prevTopRank && nextRanked.division > prevTopDiv) {
+        newTopDiv = nextRanked.division;
+      }
+
       return {
         ...p,
-        rankedProfile: nextRanked,
+        rankedProfile: { ...nextRanked, topRankReached: newTopRank, topDivisionReached: newTopDiv },
         coins: p.coins + bonusCoins,
         ownedItems: [...p.ownedItems, ...itemsToAdd],
       };
@@ -1236,6 +1266,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         : p.stats.dailyStreak;
 
       const newWinStreak = params.won ? (p.stats.winStreak ?? 0) + 1 : 0;
+      const newBestWinStreak = Math.max(p.stats.bestWinStreak ?? 0, newWinStreak);
 
       const newStats: PlayerStats = {
         ...p.stats,
@@ -1243,6 +1274,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         totalWins: params.won ? p.stats.totalWins + 1 : p.stats.totalWins,
         totalLosses: params.won ? p.stats.totalLosses : p.stats.totalLosses + 1,
         winStreak: newWinStreak,
+        bestWinStreak: newBestWinStreak,
         winsByMode: {
           ...p.stats.winsByMode,
           [params.mode]: (p.stats.winsByMode[params.mode] ?? 0) + (params.won ? 1 : 0),

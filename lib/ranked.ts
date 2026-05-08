@@ -16,6 +16,9 @@ export interface RankedProfile {
   totalWins: number;
   totalLosses: number;
   rankedProfileVersion?: number;
+  // Task #120 — peak rank/division ever reached for the prestige section.
+  topRankReached?: number;
+  topDivisionReached?: number;
 }
 
 export const RANK_COLORS: Record<number, string> = {
