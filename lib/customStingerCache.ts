@@ -71,26 +71,56 @@ function buildStingerFormData(srcUri: string, ext: string, extra?: Record<string
   return fd;
 }
 
+// Task #108 — discriminated result so callers can distinguish a user-
+// initiated abort (no error UI) from a real network/server failure
+// (retry-able error UI). The previous `null` overload is gone — every
+// caller now switches on `.ok` / `.reason`.
+export type TrimStingerResult =
+  | { ok: true; uri: string; durationMs: number; ext: string }
+  | { ok: false; reason: "aborted" | "failed" };
+
 export async function trimCustomStingerToFile(
   srcUri: string,
   ext: string,
   startMs: number,
   endMs: number,
-): Promise<{ uri: string; durationMs: number; ext: string } | null> {
+  signal?: AbortSignal,
+): Promise<TrimStingerResult> {
+  // Caller may have already aborted before we even started (rare but
+  // possible if the trim button is double-tapped). Skip the fetch.
+  if (signal?.aborted) return { ok: false, reason: "aborted" };
   let trimmed: { ext: string; durationMs: number; data: string };
   try {
     const url = new URL("/api/auth/profile/stinger/trim", getApiUrl()).toString();
     const resp = await fetch(url, {
       method: "POST",
       body: buildStingerFormData(srcUri, ext, { startMs, endMs }),
+      signal,
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) return { ok: false, reason: "failed" };
     const json = await resp.json() as { ok?: boolean; ext?: string; durationMs?: number; data?: string };
-    if (!json.ok || !json.data || !json.ext || typeof json.durationMs !== "number") return null;
+    if (!json.ok || !json.data || !json.ext || typeof json.durationMs !== "number") {
+      return { ok: false, reason: "failed" };
+    }
     trimmed = { ext: json.ext, durationMs: json.durationMs, data: json.data };
-  } catch {
-    return null;
+  } catch (err: unknown) {
+    // fetch + AbortController throws either a DOMException with
+    // name === "AbortError" (web/RN polyfill) or an Error whose name
+    // contains "abort" — check both, and also re-check signal.aborted
+    // since the caller may have aborted between the throw and now.
+    const name = (err as { name?: string } | null)?.name ?? "";
+    if (signal?.aborted || name === "AbortError" || /abort/i.test(name)) {
+      return { ok: false, reason: "aborted" };
+    }
+    return { ok: false, reason: "failed" };
   }
+  // Server already returned the trimmed bytes — even if the caller
+  // aborts between here and the disk write, completing the write is
+  // cheaper than discarding the work and we'd rather hand back the
+  // file than waste the round-trip. The caller checks the result and
+  // ignores it on abort, so the file just stays on disk briefly until
+  // the next save / app close (the document dir gets cleaned up by
+  // the existing custom-stinger sweep).
   try {
     const dir = new Directory(Paths.document, TRIMMED_DIR);
     try { dir.create({ intermediates: true, idempotent: true }); } catch {}
@@ -99,9 +129,9 @@ export async function trimCustomStingerToFile(
     const dest = new File(dir, fileName);
     if (dest.exists) { try { dest.delete(); } catch {} }
     dest.write(base64ToBytes(trimmed.data));
-    return { uri: dest.uri, durationMs: trimmed.durationMs, ext: safeExt };
+    return { ok: true, uri: dest.uri, durationMs: trimmed.durationMs, ext: safeExt };
   } catch {
-    return null;
+    return { ok: false, reason: "failed" };
   }
 }
 

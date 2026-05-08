@@ -242,6 +242,12 @@ export default function SettingsScreen() {
   // generic "could not load" alert used elsewhere).
   const [isTrimmingDraft, setIsTrimmingDraft] = useState(false);
   const [trimError, setTrimError] = useState(false);
+  // Task #108 — AbortController for the in-flight trim fetch so the
+  // player can bail out of a slow round-trip instead of waiting it out.
+  // Stored in a ref because it's mutated outside React's render cycle
+  // (created in saveStingerTrim, .abort() called from cancel handlers,
+  // cleared after the fetch settles).
+  const trimAbortRef = useRef<AbortController | null>(null);
   // Task #104 — epoch counter incremented every time the trim modal opens
   // (or closes) so an in-flight shrink whose result lands after the
   // player cancels doesn't re-open the modal with the shrunk clip.
@@ -611,6 +617,13 @@ export default function SettingsScreen() {
     // after this point sees a stale token and bails before touching state.
     stingerDraftEpochRef.current += 1;
     setIsShrinkingDraft(false);
+    // Task #108 — closing the modal mid-trim must also abort the fetch
+    // so the response doesn't land on the next opened draft. The trim
+    // promise sees `reason: "aborted"` and returns silently.
+    if (trimAbortRef.current) {
+      trimAbortRef.current.abort();
+      trimAbortRef.current = null;
+    }
     setStingerDraft(null);
     // Task #92 — bump the request id so any in-flight waveform fetch from
     // the previous source can't land on the next modal open.
@@ -618,6 +631,21 @@ export default function SettingsScreen() {
     setWaveformBars(null);
     setTrimError(false);
     setIsTrimmingDraft(false);
+    setCustomStingerBusy(false);
+  };
+
+  // Task #108 — abort the in-flight trim without closing the modal so
+  // the player returns to the pre-save state (markers intact, Save/
+  // Preview/Cancel re-enabled) and can adjust + re-save without
+  // re-opening or seeing a spurious error toast.
+  const abortStingerTrim = () => {
+    if (trimAbortRef.current) {
+      trimAbortRef.current.abort();
+      trimAbortRef.current = null;
+    }
+    setIsTrimmingDraft(false);
+    setTrimError(false);
+    setCustomStingerBusy(false);
   };
 
   const saveStingerTrim = () => {
@@ -644,6 +672,12 @@ export default function SettingsScreen() {
     setCustomStingerBusy(true);
     setTrimError(false);
     setIsTrimmingDraft(true);
+    // Task #108 — fresh AbortController per save so a previous (already-
+    // settled) one can't be re-aborted and so the cancel affordance only
+    // ever cancels the current attempt.
+    if (trimAbortRef.current) trimAbortRef.current.abort();
+    const abortCtrl = new AbortController();
+    trimAbortRef.current = abortCtrl;
 
     // Task #91 — re-encode the trimmed [startMs, endMs] window into a real
     // standalone m4a file via the server's ffmpeg endpoint, then save that
@@ -658,14 +692,25 @@ export default function SettingsScreen() {
     const draft = stingerDraft;
     (async () => {
       try {
-        const trimmed = await trimCustomStingerToFile(draft.srcUri, draft.ext, startMs, endMs);
-        setIsTrimmingDraft(false);
-        if (!trimmed) {
+        const trimmed = await trimCustomStingerToFile(draft.srcUri, draft.ext, startMs, endMs, abortCtrl.signal);
+        // Task #108 — only clear the controller if it still belongs to
+        // this attempt. abortStingerTrim() and cancelStingerTrim() may
+        // have already nulled it (and a Retry would have replaced it).
+        if (trimAbortRef.current === abortCtrl) trimAbortRef.current = null;
+        if (!trimmed.ok) {
+          if (trimmed.reason === "aborted") {
+            // Player tapped the Stop affordance — abortStingerTrim()
+            // already reset isTrimmingDraft / customStingerBusy and
+            // we explicitly do NOT show an error. Return early.
+            return;
+          }
           // Task #99 — distinct inline error so the player can retry the
           // trim call without re-opening the modal / re-recording.
+          setIsTrimmingDraft(false);
           setTrimError(true);
           return;
         }
+        setIsTrimmingDraft(false);
         const savedUri = trimmed.uri;
         const trimmedDurationMs = trimmed.durationMs;
         const trimmedExt = trimmed.ext;
@@ -1881,12 +1926,22 @@ export default function SettingsScreen() {
                       // Task #99 — while the server is trimming, swap the
                       // checkmark for a spinner + "Trimming…" so players know
                       // the app isn't frozen on a slow connection.
+                      // Task #108 — and make that spinner button tappable to
+                      // abort the in-flight fetch (calls abortStingerTrim).
+                      // The label still reads "Trimming…" so the spinner
+                      // stays the dominant signal; the secondary cue is the
+                      // small stop-circle icon underlay + the fact that the
+                      // tap area now responds. We don't disable the button
+                      // while trimming so the abort gesture is reachable.
                       const trimming = isTrimmingDraft;
                       const color = tooBig ? "#6B7A5C" : "#27AE60";
                       return (
                         <TouchableOpacity
-                          onPress={saveStingerTrim}
-                          disabled={tooBig || trimming}
+                          onPress={trimming ? abortStingerTrim : saveStingerTrim}
+                          disabled={tooBig}
+                          accessibilityLabel={trimming
+                            ? (T("logoStingerTrimStop") || "Stop")
+                            : (T("logoStingerTrimSave") || "Save")}
                           style={[styles.customStingerBtn, { borderColor: color, flex: 1, backgroundColor: tooBig ? "rgba(0,0,0,0.15)" : "rgba(39,174,96,0.12)", opacity: tooBig ? 0.55 : 1 }]}
                         >
                           {trimming ? (
