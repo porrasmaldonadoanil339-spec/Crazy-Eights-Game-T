@@ -30,7 +30,8 @@ import {
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
 import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded, playOchoLocosVoice, setLogoStingerId, setCustomStingerUri, setCustomStingerTrim, DEFAULT_LOGO_STINGER_ID } from "@/lib/audioManager";
-import { resolveCustomStingerUri } from "@/lib/customStingerCache";
+import { resolveCustomStingerUri, tryAutoUploadCustomStinger } from "@/lib/customStingerCache";
+import NetInfo from "@react-native-community/netinfo";
 import { markSplashComplete } from "@/lib/splashState";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useProfile } from "@/context/ProfileContext";
@@ -473,7 +474,7 @@ function isGameRoute(segments: string[]): boolean {
 function AudioManager() {
   const segments = useSegments();
   const isFirstRun = useRef(true);
-  const { profile, isLoaded } = useProfile();
+  const { profile, isLoaded, updateSettings } = useProfile();
 
   // Lock to portrait on mount (runtime enforcement in addition to app.json)
   useEffect(() => {
@@ -566,6 +567,49 @@ function AudioManager() {
       startMenuMusic().catch(() => {});
     }
   }, [segments.join(","), isLoaded]);
+
+  // Task #96 — auto-retry the cloud backup of the custom intro when the
+  // device regains connectivity or the app comes back to the foreground.
+  // The settings screen still surfaces a manual retry badge for cases where
+  // this silent retry also fails (no auth, server still down, etc.).
+  const customStingerUriRef = useRef<string>("");
+  const stingerRetryInFlight = useRef(false);
+  useEffect(() => {
+    customStingerUriRef.current = profile.customLogoStingerUri || "";
+  }, [profile.customLogoStingerUri]);
+  useEffect(() => {
+    if (!isLoaded) return;
+    let cancelled = false;
+    const attempt = async () => {
+      const uri = customStingerUriRef.current;
+      if (!uri || /^https?:\/\//i.test(uri)) return;
+      if (stingerRetryInFlight.current) return;
+      stingerRetryInFlight.current = true;
+      try {
+        const remoteUrl = await tryAutoUploadCustomStinger(uri);
+        if (cancelled || !remoteUrl) return;
+        // Only swap if the URI hasn't been changed (e.g. removed) underneath us.
+        if (customStingerUriRef.current === uri) {
+          updateSettings({ customLogoStingerUri: remoteUrl });
+        }
+      } finally {
+        stingerRetryInFlight.current = false;
+      }
+    };
+    // Fire once on mount in case the cold-start clip is still local.
+    attempt();
+    const appSub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") attempt();
+    });
+    const netSub = NetInfo.addEventListener((state) => {
+      if (state.isConnected && state.isInternetReachable !== false) attempt();
+    });
+    return () => {
+      cancelled = true;
+      appSub.remove();
+      netSub();
+    };
+  }, [isLoaded, updateSettings]);
 
   // Stop music when app goes to background, resume when it returns to foreground
   useEffect(() => {

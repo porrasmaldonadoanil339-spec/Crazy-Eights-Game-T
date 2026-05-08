@@ -79,6 +79,25 @@ export async function uploadCustomStinger(localUri: string, ext: string): Promis
   }
 }
 
+// Task #96 — silent retry of the cloud upload for a locally-saved custom
+// stinger (one that previously failed to back up because the device was
+// offline / unauthenticated). Returns the new remote URL on success or
+// null on any other outcome (still local, still offline, guest user, etc.).
+// Caller is responsible for swapping the profile URI to the returned value
+// — this helper deliberately doesn't touch profile state so it stays usable
+// from non-React contexts.
+export async function tryAutoUploadCustomStinger(
+  localUri: string | null | undefined,
+): Promise<string | null> {
+  if (!localUri || isRemote(localUri)) return null;
+  const dotIdx = localUri.lastIndexOf(".");
+  const ext = dotIdx >= 0 ? localUri.slice(dotIdx + 1).toLowerCase() : "m4a";
+  const remoteUrl = await uploadCustomStinger(localUri, ext);
+  if (!remoteUrl) return null;
+  cacheLocalCopyForRemote(remoteUrl, localUri);
+  return remoteUrl;
+}
+
 // Best-effort delete of the user's remote stinger copy. Silent on failure —
 // the local profile change still wins so the player sees the slot cleared.
 export async function deleteRemoteCustomStinger(): Promise<void> {
