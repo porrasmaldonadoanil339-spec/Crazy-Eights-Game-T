@@ -436,6 +436,74 @@ const lightStyles = StyleSheet.create({
   sub: { fontFamily: "Nunito_700Bold", fontSize: 13, color: "#C39BD3" },
 });
 
+// ─── Tournament round banner (ROUND 1/2/3 epic intro) ────────────────────────
+function TournamentRoundBanner({ round }: { round: number }) {
+  const sc = useSharedValue(0.5);
+  const op = useSharedValue(0);
+  const pulse = useSharedValue(1);
+  useEffect(() => {
+    sc.value = withSpring(1, { damping: 11 });
+    op.value = withTiming(1, { duration: 220 });
+    pulse.value = withRepeat(
+      withSequence(withTiming(1.05, { duration: 280 }), withTiming(1, { duration: 280 })), 4,
+    );
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: sc.value * pulse.value }],
+    opacity: op.value,
+  }));
+  const isFinal = round >= 3;
+  const accent = isFinal ? "#FFD700" : "#E67E22";
+  return (
+    <Animated.View style={[lightStyles.overlay, { pointerEvents: "none" } as any]}>
+      <Animated.View style={[lightStyles.banner, { borderColor: accent, shadowColor: accent }, animStyle]}>
+        <LinearGradient colors={["#1a0d00", "#3d2400", "#1a0d00"]} style={lightStyles.bannerGrad}>
+          <Ionicons name="trophy" size={32} color={accent} />
+          <View style={lightStyles.textWrap}>
+            <Text style={[lightStyles.title, { color: accent }]}>ROUND {round}</Text>
+            <Text style={lightStyles.sub}>{isFinal ? "RONDA FINAL — TODO O NADA" : "GANA 2 DE 3 PARA EL TROFEO"}</Text>
+          </View>
+          <Ionicons name="trophy" size={32} color={accent} />
+        </LinearGradient>
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
+// ─── Lightning "Fiebre" overlay (final-stretch warning, ≤2 cards) ─────────────
+function FiebreBadge() {
+  const pulse = useSharedValue(1);
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withSequence(withTiming(1.12, { duration: 420 }), withTiming(1, { duration: 420 })), -1, false,
+    );
+  }, []);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        {
+          position: "absolute", top: 56, alignSelf: "center",
+          flexDirection: "row", alignItems: "center", gap: 6,
+          paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+          backgroundColor: "rgba(231,76,60,0.18)",
+          borderWidth: 1.5, borderColor: "#E74C3C",
+          shadowColor: "#E74C3C", shadowOpacity: 0.7, shadowRadius: 10, elevation: 12,
+          zIndex: 180,
+        },
+        style,
+      ]}
+    >
+      <Ionicons name="flame" size={14} color="#FF6B35" />
+      <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 12, color: "#FFD7C2", letterSpacing: 2 }}>
+        ¡FIEBRE!
+      </Text>
+      <Ionicons name="flame" size={14} color="#FF6B35" />
+    </Animated.View>
+  );
+}
+
 // ─── Challenge rules modal ────────────────────────────────────────────────────
 function ChallengeRulesModal({ rules, lang, onClose }: {
   rules: ActiveChallengeRules; lang: string; onClose: () => void;
@@ -1353,6 +1421,7 @@ export default function GameScreen() {
   const [activeChallenges, setActiveChallenges] = useState<Challenge[]>([]);
   const [showLightningBanner, setShowLightningBanner] = useState(false);
   const [showEventBanner, setShowEventBanner] = useState(false);
+  const [showTournamentRoundBanner, setShowTournamentRoundBanner] = useState(false);
   const [eventShuffleFlash, setEventShuffleFlash] = useState(false);
   const lastShuffleTurnRef = useRef<number>(-1);
   const eventConfig = getEventConfig(session?.eventId as EventId | undefined);
@@ -1401,6 +1470,16 @@ export default function GameScreen() {
       return () => clearTimeout(t);
     }
   }, [dealAnimationDone, session?.mode]);
+
+  // Tournament round intro banner — fires whenever a fresh round is dealt
+  // (initial deal AND each round started via startNextTournamentRound).
+  useEffect(() => {
+    if (session?.mode === "tournament" && dealAnimationDone) {
+      setShowTournamentRoundBanner(true);
+      const t = setTimeout(() => setShowTournamentRoundBanner(false), 2400);
+      return () => clearTimeout(t);
+    }
+  }, [dealAnimationDone, session?.mode, tournamentRound]);
 
   // Event mode intro banner
   useEffect(() => {
@@ -1915,13 +1994,19 @@ export default function GameScreen() {
     const isEventWin = won && !!session.eventId;
     const eventCoinBonus = isEventWin ? 50 : 0;
     const eventXpBonus = isEventWin ? 100 : 0;
+    // Lightning fast-win bonus — under 60s gets +20 coins / +30 XP, under 90s
+    // gets +10 / +15. Keeps the mode rewarding aggressive play.
+    const isLightningFastWin = won && session.mode === "lightning" && duration < 90000;
+    const isLightningBlitzWin = won && session.mode === "lightning" && duration < 60000;
+    const fastCoinBonus = isLightningBlitzWin ? 20 : isLightningFastWin ? 10 : 0;
+    const fastXpBonus = isLightningBlitzWin ? 30 : isLightningFastWin ? 15 : 0;
     const coins = won
-      ? Math.round(modeConfig.coinsReward * diffConfig.coinMultiplier) + eventCoinBonus
+      ? Math.round(modeConfig.coinsReward * diffConfig.coinMultiplier) + eventCoinBonus + fastCoinBonus
       : Math.max(modeConfig.coinsLoss, 5);
     // Loss floor: recordGameResult deducts xpLoss=10 internally for non-practice
     // losses, so we add +10 above the floor to guarantee net >= 10 XP shown to the player.
     const xp = won
-      ? Math.round(modeConfig.xpReward * (modeConfig.hasDifficulty ? diffConfig.xpMultiplier : 1)) + eventXpBonus
+      ? Math.round(modeConfig.xpReward * (modeConfig.hasDifficulty ? diffConfig.xpMultiplier : 1)) + eventXpBonus + fastXpBonus
       : Math.max(modeConfig.xpLoss, 10) + (modeConfig.id !== "practice" ? 10 : 0);
     const isPerfect = session.cardsDrawnThisGame === 0 && won;
     const isComeback = (gameState?.playerHand?.length ?? 0) >= 10 && won;
@@ -2094,12 +2179,15 @@ export default function GameScreen() {
   }, [gameState?.phase]);
 
   // ─── Inactivity auto-draw timer ──────────────────────────────────────────
+  // For Lightning we read timerSeconds from the mode config so balance tweaks
+  // in lib/gameModes.ts propagate here without a second source of truth.
+  const lightningTurnSeconds = getModeById("lightning").timerSeconds ?? 5;
   const INACTIVITY_TIMEOUT = eventConfig?.turnSeconds
     ? eventConfig.turnSeconds
-    : session?.mode === "lightning" ? 8 : session?.mode === "practice" ? 40 : 30;
+    : session?.mode === "lightning" ? lightningTurnSeconds : session?.mode === "practice" ? 40 : 30;
   const INACTIVITY_SHOW_DELAY = eventConfig?.turnSeconds
     ? 0
-    : session?.mode === "lightning" ? 999 : 20;
+    : session?.mode === "lightning" ? 0 : 20;
   useEffect(() => {
     const isActive =
       gameState?.currentPlayer === "player" &&
@@ -2830,6 +2918,12 @@ export default function GameScreen() {
       )}
 
       {showLightningBanner && <LightningBanner />}
+      {showTournamentRoundBanner && <TournamentRoundBanner round={tournamentRound} />}
+      {session?.mode === "lightning"
+        && dealAnimationDone
+        && !isGameOver
+        && (gameState?.playerHand?.length ?? 99) <= 2
+        && <FiebreBadge />}
 
       <ChestOpeningModal
         visible={showChestModal}

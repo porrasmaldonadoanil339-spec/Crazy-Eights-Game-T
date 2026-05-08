@@ -98,7 +98,17 @@ export function getLocalizedRankInfo(rp: RankedProfile, lang: string) {
 
 export function addStars(rp: RankedProfile, delta: number): RankedProfile {
   let { rank, division, stars, maxStars, totalWins, totalLosses } = rp;
-  
+
+  // Onboarding cushion: at Hierro/Bronce (rank 0–1) wins give an extra star
+  // and losses cost zero stars. Losses are still counted in totalLosses below
+  // so stats stay accurate. Keeps low-rank players moving forward so the
+  // climb out of the entry tiers feels achievable.
+  const lowRank = rank <= 1;
+  if (lowRank && delta > 0) delta = delta + 1;
+  let recordOnlyLoss = false;
+  if (lowRank && delta < 0) { recordOnlyLoss = true; delta = 0; }
+  if (recordOnlyLoss) totalLosses++;
+
   if (delta > 0) {
     totalWins++;
     stars += delta;

@@ -1,7 +1,15 @@
 import type { Suit } from "./gameEngine";
 import type { TranslationKey } from "./i18n";
 
-export type EventId = "speed" | "random" | "double" | "survival";
+export type EventId =
+  | "speed"
+  | "random"
+  | "double"
+  | "survival"
+  | "frozen"
+  | "inferno"
+  | "chaos"
+  | "casino";
 
 export interface EventConfig {
   id: EventId;
@@ -58,6 +66,48 @@ export const EVENT_CONFIGS: Record<EventId, EventConfig> = {
     color: "#27AE60",
     cardsPerPlayer: 12,
   },
+  frozen: {
+    id: "frozen",
+    name: "Congelado",
+    shortName: "Hielo",
+    desc: "Turnos lentos y mano grande. Piensa cada movimiento.",
+    icon: "snow",
+    color: "#3498DB",
+    cardsPerPlayer: 10,
+    turnSeconds: 12,
+  },
+  inferno: {
+    id: "inferno",
+    name: "Inferno",
+    shortName: "Inferno",
+    desc: "Solo 4 segundos por turno y 5 cartas. ¡Quema rivales!",
+    icon: "flame",
+    color: "#E74C3C",
+    cardsPerPlayer: 5,
+    turnSeconds: 4,
+  },
+  chaos: {
+    id: "chaos",
+    name: "Caos",
+    shortName: "Caos",
+    desc: "Doble efecto y palo cambiante. ¡Confía en tus reflejos!",
+    icon: "skull",
+    color: "#FF1744",
+    cardsPerPlayer: 8,
+    turnSeconds: 6,
+    doubleDrawEffect: true,
+    randomSuitShuffle: true,
+    randomShuffleEvery: 3,
+  },
+  casino: {
+    id: "casino",
+    name: "Casino Royale",
+    shortName: "Casino",
+    desc: "Recompensas premium para apostadores audaces.",
+    icon: "diamond",
+    color: "#8E44AD",
+    cardsPerPlayer: 8,
+  },
 };
 
 export function getEventConfig(id: string | undefined | null): EventConfig | null {
@@ -68,19 +118,22 @@ export function getEventConfig(id: string | undefined | null): EventConfig | nul
   return null;
 }
 
-const EVENT_NAME_KEYS: Record<EventId, TranslationKey> = {
+// Only the original 4 events have translation keys. New events fall back to
+// the Spanish strings on EventConfig so we don't have to ship 22-language
+// translations for every rotation expansion at once.
+const EVENT_NAME_KEYS: Partial<Record<EventId, TranslationKey>> = {
   speed: "eventSpeedName",
   random: "eventRandomName",
   double: "eventDoubleName",
   survival: "eventSurvivalName",
 };
-const EVENT_SHORT_KEYS: Record<EventId, TranslationKey> = {
+const EVENT_SHORT_KEYS: Partial<Record<EventId, TranslationKey>> = {
   speed: "eventSpeedShort",
   random: "eventRandomShort",
   double: "eventDoubleShort",
   survival: "eventSurvivalShort",
 };
-const EVENT_DESC_KEYS: Record<EventId, TranslationKey> = {
+const EVENT_DESC_KEYS: Partial<Record<EventId, TranslationKey>> = {
   speed: "eventSpeedDesc",
   random: "eventRandomDesc",
   double: "eventDoubleDesc",
@@ -90,16 +143,22 @@ const EVENT_DESC_KEYS: Record<EventId, TranslationKey> = {
 type Translator = (key: TranslationKey) => string;
 
 export function getEventName(id: EventId, T: Translator): string {
-  return T(EVENT_NAME_KEYS[id]);
+  const key = EVENT_NAME_KEYS[id];
+  return key ? T(key) : EVENT_CONFIGS[id].name;
 }
 export function getEventShortName(id: EventId, T: Translator): string {
-  return T(EVENT_SHORT_KEYS[id]);
+  const key = EVENT_SHORT_KEYS[id];
+  return key ? T(key) : EVENT_CONFIGS[id].shortName;
 }
 export function getEventDesc(id: EventId, T: Translator): string {
-  return T(EVENT_DESC_KEYS[id]);
+  const key = EVENT_DESC_KEYS[id];
+  return key ? T(key) : EVENT_CONFIGS[id].desc;
 }
 
-export const EVENT_ORDER: EventId[] = ["speed", "random", "double", "survival"];
+export const EVENT_ORDER: EventId[] = [
+  "speed", "random", "double", "survival",
+  "frozen", "inferno", "chaos", "casino",
+];
 
 export function pickRandomSuit(exclude?: Suit): Suit {
   const all: Suit[] = ["hearts", "diamonds", "clubs", "spades"];

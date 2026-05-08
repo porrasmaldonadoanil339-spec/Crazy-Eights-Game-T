@@ -131,8 +131,9 @@ export interface ActiveChallengeRules {
 
 export function generateChallengeRules(): ActiveChallengeRules {
   const shuffled = [...CHALLENGE_RULES].sort(() => Math.random() - 0.5);
-  const count = Math.random() < 0.4 ? 2 : 1;
-  const selectedRules = shuffled.slice(0, count);
+  // Always exactly 1 rule per match — keeps each Desafío match focused on a
+  // single twist instead of stacking rules that can interact unpredictably.
+  const selectedRules = shuffled.slice(0, 1);
 
   let maxTurns: number | undefined;
   let startingCards: number | undefined;

@@ -71,7 +71,7 @@ export const GAME_MODES: GameModeConfig[] = [
     xpLoss: 5,
     coinsLoss: 0,
     hasDifficulty: false,
-    timerSeconds: 8,
+    timerSeconds: 5,
     isOnline: true,
   },
   {
