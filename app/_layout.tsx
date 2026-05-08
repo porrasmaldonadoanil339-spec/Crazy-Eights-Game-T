@@ -30,6 +30,7 @@ import {
 } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
 import { initAudio, preloadSounds, startMenuMusic, startGameMusic, stopMusic, pauseMusic, resumeMusic, resumeCurrentMusic, syncSettings, setAppBackgrounded, playOchoLocosVoice, setLogoStingerId, setCustomStingerUri, setCustomStingerTrim, DEFAULT_LOGO_STINGER_ID } from "@/lib/audioManager";
+import { resolveCustomStingerUri } from "@/lib/customStingerCache";
 import { markSplashComplete } from "@/lib/splashState";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useProfile } from "@/context/ProfileContext";
@@ -489,7 +490,12 @@ function AudioManager() {
       setLogoStingerId(profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID);
       // Task #85 — register the player's custom intro clip URI (if any) so the
       // boot stinger can use it on cold start.
-      setCustomStingerUri(profile.customLogoStingerUri || null);
+      // Task #88 — the profile may now hold a remote https:// URL pointing at
+      // the cloud-backed copy; resolve it (downloading + caching when needed)
+      // so the audio manager always sees a local file:// path it can play.
+      resolveCustomStingerUri(profile.customLogoStingerUri || null)
+        .then((resolved) => setCustomStingerUri(resolved))
+        .catch(() => setCustomStingerUri(null));
       // Task #87 — apply the saved trim window so the boot stinger uses the
       // 2-second slice the player picked, not the head of the source file.
       setCustomStingerTrim(
@@ -524,7 +530,15 @@ function AudioManager() {
   // for the next boot.
   useEffect(() => {
     if (!isLoaded) return;
-    setCustomStingerUri(profile.customLogoStingerUri || null);
+    let cancelled = false;
+    // Task #88 — resolve potentially-remote URLs through the cache before
+    // handing them to the audio manager so previews after a fresh sign-in /
+    // reinstall download the clip on demand instead of trying to play an
+    // https:// URL directly.
+    resolveCustomStingerUri(profile.customLogoStingerUri || null)
+      .then((resolved) => { if (!cancelled) setCustomStingerUri(resolved); })
+      .catch(() => { if (!cancelled) setCustomStingerUri(null); });
+    return () => { cancelled = true; };
   }, [profile.customLogoStingerUri, isLoaded]);
 
   // Task #87 — keep the audio manager in sync with the player's saved trim

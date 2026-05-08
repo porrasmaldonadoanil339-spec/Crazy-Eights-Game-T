@@ -1,4 +1,4 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
@@ -625,6 +625,115 @@ router.post("/dev-reset", (req, res) => {
   saveProfiles(next);
 
   return res.json({ ok: true, removed });
+});
+
+// ─── Custom logo stinger upload (Task #88) ────────────────────────────────────
+// Backs up the player's custom intro clip to the server so the URI stored in
+// the cloud profile is a real, downloadable URL instead of a device-local
+// file:// path. The client uploads the saved (post-trim) source after Save,
+// downloads + caches it locally on next boot, and DELETEs the remote copy
+// when the player removes their pick.
+const STINGERS_DIR = path.join("/tmp", "ocho-stingers");
+const STINGER_MAX_BYTES = 5 * 1024 * 1024;
+const STINGER_ALLOWED_EXT = new Set(["m4a", "mp3", "wav", "aac", "ogg", "caf", "webm", "mp4"]);
+const STINGER_MIME_BY_EXT: Record<string, string> = {
+  m4a:  "audio/mp4",
+  mp4:  "audio/mp4",
+  mp3:  "audio/mpeg",
+  wav:  "audio/wav",
+  aac:  "audio/aac",
+  ogg:  "audio/ogg",
+  caf:  "audio/x-caf",
+  webm: "audio/webm",
+};
+
+function ensureStingersDir() {
+  try { fs.mkdirSync(STINGERS_DIR, { recursive: true }); } catch {}
+}
+
+function deleteStingerFilesForUser(userId: string) {
+  ensureStingersDir();
+  try {
+    for (const name of fs.readdirSync(STINGERS_DIR)) {
+      if (name.startsWith(`${userId}-`)) {
+        try { fs.unlinkSync(path.join(STINGERS_DIR, name)); } catch {}
+      }
+    }
+  } catch {}
+}
+
+function buildStingerUrl(req: import("express").Request, filename: string): string {
+  const proto = req.header("x-forwarded-proto") || req.protocol || "https";
+  const host = req.header("x-forwarded-host") || req.get("host");
+  return `${proto}://${host}/api/auth/profile/stinger/${filename}`;
+}
+
+router.post(
+  "/profile/stinger",
+  express.json({ limit: "6mb" }),
+  (req, res) => {
+    const auth = req.headers.authorization;
+    if (!auth) return res.status(401).json({ error: "Unauthorized" });
+    const token = auth.replace("Bearer ", "");
+    const payload = verifyToken(token);
+    if (!payload) return res.status(401).json({ error: "Invalid token" });
+
+    const { data, ext } = req.body as { data?: string; ext?: string };
+    if (!data || !ext) return res.status(400).json({ error: "data and ext required" });
+    const safeExt = ext.replace(/[^a-z0-9]/gi, "").toLowerCase();
+    if (!STINGER_ALLOWED_EXT.has(safeExt)) {
+      return res.status(400).json({ error: "unsupported audio format" });
+    }
+    let buf: Buffer;
+    try {
+      buf = Buffer.from(data, "base64");
+    } catch {
+      return res.status(400).json({ error: "invalid base64" });
+    }
+    if (buf.byteLength === 0 || buf.byteLength > STINGER_MAX_BYTES) {
+      return res.status(413).json({ error: "audio file too large" });
+    }
+
+    ensureStingersDir();
+    deleteStingerFilesForUser(payload.userId);
+    // Capability-style URL: include 16 bytes of randomness so the public GET
+    // endpoint can't be enumerated from a known userId. The per-user cleanup
+    // above also makes a leaked URL stop working as soon as the player
+    // replaces or removes their pick.
+    const token2 = crypto.randomBytes(16).toString("hex");
+    const filename = `${payload.userId}-${Date.now()}-${token2}.${safeExt}`;
+    try {
+      fs.writeFileSync(path.join(STINGERS_DIR, filename), buf);
+    } catch {
+      return res.status(500).json({ error: "failed to write file" });
+    }
+    return res.json({ ok: true, url: buildStingerUrl(req, filename), filename });
+  },
+);
+
+router.get("/profile/stinger/:filename", (req, res) => {
+  const filename = req.params.filename;
+  if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9]+$/.test(filename)) {
+    return res.status(400).json({ error: "bad filename" });
+  }
+  ensureStingersDir();
+  const full = path.join(STINGERS_DIR, filename);
+  if (!fs.existsSync(full)) return res.status(404).json({ error: "not found" });
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  const mime = STINGER_MIME_BY_EXT[ext] ?? "application/octet-stream";
+  res.setHeader("Content-Type", mime);
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  return fs.createReadStream(full).pipe(res);
+});
+
+router.delete("/profile/stinger", (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: "Unauthorized" });
+  const token = auth.replace("Bearer ", "");
+  const payload = verifyToken(token);
+  if (!payload) return res.status(401).json({ error: "Invalid token" });
+  deleteStingerFilesForUser(payload.userId);
+  return res.json({ ok: true });
 });
 
 export default router;

@@ -14,6 +14,7 @@ import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
+import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache } from "@/lib/customStingerCache";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import { File, Directory, Paths } from "expo-file-system";
@@ -448,16 +449,34 @@ export default function SettingsScreen() {
     // _layout effect will re-sync on the next profile push too, but doing it
     // here makes the post-save preview deterministic in the same tick.
     setCustomStingerTrim(startMs, endMs);
+    const ext = stingerDraft.ext;
     updateSettings({
       customLogoStingerUri: savedUri,
       customLogoStingerStartMs: startMs,
       customLogoStingerEndMs: endMs,
       logoStingerId: "custom",
     });
-    if (previousUri && previousUri !== savedUri) cleanupOldCustomClip(previousUri);
+    if (previousUri && !/^https?:\/\//i.test(previousUri) && previousUri !== savedUri) {
+      cleanupOldCustomClip(previousUri);
+    }
     setStingerDraft(null);
     if (profile.sfxEnabled) previewLogoStinger("custom").catch(() => {});
     if (profile.vibrationEnabled) Vibration.vibrate(30);
+
+    // Task #88 — back the clip up to the cloud so signing in on another
+    // device (or reinstalling the app) restores the same intro instead of
+    // pointing at a now-missing local file. Fire-and-forget: when offline /
+    // unauthenticated the local file:// URI we just saved keeps working on
+    // this device, and the next save attempt will retry the upload.
+    (async () => {
+      const remoteUrl = await uploadCustomStinger(savedUri, ext);
+      if (!remoteUrl) return;
+      // Pre-populate the cache slot keyed by the remote filename so the
+      // resolver in _layout.tsx hits cache on the next boot instead of
+      // re-downloading what we already have on disk.
+      cacheLocalCopyForRemote(remoteUrl, savedUri);
+      updateSettings({ customLogoStingerUri: remoteUrl });
+    })();
   };
 
   // Cleanup any in-flight preview when the screen unmounts.
@@ -585,6 +604,7 @@ export default function SettingsScreen() {
 
   const removeCustomStinger = () => {
     const prevUri = profile.customLogoStingerUri || "";
+    const prevWasRemote = /^https?:\/\//i.test(prevUri);
     setCustomStingerUri(null);
     // Fall back to the *previously selected* built-in stinger if Custom was
     // the active pick, not the global default.
@@ -605,7 +625,11 @@ export default function SettingsScreen() {
         customLogoStingerEndMs: CUSTOM_LOGO_STINGER_MAX_MS,
       });
     }
-    cleanupOldCustomClip(prevUri);
+    if (!prevWasRemote) cleanupOldCustomClip(prevUri);
+    // Task #88 — drop the cloud copy + any cached downloads so reinstalling
+    // / signing back in doesn't restore a clip the user just cleared.
+    if (prevWasRemote) clearCustomStingerCache();
+    deleteRemoteCustomStinger().catch(() => {});
     if (profile.vibrationEnabled) Vibration.vibrate(30);
   };
 
