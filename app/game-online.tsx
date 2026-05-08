@@ -27,7 +27,15 @@ import {
 } from "@/lib/audioManager";
 import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
-import { getActiveEvent } from "@/components/EventsCard";
+import { getCurrentWeeklyEvent } from "@/lib/events";
+
+// Unified event source: weekly rotation from lib/events.ts. Returns null
+// when the player is below the level-5 events unlock threshold so
+// multiplayer matches don't silently apply event rules to new players.
+function getActiveEvent(level: number) {
+  if (level < 5) return null;
+  return getCurrentWeeklyEvent().event;
+}
 import { multiApplyRandomShuffle } from "@/lib/multiplayerEngine";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc } from "@/lib/eventModes";
 import { CARD_BACKS, AVATARS, getTableDesignById } from "@/lib/storeItems";

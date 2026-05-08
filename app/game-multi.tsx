@@ -25,7 +25,14 @@ import { playCardFlip, playCardDraw, playButton, playSpeedTick, stopMusic } from
 import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS } from "@/lib/storeItems";
 import { EmotePanel, EmoteBubble, type Emote } from "@/components/EmotePanel";
-import { getActiveEvent } from "@/components/EventsCard";
+import { getCurrentWeeklyEvent } from "@/lib/events";
+
+// Unified event source: weekly rotation from lib/events.ts. Returns null
+// when the player is below the level-5 events unlock threshold.
+function getActiveEvent(level: number) {
+  if (level < 5) return null;
+  return getCurrentWeeklyEvent().event;
+}
 import { updateChallengeProgress } from "@/lib/challenges";
 import BouncePressable from "@/components/BouncePressable";
 import DiscardBouncer from "@/components/DiscardBouncer";
