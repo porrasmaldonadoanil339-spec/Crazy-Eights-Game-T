@@ -25,7 +25,7 @@ import {
 import { useProfile } from "@/context/ProfileContext";
 import {
   playCardFlip, playCardDraw, playButton, playWin, playLose, playChestOpen, playOchoLocosVoice,
-  playSpeedTick, stopMusic, startGameMusic, syncSettings
+  playSpeedTick, stopMusic, startGameMusicForMode, syncSettings
 } from "@/lib/audioManager";
 import { CardPlayEffect } from "@/components/CardPlayEffect";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
@@ -1573,7 +1573,9 @@ export default function OnlineGameScreen() {
     // Replay stays on /game-online, so the route-driven AudioManager doesn't
     // re-trigger. Game-over stopped the music, so explicitly restart it here
     // (user-initiated action — comparable to the in-game music toggle).
-    startGameMusic().catch(() => {});
+    // Routed through startGameMusicForMode so online matches share the same
+    // per-mode track-routing pipeline as offline games.
+    startGameMusicForMode("online").catch(() => {});
     // Re-arm the event intro banner so it appears for the new match too.
     eventBannerShownRef.current = false;
     if (newEventId) {
@@ -2246,7 +2248,7 @@ export default function OnlineGameScreen() {
                   setInGameMusicEnabled(false);
                   syncSettings(false, inGameSfxEnabled);
                 } else {
-                  startGameMusic().catch(() => {});
+                  startGameMusicForMode("online").catch(() => {});
                   setInGameMusicEnabled(true);
                   syncSettings(true, inGameSfxEnabled);
                 }

@@ -35,7 +35,7 @@ import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge 
 import { getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
-import { stopMusic, startGameMusic, startMenuMusic, syncSettings, playWin, playLose, playChestOpen, setForceAmbience } from "@/lib/audioManager";
+import { stopMusic, startGameMusic, startGameMusicForMode, startMenuMusic, syncSettings, playWin, playLose, playChestOpen, setForceAmbience } from "@/lib/audioManager";
 import { scheduleReEngagementNotification } from "@/lib/notifications";
 import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
@@ -1712,14 +1712,32 @@ export default function GameScreen() {
   const modeName = currentModeConfig ? T(`mode${currentModeConfig.id.charAt(0).toUpperCase() + currentModeConfig.id.slice(1)}` as any) : "";
   const modeIdentity = getModeIdentity(session?.mode, { isFichasRun });
 
-  // Play menu music during matchmaking, switch to game music when it ends
+  // Play menu music during matchmaking, switch to mode-specific game music
+  // when matchmaking ends. Routing lives in lib/audioManager so high-stakes
+  // modes (Torneo, Ranked, Reto de Fichas) get a tenser backdrop than the
+  // standard game-music used by casual modes.
   useEffect(() => {
     if (showMatchmaking) {
       startMenuMusic().catch(() => {});
     } else {
-      startGameMusic().catch(() => {});
+      startGameMusicForMode(session?.mode, { isFichasRun }).catch(() => {});
     }
-  }, [showMatchmaking]);
+  }, [showMatchmaking, session?.mode, isFichasRun]);
+
+  // Reto de Fichas — premium chip-clinking stinger on first deal so the
+  // player gets sonic confirmation that this match counts toward the chip
+  // challenge (in addition to the visual purple/gold pill + casino tint).
+  // Keyed on session.gameStartTime so an in-place replay (which keeps the
+  // game screen mounted) re-arms and fires the stinger again for the new
+  // match, instead of staying stuck after the first one.
+  const fichasStingerMatchRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!isFichasRun || !dealAnimationDone) return;
+    const matchId = session?.gameStartTime ?? 0;
+    if (fichasStingerMatchRef.current === matchId) return;
+    fichasStingerMatchRef.current = matchId;
+    playChestOpen("fichas").catch(() => {});
+  }, [isFichasRun, dealAnimationDone, session?.gameStartTime]);
 
   // NetInfo disconnection: navigate home if offline for >15 seconds
   useEffect(() => {

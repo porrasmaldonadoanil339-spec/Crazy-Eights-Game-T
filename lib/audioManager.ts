@@ -403,6 +403,32 @@ export async function startSearchMusic() {
   await requestMusicTrack("search");
 }
 
+// Per-mode in-game music routing. Until dedicated per-mode loops are
+// produced, we re-use the existing two music tracks (game / search) to
+// give high-stakes modes (Torneo, Ranked, Reto de Fichas) a more tense,
+// suspenseful backdrop versus the standard game-music for casual modes.
+//
+// Goes through the same serialized requestMusicTrack pipeline as
+// startGameMusic so transitions never overlap when modes switch.
+const MODE_TO_MUSIC_TRACK: Record<string, MusicTrack> = {
+  practice: "game",
+  classic: "game",
+  lightning: "game",
+  challenge: "game",
+  tournament: "search",
+  ranked: "search",
+  fichas: "search",
+};
+
+export async function startGameMusicForMode(
+  modeId: string | undefined,
+  opts?: { sequential?: boolean; isFichasRun?: boolean },
+) {
+  const key = opts?.isFichasRun ? "fichas" : (modeId ?? "classic");
+  const track = MODE_TO_MUSIC_TRACK[key] ?? "game";
+  await requestMusicTrack(track, opts);
+}
+
 async function _stopMusicInternal() {
   const player = bgPlayer;
   bgPlayer = null;
