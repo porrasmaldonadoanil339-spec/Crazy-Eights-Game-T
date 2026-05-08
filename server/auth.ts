@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as crypto from "crypto";
-import { spawn } from "child_process";
+import { spawn, type ChildProcess } from "child_process";
 
 const router = Router();
 
@@ -739,7 +739,24 @@ function checkStingerTrimRateLimit(ip: string): { ok: true } | { ok: false; retr
   return { ok: true };
 }
 
-function runFfmpegTrim(srcPath: string, dstPath: string, startSec: number, durationSec: number): Promise<void> {
+// Sentinel error thrown when the client disconnects mid-request and we
+// SIGTERM the in-flight ffmpeg child. Routes check `instanceof
+// ClientCancelledError` so they can log "client cancelled" instead of
+// reporting a real ffmpeg failure to the error metrics.
+class ClientCancelledError extends Error {
+  constructor() {
+    super("client cancelled");
+    this.name = "ClientCancelledError";
+  }
+}
+
+function runFfmpegTrim(
+  srcPath: string,
+  dstPath: string,
+  startSec: number,
+  durationSec: number,
+  onProc?: (proc: ChildProcess) => void,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     // -ss before -i seeks the demuxer (fast + reasonably accurate for AAC/MP3
     // at frame boundaries ~23ms). Re-encode to mono 96k AAC so the output
@@ -759,11 +776,13 @@ function runFfmpegTrim(srcPath: string, dstPath: string, startSec: number, durat
       dstPath,
     ];
     const proc = spawn("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
+    onProc?.(proc);
     let stderr = "";
     proc.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString("utf8"); });
     proc.on("error", reject);
-    proc.on("close", (code) => {
+    proc.on("close", (code, signal) => {
       if (code === 0) resolve();
+      else if (signal === "SIGTERM" || signal === "SIGKILL") reject(new ClientCancelledError());
       else reject(new Error(`ffmpeg exited ${code}: ${stderr.slice(-400)}`));
     });
   });
@@ -875,8 +894,26 @@ router.post(
       return res.status(400).json({ error: "trim window too short" });
     }
     const dstPath = path.join(os.tmpdir(), `stinger-trim-${crypto.randomBytes(8).toString("hex")}.m4a`);
+    // Track the in-flight ffmpeg child so we can SIGTERM it if the client
+    // disconnects mid-encode (Task #110). Without this the encode runs to
+    // completion even after the player taps cancel, wasting CPU on the
+    // shared rate-limited path.
+    let proc: ChildProcess | null = null;
+    let clientClosed = false;
+    const onClose = () => {
+      clientClosed = true;
+      if (proc && proc.exitCode === null && proc.signalCode === null) {
+        try { proc.kill("SIGTERM"); } catch {}
+      }
+    };
+    // Listen on both req and res: req.close fires when the incoming socket
+    // closes (covers most aborts), res.close fires when the response stream
+    // ends — belt and suspenders so a disconnect after multer finishes
+    // uploading still kills ffmpeg.
+    req.on("close", onClose);
+    res.on("close", onClose);
     try {
-      await runFfmpegTrim(file.path, dstPath, start / 1000, durationMs / 1000);
+      await runFfmpegTrim(file.path, dstPath, start / 1000, durationMs / 1000, (p) => { proc = p; });
       const out = fs.readFileSync(dstPath);
       return res.json({
         ok: true,
@@ -885,9 +922,19 @@ router.post(
         data: out.toString("base64"),
       });
     } catch (err) {
+      if (err instanceof ClientCancelledError || clientClosed) {
+        console.log("stinger trim: client cancelled mid-encode");
+        if (!res.headersSent && !clientClosed) {
+          return res.status(499).json({ error: "client cancelled" });
+        }
+        return;
+      }
       const msg = err instanceof Error ? err.message : String(err);
+      console.error("stinger trim: ffmpeg failed", msg);
       return res.status(500).json({ error: "trim failed", detail: msg });
     } finally {
+      req.off("close", onClose);
+      res.off("close", onClose);
       cleanup();
       try { fs.unlinkSync(dstPath); } catch {}
     }
@@ -904,7 +951,11 @@ router.post(
 // so the source bytes stream straight to disk via multer instead of being
 // buffered as base64 JSON. No auth — matches trim, so guests benefit too.
 
-function runFfmpegShrink(srcPath: string, dstPath: string): Promise<void> {
+function runFfmpegShrink(
+  srcPath: string,
+  dstPath: string,
+  onProc?: (proc: ChildProcess) => void,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     // -vn drops any cover art, -ac 1 forces mono, -ar 22050 halves the
     // sample rate, -b:a 64k fixes the bitrate so the output size scales
@@ -923,11 +974,13 @@ function runFfmpegShrink(srcPath: string, dstPath: string): Promise<void> {
       dstPath,
     ];
     const proc = spawn("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
+    onProc?.(proc);
     let stderr = "";
     proc.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString("utf8"); });
     proc.on("error", reject);
-    proc.on("close", (code) => {
+    proc.on("close", (code, signal) => {
       if (code === 0) resolve();
+      else if (signal === "SIGTERM" || signal === "SIGKILL") reject(new ClientCancelledError());
       else reject(new Error(`ffmpeg exited ${code}: ${stderr.slice(-400)}`));
     });
   });
@@ -950,8 +1003,21 @@ router.post(
       return res.status(400).json({ error: "empty file" });
     }
     const dstPath = path.join(os.tmpdir(), `stinger-shrink-${crypto.randomBytes(8).toString("hex")}.m4a`);
+    // Same client-disconnect handling as /trim (Task #110): SIGTERM the
+    // ffmpeg child if the player cancels, since the shrink encode is the
+    // long-running step on the shared rate-limited path.
+    let proc: ChildProcess | null = null;
+    let clientClosed = false;
+    const onClose = () => {
+      clientClosed = true;
+      if (proc && proc.exitCode === null && proc.signalCode === null) {
+        try { proc.kill("SIGTERM"); } catch {}
+      }
+    };
+    req.on("close", onClose);
+    res.on("close", onClose);
     try {
-      await runFfmpegShrink(file.path, dstPath);
+      await runFfmpegShrink(file.path, dstPath, (p) => { proc = p; });
       const out = fs.readFileSync(dstPath);
       // Defensive: the encoder settings should always produce something
       // under STINGER_MAX_BYTES, but pathologically long sources could
@@ -967,9 +1033,19 @@ router.post(
         data: out.toString("base64"),
       });
     } catch (err) {
+      if (err instanceof ClientCancelledError || clientClosed) {
+        console.log("stinger shrink: client cancelled mid-encode");
+        if (!res.headersSent && !clientClosed) {
+          return res.status(499).json({ error: "client cancelled" });
+        }
+        return;
+      }
       const msg = err instanceof Error ? err.message : String(err);
+      console.error("stinger shrink: ffmpeg failed", msg);
       return res.status(500).json({ error: "shrink failed", detail: msg });
     } finally {
+      req.off("close", onClose);
+      res.off("close", onClose);
       cleanup();
       try { fs.unlinkSync(dstPath); } catch {}
     }
