@@ -285,12 +285,23 @@ async function stopAmbience() {
   if (ambienceTransition === next) ambienceTransition = null;
 }
 
+// When set, the casino ambience layer is forced ON regardless of which music
+// track is currently playing. Used during the Reto de Fichas run so the
+// casino atmosphere bleeds under the in-game music for the whole match.
+let forceAmbience = false;
+
 async function syncAmbienceWithTrack(track: MusicTrack | null) {
-  if (track === "menu" && isMusicEnabled) {
+  if (isMusicEnabled && (forceAmbience || track === "menu")) {
     await startAmbience();
   } else {
     await stopAmbience();
   }
+}
+
+export async function setForceAmbience(enabled: boolean): Promise<void> {
+  if (forceAmbience === enabled) return;
+  forceAmbience = enabled;
+  await syncAmbienceWithTrack(currentTrack);
 }
 
 async function applyMusicTransition(track: MusicTrack, opts?: { sequential?: boolean }) {

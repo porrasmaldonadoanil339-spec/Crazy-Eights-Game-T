@@ -35,7 +35,7 @@ import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge 
 import { getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
-import { stopMusic, startGameMusic, startMenuMusic, syncSettings, playWin, playLose, playChestOpen } from "@/lib/audioManager";
+import { stopMusic, startGameMusic, startMenuMusic, syncSettings, playWin, playLose, playChestOpen, setForceAmbience } from "@/lib/audioManager";
 import { scheduleReEngagementNotification } from "@/lib/notifications";
 import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
@@ -43,7 +43,7 @@ import { getCpuPhrase, type CpuPhraseEvent } from "@/lib/cpuPhrases";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
 import ChestVisual from "@/components/ChestVisual";
 import RoundTransition from "@/components/RoundTransition";
-import { consumeFichasRunActive, recordFichasWin } from "@/lib/fichasChallenge";
+import { consumeFichasRunActive, peekFichasRunActive, recordFichasWin } from "@/lib/fichasChallenge";
 import { ChestType, ChestReward, getChestProgress, CHEST_CONFIG } from "@/lib/chestSystem";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc, pickRandomSuit, type EventId } from "@/lib/eventModes";
 
@@ -1422,6 +1422,10 @@ export default function GameScreen() {
   const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  // Reto de Fichas in-match identity. Peeked at mount so the casino pill,
+  // ambience, and palette swap stay active for the whole match — the flag
+  // itself is consumed in the win/loss handler (see consumeFichasRunActive).
+  const [isFichasRun] = useState<boolean>(() => peekFichasRunActive());
 
   // Hardware back button (Android) → confirm before leaving the match.
   // Centralized in `useGameBackHandler` so Practice / Classic / Lightning /
@@ -1453,14 +1457,27 @@ export default function GameScreen() {
   }, [dealAnimationDone, session?.mode]);
 
   useEffect(() => {
+    // Continuous tournament: surface a brief, non-blocking ROUND N pulse on
+    // every round so the player sees the format change — but never a
+    // disruptive modal. Round 1 also gets the banner so the format is
+    // announced from the start.
     if (session?.mode === "tournament" && dealAnimationDone && tournamentRound <= 3) {
       setShowTournamentRoundBanner(true);
-      const t = setTimeout(() => setShowTournamentRoundBanner(false), 2400);
+      const t = setTimeout(() => setShowTournamentRoundBanner(false), 1800);
       return () => clearTimeout(t);
     }
   }, [dealAnimationDone, session?.mode, tournamentRound]);
 
   useEffect(() => () => { consumeFichasRunActive(); }, []);
+
+  // Layer the casino ambience under in-game music for Reto de Fichas. Cleared
+  // on unmount so leaving the match returns audio to the default behaviour
+  // (ambience only under the menu track).
+  useEffect(() => {
+    if (!isFichasRun) return;
+    setForceAmbience(true).catch(() => {});
+    return () => { setForceAmbience(false).catch(() => {}); };
+  }, [isFichasRun]);
 
   // Event mode intro banner
   useEffect(() => {
@@ -2001,13 +2018,23 @@ export default function GameScreen() {
         ? [tournamentScores[0] + 1, tournamentScores[1]]
         : [tournamentScores[0], tournamentScores[1] + 1];
       setTournamentScores(newScores);
+      const nextRound = tournamentRound + 1;
       setTournamentRound((r) => r + 1);
       setLastTournamentRoundWon(won);
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration, eventId: session.eventId ?? null });
       scheduleReEngagementNotification(86400, { notificationsEnabled: profile.notificationsEnabled ?? true, reminderNotifications: profile.reminderNotifications ?? true }).catch(() => {});
+      // Continuous tournament: auto-chain into the next round vs. the SAME
+      // rival (startNextTournamentRound preserves session.cpuProfile only
+      // when not practice — same player). Only show the trophy modal at the
+      // very end, when all 3 rounds have been played.
+      const tournamentOver = nextRound > 3;
       setTimeout(() => {
         setShowEpicResult(null);
-        setShowTournamentModal(true);
+        if (tournamentOver) {
+          setShowTournamentModal(true);
+        } else {
+          startNextTournamentRound();
+        }
       }, 1500);
     } else {
       recordGameResult({ won, mode: session.mode, difficulty: session.difficulty, coinsEarned: coins, xpEarned: xp, eightsPlayed: session.eightsPlayedThisGame, cardsDrawn: session.cardsDrawnThisGame, isPerfect, isComeback, gameDurationMs: duration, eventId: session.eventId ?? null });
@@ -2427,6 +2454,16 @@ export default function GameScreen() {
         style={StyleSheet.absoluteFill}
       />
       <AnimatedBackground />
+      {isFichasRun && (
+        // Casino-purple haze layered over the table felt for Reto de Fichas.
+        // Subtle enough to keep cards readable, but instantly distinct from
+        // a normal Classic match.
+        <LinearGradient
+          colors={["#6B21A833", "#A855F71A", "#D4AF3722"]}
+          locations={[0, 0.5, 1]}
+          style={[StyleSheet.absoluteFill, { pointerEvents: "none" } as any]}
+        />
+      )}
       <View style={styles.tableGlowBorder} />
 
       {/* Ripple effect on play — color-coded for special cards */}
@@ -2536,7 +2573,16 @@ export default function GameScreen() {
           <Ionicons name="arrow-back" size={20} color={Colors.gold} />
         </BouncePressable>
         <View style={styles.headerCenter}>
-          {currentModeConfig && (
+          {isFichasRun ? (
+            // Reto de Fichas — replace the underlying "Clásico" pill with a
+            // dedicated casino-purple identity so the player sees they're in
+            // the chip challenge, not a generic Classic match.
+            <View style={[styles.modePill, { borderColor: "#A855F799", backgroundColor: "#A855F71A" }]}>
+              <Ionicons name="diamond" size={11} color="#D4AF37" />
+              <Text style={[styles.modeLabel, { color: "#D4AF37" }]}>RETO FICHAS</Text>
+              {isExpert && <Ionicons name="timer" size={10} color="#E74C3C" style={{ marginLeft: 2 }} />}
+            </View>
+          ) : currentModeConfig && (
             <View style={[styles.modePill, { borderColor: currentModeConfig.color + "44" }]}>
               <Ionicons name={currentModeConfig.icon as any} size={11} color={currentModeConfig.color} />
               <Text style={[styles.modeLabel, { color: currentModeConfig.color }]}>{modeName}</Text>
@@ -2970,7 +3016,16 @@ export default function GameScreen() {
       )}
 
       {showLightningBanner && <LightningBanner />}
-      {showTournamentRoundBanner && <RoundTransition round={tournamentRound} />}
+      {showTournamentRoundBanner && (
+        <RoundTransition
+          round={tournamentRound}
+          subtitle={
+            tournamentRound >= 3
+              ? "RONDA FINAL — TODO O NADA"
+              : `RONDA ${tournamentRound} DE 3 — ${tournamentScores[0]} - ${tournamentScores[1]}`
+          }
+        />
+      )}
       {session?.mode === "lightning"
         && dealAnimationDone
         && !isGameOver

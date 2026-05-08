@@ -117,3 +117,10 @@ export function consumeFichasRunActive(): boolean {
   _fichasRunActive = false;
   return was;
 }
+
+// Non-consuming peek so the game screen can read "is this a Fichas run?"
+// for in-match identity (banner, ambience, palette) WITHOUT clearing the
+// flag that the win-handler later needs to consume.
+export function peekFichasRunActive(): boolean {
+  return _fichasRunActive;
+}

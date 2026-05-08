@@ -174,10 +174,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       if (!prev) return prev;
       const modeConfig = getModeById(prev.mode);
       const newState = initGame(modeConfig.cardsPerPlayer, prev.difficulty);
-      const isExpert = prev.difficulty === "expert";
-      const cpuProfile = prev.mode === "practice"
-        ? BIYIS_PROFILE
-        : getRandomCpuProfile(undefined, playerLevel, isExpert, playerProfile?.avatarId);
+      // Continuous tournament — same rival across all 3 rounds. We deliberately
+      // KEEP prev.cpuProfile instead of rolling a fresh one so the player sees
+      // a coherent best-of-3 match against the same opponent.
+      const cpuProfile = prev.cpuProfile;
 
       setDealAnimationDone(false);
       setGameState(newState);
@@ -192,7 +192,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       };
     });
     setSelectedCard(null);
-  }, [playerLevel]);
+  }, []);
 
   const getGameResult = useCallback((): "player_wins" | "ai_wins" | "draw" | null => {
     if (!gameState) return null;
