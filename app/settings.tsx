@@ -1668,10 +1668,21 @@ export default function SettingsScreen() {
                       const endStr = fmt(stingerSourceMemo.endMs);
                       const durStr = fmt(stingerSourceMemo.durationMs);
                       const tpl = T("logoStingerTrimmedSliceHint") || "Trimmed {start}s–{end}s of {duration}s";
-                      const label = tpl
+                      const baseLabel = tpl
                         .replace("{start}", startStr)
                         .replace("{end}", endStr)
                         .replace("{duration}", durStr);
+                      // Task #111 — call out when the saved window is pinned
+                      // to the very edge of the source memo (within ~50ms),
+                      // so the player knows they can only nudge in one
+                      // direction without re-recording.
+                      const EDGE_TOLERANCE_MS = 50;
+                      const atStart = stingerSourceMemo.startMs <= EDGE_TOLERANCE_MS;
+                      const atEnd = stingerSourceMemo.endMs >= stingerSourceMemo.durationMs - EDGE_TOLERANCE_MS;
+                      const qualifiers: string[] = [];
+                      if (atStart) qualifiers.push(T("logoStingerTrimmedSliceAtStart") || "(at start)");
+                      if (atEnd) qualifiers.push(T("logoStingerTrimmedSliceAtEnd") || "(at end)");
+                      const label = qualifiers.length > 0 ? `${baseLabel} ${qualifiers.join(" ")}` : baseLabel;
                       return (
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                           <Ionicons name="cut-outline" size={13} color="#F1C40F" />
