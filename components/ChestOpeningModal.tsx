@@ -31,16 +31,19 @@ import { t as i18nT, type Lang, type TranslationKey } from "@/lib/i18n";
 import { playSound } from "@/lib/sounds";
 
 import type { SoundEvent } from "@/lib/sounds";
+// Task #83 — each rarity gets its own dedicated chest-opening waveform.
+// Sounds are gated by the SFX setting via lib/audioManager and preloaded
+// at app start by preloadSounds() so the first open has no decode latency.
 const RARITY_OPEN_SFX: Record<ChestType, SoundEvent> = {
-  common: "purchase",
-  rare: "achievement",
-  magic: "equip",
-  epic: "level_up",
-  event: "dramatic_drum",
-  fichas: "coin_earn",
-  giant: "applause",
-  legendary: "victory_fanfare",
-  supreme: "battle_pass_unlock",
+  common:    "chest_open_common",
+  rare:      "chest_open_rare",
+  magic:     "chest_open_magic",
+  epic:      "chest_open_epic",
+  event:     "chest_open_event",
+  fichas:    "chest_open_fichas",
+  giant:     "chest_open_giant",
+  legendary: "chest_open_legendary",
+  supreme:   "chest_open_supreme",
 };
 
 const CHEST_NAME_KEY: Record<ChestType, TranslationKey> = {
@@ -182,7 +185,7 @@ export default function ChestOpeningModal({ visible, chestType, reward, onClose 
   function startOpening() {
     setPhase("opening");
     setFlashColor(rc.flashColor);
-    playSound(RARITY_OPEN_SFX[chestType] ?? "chestCommon").catch(() => {});
+    playSound(RARITY_OPEN_SFX[chestType] ?? "chest_open_common").catch(() => {});
     shakeX.value = withTiming(0, { duration: 100 });
     shakeY.value = withTiming(0, { duration: 100 });
 

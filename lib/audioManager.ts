@@ -39,6 +39,19 @@ const SOUNDS = {
   logoStingerCinematic: require("@/assets/sounds/logo-stinger-cinematic.wav"),
   logoStingerArcade:    require("@/assets/sounds/logo-stinger-arcade.wav"),
   logoStingerElegant:   require("@/assets/sounds/logo-stinger-elegant.wav"),
+  // Task #83 — unique chest-opening SFX per rarity. Procedurally synthesized
+  // by scripts/gen-chest-open-sfx.mjs so each rarity has its own waveform
+  // (creak + rarity-specific shimmer/fanfare/tail) instead of remixing
+  // existing card/personality samples.
+  chestOpenCommon:    require("@/assets/sounds/chest-open-common.wav"),
+  chestOpenRare:      require("@/assets/sounds/chest-open-rare.wav"),
+  chestOpenMagic:     require("@/assets/sounds/chest-open-magic.wav"),
+  chestOpenEpic:      require("@/assets/sounds/chest-open-epic.wav"),
+  chestOpenEvent:     require("@/assets/sounds/chest-open-event.wav"),
+  chestOpenFichas:    require("@/assets/sounds/chest-open-fichas.wav"),
+  chestOpenGiant:     require("@/assets/sounds/chest-open-giant.wav"),
+  chestOpenLegendary: require("@/assets/sounds/chest-open-legendary.wav"),
+  chestOpenSupreme:   require("@/assets/sounds/chest-open-supreme.wav"),
 };
 
 type SoundKey = keyof typeof SOUNDS;
@@ -114,7 +127,14 @@ function getOrCreateSfx(key: SoundKey): AudioPlayer {
 
 export async function preloadSounds() {
   await initAudio();
-  const keys: SoundKey[] = ["cardFlip", "cardDraw", "shuffle", "button", "wild", "win", "lose"];
+  const keys: SoundKey[] = [
+    "cardFlip", "cardDraw", "shuffle", "button", "wild", "win", "lose",
+    // Task #83 — preload chest-open SFX so the first chest opened in a
+    // session doesn't suffer first-play decode latency.
+    "chestOpenCommon", "chestOpenRare", "chestOpenMagic", "chestOpenEpic",
+    "chestOpenEvent", "chestOpenFichas", "chestOpenGiant",
+    "chestOpenLegendary", "chestOpenSupreme",
+  ];
   for (const k of keys) {
     try { getOrCreateSfx(k); } catch {}
   }
@@ -590,62 +610,51 @@ export async function playInactivityWarning() {
 
 // ─── New sound events ─────────────────────────────────────────────────────────
 
-// Chest opening sounds — different layered combos so each rarity feels distinct.
-export async function playChestOpen(rarity: "common" | "rare" | "epic" | "legendary" | "event" | "fichas") {
-  if (rarity === "common") {
-    await playSfx("shuffle", sfxVolume * 0.7);
-    setTimeout(() => playSfx("cardDraw", sfxVolume * 0.6).catch(() => {}), 220);
+// Chest opening sounds (Task #83) — each rarity plays its own dedicated
+// procedurally-generated waveform from assets/sounds/ so common, rare,
+// magic, epic, event, fichas, giant, legendary, and supreme all sound
+// distinct. Higher rarities use longer, brighter samples + heavier haptics
+// to reinforce the premium feel of the redesigned chest opening modal.
+type ChestRarity =
+  | "common" | "rare" | "magic" | "epic"
+  | "event" | "fichas" | "giant" | "legendary" | "supreme";
+
+const CHEST_OPEN_SFX: Record<ChestRarity, { key: SoundKey; volume: number }> = {
+  common:    { key: "chestOpenCommon",    volume: 0.75 },
+  rare:      { key: "chestOpenRare",      volume: 0.85 },
+  magic:     { key: "chestOpenMagic",     volume: 0.90 },
+  epic:      { key: "chestOpenEpic",      volume: 0.95 },
+  event:     { key: "chestOpenEvent",     volume: 0.90 },
+  fichas:    { key: "chestOpenFichas",    volume: 0.85 },
+  giant:     { key: "chestOpenGiant",     volume: 1.00 },
+  legendary: { key: "chestOpenLegendary", volume: 1.00 },
+  supreme:   { key: "chestOpenSupreme",   volume: 1.00 },
+};
+
+export async function playChestOpen(rarity: ChestRarity) {
+  const cfg = CHEST_OPEN_SFX[rarity] ?? CHEST_OPEN_SFX.common;
+  await playSfx(cfg.key, sfxVolume * cfg.volume);
+  // Layered haptics: stronger / longer for higher rarities.
+  if (rarity === "common" || rarity === "fichas") {
     haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
-    return;
-  }
-  if (rarity === "rare") {
-    await playSfx("shuffle", sfxVolume * 0.8);
-    setTimeout(() => playSfx("wild", sfxVolume * 0.6).catch(() => {}), 200);
-    setTimeout(() => playSfx("win", sfxVolume * 0.5).catch(() => {}), 420);
+  } else if (rarity === "rare" || rarity === "event") {
     haptic(async () => {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 200);
     });
-    return;
-  }
-  if (rarity === "epic") {
-    await playSfx("wild", sfxVolume * 0.9);
-    setTimeout(() => playSfx("shuffle", sfxVolume * 0.7).catch(() => {}), 180);
-    setTimeout(() => playSfx("win", sfxVolume * 0.7).catch(() => {}), 420);
+  } else if (rarity === "magic" || rarity === "epic") {
     haptic(async () => {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 250);
+      setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 260);
     });
-    return;
-  }
-  if (rarity === "legendary") {
-    await playSfx("wild", sfxVolume);
-    setTimeout(() => playSfx("wild", sfxVolume * 0.8).catch(() => {}), 150);
-    setTimeout(() => playSfx("shuffle", sfxVolume * 0.8).catch(() => {}), 280);
-    setTimeout(() => playSfx("win", sfxVolume).catch(() => {}), 480);
-    setTimeout(() => playSfx("win", sfxVolume * 0.6).catch(() => {}), 720);
+  } else {
+    // giant / legendary / supreme — multi-pulse fanfare haptic
     haptic(async () => {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 200);
-      setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 450);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 220);
+      setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), 480);
     });
-    return;
   }
-  if (rarity === "event") {
-    await playSfx("wild", sfxVolume * 0.85);
-    setTimeout(() => playSfx("cardDraw", sfxVolume * 0.7).catch(() => {}), 180);
-    setTimeout(() => playSfx("win", sfxVolume * 0.7).catch(() => {}), 380);
-    haptic(async () => {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 220);
-    });
-    return;
-  }
-  // fichas
-  await playSfx("cardDraw", sfxVolume * 0.7);
-  setTimeout(() => playSfx("wild", sfxVolume * 0.5).catch(() => {}), 140);
-  setTimeout(() => playSfx("win", sfxVolume * 0.5).catch(() => {}), 280);
-  haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
 }
 
 // Reward claim sound — for path/road/battle-pass tier claims.

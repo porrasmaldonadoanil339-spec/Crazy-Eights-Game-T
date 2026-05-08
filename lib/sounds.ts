@@ -49,7 +49,17 @@ export type SoundEvent =
   | "dramatic_drum"
   | "boo"
   | "cackle"
-  | "victory_fanfare";
+  | "victory_fanfare"
+  // Task #83 — unique opening sound per chest rarity.
+  | "chest_open_common"
+  | "chest_open_rare"
+  | "chest_open_magic"
+  | "chest_open_epic"
+  | "chest_open_event"
+  | "chest_open_fichas"
+  | "chest_open_giant"
+  | "chest_open_legendary"
+  | "chest_open_supreme";
 
 import {
   playCardFlip,
@@ -92,6 +102,7 @@ import {
   playBoo,
   playCackle,
   playVictoryFanfare,
+  playChestOpen,
 } from "@/lib/audioManager";
 
 export async function playSound(event: SoundEvent) {
@@ -147,5 +158,14 @@ export async function playSound(event: SoundEvent) {
     case "boo":                return playBoo();
     case "cackle":             return playCackle();
     case "victory_fanfare":    return playVictoryFanfare();
+    case "chest_open_common":    return playChestOpen("common");
+    case "chest_open_rare":      return playChestOpen("rare");
+    case "chest_open_magic":     return playChestOpen("magic");
+    case "chest_open_epic":      return playChestOpen("epic");
+    case "chest_open_event":     return playChestOpen("event");
+    case "chest_open_fichas":    return playChestOpen("fichas");
+    case "chest_open_giant":     return playChestOpen("giant");
+    case "chest_open_legendary": return playChestOpen("legendary");
+    case "chest_open_supreme":   return playChestOpen("supreme");
   }
 }
