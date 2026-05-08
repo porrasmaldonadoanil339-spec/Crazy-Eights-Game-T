@@ -185,6 +185,20 @@ function EffectPreview({ item, compact }: { item: StoreItem; compact?: boolean }
   );
 }
 
+function StingerPreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
+  const color = item.previewColor;
+  return (
+    <View style={previewStyles.centerWrap}>
+      <LinearGradient
+        colors={[color + "55", color + "11"] as [string, string]}
+        style={[compact ? previewStyles.effectCircleCompact : previewStyles.effectCircle, { borderColor: color + "AA" }]}
+      >
+        <Ionicons name="musical-notes" size={compact ? 26 : 36} color={color} />
+      </LinearGradient>
+    </View>
+  );
+}
+
 function EmotePreview({ item, compact }: { item: StoreItem; compact?: boolean }) {
   const color = item.previewColor;
   const icon = (item.preview ?? "happy") as IconName;
@@ -210,6 +224,7 @@ export function ItemPreview({ item, lang, compact }: { item: StoreItem; lang: La
     case "title":        return <TitlePreview item={item} lang={lang} compact={compact} />;
     case "effect":       return <EffectPreview item={item} compact={compact} />;
     case "emote":        return <EmotePreview item={item} compact={compact} />;
+    case "logo_stinger": return <StingerPreview item={item} compact={compact} />;
     default:             return null;
   }
 }

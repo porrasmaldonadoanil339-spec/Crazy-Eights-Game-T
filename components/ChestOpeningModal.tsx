@@ -29,6 +29,7 @@ import { pickLocalized } from "@/lib/storeItems";
 import { useProfile } from "@/context/ProfileContext";
 import { t as i18nT, type Lang, type TranslationKey } from "@/lib/i18n";
 import { playSound } from "@/lib/sounds";
+import { previewLogoStinger, STINGER_OWNED_PREFIX, type LogoStingerId } from "@/lib/audioManager";
 
 import type { SoundEvent } from "@/lib/sounds";
 // Task #83 — each rarity gets its own dedicated chest-opening waveform.
@@ -492,19 +493,48 @@ function RewardDisplay({ reward, config, chestType }: {
 
         {reward.item && (
           <View style={styles.rewardItem}>
-            <View style={[
-              styles.rewardBadge,
-              {
-                backgroundColor: config.color + "33",
-                borderColor: config.glowColor,
-              }
-            ]}>
-              <Ionicons
-                name={(reward.item.preview ?? "gift") as any}
-                size={26}
-                color={reward.item.previewColor ?? config.glowColor}
-              />
-            </View>
+            {reward.item.category === "logo_stinger" ? (
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  const stingerId = reward.item!.id.startsWith(STINGER_OWNED_PREFIX)
+                    ? (reward.item!.id.slice(STINGER_OWNED_PREFIX.length) as LogoStingerId)
+                    : null;
+                  if (stingerId) previewLogoStinger(stingerId).catch(() => {});
+                }}
+                style={[
+                  styles.rewardBadge,
+                  {
+                    backgroundColor: (reward.item.previewColor ?? config.glowColor) + "33",
+                    borderColor: reward.item.previewColor ?? config.glowColor,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="musical-notes"
+                  size={26}
+                  color={reward.item.previewColor ?? config.glowColor}
+                />
+                <View style={styles.stingerPlayDot}>
+                  <Ionicons name="play" size={10} color="#1a0a00" />
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <View style={[
+                styles.rewardBadge,
+                {
+                  backgroundColor: config.color + "33",
+                  borderColor: config.glowColor,
+                }
+              ]}>
+                <Ionicons
+                  name={(reward.item.preview ?? "gift") as any}
+                  size={26}
+                  color={reward.item.previewColor ?? config.glowColor}
+                />
+              </View>
+            )}
             <Text style={[styles.rewardValue, { fontSize: 10 }]} numberOfLines={1}>
               {pickLocalized(reward.item.name, lang)}
             </Text>
@@ -744,6 +774,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
+  },
+  stingerPlayDot: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#FFD700",
+    borderWidth: 2,
+    borderColor: "#1a0a00",
+    justifyContent: "center",
+    alignItems: "center",
   },
   rewardValue: {
     fontSize: 16,
