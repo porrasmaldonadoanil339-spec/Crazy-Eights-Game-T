@@ -1583,6 +1583,7 @@ export default function OnlineGameScreen() {
     cardsDrawnRef.current = 0;
     resultRecordedRef.current = false;
     rankedUpdatedRef.current = false;
+    localResultCueFiredRef.current = false;
     // Replay stays on /game-online, so the route-driven AudioManager doesn't
     // re-trigger. Game-over stopped the music, so explicitly restart it here
     // (user-initiated action — comparable to the in-game music toggle).
