@@ -1,16 +1,14 @@
 import { useEffect } from "react";
-import { Redirect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useGame } from "@/context/GameContext";
 
-// Dedicated entry point for Torneo. See app/lightning.tsx for the rationale.
+// Boots a Tournament session and navigates to the shared /game screen.
 export default function TournamentScreen() {
   const router = useRouter();
   const { startGame } = useGame();
-
   useEffect(() => {
     startGame("tournament", "normal");
     router.replace("/game");
   }, []);
-
-  return <Redirect href="/game" />;
+  return null;
 }
