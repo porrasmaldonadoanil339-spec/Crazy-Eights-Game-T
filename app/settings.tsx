@@ -13,7 +13,7 @@ import { reloadAppAsync } from "expo";
 import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
-import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
+import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
 import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, type UploadStingerErrorReason } from "@/lib/customStingerCache";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
@@ -221,7 +221,7 @@ export default function SettingsScreen() {
   // a 2-second window and preview it before committing to disk + profile.
   const [stingerDraft, setStingerDraft] = useState<
     | null
-    | { srcUri: string; ext: string; durationMs: number }
+    | { srcUri: string; ext: string; durationMs: number; srcSizeBytes: number }
   >(null);
   const [draftStartMs, setDraftStartMs] = useState(0);
   const [draftEndMs, setDraftEndMs] = useState(CUSTOM_LOGO_STINGER_MAX_MS);
@@ -380,13 +380,32 @@ export default function SettingsScreen() {
       Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
       return;
     }
+    // Task #101 — measure the source file's on-disk size so the trim modal
+    // can show it and warn when the clip is too big to be trimmed / backed
+    // up server-side. Best-effort: 0 means "unknown" and the warning row
+    // simply won't render.
+    let srcSizeBytes = 0;
+    try {
+      const f = new File(srcUri);
+      const s = f.size;
+      if (typeof s === "number" && isFinite(s) && s > 0) srcSizeBytes = s;
+    } catch {}
     // Default the trim window to the first 2 seconds of the source (or the
     // full clip if shorter than the cap). The player can then drag handles
     // to move the window before previewing / saving.
     const initialEnd = Math.min(durationMs, CUSTOM_LOGO_STINGER_MAX_MS);
-    setStingerDraft({ srcUri, ext, durationMs });
+    setStingerDraft({ srcUri, ext, durationMs, srcSizeBytes });
     setDraftStartMs(0);
     setDraftEndMs(initialEnd);
+  };
+
+  // Task #101 — human-readable file size used by the trim modal. Returns
+  // "" for 0/unknown sizes so callers can hide the label entirely.
+  const formatStingerSize = (bytes: number): string => {
+    if (!bytes || bytes <= 0) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const stopDraftPreview = () => {
@@ -444,6 +463,18 @@ export default function SettingsScreen() {
 
   const saveStingerTrim = () => {
     if (!stingerDraft) return;
+    // Task #101 — server-side ffmpeg trim rejects sources over the upload
+    // limit with 413, so there's no path to save an oversized clip (we
+    // don't have a local trimmer). Bail out early with a clear message
+    // instead of letting trim fail with the generic "could not load" alert.
+    if (stingerDraft.srcSizeBytes > CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES) {
+      Alert.alert(
+        stingerTitle(),
+        (T("logoStingerTrimTooBigBlock") || "This clip is too big to save. Try picking or recording a shorter one.")
+          .replace("{limit}", `${(CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES / (1024 * 1024)).toFixed(0)} MB`),
+      );
+      return;
+    }
     const startMs = Math.max(0, Math.floor(draftStartMs));
     const endMs = Math.min(
       stingerDraft.durationMs,
@@ -1426,12 +1457,30 @@ export default function SettingsScreen() {
                 <View>
                   <View style={styles.trimDurationRow}>
                     <Text style={styles.trimMetaText}>
-                      {`0:00 / ${(stingerDraft.durationMs / 1000).toFixed(1)}s`}
+                      {(() => {
+                        const dur = `0:00 / ${(stingerDraft.durationMs / 1000).toFixed(1)}s`;
+                        const sz = formatStingerSize(stingerDraft.srcSizeBytes);
+                        return sz ? `${dur} \u00b7 ${sz}` : dur;
+                      })()}
                     </Text>
                     <Text style={styles.trimWindowText}>
                       {`${windowSec.toFixed(2)}s`}
                     </Text>
                   </View>
+                  {/* Task #101 — warn when the source clip exceeds the
+                      server's upload limit. The trim itself runs server-side
+                      (Task #91) and the endpoint refuses oversized payloads,
+                      so we can't trim or back up a too-big clip. Save is
+                      disabled below for the same reason. */}
+                  {stingerDraft.srcSizeBytes > CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES && (
+                    <View style={styles.trimWarnRow}>
+                      <Ionicons name="alert-circle-outline" size={14} color="#E67E22" />
+                      <Text style={styles.trimWarnText}>
+                        {(T("logoStingerTrimTooBigWarn") || "Clip is over {limit} — pick or record a shorter one to save it.")
+                          .replace("{limit}", `${(CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES / (1024 * 1024)).toFixed(0)} MB`)}
+                      </Text>
+                    </View>
+                  )}
                   <View
                     style={styles.trimTrack}
                     onLayout={(e: LayoutChangeEvent) => setTrimTrackWidth(e.nativeEvent.layout.width)}
@@ -1505,15 +1554,24 @@ export default function SettingsScreen() {
                         {T("logoStingerTrimCancel") || "Cancel"}
                       </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={saveStingerTrim}
-                      style={[styles.customStingerBtn, { borderColor: "#27AE60", flex: 1, backgroundColor: "rgba(39,174,96,0.12)" }]}
-                    >
-                      <Ionicons name="checkmark-circle" size={18} color="#27AE60" />
-                      <Text style={[styles.customStingerBtnText, { color: "#27AE60" }]}>
-                        {T("logoStingerTrimSave") || "Save"}
-                      </Text>
-                    </TouchableOpacity>
+                    {(() => {
+                      // Task #101 — disable Save when the source clip exceeds
+                      // the server's upload limit; trim would just 413.
+                      const tooBig = stingerDraft.srcSizeBytes > CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES;
+                      const color = tooBig ? "#6B7A5C" : "#27AE60";
+                      return (
+                        <TouchableOpacity
+                          onPress={saveStingerTrim}
+                          disabled={tooBig}
+                          style={[styles.customStingerBtn, { borderColor: color, flex: 1, backgroundColor: tooBig ? "rgba(0,0,0,0.15)" : "rgba(39,174,96,0.12)", opacity: tooBig ? 0.55 : 1 }]}
+                        >
+                          <Ionicons name="checkmark-circle" size={18} color={color} />
+                          <Text style={[styles.customStingerBtnText, { color }]}>
+                            {T("logoStingerTrimSave") || "Save"}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })()}
                   </View>
                 </View>
               );
@@ -1598,6 +1656,8 @@ const styles = StyleSheet.create({
   trimDurationRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10, paddingHorizontal: 4 },
   trimMetaText: { fontFamily: "Nunito_500Medium", fontSize: 12, color: "#8A9978" },
   trimWindowText: { fontFamily: "Nunito_800ExtraBold", fontSize: 14, color: "#D4AF37" },
+  trimWarnRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10, paddingHorizontal: 6, paddingVertical: 6, borderRadius: 6, backgroundColor: "rgba(230,126,34,0.12)", borderWidth: 1, borderColor: "rgba(230,126,34,0.3)" },
+  trimWarnText: { fontFamily: "Nunito_600SemiBold", fontSize: 11, color: "#E67E22", flex: 1 },
   trimTrack: {
     height: 56, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.35)",
     borderWidth: 1, borderColor: "rgba(212,175,55,0.18)",

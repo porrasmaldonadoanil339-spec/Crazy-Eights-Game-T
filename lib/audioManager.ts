@@ -100,6 +100,10 @@ export function isStingerUnlocked(id: LogoStingerId, ownedItems: string[] | unde
 }
 // Hard cap enforced when picking/recording a custom intro clip.
 export const CUSTOM_LOGO_STINGER_MAX_MS = 2000;
+// Task #101 — mirror the server's STINGER_MAX_BYTES (server/auth.ts) so the
+// trim modal can warn the player when their source clip is too big to be
+// trimmed/uploaded *before* they tap Save.
+export const CUSTOM_LOGO_STINGER_SOURCE_MAX_BYTES = 5 * 1024 * 1024;
 
 type MusicTrack = "menu" | "search" | "game";
 
