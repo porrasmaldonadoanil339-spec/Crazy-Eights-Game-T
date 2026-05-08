@@ -1556,7 +1556,7 @@ export default function PlayScreen() {
               }}>
                 <Ionicons name="checkmark-circle" size={12} color={theme.gold} />
                 <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: theme.gold, letterSpacing: 0.5 }}>
-                  {challenges.filter((c) => c.claimed).length}/{challenges.length}
+                  {challenges.filter((c) => c.completed || c.claimed).length}/{challenges.length}
                 </Text>
               </View>
             </View>
