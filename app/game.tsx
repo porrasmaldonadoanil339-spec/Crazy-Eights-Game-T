@@ -35,7 +35,7 @@ import { Challenge, getDailyChallenges, updateChallengeProgress, claimChallenge 
 import { getRuleTitle, getRuleDesc, type ActiveChallengeRules } from "@/lib/challengeRules";
 import { getRandomCpuProfile, type CpuProfile } from "@/lib/cpuProfiles";
 import { playSound } from "@/lib/sounds";
-import { stopMusic, startGameMusic, startGameMusicForMode, startMenuMusic, syncSettings, playWin, playLose, playChestOpen, setForceAmbience } from "@/lib/audioManager";
+import { stopMusic, startGameMusicForMode, startMenuMusic, syncSettings, playWin, playLose, playChestOpen, setForceAmbience } from "@/lib/audioManager";
 import { scheduleReEngagementNotification } from "@/lib/notifications";
 import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
@@ -3126,7 +3126,11 @@ export default function GameScreen() {
                   setInGameMusicEnabled(false);
                   syncSettings(false, inGameSfxEnabled);
                 } else {
-                  startGameMusic().catch(() => {});
+                  // Re-route via the per-mode pipeline so toggling music ON
+                  // mid-match resumes the same mode-specific track that
+                  // started at match begin (Torneo / Ranked / Fichas use
+                  // search-music, casual modes use game-music).
+                  startGameMusicForMode(session?.mode, { isFichasRun }).catch(() => {});
                   setInGameMusicEnabled(true);
                   syncSettings(true, inGameSfxEnabled);
                 }

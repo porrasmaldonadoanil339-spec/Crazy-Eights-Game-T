@@ -22,7 +22,7 @@ import {
   suitName, suitSymbol, suitColor, multiGetTopCard,
 } from "@/lib/multiplayerEngine";
 import { getEventConfig, getEventName, getEventShortName, getEventDesc } from "@/lib/eventModes";
-import { playCardFlip, playCardDraw, playButton, playSpeedTick, stopMusic } from "@/lib/audioManager";
+import { playCardFlip, playCardDraw, playButton, playSpeedTick, stopMusic, startGameMusicForMode } from "@/lib/audioManager";
 import { useProfile } from "@/context/ProfileContext";
 import { CARD_BACKS } from "@/lib/storeItems";
 import { EmotePanel, EmoteBubble, type Emote } from "@/components/EmotePanel";
@@ -248,6 +248,15 @@ export default function MultiGameScreen() {
       stopMusic().catch(() => {});
     }
   }, [gameState.phase]);
+
+  // Coop / pass-and-play uses the warm "game" track per the per-mode music
+  // routing in lib/audioManager.ts. Started on match begin so this screen
+  // matches the per-mode behaviour of the offline game screen.
+  useEffect(() => {
+    if (!gameStarted) return;
+    if (gameState.phase === "game_over") return;
+    startGameMusicForMode("coop").catch(() => {});
+  }, [gameStarted, gameState.phase]);
 
   // ─── Record daily-challenge progress for pass-and-play matches ──────────
   // Counts every card played on this device (the device owner operates

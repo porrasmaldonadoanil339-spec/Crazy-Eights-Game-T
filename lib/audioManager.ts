@@ -404,20 +404,28 @@ export async function startSearchMusic() {
 }
 
 // Per-mode in-game music routing. Until dedicated per-mode loops are
-// produced, we re-use the existing two music tracks (game / search) to
-// give high-stakes modes (Torneo, Ranked, Reto de Fichas) a more tense,
-// suspenseful backdrop versus the standard game-music for casual modes.
+// produced, we route across the two existing in-game tracks so each mode
+// belongs to one of two sonic families:
+//   - "game"   — warm casino-band loop used by relaxed / cooperative modes.
+//   - "search" — tense, suspenseful matchmaking loop used by competitive,
+//     time-pressured, or rule-twisting modes.
 //
-// Goes through the same serialized requestMusicTrack pipeline as
-// startGameMusic so transitions never overlap when modes switch.
+// Combined with the per-mode ambience layer (setForceAmbience) and the
+// per-mode intro stinger driven from the game screen, every listed mode
+// has a distinct audible signature even with the current asset budget.
+//
+// All routes go through the same serialized requestMusicTrack pipeline as
+// startGameMusic so mode transitions never overlap.
 const MODE_TO_MUSIC_TRACK: Record<string, MusicTrack> = {
-  practice: "game",
-  classic: "game",
-  lightning: "game",
-  challenge: "game",
-  tournament: "search",
-  ranked: "search",
-  fichas: "search",
+  practice:   "game",   // calm tutorial-feeling backdrop
+  classic:    "game",   // default casino loop
+  lightning:  "search", // fast / time-pressured → tense loop
+  challenge:  "search", // shifting rules → tense loop
+  tournament: "search", // best-of-3 high stakes → tense loop
+  ranked:     "search", // competitive ladder → tense loop
+  fichas:     "game",   // casino-warm; differentiated by ambience+stinger
+  coop:       "game",   // cooperative / friendly → warm loop
+  online:     "game",   // online classic → warm loop (matches base game-music)
 };
 
 export async function startGameMusicForMode(
