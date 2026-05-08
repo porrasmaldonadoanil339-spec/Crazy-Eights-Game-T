@@ -787,11 +787,16 @@ let selectedLogoStingerId: LogoStingerId = DEFAULT_LOGO_STINGER_ID;
 // the player cached so repeated previews / boot don't decode the file twice.
 let customStingerUri: string | null = null;
 let customStingerPlayer: AudioPlayer | null = null;
-// Task #87 — start/end markers (ms) within the saved clip. When a trim window
-// is active, playback seeks to startMs and a scheduled pause stops playback at
-// endMs. Defaults to the full clip (0..MAX_MS) when no trim has been picked.
+// Task #91 — saved custom clips are now real, pre-trimmed m4a files written
+// to the document directory (the trim window is baked in by the server's
+// ffmpeg endpoint at Save time). When customStingerIsTrimmedFile is true,
+// playback just plays the file from the start and lets it end naturally.
+// The start/end markers below are still applied (seek + scheduled pause)
+// for legacy profiles created before #91 (where the file is the full
+// untrimmed source) so they keep stopping at the 2-second budget.
 let customStingerStartMs = 0;
 let customStingerEndMs = CUSTOM_LOGO_STINGER_MAX_MS;
+let customStingerIsTrimmedFile = false;
 let customStingerStopTimer: ReturnType<typeof setTimeout> | null = null;
 
 function sfxKeyForStinger(id: LogoStingerId): SoundKey {
@@ -838,29 +843,18 @@ function getOrCreateCustomStingerPlayer(): AudioPlayer | null {
   return customStingerPlayer;
 }
 
-// Task #87 — clamp/normalize the trim window so the audio manager never tries
-// to play a window with a negative or zero duration. The start marker is NOT
-// clamped to 2 seconds — long source clips can have a start anywhere inside
-// the file (e.g. 3.5s into a 6s recording). Only the *window length*
-// (end-start) is bounded by CUSTOM_LOGO_STINGER_MAX_MS.
-function effectiveCustomTrim(): { startSec: number; durationMs: number } {
-  const startMs = Math.max(0, customStingerStartMs);
-  const endMs = Math.max(startMs, customStingerEndMs);
-  let durationMs = Math.min(endMs - startMs, CUSTOM_LOGO_STINGER_MAX_MS);
-  if (!isFinite(durationMs) || durationMs <= 0) durationMs = CUSTOM_LOGO_STINGER_MAX_MS;
-  return { startSec: startMs / 1000, durationMs };
-}
-
-// Task #87 — register the trim window for the saved custom clip. End-start is
-// always capped at CUSTOM_LOGO_STINGER_MAX_MS by the picker UI; this guard is
-// belt-and-braces so a stale profile field can't make playback hang past the
-// 2-second budget. The start marker itself is NOT capped (the source clip can
-// be longer than 2 seconds).
-export function setCustomStingerTrim(startMs: number, endMs: number) {
+// Task #91 — register the trim markers for the saved custom clip. Post-#91
+// callers always pass isTrimmedFile=true with 0..trimmedDurationMs (the file
+// IS the trimmed clip, so playback skips the seek + scheduled pause). Legacy
+// callers (or boot-time hydration of a pre-#91 profile) leave isTrimmedFile
+// undefined / false; we keep the window length capped at the 2-second budget
+// so the legacy safety stop never exceeds it.
+export function setCustomStingerTrim(startMs: number, endMs: number, isTrimmedFile?: boolean) {
   const a = Math.max(0, Math.floor(startMs));
   const b = Math.max(a, Math.floor(endMs));
   customStingerStartMs = a;
   customStingerEndMs = Math.min(b, a + CUSTOM_LOGO_STINGER_MAX_MS);
+  customStingerIsTrimmedFile = !!isTrimmedFile;
 }
 
 // Task #87 — preview an arbitrary [startMs, endMs] window of a draft clip
@@ -932,20 +926,36 @@ async function playStingerById(id: LogoStingerId, volume: number): Promise<boole
   if (id === "custom") {
     const p = getOrCreateCustomStingerPlayer();
     if (!p) return false;
-    const { startSec, durationMs } = effectiveCustomTrim();
-    await safe(async () => {
-      p.volume = volume;
-      p.seekTo(startSec);
-      p.play();
-    });
+    // Task #91 — when isTrimmedFile=true the saved file IS the trimmed clip,
+    // so just play from the start and let it end naturally. Pre-#91 (legacy)
+    // profiles still need the seek + scheduled-pause trick to honour the
+    // 2-second budget against a longer untrimmed source.
     if (customStingerStopTimer) {
       clearTimeout(customStingerStopTimer);
       customStingerStopTimer = null;
     }
-    customStingerStopTimer = setTimeout(() => {
-      customStingerStopTimer = null;
-      try { p.pause(); } catch {}
-    }, durationMs);
+    if (customStingerIsTrimmedFile) {
+      await safe(async () => {
+        p.volume = volume;
+        p.seekTo(0);
+        p.play();
+      });
+    } else {
+      const startSec = customStingerStartMs / 1000;
+      const windowMs = Math.min(
+        CUSTOM_LOGO_STINGER_MAX_MS,
+        Math.max(50, customStingerEndMs - customStingerStartMs),
+      );
+      await safe(async () => {
+        p.volume = volume;
+        p.seekTo(startSec);
+        p.play();
+      });
+      customStingerStopTimer = setTimeout(() => {
+        customStingerStopTimer = null;
+        try { p.pause(); } catch {}
+      }, windowMs);
+    }
     return true;
   }
   await playSfx(sfxKeyForStinger(id), volume);

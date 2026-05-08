@@ -502,6 +502,7 @@ function AudioManager() {
       setCustomStingerTrim(
         profile.customLogoStingerStartMs ?? 0,
         profile.customLogoStingerEndMs ?? 2000,
+        profile.customLogoStingerIsTrimmedFile === true,
       );
       preloadSounds().catch(() => {});
       const inGame = isGameRoute(segments as string[]);
@@ -550,8 +551,9 @@ function AudioManager() {
     setCustomStingerTrim(
       profile.customLogoStingerStartMs ?? 0,
       profile.customLogoStingerEndMs ?? 2000,
+      profile.customLogoStingerIsTrimmedFile === true,
     );
-  }, [profile.customLogoStingerStartMs, profile.customLogoStingerEndMs, isLoaded]);
+  }, [profile.customLogoStingerStartMs, profile.customLogoStingerEndMs, profile.customLogoStingerIsTrimmedFile, isLoaded]);
 
   // React to route changes — skip the very first run (handled by init above).
   // Use sequential (non-overlapping) fade when entering a game route so menu

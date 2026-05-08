@@ -14,10 +14,10 @@ import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
 import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, previewCustomStingerWindow, stopCustomStingerWindowPreview, releaseCustomStingerWindowPreview, setCustomStingerTrim, type LogoStingerId } from "@/lib/audioManager";
-import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, type UploadStingerErrorReason } from "@/lib/customStingerCache";
+import { uploadCustomStinger, deleteRemoteCustomStinger, cacheLocalCopyForRemote, clearCustomStingerCache, trimCustomStingerToFile, type UploadStingerErrorReason } from "@/lib/customStingerCache";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
-import { File, Directory, Paths } from "expo-file-system";
+import { File } from "expo-file-system";
 import { useT } from "@/hooks/useT";
 import type { TranslationKey } from "@/lib/i18n";
 import { playSound } from "@/lib/sounds";
@@ -352,26 +352,11 @@ export default function SettingsScreen() {
     }
   };
 
-  // Persist `srcUri` to the app's document directory under a deterministic
-  // filename so the saved profile URI keeps working across launches. Returns
-  // the destination file:// URI.
-  const persistCustomClip = (srcUri: string, ext: string): string => {
-    const dirName = "custom-stingers";
-    const safeExt = ext.replace(/[^a-z0-9]/gi, "").toLowerCase() || "audio";
-    // Use a timestamp suffix so cached AudioPlayers (keyed by URI) for any
-    // previously-stored clip don't keep playing the old buffer.
-    const fileName = `intro-${Date.now()}.${safeExt}`;
-    const dir = new Directory(Paths.document, dirName);
-    try { dir.create({ intermediates: true, idempotent: true }); } catch {}
-    const dest = new File(dir, fileName);
-    if (dest.exists) { try { dest.delete(); } catch {} }
-    const src = new File(srcUri);
-    src.copy(dest);
-    return dest.uri;
-  };
-
   // Best-effort cleanup of the previously-stored custom clip (if any) so the
-  // document directory doesn't accumulate orphaned audio files.
+  // document directory doesn't accumulate orphaned audio files. Task #91 —
+  // the trimmed clip itself is now written by `trimCustomStingerToFile`
+  // (via the server's ffmpeg endpoint), so the local persist helper is no
+  // longer needed here.
   const cleanupOldCustomClip = (uri: string | undefined | null) => {
     if (!uri) return;
     try {
@@ -465,49 +450,62 @@ export default function SettingsScreen() {
       Math.max(startMs + 100, Math.floor(draftEndMs)),
     );
     teardownDraftPreview();
-    let savedUri: string;
-    try {
-      savedUri = persistCustomClip(stingerDraft.srcUri, stingerDraft.ext);
-    } catch {
-      Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
-      return;
-    }
-    const previousUri = profile.customLogoStingerUri || "";
-    setCustomStingerUri(savedUri);
-    // Sync trim into the audio manager *before* the optional preview so the
-    // immediate playStingerById("custom") call uses the new window. The
-    // _layout effect will re-sync on the next profile push too, but doing it
-    // here makes the post-save preview deterministic in the same tick.
-    setCustomStingerTrim(startMs, endMs);
-    const ext = stingerDraft.ext;
-    updateSettings({
-      customLogoStingerUri: savedUri,
-      customLogoStingerStartMs: startMs,
-      customLogoStingerEndMs: endMs,
-      logoStingerId: "custom",
-    });
-    if (previousUri && !/^https?:\/\//i.test(previousUri) && previousUri !== savedUri) {
-      cleanupOldCustomClip(previousUri);
-    }
-    setStingerDraft(null);
-    if (profile.sfxEnabled) previewLogoStinger("custom").catch(() => {});
-    if (profile.vibrationEnabled) Vibration.vibrate(30);
+    setCustomStingerBusy(true);
 
+    // Task #91 — re-encode the trimmed [startMs, endMs] window into a real
+    // standalone m4a file via the server's ffmpeg endpoint, then save that
+    // file to the document directory. The saved file is the trimmed clip
+    // itself (always 0..durationMs at playback time), so the audio manager
+    // no longer needs the seek + scheduled-pause trick for the custom slot.
     // Task #88 — back the clip up to the cloud so signing in on another
     // device (or reinstalling the app) restores the same intro instead of
-    // pointing at a now-missing local file. Task #94 — surface the status
-    // (uploading / synced / failed) so the player knows whether the clip
-    // will roam, and can retry without re-running the trim flow.
-    setCustomStingerBackupStatus({ phase: "uploading" });
+    // pointing at a now-missing local file. Task #94/#97 — surface the
+    // status (uploading / synced / failed-with-reason) so the player knows
+    // whether the clip will roam, and can retry without re-running trim.
+    const draft = stingerDraft;
     (async () => {
-      const result = await uploadCustomStinger(savedUri, ext);
-      if (!result.ok) {
-        setCustomStingerBackupStatus({ phase: "failed", reason: result.reason });
-        return;
+      try {
+        const trimmed = await trimCustomStingerToFile(draft.srcUri, draft.ext, startMs, endMs);
+        if (!trimmed) {
+          Alert.alert(stingerTitle(), T("logoStingerLoadFailed") || "Could not load the audio");
+          return;
+        }
+        const savedUri = trimmed.uri;
+        const trimmedDurationMs = trimmed.durationMs;
+        const trimmedExt = trimmed.ext;
+        const previousUri = profile.customLogoStingerUri || "";
+        setCustomStingerUri(savedUri);
+        // Sync the (now trivial) markers into the audio manager *before* the
+        // optional preview so the immediate playStingerById("custom") call
+        // sees the fresh file's full window. isTrimmedFile=true tells the
+        // audio manager to skip seek + scheduled-pause and just play.
+        setCustomStingerTrim(0, trimmedDurationMs, true);
+        updateSettings({
+          customLogoStingerUri: savedUri,
+          customLogoStingerStartMs: 0,
+          customLogoStingerEndMs: trimmedDurationMs,
+          customLogoStingerIsTrimmedFile: true,
+          logoStingerId: "custom",
+        });
+        if (previousUri && !/^https?:\/\//i.test(previousUri) && previousUri !== savedUri) {
+          cleanupOldCustomClip(previousUri);
+        }
+        setStingerDraft(null);
+        if (profile.sfxEnabled) previewLogoStinger("custom").catch(() => {});
+        if (profile.vibrationEnabled) Vibration.vibrate(30);
+
+        setCustomStingerBackupStatus({ phase: "uploading" });
+        const result = await uploadCustomStinger(savedUri, trimmedExt);
+        if (!result.ok) {
+          setCustomStingerBackupStatus({ phase: "failed", reason: result.reason });
+          return;
+        }
+        cacheLocalCopyForRemote(result.url, savedUri);
+        updateSettings({ customLogoStingerUri: result.url });
+        setCustomStingerBackupStatus({ phase: "synced" });
+      } finally {
+        setCustomStingerBusy(false);
       }
-      cacheLocalCopyForRemote(result.url, savedUri);
-      updateSettings({ customLogoStingerUri: result.url });
-      setCustomStingerBackupStatus({ phase: "synced" });
     })();
   };
 
@@ -669,6 +667,7 @@ export default function SettingsScreen() {
         customLogoStingerUri: "",
         customLogoStingerStartMs: 0,
         customLogoStingerEndMs: CUSTOM_LOGO_STINGER_MAX_MS,
+        customLogoStingerIsTrimmedFile: false,
         logoStingerId: fallbackId,
       });
     } else {
@@ -676,6 +675,7 @@ export default function SettingsScreen() {
         customLogoStingerUri: "",
         customLogoStingerStartMs: 0,
         customLogoStingerEndMs: CUSTOM_LOGO_STINGER_MAX_MS,
+        customLogoStingerIsTrimmedFile: false,
       });
     }
     if (!prevWasRemote) cleanupOldCustomClip(prevUri);

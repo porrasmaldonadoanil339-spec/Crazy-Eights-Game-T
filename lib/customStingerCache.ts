@@ -38,6 +38,64 @@ function filenameFromUrl(url: string): string | null {
   }
 }
 
+// Task #91 — re-encode the trimmed [startMs, endMs] window of a source clip
+// into a real m4a file by round-tripping through the server's ffmpeg-backed
+// /api/auth/profile/stinger/trim endpoint. Writes the trimmed bytes into the
+// app's document directory and returns the local file:// URI plus the
+// trimmed clip's actual duration. Returns null on any failure (network /
+// server / write error) so callers can show an alert instead of silently
+// keeping the full source. No auth required (the endpoint is rate-limited
+// per IP and stateless), so guests can trim too.
+const TRIMMED_DIR = "custom-stingers";
+
+function base64ToBytes(b64: string): Uint8Array {
+  const bin = globalThis.atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+export async function trimCustomStingerToFile(
+  srcUri: string,
+  ext: string,
+  startMs: number,
+  endMs: number,
+): Promise<{ uri: string; durationMs: number; ext: string } | null> {
+  let base64: string;
+  try {
+    base64 = await new File(srcUri).base64();
+  } catch {
+    return null;
+  }
+  let trimmed: { ext: string; durationMs: number; data: string };
+  try {
+    const url = new URL("/api/auth/profile/stinger/trim", getApiUrl()).toString();
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: base64, ext, startMs, endMs }),
+    });
+    if (!resp.ok) return null;
+    const json = await resp.json() as { ok?: boolean; ext?: string; durationMs?: number; data?: string };
+    if (!json.ok || !json.data || !json.ext || typeof json.durationMs !== "number") return null;
+    trimmed = { ext: json.ext, durationMs: json.durationMs, data: json.data };
+  } catch {
+    return null;
+  }
+  try {
+    const dir = new Directory(Paths.document, TRIMMED_DIR);
+    try { dir.create({ intermediates: true, idempotent: true }); } catch {}
+    const safeExt = trimmed.ext.replace(/[^a-z0-9]/gi, "").toLowerCase() || "m4a";
+    const fileName = `intro-${Date.now()}.${safeExt}`;
+    const dest = new File(dir, fileName);
+    if (dest.exists) { try { dest.delete(); } catch {} }
+    dest.write(base64ToBytes(trimmed.data));
+    return { uri: dest.uri, durationMs: trimmed.durationMs, ext: safeExt };
+  } catch {
+    return null;
+  }
+}
+
 async function getAuthToken(): Promise<string | null> {
   try {
     const raw = await AsyncStorage.getItem("ocho_auth_v1");

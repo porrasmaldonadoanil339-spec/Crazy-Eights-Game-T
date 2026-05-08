@@ -145,12 +145,19 @@ export interface PlayerProfile {
   // or recorded). Empty string when none. Cloud-synced as part of the profile
   // (the URI is device-local, same pattern as photoUri).
   customLogoStingerUri?: string;
-  // Task #87 — start/end markers (in milliseconds, relative to the saved clip)
-  // applied at playback time so the player can preview a 2-second window of a
-  // longer source recording without re-encoding the file. end-start is capped
-  // at CUSTOM_LOGO_STINGER_MAX_MS.
+  // Task #91 — saved custom clips are now real, pre-trimmed m4a files (the
+  // trim window is baked in by the server's ffmpeg endpoint at Save time).
+  // Post-#91 saves always write startMs=0, endMs=trimmedDurationMs, and
+  // isTrimmedFile=true; legacy profiles created before #91 (where the
+  // file is the full untrimmed source) leave isTrimmedFile undefined and
+  // still get a (endMs-startMs)-bounded safety stop in the audio manager.
   customLogoStingerStartMs?: number;
   customLogoStingerEndMs?: number;
+  // Task #91 — true when customLogoStingerUri points at an already-trimmed
+  // standalone file (no playback-time trimming needed). Undefined / false
+  // means the URI is a pre-#91 untrimmed source clip that still needs the
+  // legacy safety stop derived from customLogoStingerStartMs/EndMs.
+  customLogoStingerIsTrimmedFile?: boolean;
   // Task #85 — remembers the last built-in stinger id the player explicitly
   // picked, so removing the custom clip falls back to that selection (rather
   // than the global default).
@@ -340,7 +347,7 @@ interface ProfileContextValue {
   claimDailyReward: () => { reward: DailyReward; queued: boolean } | null;
   canClaimDailyReward: boolean;
   todaysDailyReward: DailyReward;
-  updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "voiceFxEnabled" | "logoStingerId" | "customLogoStingerUri" | "customLogoStingerStartMs" | "customLogoStingerEndMs" | "lastBuiltInLogoStingerId" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
+  updateSettings: (settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "voiceFxEnabled" | "logoStingerId" | "customLogoStingerUri" | "customLogoStingerStartMs" | "customLogoStingerEndMs" | "customLogoStingerIsTrimmedFile" | "lastBuiltInLogoStingerId" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => void;
   updateEquippedEmotes: (emoteIds: string[]) => void;
   updateRanked: (delta: number) => void;
   recordRankedAbandon: () => { totalStarLoss: number; cooldownMs: number; abandonsInWindow: number };
@@ -1178,7 +1185,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return { reward, queued: willQueue };
   }, [profile.lastDailyRewardDate, profile.dailyRewardIndex, profile.chestInventory, profile.chestOverflow, update]);
 
-  const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "voiceFxEnabled" | "logoStingerId" | "customLogoStingerUri" | "customLogoStingerStartMs" | "customLogoStingerEndMs" | "lastBuiltInLogoStingerId" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
+  const updateSettings = useCallback((settings: Partial<Pick<PlayerProfile, "musicEnabled" | "sfxEnabled" | "vibrationEnabled" | "voiceFxEnabled" | "logoStingerId" | "customLogoStingerUri" | "customLogoStingerStartMs" | "customLogoStingerEndMs" | "customLogoStingerIsTrimmedFile" | "lastBuiltInLogoStingerId" | "muteEmotes" | "language" | "darkMode" | "notificationsEnabled" | "missionNotifications" | "rewardNotifications" | "eventNotifications" | "reminderNotifications" | "fastAnimations" | "confirmSpecialCards" | "showTutorials" | "graphicsQuality" | "specialEffectsEnabled" | "animationsEnabled">>) => {
     update((p) => ({ ...p, ...settings }));
   }, [update]);
 

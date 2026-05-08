@@ -1,7 +1,9 @@
 import express, { Router } from "express";
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import * as crypto from "crypto";
+import { spawn } from "child_process";
 
 const router = Router();
 
@@ -710,6 +712,118 @@ function buildStingerUrl(req: import("express").Request, filename: string): stri
   const host = req.header("x-forwarded-host") || req.get("host");
   return `${proto}://${host}/api/auth/profile/stinger/${filename}`;
 }
+
+// ─── Custom logo stinger trim (Task #91) ───────────────────────────────────
+// Re-encodes the trimmed [startMs, endMs] window of a source clip into a
+// standalone m4a/aac file using ffmpeg. The client uses this to write a real
+// 2-second file to its document directory instead of saving the full source
+// + start/end markers and applying them at playback time. Stateless / no
+// auth required (so guest accounts can also trim) — rate-limited per IP.
+const STINGER_TRIM_RATE_WINDOW_MS = 60 * 1000;
+const STINGER_TRIM_RATE_MAX = 20;
+const stingerTrimHistory = new Map<string, number[]>();
+
+function checkStingerTrimRateLimit(ip: string): { ok: true } | { ok: false; retryAfterSec: number } {
+  const now = Date.now();
+  const cutoff = now - STINGER_TRIM_RATE_WINDOW_MS;
+  const recent = (stingerTrimHistory.get(ip) ?? []).filter(t => t > cutoff);
+  if (recent.length >= STINGER_TRIM_RATE_MAX) {
+    const retryAfterSec = Math.max(1, Math.ceil((recent[0] + STINGER_TRIM_RATE_WINDOW_MS - now) / 1000));
+    stingerTrimHistory.set(ip, recent);
+    return { ok: false, retryAfterSec };
+  }
+  recent.push(now);
+  stingerTrimHistory.set(ip, recent);
+  return { ok: true };
+}
+
+function runFfmpegTrim(srcPath: string, dstPath: string, startSec: number, durationSec: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // -ss before -i seeks the demuxer (fast + reasonably accurate for AAC/MP3
+    // at frame boundaries ~23ms). Re-encode to mono 96k AAC so the output
+    // format is uniform regardless of the source container/codec, and the
+    // resulting file is small (~25 KB for a 2s clip).
+    const args = [
+      "-y",
+      "-ss", startSec.toFixed(3),
+      "-i", srcPath,
+      "-t", durationSec.toFixed(3),
+      "-vn",
+      "-ac", "1",
+      "-ar", "44100",
+      "-c:a", "aac",
+      "-b:a", "96k",
+      "-f", "mp4",
+      dstPath,
+    ];
+    const proc = spawn("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
+    let stderr = "";
+    proc.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString("utf8"); });
+    proc.on("error", reject);
+    proc.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`ffmpeg exited ${code}: ${stderr.slice(-400)}`));
+    });
+  });
+}
+
+router.post(
+  "/profile/stinger/trim",
+  express.json({ limit: "8mb" }),
+  async (req, res) => {
+    const ip = (req.ip || req.socket.remoteAddress || "unknown").toString();
+    const rate = checkStingerTrimRateLimit(ip);
+    if (!rate.ok) {
+      res.setHeader("Retry-After", String(rate.retryAfterSec));
+      return res.status(429).json({ error: "too many trim requests", retryAfterSec: rate.retryAfterSec });
+    }
+    const { data, ext, startMs, endMs } = req.body as {
+      data?: string; ext?: string; startMs?: number; endMs?: number;
+    };
+    if (!data || !ext || typeof startMs !== "number" || typeof endMs !== "number") {
+      return res.status(400).json({ error: "data, ext, startMs, endMs required" });
+    }
+    const safeExt = ext.replace(/[^a-z0-9]/gi, "").toLowerCase();
+    if (!STINGER_ALLOWED_EXT.has(safeExt)) {
+      return res.status(400).json({ error: "unsupported audio format" });
+    }
+    const start = Math.max(0, Math.floor(startMs));
+    const end = Math.max(start + 50, Math.floor(endMs));
+    const durationMs = Math.min(end - start, 2000);
+    if (durationMs < 50) return res.status(400).json({ error: "trim window too short" });
+
+    let srcBuf: Buffer;
+    try {
+      srcBuf = Buffer.from(data, "base64");
+    } catch {
+      return res.status(400).json({ error: "invalid base64" });
+    }
+    if (srcBuf.byteLength === 0 || srcBuf.byteLength > STINGER_MAX_BYTES) {
+      return res.status(413).json({ error: "audio file too large" });
+    }
+
+    const tmpId = crypto.randomBytes(8).toString("hex");
+    const srcPath = path.join(os.tmpdir(), `stinger-src-${tmpId}.${safeExt}`);
+    const dstPath = path.join(os.tmpdir(), `stinger-trim-${tmpId}.m4a`);
+    try {
+      fs.writeFileSync(srcPath, srcBuf);
+      await runFfmpegTrim(srcPath, dstPath, start / 1000, durationMs / 1000);
+      const out = fs.readFileSync(dstPath);
+      return res.json({
+        ok: true,
+        ext: "m4a",
+        durationMs,
+        data: out.toString("base64"),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return res.status(500).json({ error: "trim failed", detail: msg });
+    } finally {
+      try { fs.unlinkSync(srcPath); } catch {}
+      try { fs.unlinkSync(dstPath); } catch {}
+    }
+  },
+);
 
 router.post(
   "/profile/stinger",
