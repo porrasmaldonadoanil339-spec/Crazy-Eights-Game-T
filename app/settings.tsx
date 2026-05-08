@@ -12,7 +12,7 @@ import { reloadAppAsync } from "expo";
 import { getApiUrl } from "@/lib/query-client";
 import { useProfile } from "@/context/ProfileContext";
 import { useAuth } from "@/context/AuthContext";
-import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, previewLogoStinger, setCustomStingerUri, type LogoStingerId } from "@/lib/audioManager";
+import { stopMusic, startMenuMusic, syncSettings, getCurrentTrack, LOGO_STINGERS, DEFAULT_LOGO_STINGER_ID, CUSTOM_LOGO_STINGER_MAX_MS, previewLogoStinger, setCustomStingerUri, isStingerUnlocked, type LogoStingerId } from "@/lib/audioManager";
 import { createAudioPlayer, useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import { File, Directory, Paths } from "expo-file-system";
@@ -249,6 +249,9 @@ export default function SettingsScreen() {
     // record buttons handle setting it. Also remember the last built-in pick
     // so removing a custom clip can revert to it.
     if (id === "custom" && !(profile.customLogoStingerUri || "")) return;
+    // Task #86 — locked premium stingers can be previewed but not selected
+    // until the player unlocks them via chests or the battle pass.
+    if (!isStingerUnlocked(id, profile.ownedItems)) return;
     if (id === "custom") {
       updateSettings({ logoStingerId: id });
     } else {
@@ -958,22 +961,43 @@ export default function SettingsScreen() {
                 const isSelected = (profile.logoStingerId ?? DEFAULT_LOGO_STINGER_ID) === s.id;
                 const labelKey = `logoStinger${s.id.charAt(0).toUpperCase()}${s.id.slice(1)}` as any;
                 const label = T(labelKey) || s.id;
+                // Task #86 — premium stingers display a lock + unlock hint
+                // until they show up in the player's ownedItems list.
+                const unlocked = isStingerUnlocked(s.id, profile.ownedItems);
+                const lockHint = !unlocked
+                  ? (s.unlock.type === "battle_pass"
+                      ? (T("logoStingerLockedBattlePass") || "Unlock in Battle Pass")
+                      : (T("logoStingerLockedChest") || "Unlock from chests"))
+                  : null;
                 return (
                   <Pressable
                     key={s.id}
-                    onPress={() => selectLogoStinger(s.id)}
+                    onPress={() => {
+                      if (!unlocked) {
+                        previewLogoStinger(s.id).catch(() => {});
+                      } else {
+                        selectLogoStinger(s.id);
+                      }
+                    }}
                     style={({ pressed }) => [
                       styles.langOption,
                       isSelected && styles.langOptionSelected,
                       pressed && { opacity: 0.8 },
+                      !unlocked && { opacity: 0.7 },
                     ]}
                   >
                     <View style={[styles.iconCircle, { backgroundColor: "#2a2a1a", marginRight: 12 }]}>
-                      <Ionicons name={isSelected ? "musical-notes" : "play"} size={18} color="#F1C40F" />
+                      <Ionicons
+                        name={!unlocked ? "lock-closed" : (isSelected ? "musical-notes" : "play")}
+                        size={18}
+                        color={!unlocked ? "#8E8E93" : "#F1C40F"}
+                      />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.langOptionName, isSelected && { color: "#D4AF37" }]}>{label}</Text>
-                      <Text style={styles.langOptionSub}>{(s.durationMs / 1000).toFixed(1)}s</Text>
+                      <Text style={styles.langOptionSub}>
+                        {lockHint ?? `${(s.durationMs / 1000).toFixed(1)}s`}
+                      </Text>
                     </View>
                     {isSelected && <Ionicons name="checkmark-circle" size={20} color="#D4AF37" />}
                   </Pressable>

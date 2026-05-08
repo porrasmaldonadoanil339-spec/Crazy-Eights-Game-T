@@ -1,4 +1,14 @@
 import { STORE_ITEMS, StoreItem } from "@/lib/storeItems";
+import { LOGO_STINGERS, getStingerOwnedId } from "@/lib/audioManager";
+
+// Task #86 — only stingers whose unlock metadata says `chest` are eligible
+// to drop from chests. Battle-pass exclusives (stinger_cinematic) and the
+// always-free intros must never appear in the chest reward pool.
+const CHEST_ELIGIBLE_STINGER_IDS = new Set(
+  LOGO_STINGERS
+    .filter((s) => s.unlock.type === "chest")
+    .map((s) => getStingerOwnedId(s.id)),
+);
 
 export type ChestType = "common" | "rare" | "epic" | "legendary" | "magic" | "giant" | "event" | "supreme" | "fichas";
 
@@ -181,7 +191,9 @@ export function openChest(chest: Chest, ownedItems: string[]): ChestReward {
       (s) =>
         config.itemRarities.includes(s.rarity ?? "common") &&
         !ownedItems.includes(s.id) &&
-        !s.isDefault
+        !s.isDefault &&
+        // Task #86 — gate stinger drops to chest-flagged intros only.
+        (s.category !== "logo_stinger" || CHEST_ELIGIBLE_STINGER_IDS.has(s.id))
     );
 
     if (eligibleItems.length > 0) {

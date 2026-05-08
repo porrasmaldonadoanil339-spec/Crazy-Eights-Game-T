@@ -67,7 +67,11 @@ export function getDailyShopItems(
   excludeIds: string[] = [],
 ): DailyShopItem[] {
   const exclude = new Set(excludeIds);
-  const eligible = STORE_ITEMS.filter((s) => !s.isDefault && !exclude.has(s.id));
+  // Task #86 — premium logo stingers are unlock-only (chests / battle pass)
+  // and must not appear in the rotating daily shop.
+  const eligible = STORE_ITEMS.filter(
+    (s) => !s.isDefault && !exclude.has(s.id) && s.category !== "logo_stinger",
+  );
   const rnd = mulberry32(hashString("shop:" + dateKey));
   const picked = pickShuffled(eligible, 6, rnd);
   return picked.map((item) => ({ ...item, ...priceFor(item) }));
@@ -88,8 +92,11 @@ export function getDailyEmotes(
 }
 
 export function getDailyFreeItem(dateKey: string = getDailyDateKey()): DailyShopItem {
+  // Task #86 — exclude logo stingers from the daily free pick for the same
+  // reason as the paid daily shop above.
   const eligible = STORE_ITEMS.filter(
-    (s) => !s.isDefault && (s.rarity === "common" || s.rarity === "rare")
+    (s) => !s.isDefault && s.category !== "logo_stinger" &&
+      (s.rarity === "common" || s.rarity === "rare")
   );
   const rnd = mulberry32(hashString("free:" + dateKey));
   const picked = pickShuffled(eligible, 1, rnd)[0];

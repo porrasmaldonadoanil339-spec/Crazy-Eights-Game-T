@@ -14,7 +14,7 @@ import { BATTLE_PASS_TIERS, getBattlePassTiers, getCurrentBattlePassTier, getPla
 import { getCurrentSeason } from "@/lib/seasons";
 import type { GameModeId, Difficulty } from "@/lib/gameModes";
 import { RankedProfile, addStars, getRankUpRewards, getRankUpBonusCoins } from "@/lib/ranked";
-import { playOchoLocosVoice, DEFAULT_LOGO_STINGER_ID, type LogoStingerId } from "@/lib/audioManager";
+import { playOchoLocosVoice, DEFAULT_LOGO_STINGER_ID, isStingerUnlocked, type LogoStingerId } from "@/lib/audioManager";
 import { Chest, ChestReward, ChestType, createChest, openChest as openChestReward } from "@/lib/chestSystem";
 import { getPlayerPathLevel, getPlayerPathReward, MAX_PLAYER_PATH_LEVEL } from "@/lib/playerPath";
 
@@ -225,7 +225,10 @@ const DEFAULT_PROFILE: PlayerProfile = {
   coins: 50,
   fichas: 25,
   totalXp: 0,
-  ownedItems: ["back_default", "avatar_knight", "title_novice", "frame_gold"],
+  // Task #86 — free logo intro stingers (`stinger_casino`, `stinger_fanfare`)
+  // are seeded so isStingerUnlocked() reports the same source of truth as the
+  // unlock metadata in audioManager.LOGO_STINGERS.
+  ownedItems: ["back_default", "avatar_knight", "title_novice", "frame_gold", "stinger_casino", "stinger_fanfare"],
   achievementProgress: ACHIEVEMENTS.map((a) => ({
     id: a.id,
     progress: 0,
@@ -446,9 +449,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             mergedRanked.rankedProfileVersion = 2;
           }
 
+          // Task #86 — older profiles may have a premium stinger selected
+          // from before unlock gating existed. Reset to the default free
+          // stinger if the saved selection isn't actually unlocked.
+          const ownedForCheck = saved.ownedItems ?? DEFAULT_PROFILE.ownedItems;
+          const savedStingerId = (saved.logoStingerId ?? DEFAULT_LOGO_STINGER_ID) as LogoStingerId;
+          const safeStingerId: LogoStingerId =
+            savedStingerId === "custom" || isStingerUnlocked(savedStingerId, ownedForCheck)
+              ? savedStingerId
+              : DEFAULT_LOGO_STINGER_ID;
+
           const merged: PlayerProfile = {
             ...DEFAULT_PROFILE,
             ...saved,
+            logoStingerId: safeStingerId,
             stats: { ...DEFAULT_STATS, ...saved.stats },
             rankedProfile: mergedRanked,
             achievementProgress: ACHIEVEMENTS.map((a) => {
@@ -1019,7 +1033,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (bpTier.rewardType === "coins" && typeof bpTier.rewardValue === "number") {
         next = { ...next, coins: next.coins + bpTier.rewardValue };
       }
-      if (["item", "avatar", "title", "frame", "effect"].includes(bpTier.rewardType)) {
+      // Task #86 — "stinger" rewards are stored in ownedItems alongside the
+      // other cosmetics, gated by `isStingerUnlocked` in the Settings picker.
+      if (["item", "avatar", "title", "frame", "effect", "stinger"].includes(bpTier.rewardType)) {
         const itemId = bpTier.rewardValue as string;
         if (!next.ownedItems.includes(itemId)) {
           next = { ...next, ownedItems: [...next.ownedItems, itemId] };
@@ -1072,7 +1088,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         if (t.rewardType === "coins" && typeof t.rewardValue === "number") {
           next = { ...next, coins: next.coins + t.rewardValue };
           newlyClaimed.push(t.tier);
-        } else if (["item", "avatar", "title", "frame", "effect"].includes(t.rewardType)) {
+        } else if (["item", "avatar", "title", "frame", "effect", "stinger"].includes(t.rewardType)) {
           const itemId = t.rewardValue as string;
           if (!next.ownedItems.includes(itemId)) {
             next = { ...next, ownedItems: [...next.ownedItems, itemId] };

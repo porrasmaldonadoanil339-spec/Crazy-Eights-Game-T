@@ -1,7 +1,7 @@
 import type { Lang } from "./i18n";
 
 export type StoreItemId = string;
-export type StoreItemCategory = "card_back" | "avatar" | "effect" | "title" | "frame" | "emote" | "table_design" | "card_design";
+export type StoreItemCategory = "card_back" | "avatar" | "effect" | "title" | "frame" | "emote" | "table_design" | "card_design" | "logo_stinger";
 
 export type LocalizedText = Partial<Record<Lang, string>>;
 
@@ -17643,9 +17643,22 @@ export const EMOTES: StoreItem[] = EMOTES_RAW.map(buildLocalizedFromRaw);
 export const TABLE_DESIGNS: StoreItem[] = TABLE_DESIGNS_RAW.map(buildLocalizedFromRaw);
 export const CARD_DESIGNS: StoreItem[] = CARD_DESIGNS_RAW.map(buildLocalizedFromRaw);
 
+// Task #86 — premium logo intro stingers as collectibles. They are not sold
+// in the shop (the store and collection screens explicitly enumerate the
+// other categories) but they sit in STORE_ITEMS so the chest reward picker
+// — which filters by rarity & ownedItems — can drop them like any other
+// cosmetic. Owned ids match `getStingerOwnedId(...)` from audioManager.
+const LOGO_STINGERS_RAW: StoreItemRaw[] = [
+  { id: "stinger_arcade",    category: "logo_stinger", name: "Intro: Arcade",     description: "Sonido de logo arcade desbloqueable.",      price: 0, preview: "stinger", previewColor: "#F1C40F", rarity: "rare" },
+  { id: "stinger_elegant",   category: "logo_stinger", name: "Intro: Elegante",   description: "Sonido de logo elegante desbloqueable.",    price: 0, preview: "stinger", previewColor: "#D4AF37", rarity: "epic" },
+  { id: "stinger_cinematic", category: "logo_stinger", name: "Intro: Cinemático", description: "Sonido de logo cinemático del battle pass.", price: 0, preview: "stinger", previewColor: "#9B59B6", rarity: "epic" },
+];
+export const LOGO_STINGER_ITEMS: StoreItem[] = LOGO_STINGERS_RAW.map(buildLocalizedFromRaw);
+
 export const STORE_ITEMS: StoreItem[] = [
   ...CARD_BACKS, ...AVATARS, ...TITLES, ...AVATAR_FRAMES,
   ...EFFECTS, ...EMOTES, ...TABLE_DESIGNS, ...CARD_DESIGNS,
+  ...LOGO_STINGER_ITEMS,
 ];
 
 /**

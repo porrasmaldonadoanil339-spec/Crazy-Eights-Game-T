@@ -61,14 +61,43 @@ type SoundKey = keyof typeof SOUNDS;
 // recorded). The custom slot has no bundled asset; its source is a runtime
 // file:// URI managed via setCustomStingerUri().
 export type LogoStingerId = "casino" | "fanfare" | "cinematic" | "arcade" | "elegant" | "custom";
-export const LOGO_STINGERS: { id: LogoStingerId; sfxKey: SoundKey; durationMs: number }[] = [
-  { id: "casino",    sfxKey: "logoStingerCasino",    durationMs: 1400 },
-  { id: "fanfare",   sfxKey: "logoStingerFanfare",   durationMs: 1500 },
-  { id: "cinematic", sfxKey: "logoStingerCinematic", durationMs: 1600 },
-  { id: "arcade",    sfxKey: "logoStingerArcade",    durationMs: 1200 },
-  { id: "elegant",   sfxKey: "logoStingerElegant",   durationMs: 1600 },
+// Task #86 — premium intros are unlocked through the same economy as the rest
+// of the cosmetics: "free" stingers are available from the start, "chest"
+// stingers drop from chest rewards, and "battle_pass" stingers are claimed at
+// a specific premium battle pass tier. The custom slot is always free (it's a
+// player-provided clip, not a reward).
+export type LogoStingerUnlock =
+  | { type: "free" }
+  | { type: "chest"; rarity: "common" | "rare" | "epic" | "legendary" }
+  | { type: "battle_pass"; tier: number };
+export const LOGO_STINGERS: {
+  id: LogoStingerId;
+  sfxKey: SoundKey;
+  durationMs: number;
+  unlock: LogoStingerUnlock;
+}[] = [
+  { id: "casino",    sfxKey: "logoStingerCasino",    durationMs: 1400, unlock: { type: "free" } },
+  { id: "fanfare",   sfxKey: "logoStingerFanfare",   durationMs: 1500, unlock: { type: "free" } },
+  { id: "arcade",    sfxKey: "logoStingerArcade",    durationMs: 1200, unlock: { type: "chest", rarity: "rare" } },
+  { id: "cinematic", sfxKey: "logoStingerCinematic", durationMs: 1600, unlock: { type: "battle_pass", tier: 47 } },
+  { id: "elegant",   sfxKey: "logoStingerElegant",   durationMs: 1600, unlock: { type: "chest", rarity: "epic" } },
 ];
 export const DEFAULT_LOGO_STINGER_ID: LogoStingerId = "casino";
+
+// Task #86 — owned-item id used to track stinger unlocks alongside other
+// cosmetics in profile.ownedItems. The "custom" slot is intentionally NOT
+// tracked here since it isn't a reward — it's a player-provided clip.
+export const STINGER_OWNED_PREFIX = "stinger_";
+export function getStingerOwnedId(id: LogoStingerId): string {
+  return `${STINGER_OWNED_PREFIX}${id}`;
+}
+export function isStingerUnlocked(id: LogoStingerId, ownedItems: string[] | undefined): boolean {
+  if (id === "custom") return true;
+  const entry = LOGO_STINGERS.find((s) => s.id === id);
+  if (!entry) return false;
+  if (entry.unlock.type === "free") return true;
+  return (ownedItems ?? []).includes(getStingerOwnedId(id));
+}
 // Hard cap enforced when picking/recording a custom intro clip.
 export const CUSTOM_LOGO_STINGER_MAX_MS = 2000;
 

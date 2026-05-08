@@ -3,7 +3,9 @@ import type { Lang } from "./i18n";
 export interface BattlePassTier {
   tier: number;
   xpRequired: number;
-  rewardType: "coins" | "item" | "title" | "avatar" | "frame" | "effect" | "chest";
+  // Task #86 — "stinger" rewards a premium logo intro sound, tracked in
+  // ownedItems alongside the rest of the cosmetics.
+  rewardType: "coins" | "item" | "title" | "avatar" | "frame" | "effect" | "chest" | "stinger";
   rewardValue: string | number;
   rewardLabel: string;
   icon: string;
@@ -35,7 +37,7 @@ export interface SeasonTheme {
 // category in the SeasonExclusive type system. Shared by both Battle Pass
 // reward labels and seasonal-exclusive labels.
 export const BP_PREFIXES: Record<
-  "avatar" | "frame" | "title" | "item" | "effect",
+  "avatar" | "frame" | "title" | "item" | "effect" | "stinger",
   Record<Lang, string>
 > = {
   avatar: {
@@ -67,6 +69,13 @@ export const BP_PREFIXES: Record<
     tr:"Efekt", ru:"Эффект", pl:"Efekt", nl:"Effect", sv:"Effekt", da:"Effekt",
     fi:"Tehoste", no:"Effekt", zh:"特效", ja:"エフェクト", ko:"이펙트", hi:"प्रभाव",
     th:"เอฟเฟกต์", vi:"Hiệu ứng", id:"Efek", ar:"تأثير",
+  },
+  // Task #86 — premium logo intro sounds.
+  stinger: {
+    es:"Intro", en:"Intro", pt:"Intro", fr:"Intro", de:"Intro", it:"Intro",
+    tr:"İntro", ru:"Интро", pl:"Intro", nl:"Intro", sv:"Intro", da:"Intro",
+    fi:"Intro", no:"Intro", zh:"开场音", ja:"イントロ", ko:"인트로", hi:"इंट्रो",
+    th:"อินโทร", vi:"Intro", id:"Intro", ar:"مقدمة",
   },
 };
 
@@ -469,7 +478,7 @@ export const BATTLE_PASS_TIERS: BattlePassTier[] = [
   { tier: 44, xpRequired: 15488 , rewardType: "frame",   rewardValue: "frame_neon",          rewardLabel: "Marco: Neón",                 icon: "ellipse",          iconColor: "#FF00FF" },
   { tier: 45, xpRequired: 16200 , rewardType: "item",    rewardValue: "back_aurora",         rewardLabel: "Dorso: Aurora Boreal",        icon: "card",             iconColor: "#00FFCC" },
   { tier: 46, xpRequired: 16928 , rewardType: "title",   rewardValue: "title_invincible",    rewardLabel: "Título: Invencible",          icon: "shield",           iconColor: "#C0392B" },
-  { tier: 47, xpRequired: 17672 , rewardType: "coins",   rewardValue: 1200,                 rewardLabel: "1200 Monedas",                icon: "cash",             iconColor: "#F1C40F" },
+  { tier: 47, xpRequired: 17672 , rewardType: "stinger", rewardValue: "stinger_cinematic",   rewardLabel: "Intro: Cinemático",           icon: "musical-notes",    iconColor: "#9B59B6" },
   { tier: 48, xpRequired: 18432 , rewardType: "avatar",  rewardValue: "avatar_oracle",       rewardLabel: "Avatar: Oráculo",             icon: "eye",              iconColor: "#9B59B6" },
   { tier: 49, xpRequired: 19208 , rewardType: "item",    rewardValue: "back_blood",          rewardLabel: "Dorso: Sangre",               icon: "card",             iconColor: "#6B0000" },
   { tier: 50, xpRequired: 20000 , rewardType: "chest",   rewardValue: "legendary",          rewardLabel: "Cofre Legendario",            icon: "star",             iconColor: "#D4AF37" },
@@ -916,6 +925,29 @@ function bpPrefix(type: BattlePassTier["rewardType"], lang: Lang): string | null
   return entry[lang] ?? entry.en ?? entry.es;
 }
 
+// Task #86 — localized names for stinger rewards keyed by their owned item id.
+const BP_STINGER_NAMES: Record<string, Record<Lang, string>> = {
+  stinger_cinematic: {
+    es:"Cinemático", en:"Cinematic", pt:"Cinemático", fr:"Cinématique", de:"Filmreif",
+    it:"Cinematografico", tr:"Sinematik", ru:"Кинематографичный", pl:"Filmowy", nl:"Filmisch",
+    sv:"Filmisk", da:"Filmisk", fi:"Elokuvallinen", no:"Filmatisk", zh:"电影感",
+    ja:"シネマティック", ko:"시네마틱", hi:"सिनेमाई", th:"ภาพยนตร์", vi:"Điện ảnh",
+    id:"Sinematik", ar:"سينمائي",
+  },
+  stinger_arcade: {
+    es:"Arcade", en:"Arcade", pt:"Arcade", fr:"Arcade", de:"Arcade", it:"Arcade",
+    tr:"Atari", ru:"Аркада", pl:"Arcade", nl:"Arcade", sv:"Arkad", da:"Arkade",
+    fi:"Arcade", no:"Arkade", zh:"街机", ja:"アーケード", ko:"아케이드",
+    hi:"आर्केड", th:"อาร์เคด", vi:"Arcade", id:"Arkade", ar:"أركيد",
+  },
+  stinger_elegant: {
+    es:"Elegante", en:"Elegant", pt:"Elegante", fr:"Élégant", de:"Elegant", it:"Elegante",
+    tr:"Zarif", ru:"Элегантный", pl:"Elegancki", nl:"Elegant", sv:"Elegant", da:"Elegant",
+    fi:"Tyylikäs", no:"Elegant", zh:"优雅", ja:"エレガント", ko:"우아한",
+    hi:"शालीन", th:"สง่างาม", vi:"Thanh lịch", id:"Elegan", ar:"أنيق",
+  },
+};
+
 export function getBPRewardLabel(tier: BattlePassTier, lang: Lang): string {
   if (tier.isExclusive && tier.exclusiveLabel) {
     return tier.exclusiveLabel[lang] ?? tier.exclusiveLabel.en ?? tier.exclusiveLabel.es;
@@ -933,6 +965,15 @@ export function getBPRewardLabel(tier: BattlePassTier, lang: Lang): string {
 
   if (tier.rewardType === "chest") {
     return localizedChestName(tier.rewardValue, lang) ?? tier.rewardLabel;
+  }
+
+  if (tier.rewardType === "stinger") {
+    const id = String(tier.rewardValue);
+    const entry = BP_STINGER_NAMES[id];
+    const namePart = entry ? (entry[lang] ?? entry.en ?? entry.es) : null;
+    const prefix = bpPrefix("stinger", lang);
+    if (prefix && namePart) return `${prefix}: ${namePart}`;
+    return namePart ?? tier.rewardLabel;
   }
 
   const prefix = bpPrefix(tier.rewardType, lang);
