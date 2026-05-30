@@ -32,12 +32,29 @@ import { achTitle, achDesc } from "@/lib/achTranslations";
 import type { Lang } from "@/lib/i18n";
 import RewardPopup from "@/components/RewardPopup";
 import BouncePressable from "@/components/BouncePressable";
+import { StarRating } from "@/components/Star";
 
 const RARITY_COLORS_MAP: Record<string, string> = {
   common: "#95A5A6",
   rare: "#2196F3",
   epic: "#9B59B6",
   legendary: "#D4AF37",
+};
+
+// Premium medal gradients per rarity (light -> deep) for the achievement badge.
+const RARITY_GRADIENTS: Record<string, readonly [string, string]> = {
+  common: ["#B8C2C6", "#7F8C8D"],
+  rare: ["#5CB3F5", "#1565C0"],
+  epic: ["#C586D9", "#7B1FA2"],
+  legendary: ["#F5D473", "#C9961E"],
+};
+
+// Rarity expressed as filled stars (1-4) for the badge rating row.
+const RARITY_STARS: Record<string, number> = {
+  common: 1,
+  rare: 2,
+  epic: 3,
+  legendary: 4,
 };
 
 type Tab = "playerpath" | "battlepass" | "achievements";
@@ -216,6 +233,9 @@ export default function AchievementsScreen() {
     const unlocked = prog?.unlocked ?? false;
     const claimed = prog?.claimedReward ?? false;
     const rarityColor = RARITY_COLORS_MAP[ach.rarity];
+    const rarityGrad = RARITY_GRADIENTS[ach.rarity] ?? RARITY_GRADIENTS.common;
+    const rarityStars = RARITY_STARS[ach.rarity] ?? 1;
+    const claimable = unlocked && !claimed;
     const title = achTitle(ach.id, lang) || ach.title;
     const desc = achDesc(ach.id, lang) || ach.description;
     return (
@@ -224,49 +244,98 @@ export default function AchievementsScreen() {
           styles.achCard,
           {
             backgroundColor: unlocked ? themeColors.card : themeColors.surface,
-            borderColor: unlocked ? rarityColor + "55" : themeColors.border,
+            borderColor: unlocked ? rarityColor + "66" : themeColors.border,
+          },
+          claimable && {
+            borderColor: themeGold,
+            shadowColor: themeGold,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.55,
+            shadowRadius: 12,
+            elevation: 8,
           },
         ]}
       >
-        <View style={[styles.achIconWrap, { backgroundColor: unlocked ? ach.iconColor + "33" : themeColors.card }]}>
-          {ach.icon === "cash" ? (
-            <CoinIcon size={22} color={unlocked ? ach.iconColor : themeColors.textDim} />
+        {/* Rarity accent rail */}
+        <View style={[styles.achRail, { backgroundColor: unlocked ? rarityColor : themeColors.border }]} />
+
+        {/* Medal badge */}
+        <View style={styles.achMedalWrap}>
+          {unlocked ? (
+            <LinearGradient
+              colors={rarityGrad}
+              start={{ x: 0.2, y: 0 }}
+              end={{ x: 0.8, y: 1 }}
+              style={[styles.achMedal, { borderColor: rarityColor + "AA" }]}
+            >
+              {ach.icon === "cash" ? (
+                <CoinIcon size={24} color="#1a0a00" />
+              ) : (
+                <Ionicons name={ach.icon as any} size={24} color="#1a0a00" />
+              )}
+            </LinearGradient>
           ) : (
-            <Ionicons name={ach.icon as any} size={22} color={unlocked ? ach.iconColor : themeColors.textDim} />
-          )}
-        </View>
-        <View style={styles.achContent}>
-          <View style={styles.achTitleRow}>
-            <Text style={[styles.achTitle, { color: unlocked ? themeColors.text : themeColors.textMuted }]}>{title}</Text>
-            {unlocked && !claimed && <View style={styles.claimDot} />}
-          </View>
-          <Text style={[styles.achDesc, { color: themeColors.textMuted }]}>{desc}</Text>
-          {!unlocked && (
-            <View style={[styles.progressBarBg, { backgroundColor: themeColors.border }]}>
-              <View style={[styles.progressBarFill, { width: `${pct * 100}%`, backgroundColor: rarityColor }]} />
+            <View style={[styles.achMedal, styles.achMedalLocked, { borderColor: themeColors.border }]}>
+              {ach.icon === "cash" ? (
+                <CoinIcon size={22} color={themeColors.textDim} />
+              ) : (
+                <Ionicons name={ach.icon as any} size={22} color={themeColors.textDim} />
+              )}
             </View>
           )}
-          <View style={styles.achRewardRow}>
-            <CoinIcon size={11} color={themeGold} />
-            <Text style={[styles.achRewardText, { color: themeColors.textMuted }]}>{ach.coinsReward}</Text>
-            <Text style={[styles.achSep, { color: themeColors.textDim }]}>·</Text>
-            <Text style={[styles.achRewardText, { color: themeColors.textMuted }]}>{ach.xpReward} XP</Text>
-            {!unlocked && (
+        </View>
+
+        <View style={styles.achContent}>
+          <View style={styles.achTitleRow}>
+            <Text
+              style={[styles.achTitle, { color: unlocked ? themeColors.text : themeColors.textMuted }]}
+              numberOfLines={1}
+            >
+              {title}
+            </Text>
+            <StarRating
+              count={unlocked ? rarityStars : 0}
+              total={rarityStars}
+              size={10}
+              color={rarityColor}
+              dimColor={themeColors.textDim}
+            />
+          </View>
+          <Text style={[styles.achDesc, { color: themeColors.textMuted }]} numberOfLines={2}>{desc}</Text>
+          {!unlocked && (
+            <>
+              <View style={[styles.progressBarBg, { backgroundColor: themeColors.border }]}>
+                <View
+                  style={[
+                    styles.progressBarFill,
+                    { width: `${Math.min(100, pct * 100)}%`, backgroundColor: rarityColor },
+                  ]}
+                />
+              </View>
               <Text style={[styles.progText, { color: themeColors.textDim }]}>{prog?.progress ?? 0}/{ach.target}</Text>
-            )}
+            </>
+          )}
+          <View style={[styles.achRewardBand, { backgroundColor: themeGold + "1A", borderColor: themeGold + "44" }]}>
+            <CoinIcon size={12} color={themeGold} />
+            <Text style={[styles.achRewardVal, { color: themeGold }]}>{ach.coinsReward}</Text>
+            <View style={[styles.achRewardDivider, { backgroundColor: themeGold + "44" }]} />
+            <Ionicons name="flash" size={11} color={themeColors.blue} />
+            <Text style={[styles.achRewardVal, { color: themeColors.blue }]}>{ach.xpReward} XP</Text>
           </View>
         </View>
-        {unlocked && !claimed && (
+
+        {claimable && (
           <BouncePressable
             onPress={() => handleClaimAchievement(ach.id)}
-            style={[styles.claimBtn, { backgroundColor: themeGold }]}
+            style={styles.claimBtn}
+            gradient={[themeColors.goldLight, themeGold]}
             sound
           >
             <Text style={styles.claimText}>{claimLabel}</Text>
           </BouncePressable>
         )}
         {claimed && (
-          <Ionicons name="checkmark-circle" size={22} color={Colors.success} />
+          <Ionicons name="checkmark-circle" size={24} color={Colors.success} />
         )}
       </View>
     );
@@ -626,24 +695,40 @@ const styles = StyleSheet.create({
   achCard: {
     flexDirection: "row", alignItems: "center", gap: 12,
     borderRadius: 14, padding: 12, marginBottom: 8,
-    borderWidth: 1,
+    borderWidth: 1, overflow: "hidden",
   },
-  achIconWrap: {
-    width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center", flexShrink: 0,
+  achRail: {
+    position: "absolute", left: 0, top: 0, bottom: 0, width: 4,
+    borderTopLeftRadius: 14, borderBottomLeftRadius: 14,
   },
-  achContent: { flex: 1, gap: 3 },
-  achTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  achTitle: { fontFamily: "Nunito_700Bold", fontSize: 13 },
-  claimDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.gold },
-  achDesc: { fontFamily: "Nunito_400Regular", fontSize: 11 },
-  progressBarBg: { height: 3, borderRadius: 2 },
+  achMedalWrap: {
+    width: 48, height: 48, alignItems: "center", justifyContent: "center", flexShrink: 0,
+  },
+  achMedal: {
+    width: 48, height: 48, borderRadius: 24, borderWidth: 1.5,
+    alignItems: "center", justifyContent: "center",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3,
+  },
+  achMedalLocked: { backgroundColor: "rgba(0,0,0,0.18)" },
+  achContent: { flex: 1, gap: 4 },
+  achTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  achTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 13, flexShrink: 1 },
+  achDesc: { fontFamily: "Nunito_400Regular", fontSize: 11, lineHeight: 15 },
+  progressBarBg: { height: 4, borderRadius: 2, marginTop: 1 },
   progressBarFill: { height: "100%", borderRadius: 2 },
-  achRewardRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  achRewardText: { fontFamily: "Nunito_400Regular", fontSize: 11 },
-  achSep: { fontSize: 11 },
-  progText: { fontFamily: "Nunito_400Regular", fontSize: 10, marginLeft: "auto" as any },
+  progText: { fontFamily: "Nunito_700Bold", fontSize: 10, alignSelf: "flex-end" },
+  achRewardBand: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    alignSelf: "flex-start",
+    paddingHorizontal: 9, paddingVertical: 4,
+    borderRadius: 8, borderWidth: 1, marginTop: 2,
+  },
+  achRewardVal: { fontFamily: "Nunito_800ExtraBold", fontSize: 11 },
+  achRewardDivider: { width: 1, height: 11, marginHorizontal: 1 },
   claimBtn: {
-    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
+    borderRadius: 9, paddingHorizontal: 12, paddingVertical: 7,
+    overflow: "hidden", flexShrink: 0,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 4,
   },
   claimText: { fontFamily: "Nunito_800ExtraBold", fontSize: 11, color: "#1a0a00" },
   bpHeader: { marginBottom: 16 },

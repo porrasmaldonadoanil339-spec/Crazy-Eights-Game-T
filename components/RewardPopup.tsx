@@ -70,6 +70,7 @@ export default function RewardPopup({
   const ringScale = useSharedValue(0);
   const ringOp = useSharedValue(0);
   const tapHintOp = useSharedValue(0);
+  const haloRot = useSharedValue(0);
 
   const particles = useRef<Particle[]>(
     Array.from({ length: NUM_PARTICLES }, (_, i) => ({
@@ -125,6 +126,13 @@ export default function RewardPopup({
         )
       );
 
+      haloRot.value = 0;
+      haloRot.value = withRepeat(
+        withTiming(1, { duration: 6000, easing: Easing.linear }),
+        -1,
+        false
+      );
+
       particles.forEach((p) => {
         p.x.value = 0;
         p.y.value = 0;
@@ -150,6 +158,7 @@ export default function RewardPopup({
       cardScale.value = withTiming(0.85, { duration: 180 });
       titlePulse.value = 1;
       tapHintOp.value = 0;
+      haloRot.value = 0;
     }
   }, [visible]);
 
@@ -166,6 +175,9 @@ export default function RewardPopup({
     transform: [{ scale: ringScale.value }],
   }));
   const tapStyle = useAnimatedStyle(() => ({ opacity: tapHintOp.value }));
+  const haloStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${haloRot.value * 360}deg` }],
+  }));
 
   if (!visible) return null;
 
@@ -199,6 +211,14 @@ export default function RewardPopup({
 
           {/* Big icon area */}
           <View style={styles.iconArea}>
+            <Animated.View pointerEvents="none" style={[styles.iconHalo, haloStyle]}>
+              <LinearGradient
+                colors={[accent + "00", accent + "55", accent + "00", accent + "55", accent + "00"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
             <LinearGradient
               colors={[accent, accent + "AA"]}
               style={styles.iconCircle}
@@ -340,6 +360,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     alignItems: "center",
     justifyContent: "center",
+  },
+  iconHalo: {
+    position: "absolute",
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    overflow: "hidden",
+    opacity: 0.7,
   },
   iconCircle: {
     width: 96,

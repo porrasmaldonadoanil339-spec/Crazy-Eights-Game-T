@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { playSound } from "@/lib/sounds";
+import { AnimatedStar } from "@/components/Star";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 const PARTICLE_COUNT = 18;
@@ -16,7 +17,7 @@ function Particle({ index }: { index: number }) {
   const op = useRef(new Animated.Value(0)).current;
   const sc = useRef(new Animated.Value(0)).current;
 
-  const ICONS = ["♠", "♥", "♦", "♣", "★"];
+  const ICONS = ["star", "sparkles", "diamond", "star-outline"] as const;
   const icon = ICONS[index % ICONS.length];
   const colors = [Colors.gold, "#FFD700", "#FFF700", "#FF9D00", "#fff"];
   const color = colors[index % colors.length];
@@ -41,20 +42,17 @@ function Particle({ index }: { index: number }) {
   }, []);
 
   return (
-    <Animated.Text
+    <Animated.View
       style={{
         position: "absolute",
         left: x,
         top: y,
         opacity: op,
         transform: [{ scale: sc }],
-        fontSize: 16,
-        color,
-        fontWeight: "bold",
       }}
     >
-      {icon}
-    </Animated.Text>
+      <Ionicons name={icon} size={16} color={color} />
+    </Animated.View>
   );
 }
 
@@ -69,6 +67,8 @@ export function LevelUpOverlay({ newLevel, onDone }: LevelUpOverlayProps) {
   const cardOp = useRef(new Animated.Value(0)).current;
   const titleY = useRef(new Animated.Value(30)).current;
   const shineX = useRef(new Animated.Value(-SW)).current;
+  const auraSc = useRef(new Animated.Value(0.85)).current;
+  const auraOp = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     playSound("level_up").catch(() => {});
@@ -84,6 +84,20 @@ export function LevelUpOverlay({ newLevel, onDone }: LevelUpOverlayProps) {
       // shine sweep
       Animated.timing(shineX, { toValue: SW * 1.5, duration: 700, useNativeDriver: true }).start();
     });
+
+    // Breathing gold aura behind the level orb.
+    Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(auraOp, { toValue: 0.55, duration: 1000, useNativeDriver: true }),
+          Animated.timing(auraSc, { toValue: 1.25, duration: 1000, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(auraOp, { toValue: 0.18, duration: 1000, useNativeDriver: true }),
+          Animated.timing(auraSc, { toValue: 0.9, duration: 1000, useNativeDriver: true }),
+        ]),
+      ])
+    ).start();
 
     const doneTimer = setTimeout(() => {
       Animated.timing(overlayOp, { toValue: 0, duration: 500, useNativeDriver: true }).start(() => {
@@ -107,18 +121,24 @@ export function LevelUpOverlay({ newLevel, onDone }: LevelUpOverlayProps) {
           colors={["#0A1E0A", "#162816", "#0D1E0D"]}
           style={styles.cardGrad}
         >
-          {/* Gold glow ring */}
-          <View style={styles.glowRing}>
-            <LinearGradient
-              colors={[Colors.gold, "#FFD700", Colors.gold]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.glowRingGrad}
-            >
-              <View style={styles.levelCircleInner}>
-                <Text style={styles.levelNumber}>{newLevel}</Text>
-              </View>
-            </LinearGradient>
+          {/* Gold glow ring with breathing aura */}
+          <View style={styles.orbWrap}>
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.orbAura, { opacity: auraOp, transform: [{ scale: auraSc }] }]}
+            />
+            <View style={styles.glowRing}>
+              <LinearGradient
+                colors={[Colors.gold, "#FFD700", Colors.gold]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.glowRingGrad}
+              >
+                <View style={styles.levelCircleInner}>
+                  <Text style={styles.levelNumber}>{newLevel}</Text>
+                </View>
+              </LinearGradient>
+            </View>
           </View>
 
           {/* Title */}
@@ -126,9 +146,9 @@ export function LevelUpOverlay({ newLevel, onDone }: LevelUpOverlayProps) {
             <Text style={styles.levelUpLabel}>NIVEL SUPERADO</Text>
             <Text style={styles.levelUpTitle}>¡NIVEL {newLevel}!</Text>
             <View style={styles.starRow}>
-              <Ionicons name="star" size={14} color={Colors.gold} />
-              <Ionicons name="star" size={18} color={Colors.gold} />
-              <Ionicons name="star" size={14} color={Colors.gold} />
+              <AnimatedStar size={14} color={Colors.gold} delay={400} />
+              <AnimatedStar size={20} color={Colors.gold} delay={520} />
+              <AnimatedStar size={14} color={Colors.gold} delay={640} />
             </View>
           </Animated.View>
 
@@ -170,6 +190,21 @@ const styles = StyleSheet.create({
     paddingVertical: 36,
     paddingHorizontal: 24,
     gap: 20,
+  },
+  orbWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  orbAura: {
+    position: "absolute",
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: Colors.gold + "22",
+    shadowColor: Colors.gold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 30,
   },
   glowRing: {
     borderRadius: 52,

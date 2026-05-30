@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { usePressFeedback } from "@/hooks/usePressFeedback";
 
@@ -22,6 +23,12 @@ interface BouncePressableProps extends PressableProps {
    *  warm gold that reads on most surfaces. */
   glowColor?: string;
   wrapperStyle?: StyleProp<ViewStyle>;
+  /** When provided, renders a premium gradient background behind the children.
+   *  The button `style` should set `borderRadius` + `overflow: "hidden"` so the
+   *  gradient clips to the button shape. */
+  gradient?: readonly [string, string, ...string[]];
+  gradientStart?: { x: number; y: number };
+  gradientEnd?: { x: number; y: number };
 }
 
 function tapHaptic() {
@@ -41,6 +48,9 @@ export default function BouncePressable({
   sound = false,
   glowColor = "rgba(255, 215, 0, 0.35)",
   wrapperStyle,
+  gradient,
+  gradientStart = { x: 0, y: 0 },
+  gradientEnd = { x: 1, y: 1 },
   ...rest
 }: BouncePressableProps) {
   const scale = useSharedValue(1);
@@ -82,6 +92,15 @@ export default function BouncePressable({
         }}
         style={style}
       >
+        {gradient ? (
+          <LinearGradient
+            colors={gradient}
+            start={gradientStart}
+            end={gradientEnd}
+            style={StyleSheet.absoluteFillObject}
+            pointerEvents="none"
+          />
+        ) : null}
         {children}
         {sound ? (
           <Animated.View
