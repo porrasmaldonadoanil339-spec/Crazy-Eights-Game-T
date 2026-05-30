@@ -965,19 +965,18 @@ function EventLiveBadge({ level }: { level: number }) {
         style={[styles.bpShortcut, locked && { opacity: 0.6 }]}
         sound
         glowColor={baseColor + (locked ? "22" : "55")}
+        gradient={gradColors}
+        gradientStart={{ x: 0, y: 0 }}
+        gradientEnd={{ x: 1, y: 0 }}
       >
-        <LinearGradient
-          colors={gradColors}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-          style={styles.bpShortcutGrad}
-        >
+        <View style={styles.bpShortcutGrad}>
           <Ionicons name={iconName} size={20} color={locked ? "#888" : "#FFD700"} />
           <View style={{ flex: 1 }}>
             <Text style={styles.bpShortcutTitle}>{ev.name} {locked ? "· NIVEL 5" : "· EN VIVO"}</Text>
             <Text style={styles.bpShortcutSub}>{locked ? "Desbloquea al nivel 5" : `Termina en ${slot.daysLeft}d`}</Text>
           </View>
           <Ionicons name={locked ? "lock-closed" : "chevron-forward"} size={18} color={locked ? "#888" : "#FFD700"} />
-        </LinearGradient>
+        </View>
       </BouncePressable>
     </Animated.View>
   );
@@ -1801,19 +1800,18 @@ export default function PlayScreen() {
           style={styles.bpShortcut}
           sound
           glowColor="rgba(168,85,247,0.35)"
+          gradient={["#7B2FBE", "#A855F7", "#7B2FBE"]}
+          gradientStart={{ x: 0, y: 0 }}
+          gradientEnd={{ x: 1, y: 0 }}
         >
-          <LinearGradient
-            colors={["#7B2FBE", "#A855F7", "#7B2FBE"]}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-            style={styles.bpShortcutGrad}
-          >
+          <View style={styles.bpShortcutGrad}>
             <Ionicons name="sparkles" size={20} color="#FFD700" />
             <View style={{ flex: 1 }}>
               <Text style={styles.bpShortcutTitle}>{T("battlePassShortcut")}</Text>
               <Text style={styles.bpShortcutSub}>{T("level")} {level}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#FFD700" />
-          </LinearGradient>
+          </View>
         </BouncePressable>
         </Animated.View>
 

@@ -16,6 +16,7 @@ import { getCurrentSeason, getSeasonRewardsForRank } from "@/lib/seasons";
 import type { Lang } from "@/lib/i18n";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { PlayerProfileModal, type PlayerProfileData } from "@/components/PlayerProfileModal";
+import StarRating from "@/components/Star";
 
 const { width } = Dimensions.get("window");
 
@@ -226,21 +227,18 @@ export default function RankedScreen() {
     }
   }, [visibleCount]);
 
-  const renderStars = (current: number, max: number, size = 24) => {
-    return (
-      <View style={styles.starsRow}>
-        {Array.from({ length: max }).map((_, i) => (
-          <Ionicons
-            key={i}
-            name={i < current ? "star" : "star-outline"}
-            size={size}
-            color={i < current ? rankInfo.color : themeColors.textDim}
-            style={styles.starIcon}
-          />
-        ))}
-      </View>
-    );
-  };
+  const renderStars = (current: number, max: number, size = 24) => (
+    <View style={styles.starsRow}>
+      <StarRating
+        count={current}
+        total={max}
+        size={size}
+        gap={10}
+        color={rankInfo.color}
+        dimColor={themeColors.textDim}
+      />
+    </View>
+  );
 
   const nextRankProgress = (profile.rankedProfile.stars / profile.rankedProfile.maxStars) * 100;
 

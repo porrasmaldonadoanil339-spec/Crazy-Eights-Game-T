@@ -240,11 +240,16 @@ function ConfirmModal({
             <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Text style={[styles.cancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
             </Pressable>
-            <BouncePressable onPress={onConfirm} style={styles.buyBtn} sound>
-              <LinearGradient colors={item.category === "emote" ? ["#67E8F9", "#3B82F6"] : [theme.goldLight, theme.gold]} style={styles.buyBtnGrad}>
+            <BouncePressable
+              onPress={onConfirm}
+              style={styles.buyBtn}
+              sound
+              gradient={(item.category === "emote" ? ["#67E8F9", "#3B82F6"] : [theme.goldLight, theme.gold]) as [string, string]}
+            >
+              <View style={styles.buyBtnGrad}>
                 <Ionicons name="bag-check" size={16} color="#1a0a00" />
                 <Text style={styles.buyBtnText}>{T("buy")}</Text>
-              </LinearGradient>
+              </View>
             </BouncePressable>
           </View>
         </View>
@@ -1006,11 +1011,16 @@ function DailyConfirmModal({
             <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Text style={[styles.cancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
             </Pressable>
-            <BouncePressable onPress={onConfirm} style={styles.buyBtn} sound>
-              <LinearGradient colors={isFichas ? ["#7FD0FF", "#3498DB"] : [theme.goldLight, theme.gold]} style={styles.buyBtnGrad}>
+            <BouncePressable
+              onPress={onConfirm}
+              style={styles.buyBtn}
+              sound
+              gradient={(isFichas ? ["#7FD0FF", "#3498DB"] : [theme.goldLight, theme.gold]) as [string, string]}
+            >
+              <View style={styles.buyBtnGrad}>
                 <Ionicons name="bag-check" size={16} color="#1a0a00" />
                 <Text style={styles.buyBtnText}>{T("buy")}</Text>
-              </LinearGradient>
+              </View>
             </BouncePressable>
           </View>
         </View>
@@ -1700,11 +1710,16 @@ function ChestConfirmModal({
             <Pressable onPress={onCancel} style={[styles.cancelBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Text style={[styles.cancelText, { color: theme.textMuted }]}>{T("cancel")}</Text>
             </Pressable>
-            <BouncePressable onPress={onConfirm} style={styles.buyBtn} sound>
-              <LinearGradient colors={["#7FD0FF", "#3498DB"]} style={styles.buyBtnGrad}>
+            <BouncePressable
+              onPress={onConfirm}
+              style={styles.buyBtn}
+              sound
+              gradient={["#7FD0FF", "#3498DB"]}
+            >
+              <View style={styles.buyBtnGrad}>
                 <Ionicons name="bag-check" size={16} color="#1a0a00" />
                 <Text style={styles.buyBtnText}>{T("buy")}</Text>
-              </LinearGradient>
+              </View>
             </BouncePressable>
           </View>
         </View>
