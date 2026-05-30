@@ -140,6 +140,10 @@ export interface PlayerProfile {
   // Ranked star rescue (watch ad to cancel a ranked star loss)
   rankedRescuesToday: number;
   lastRankedRescueDate: string;
+  // Surprise gift (floating mystery box on main menu — separate from the daily
+  // login reward and the daily shop free gift). Stores the last claim time so
+  // the box can be hidden during its own cooldown.
+  lastSurpriseGiftAt: number;
   // Emotes
   equippedEmotes: string[];
   // Settings
@@ -280,6 +284,7 @@ const DEFAULT_PROFILE: PlayerProfile = {
   lastAdsDate: "",
   rankedRescuesToday: 0,
   lastRankedRescueDate: "",
+  lastSurpriseGiftAt: 0,
   equippedEmotes: ["emote_gg", "emote_ocho", "emote_bravo", "emote_lol", "emote_no", "emote_si", "emote_jaja", "emote_bien"],
   musicEnabled: true,
   sfxEnabled: true,
@@ -374,6 +379,9 @@ interface ProfileContextValue {
   recordRankedRescue: () => boolean;
   rankedRescuesToday: number;
   rankedRescueDailyLimit: number;
+  claimSurpriseGift: () => SurpriseGiftResult | null;
+  surpriseGiftAvailableAt: number;
+  surpriseGiftCooldownMs: number;
   level: number;
   xpProgress: { current: number; needed: number; level: number };
   battlePassTier: number;
@@ -397,6 +405,14 @@ const ProfileContext = createContext<ProfileContextValue | null>(null);
 const STORAGE_KEY = "ocho_profile_v3";
 const CHEST_INVENTORY_LIMIT = 10;
 const CHEST_OVERFLOW_LIMIT = 20;
+
+// Outcome of claiming the surprise mystery box. Coins/fichas are credited
+// immediately; a chest is added to inventory (or queued to overflow) and shown
+// as a "won a chest" reveal, matching how the daily login reward grants chests.
+export type SurpriseGiftResult =
+  | { kind: "coins"; coins: number }
+  | { kind: "fichas"; fichas: number }
+  | { kind: "chest"; chestType: ChestType; queued: boolean };
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<PlayerProfile>(() => ({
@@ -1298,6 +1314,51 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return profile.lastRankedRescueDate === today ? (profile.rankedRescuesToday ?? 0) : 0;
   }, [profile.lastRankedRescueDate, profile.rankedRescuesToday]);
 
+  // Surprise mystery box — a second gift system independent of the daily login
+  // reward. Fixed cooldown (no admin panel). The box on the menu only shows when
+  // available; this draws + credits a weighted prize and stamps the cooldown
+  // atomically so it can't be double-claimed.
+  const SURPRISE_GIFT_COOLDOWN_MS = 4 * 60 * 60 * 1000; // 4 hours
+  const SURPRISE_GIFT_FALLBACK_COINS = 100;
+  const claimSurpriseGift = useCallback((): SurpriseGiftResult | null => {
+    const now = Date.now();
+    // Pre-roll the weighted prize; only applied if the cooldown has elapsed.
+    const roll = Math.random();
+    const kind: "coins" | "fichas" | "chest" = roll < 0.5 ? "coins" : roll < 0.8 ? "fichas" : "chest";
+    const coinsAmount = 50 + Math.floor(Math.random() * 6) * 25; // 50..175
+    const fichasAmount = 5 + Math.floor(Math.random() * 4) * 5; // 5..20
+    const chestType: ChestType = Math.random() < 0.8 ? "common" : "rare";
+
+    let result: SurpriseGiftResult | null = null;
+    update((p) => {
+      const last = p.lastSurpriseGiftAt ?? 0;
+      if (now - last < SURPRISE_GIFT_COOLDOWN_MS) return p; // still on cooldown
+      if (kind === "coins") {
+        result = { kind: "coins", coins: coinsAmount };
+        return { ...p, coins: p.coins + coinsAmount, lastSurpriseGiftAt: now };
+      }
+      if (kind === "fichas") {
+        result = { kind: "fichas", fichas: fichasAmount };
+        return { ...p, fichas: (p.fichas ?? 0) + fichasAmount, lastSurpriseGiftAt: now };
+      }
+      // Chest — respect inventory + overflow limits exactly like addChestToInventory.
+      const inventory = p.chestInventory ?? [];
+      const overflow = p.chestOverflow ?? [];
+      if (inventory.length < CHEST_INVENTORY_LIMIT) {
+        result = { kind: "chest", chestType, queued: false };
+        return { ...p, chestInventory: [...inventory, createChest(chestType, "daily")], lastSurpriseGiftAt: now };
+      }
+      if (overflow.length < CHEST_OVERFLOW_LIMIT) {
+        result = { kind: "chest", chestType, queued: true };
+        return { ...p, chestOverflow: [...overflow, createChest(chestType, "daily")], lastSurpriseGiftAt: now };
+      }
+      // Both chest stores full — fall back to coins so the gift is never wasted.
+      result = { kind: "coins", coins: SURPRISE_GIFT_FALLBACK_COINS };
+      return { ...p, coins: p.coins + SURPRISE_GIFT_FALLBACK_COINS, lastSurpriseGiftAt: now };
+    });
+    return result;
+  }, [update]);
+
   const recordGameResult = useCallback((params: {
     won: boolean;
     mode: GameModeId;
@@ -1576,6 +1637,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         recordRankedRescue,
         rankedRescuesToday,
         rankedRescueDailyLimit: RANKED_RESCUE_DAILY_LIMIT,
+        claimSurpriseGift,
+        surpriseGiftAvailableAt: (profile.lastSurpriseGiftAt ?? 0) + SURPRISE_GIFT_COOLDOWN_MS,
+        surpriseGiftCooldownMs: SURPRISE_GIFT_COOLDOWN_MS,
         level,
         xpProgress,
         battlePassTier,

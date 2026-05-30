@@ -1,6 +1,6 @@
 import { CoinIcon } from "@/components/CoinIcon";
 import { ChipIcon } from "@/components/ChipIcon";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View, Text, StyleSheet, Pressable, ScrollView,
   Modal, Platform, Dimensions, TextInput, BackHandler, Alert, Image,
@@ -21,7 +21,7 @@ import { useGame } from "@/context/GameContext";
 import { getCurrentWeeklyEvent } from "@/lib/events";
 import { markFichasRunActive } from "@/lib/fichasChallenge";
 import { loadRewardedAd, showRewardedAd } from "@/lib/ads";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, type SurpriseGiftResult } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
 import { playButton, syncSettings, playChestOpen, playLogoStinger } from "@/lib/audioManager";
 import { playSound } from "@/lib/sounds";
@@ -39,6 +39,7 @@ import { getDailyDateKey } from "@/lib/dailyShop";
 import { getRankInfo, RANKS, DIVISIONS } from "@/lib/ranked";
 import { FlatList } from "react-native";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
+import SurpriseGiftModal from "@/components/SurpriseGiftModal";
 import ChestVisual from "@/components/ChestVisual";
 import { ChestType, ChestReward, CHEST_CONFIG, getChestProgress } from "@/lib/chestSystem";
 import type { Chest } from "@/lib/chestSystem";
@@ -354,6 +355,127 @@ function DailyBurstParticle({ progress, angle, dist, color }: { progress: { valu
     />
   );
 }
+
+// Floating surprise mystery box shown on the main menu while available. This is
+// a SECOND gift system, independent of the daily login reward — it has its own
+// cooldown and idle "look at me" animation (float + tilt + glow pulse).
+function SurpriseGiftBox({ onPress, label, hint }: { onPress: () => void; label: string; hint: string }) {
+  const floatY = useSharedValue(0);
+  const rot = useSharedValue(0);
+  const glow = useSharedValue(0.4);
+  useEffect(() => {
+    floatY.value = withRepeat(withSequence(
+      withTiming(-6, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
+      withTiming(0, { duration: 1100, easing: Easing.inOut(Easing.ease) })
+    ), -1, false);
+    rot.value = withRepeat(withSequence(
+      withTiming(-0.05, { duration: 900 }),
+      withTiming(0.05, { duration: 900 })
+    ), -1, true);
+    glow.value = withRepeat(withSequence(
+      withTiming(0.95, { duration: 900 }),
+      withTiming(0.35, { duration: 900 })
+    ), -1, true);
+  }, []);
+  const boxAnim = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatY.value }, { rotate: `${rot.value}rad` }],
+  }));
+  const glowAnim = useAnimatedStyle(() => ({ opacity: glow.value }));
+  return (
+    <Pressable onPress={onPress} style={sgStyles.banner}>
+      <View style={sgStyles.boxSlot}>
+        <Animated.View style={[sgStyles.glow, glowAnim]} pointerEvents="none" />
+        <Animated.View style={boxAnim}>
+          <LinearGradient
+            colors={[Colors.gold, "#C9961E", "#9A7016"]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={sgStyles.box}
+          >
+            <View style={sgStyles.ribbonV} />
+            <View style={sgStyles.ribbonH} />
+            <Text style={sgStyles.q}>?</Text>
+          </LinearGradient>
+        </Animated.View>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={sgStyles.label}>{label}</Text>
+        <Text style={sgStyles.hint}>{hint}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={Colors.gold} />
+    </Pressable>
+  );
+}
+
+const sgStyles = StyleSheet.create({
+  banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "rgba(212,175,55,0.5)",
+    backgroundColor: "rgba(212,175,55,0.12)",
+  },
+  boxSlot: {
+    width: 50,
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  glow: {
+    position: "absolute",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: Colors.gold,
+    shadowColor: Colors.gold,
+    shadowOpacity: 0.9,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  box: {
+    width: 42,
+    height: 42,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    borderWidth: 1.5,
+    borderColor: "#FFF3C4AA",
+  },
+  ribbonV: {
+    position: "absolute",
+    width: 7,
+    height: "100%",
+    backgroundColor: "rgba(255,255,255,0.3)",
+  },
+  ribbonH: {
+    position: "absolute",
+    height: 7,
+    width: "100%",
+    backgroundColor: "rgba(255,255,255,0.3)",
+  },
+  q: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 22,
+    color: "#1a0a00",
+  },
+  label: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 14,
+    color: Colors.gold,
+  },
+  hint: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 11,
+    color: "rgba(212,175,55,0.8)",
+    marginTop: 1,
+  },
+});
 
 // Daily reward modal
 function DailyRewardModal({ visible, reward, onClaim, inventoryFull, overflowFull, onClose }: {
@@ -917,7 +1039,7 @@ export default function PlayScreen() {
   const insets = useSafeAreaInsets();
   const tabSpacing = useTabBarSpacing();
   const { startGame } = useGame();
-  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, chestOverflow, openChestFromInventory, openChestFromOverflow, battlePassTier, recordFichasModePlay, fichasModePlaysRemaining, isChestInventoryFull, chestOverflowCount, chestOverflowLimit } = useProfile();
+  const { profile, level, xpProgress, canClaimDailyReward, todaysDailyReward, claimDailyReward, watchAd, adsWatchedToday, adDailyLimit, isLoaded, addCoins, addXp, markTutorialSeen, chestInventory, chestOverflow, openChestFromInventory, openChestFromOverflow, battlePassTier, recordFichasModePlay, fichasModePlaysRemaining, isChestInventoryFull, chestOverflowCount, chestOverflowLimit, claimSurpriseGift, surpriseGiftAvailableAt } = useProfile();
   const { setTabBarVisible, splashReady } = useUIState();
   const [selectedMode, setSelectedMode] = useState<GameModeId | null>(null);
   const [showDiffModal, setShowDiffModal] = useState(false);
@@ -932,6 +1054,31 @@ export default function PlayScreen() {
   const [multiPlayerCount, setMultiPlayerCount] = useState(2);
   const [onlinePlayerCount, setOnlinePlayerCount] = useState(2);
   const [multiPlayerNames, setMultiPlayerNames] = useState(["Jugador 1", "Jugador 2", "Jugador 3", "Jugador 4", "Jugador 5", "Jugador 6"]);
+
+  // Surprise mystery box (second gift system, independent of daily reward)
+  const [showSurpriseModal, setShowSurpriseModal] = useState(false);
+  const [surpriseReward, setSurpriseReward] = useState<SurpriseGiftResult | null>(null);
+  const [surpriseReady, setSurpriseReady] = useState(false);
+  useEffect(() => {
+    // Wait for the persisted profile to hydrate before trusting the cooldown —
+    // otherwise the default lastSurpriseGiftAt (0) makes the box flash as
+    // available on cold start even when a cooldown is actually active.
+    const tick = () => setSurpriseReady(isLoaded && Date.now() >= surpriseGiftAvailableAt);
+    tick();
+    const id = setInterval(tick, 30000);
+    return () => clearInterval(id);
+  }, [isLoaded, surpriseGiftAvailableAt]);
+  const handleSurprisePress = useCallback(() => {
+    playButton();
+    const result = claimSurpriseGift();
+    if (!result) {
+      setSurpriseReady(Date.now() >= surpriseGiftAvailableAt);
+      return;
+    }
+    setSurpriseReward(result);
+    setShowSurpriseModal(true);
+    setSurpriseReady(false);
+  }, [claimSurpriseGift, surpriseGiftAvailableAt]);
 
   // Animated coin counter (header)
   const prevCoinsRef = useRef<number>(profile.coins);
@@ -1328,6 +1475,14 @@ export default function PlayScreen() {
             <Text style={[styles.dailyBannerText, { color: "#2ECC71" }]}>{T("dailyShopGiftReady")}</Text>
             <Ionicons name="chevron-forward" size={14} color="#2ECC71" />
           </Pressable>
+        )}
+
+        {surpriseReady && (
+          <SurpriseGiftBox
+            onPress={handleSurprisePress}
+            label={T("surpriseGiftLabel")}
+            hint={T("surpriseGiftHint")}
+          />
         )}
 
         <View style={styles.titleHeroWrap}>
@@ -1867,6 +2022,12 @@ export default function PlayScreen() {
         chestType={selectedChestType}
         reward={chestModalReward}
         onClose={() => { setShowChestModal(false); setChestModalReward(null); setTabBarVisible(true); }}
+      />
+
+      <SurpriseGiftModal
+        visible={showSurpriseModal}
+        reward={surpriseReward}
+        onClose={() => { setShowSurpriseModal(false); setSurpriseReward(null); }}
       />
 
       {/* Online modal */}
