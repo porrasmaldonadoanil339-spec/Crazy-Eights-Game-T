@@ -1120,6 +1120,7 @@ export default function PlayScreen() {
   const [showAdModal, setShowAdModal] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
   const [adComplete, setAdComplete] = useState(false);
+  const [adClaiming, setAdClaiming] = useState(false);
   const [onlineTab, setOnlineTab] = useState<"search" | "create" | "join">("search");
   const [generatedRoomCode, setGeneratedRoomCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -1375,13 +1376,21 @@ export default function PlayScreen() {
   };
 
   const handleClaimAd = async () => {
-    // Mirrors AdMob's onUserEarnedReward: only grant when the ad is earned.
-    const { earned } = await showRewardedAd();
-    if (earned) {
-      watchAd();
-      playSound("purchase").catch(() => {});
+    // Guard against double-taps: a single completed view must grant at most once.
+    if (adClaiming) return;
+    setAdClaiming(true);
+    try {
+      // Mirrors AdMob's onUserEarnedReward: only grant when the ad is earned.
+      const { earned } = await showRewardedAd();
+      // watchAd() returns false if the daily cap was already reached, so the
+      // reward SFX only plays when coins were actually granted.
+      if (earned && watchAd()) {
+        playSound("purchase").catch(() => {});
+      }
+    } finally {
+      setShowAdModal(false);
+      setAdClaiming(false);
     }
-    setShowAdModal(false);
   };
 
   const selectedModeConfig = selectedMode ? GAME_MODES.find((m) => m.id === selectedMode) : null;
@@ -2251,7 +2260,7 @@ export default function PlayScreen() {
                   <CoinIcon size={20} color={Colors.gold} />
                   <Text style={[styles.adRewardText, { color: theme.gold }]}>+15 {T("coins")}</Text>
                 </View>
-                <Pressable onPress={handleClaimAd} style={styles.adClaimBtn}>
+                <Pressable onPress={handleClaimAd} disabled={adClaiming} style={[styles.adClaimBtn, adClaiming && { opacity: 0.6 }]}>
                   <LinearGradient colors={[Colors.goldLight, Colors.gold]} style={styles.adClaimGrad}>
                     <Text style={styles.adClaimText}>{T("adClose")}</Text>
                   </LinearGradient>
