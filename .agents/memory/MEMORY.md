@@ -1,0 +1,1 @@
+- [Ranked deferred star-loss on exit](ranked-deferred-loss.md) — deferred ranked -1 star must be committed on EVERY game-screen exit path, not just the result modal, or players dodge the penalty.

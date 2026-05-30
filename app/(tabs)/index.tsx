@@ -20,6 +20,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useGame } from "@/context/GameContext";
 import { getCurrentWeeklyEvent } from "@/lib/events";
 import { markFichasRunActive } from "@/lib/fichasChallenge";
+import { loadRewardedAd, showRewardedAd } from "@/lib/ads";
 import { useProfile } from "@/context/ProfileContext";
 import { GAME_MODES, DIFFICULTIES, GameModeId, Difficulty } from "@/lib/gameModes";
 import { playButton, syncSettings, playChestOpen, playLogoStinger } from "@/lib/audioManager";
@@ -1212,6 +1213,7 @@ export default function PlayScreen() {
 
   const handleOpenAd = () => {
     if (adsWatchedToday >= adDailyLimit) return;
+    loadRewardedAd().catch(() => {});
     setAdCountdown(5);
     setAdComplete(false);
     setShowAdModal(true);
@@ -1226,9 +1228,13 @@ export default function PlayScreen() {
     }, 1000);
   };
 
-  const handleClaimAd = () => {
-    watchAd();
-    playSound("purchase").catch(() => {});
+  const handleClaimAd = async () => {
+    // Mirrors AdMob's onUserEarnedReward: only grant when the ad is earned.
+    const { earned } = await showRewardedAd();
+    if (earned) {
+      watchAd();
+      playSound("purchase").catch(() => {});
+    }
     setShowAdModal(false);
   };
 

@@ -137,6 +137,9 @@ export interface PlayerProfile {
   // Watch ads
   adsWatchedToday: number;
   lastAdsDate: string;
+  // Ranked star rescue (watch ad to cancel a ranked star loss)
+  rankedRescuesToday: number;
+  lastRankedRescueDate: string;
   // Emotes
   equippedEmotes: string[];
   // Settings
@@ -275,6 +278,8 @@ const DEFAULT_PROFILE: PlayerProfile = {
   lastFichasModeDate: "",
   adsWatchedToday: 0,
   lastAdsDate: "",
+  rankedRescuesToday: 0,
+  lastRankedRescueDate: "",
   equippedEmotes: ["emote_gg", "emote_ocho", "emote_bravo", "emote_lol", "emote_no", "emote_si", "emote_jaja", "emote_bien"],
   musicEnabled: true,
   sfxEnabled: true,
@@ -366,6 +371,9 @@ interface ProfileContextValue {
   watchAd: () => boolean;
   adsWatchedToday: number;
   adDailyLimit: number;
+  recordRankedRescue: () => boolean;
+  rankedRescuesToday: number;
+  rankedRescueDailyLimit: number;
   level: number;
   xpProgress: { current: number; needed: number; level: number };
   battlePassTier: number;
@@ -1265,6 +1273,31 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return profile.lastAdsDate === today ? (profile.adsWatchedToday ?? 0) : 0;
   }, [profile.lastAdsDate, profile.adsWatchedToday]);
 
+  const RANKED_RESCUE_DAILY_LIMIT = 3;
+  // Records one ranked-star rescue against the daily cap. Returns true when the
+  // rescue was allowed (caller may then cancel the star loss), false when the
+  // daily limit is already reached.
+  const recordRankedRescue = useCallback((): boolean => {
+    const today = new Date().toDateString();
+    let success = false;
+    update((p) => {
+      const used = p.lastRankedRescueDate === today ? (p.rankedRescuesToday ?? 0) : 0;
+      if (used >= RANKED_RESCUE_DAILY_LIMIT) return p;
+      success = true;
+      return {
+        ...p,
+        rankedRescuesToday: used + 1,
+        lastRankedRescueDate: today,
+      };
+    });
+    return success;
+  }, [update]);
+
+  const rankedRescuesToday = useMemo(() => {
+    const today = new Date().toDateString();
+    return profile.lastRankedRescueDate === today ? (profile.rankedRescuesToday ?? 0) : 0;
+  }, [profile.lastRankedRescueDate, profile.rankedRescuesToday]);
+
   const recordGameResult = useCallback((params: {
     won: boolean;
     mode: GameModeId;
@@ -1540,6 +1573,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         watchAd,
         adsWatchedToday,
         adDailyLimit: AD_DAILY_LIMIT,
+        recordRankedRescue,
+        rankedRescuesToday,
+        rankedRescueDailyLimit: RANKED_RESCUE_DAILY_LIMIT,
         level,
         xpProgress,
         battlePassTier,

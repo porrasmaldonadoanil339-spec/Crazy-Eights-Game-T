@@ -39,6 +39,7 @@ import { playSound } from "@/lib/sounds";
 import { stopMusic, startGameMusicForMode, startMenuMusic, syncSettings, playVictory, playDefeat, playChestOpen, setForceAmbience } from "@/lib/audioManager";
 import { scheduleReEngagementNotification } from "@/lib/notifications";
 import { getRankInfo, RANK_COLORS, DIVISIONS, addStars, type RankedProfile } from "@/lib/ranked";
+import { loadRewardedAd, showRewardedAd } from "@/lib/ads";
 import { EmotePanel, EmoteBubble, EMOTES, type Emote } from "@/components/EmotePanel";
 import { getCpuPhrase, type CpuPhraseEvent } from "@/lib/cpuPhrases";
 import ChestOpeningModal from "@/components/ChestOpeningModal";
@@ -992,7 +993,7 @@ function ChestEarnedBadge({ chestType, onTap }: { chestType: ChestType; onTap: (
 }
 
 // ─── End modal ────────────────────────────────────────────────────────────────
-function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap, winStreak, rankChanged, rivalAbandoned, isEventWin }: {
+function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile, mode, rankedProfile, showChest, chestType, onChestTap, winStreak, rankChanged, rivalAbandoned, isEventWin, rescueAvailable, rescued, rescuing, rescuesRemaining, onRescue }: {
   phase: string; coinsEarned: number; xpEarned: number; onRestart: () => void; onHome: () => void;
   cpuProfile?: CpuProfile | null; mode?: string;
   rankedProfile?: RankedProfile | null;
@@ -1003,6 +1004,11 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
   rankChanged?: "promotion" | "demotion" | null;
   rivalAbandoned?: boolean;
   isEventWin?: boolean;
+  rescueAvailable?: boolean;
+  rescued?: boolean;
+  rescuing?: boolean;
+  rescuesRemaining?: number;
+  onRescue?: () => void;
 }) {
   const T = useT();
   const isWin = phase === "player_wins";
@@ -1155,7 +1161,39 @@ function EndModal({ phase, coinsEarned, xpEarned, onRestart, onHome, cpuProfile,
 
           {/* Ranked star section (win and loss) */}
           {mode === "ranked" && !isDraw && rankedProfile && (
-            <RankedStarSection rankedProfile={rankedProfile} isWin={isWin} rankChanged={rankChanged} rivalAbandoned={rivalAbandoned} />
+            !isWin && rescueAvailable && !rescued ? (
+              <View style={styles.rescueSection}>
+                <View style={styles.rescueIconWrap}>
+                  <Ionicons name="shield-checkmark" size={26} color={Colors.gold} />
+                </View>
+                <Text style={styles.rescueTitle}>{T("rescueTitle")}</Text>
+                <Text style={styles.rescueDesc}>{T("rescueDesc")}</Text>
+                <BouncePressable
+                  inline
+                  onPress={onRescue}
+                  disabled={rescuing}
+                  style={[styles.rescueBtn, rescuing && { opacity: 0.6 }]}
+                >
+                  <Ionicons name={rescuing ? "hourglass-outline" : "play-circle"} size={20} color="#1A1206" />
+                  <Text style={styles.rescueBtnText}>
+                    {rescuing ? T("rescueWatching") : T("rescueWatch")}
+                  </Text>
+                </BouncePressable>
+                <Text style={styles.rescueRemaining}>
+                  {T("rescueRemaining").replace("{n}", String(rescuesRemaining ?? 0))}
+                </Text>
+              </View>
+            ) : !isWin && rescued ? (
+              <View style={styles.rescueSection}>
+                <View style={[styles.rescueIconWrap, { backgroundColor: "#2ECC7122", borderColor: "#2ECC7155" }]}>
+                  <Ionicons name="star" size={26} color="#2ECC71" />
+                </View>
+                <Text style={[styles.rescueTitle, { color: "#2ECC71" }]}>{T("rescueSaved")}</Text>
+                <Text style={styles.rescueDesc}>{T("rescueSavedDesc")}</Text>
+              </View>
+            ) : (
+              <RankedStarSection rankedProfile={rankedProfile} isWin={isWin} rankChanged={rankChanged} rivalAbandoned={rivalAbandoned} />
+            )
           )}
 
           {/* Friend Request Button */}
@@ -1352,7 +1390,7 @@ export default function GameScreen() {
     startNextTournamentRound, startGame, getGameResult, forceGameOver, forceAiDraw, forcePlayerWin,
     setCurrentSuit,
   } = useGame();
-  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins, addFichas, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit } = useProfile();
+  const { profile, level, recordGameResult, updateAchievementProgress, updateRanked, addXp, addCoins, addFichas, addChestToInventory, openChestFromInventory, chestInventory, chestInventoryLimit, recordRankedRescue, rankedRescuesToday, rankedRescueDailyLimit } = useProfile();
   const T = useT();
   const gameStateRef = useRef(gameState);
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
@@ -1424,6 +1462,47 @@ export default function GameScreen() {
   const [showInactivityBar, setShowInactivityBar] = useState(false);
   const [rankedPromotion, setRankedPromotion] = useState<"promotion" | "demotion" | null>(null);
   const [rivalAbandoned, setRivalAbandoned] = useState(false);
+  // Rescate Clasificatoria — when a ranked match is lost and the player still
+  // has rescues left, the -1 star is held (deferred) and a "watch a video to
+  // save your star" button is offered. The loss is applied only if the player
+  // declines or the ad is not earned.
+  const [rankedRescueAvailable, setRankedRescueAvailable] = useState(false);
+  const [rankedRescued, setRankedRescued] = useState(false);
+  const [rankedRescuing, setRankedRescuing] = useState(false);
+  const rankedLossAppliedRef = useRef(false);
+
+  // Commits the deferred -1 star (and demotion overlay if a rank dropped). Safe
+  // to call multiple times — only the first call takes effect.
+  const applyDeferredRankedLoss = () => {
+    if (rankedLossAppliedRef.current) return;
+    rankedLossAppliedRef.current = true;
+    const beforeRank = profile.rankedProfile?.rank ?? 0;
+    const nextRanked = addStars(profile.rankedProfile, -1);
+    updateRanked(-1);
+    if (nextRanked.rank < beforeRank) setRankedPromotion("demotion");
+    setRankedRescueAvailable(false);
+  };
+
+  // Plays a rewarded video; if earned and within the daily cap, the star loss
+  // is cancelled. Otherwise the loss is committed.
+  const handleRankedRescue = async () => {
+    if (rankedRescuing || rankedRescued) return;
+    setRankedRescuing(true);
+    try {
+      await loadRewardedAd().catch(() => {});
+      const { earned } = await showRewardedAd();
+      if (earned && recordRankedRescue()) {
+        rankedLossAppliedRef.current = true; // star saved — never apply the loss
+        setRankedRescued(true);
+        setRankedRescueAvailable(false);
+        playSound("purchase").catch(() => {});
+        return;
+      }
+      applyDeferredRankedLoss();
+    } finally {
+      setRankedRescuing(false);
+    }
+  };
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   // Reto de Fichas in-match identity. Peeked at mount so the casino pill,
   // ambience, and palette swap stay active for the whole match — the flag
@@ -2141,10 +2220,19 @@ export default function GameScreen() {
         if (isAbandonment) setRivalAbandoned(true);
         const beforeRank = profile.rankedProfile?.rank ?? 0;
         const rankedDelta = won ? (isAbandonment ? 1 : 2) : -1;
-        const nextRanked = addStars(profile.rankedProfile, rankedDelta);
-        updateRanked(rankedDelta);
-        if (nextRanked.rank > beforeRank) setRankedPromotion("promotion");
-        else if (nextRanked.rank < beforeRank) setRankedPromotion("demotion");
+        const isRankedLoss = !won && !isAbandonment;
+        if (isRankedLoss && rankedRescuesToday < rankedRescueDailyLimit) {
+          // Defer the -1 star and offer a rescue. The loss is committed later
+          // by applyDeferredRankedLoss() if the player declines or the ad fails.
+          rankedLossAppliedRef.current = false;
+          setRankedRescueAvailable(true);
+        } else {
+          const nextRanked = addStars(profile.rankedProfile, rankedDelta);
+          updateRanked(rankedDelta);
+          rankedLossAppliedRef.current = true;
+          if (nextRanked.rank > beforeRank) setRankedPromotion("promotion");
+          else if (nextRanked.rank < beforeRank) setRankedPromotion("demotion");
+        }
       }
       setTimeout(() => {
         setShowEpicResult(null);
@@ -2978,6 +3066,8 @@ export default function GameScreen() {
           coinsEarned={endCoins}
           xpEarned={endXp}
           onRestart={() => {
+            // Leaving the result screen without rescuing commits the star loss.
+            if (rankedRescueAvailable && !rankedRescued) applyDeferredRankedLoss();
             if (session?.mode === "ranked") {
               router.replace("/ranked-lobby");
               return;
@@ -3006,7 +3096,10 @@ export default function GameScreen() {
             prevTopCardIdRef.current = undefined;
             if (session) startGame(session.mode, session.difficulty);
           }}
-          onHome={() => router.back()}
+          onHome={() => {
+            if (rankedRescueAvailable && !rankedRescued) applyDeferredRankedLoss();
+            router.back();
+          }}
           cpuProfile={activeCpu}
           mode={session?.mode}
           rankedProfile={session?.mode === "ranked" ? profile.rankedProfile : null}
@@ -3014,6 +3107,11 @@ export default function GameScreen() {
           rankChanged={rankedPromotion}
           rivalAbandoned={rivalAbandoned}
           isEventWin={endIsEventWin}
+          rescueAvailable={rankedRescueAvailable}
+          rescued={rankedRescued}
+          rescuing={rankedRescuing}
+          rescuesRemaining={Math.max(0, rankedRescueDailyLimit - rankedRescuesToday)}
+          onRescue={handleRankedRescue}
           showChest={showChestReward}
           chestType={pendingChestType}
           onChestTap={() => {
@@ -3184,6 +3282,8 @@ export default function GameScreen() {
         onCancel={() => setShowExitConfirm(false)}
         onConfirm={() => {
           setShowExitConfirm(false);
+          // If a ranked loss was deferred for a rescue, exiting commits it.
+          if (rankedRescueAvailable && !rankedRescued) applyDeferredRankedLoss();
           if (session?.mode === "ranked" || session?.mode === "challenge") addXp(-25);
           router.back();
         }}
@@ -3716,6 +3816,24 @@ const styles = StyleSheet.create({
     paddingVertical: 14, paddingHorizontal: 16, width: "100%",
     alignItems: "center", gap: 8,
   },
+  rescueSection: {
+    backgroundColor: "rgba(20,16,4,0.6)", borderRadius: 14,
+    borderWidth: 1, borderColor: "rgba(212,175,55,0.35)",
+    paddingVertical: 16, paddingHorizontal: 16, width: "100%",
+    alignItems: "center", gap: 8,
+  },
+  rescueIconWrap: {
+    width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(212,175,55,0.15)", borderWidth: 1, borderColor: "rgba(212,175,55,0.4)",
+  },
+  rescueTitle: { fontFamily: "Nunito_800ExtraBold", fontSize: 16, color: Colors.gold, textAlign: "center" },
+  rescueDesc: { fontFamily: "Nunito_400Regular", fontSize: 12, color: "rgba(255,255,255,0.6)", textAlign: "center", marginBottom: 2 },
+  rescueBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+    backgroundColor: Colors.gold, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 24, marginTop: 2,
+  },
+  rescueBtnText: { fontFamily: "Nunito_800ExtraBold", fontSize: 15, color: "#1A1206" },
+  rescueRemaining: { fontFamily: "Nunito_400Regular", fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 },
   rankedStarRow: { flexDirection: "row", alignItems: "center", gap: 16 },
   rankedStarBig: { alignItems: "center", justifyContent: "center", position: "relative" },
   rankedStarGlow: { position: "absolute" },
