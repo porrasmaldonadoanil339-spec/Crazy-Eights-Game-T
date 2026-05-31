@@ -1,1 +1,2 @@
 - [Ranked deferred star-loss on exit](ranked-deferred-loss.md) — deferred ranked -1 star must be committed on EVERY game-screen exit path, not just the result modal, or players dodge the penalty.
+- [Native-only RN modules break the web bundle](native-only-module-web-bundle.md) — guard a native-only require isn't enough; Metro still bundles it for web. Use a `.web.ts`/`.ts` bridge split.

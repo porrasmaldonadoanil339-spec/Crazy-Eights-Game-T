@@ -41,7 +41,14 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-6557640591803618~8666845152",
+          "iosAppId": "ca-app-pub-6557640591803618~8666845152"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

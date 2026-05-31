@@ -1,4 +1,4 @@
-import { Platform } from "react-native";
+import { loadNativeGma, type GmaModule } from "./admobBridge";
 
 // ─── AdMob configuration ──────────────────────────────────────────────────────
 // Real production identifiers provided for OCHO LOCOS.
@@ -32,66 +32,178 @@ export type RewardedAdResult = {
 // ──────────────────────────────────────────────────────────────────────────────
 // AdMob native bridge
 //
-// `react-native-google-mobile-ads` is a NATIVE module: it requires a custom
-// development/production build and does NOT run inside Expo Go (Replit's live
-// preview). Because of that the SDK is intentionally NOT imported here — doing
-// so would break Metro bundling for the Expo Go preview.
+// `react-native-google-mobile-ads` is a NATIVE module. It only runs in a custom
+// development/production build (Expo Launch / expo-dev-client), NOT inside Expo
+// Go (Replit's live preview) or on web. To keep the Expo Go preview working we
+// load the SDK lazily behind a runtime guard: when the native module is present
+// we serve real AdMob rewarded ads; otherwise we fall back to a faithful
+// SIMULATION of the rewarded-ad lifecycle so every business rule (daily limits,
+// reward granting on EARNED_REWARD, ranked-star rescue) stays testable.
 //
-// The functions below run a faithful SIMULATION of the rewarded-ad lifecycle so
-// all business rules (daily limits, reward granting on `onUserEarnedReward`,
-// ranked-star rescue) are fully testable today.
-//
-// TO ENABLE REAL ADS once you create a development build:
-//   1) Install the package via the package manager (do not edit package.json by
-//      hand): `react-native-google-mobile-ads`.
-//   2) Add the plugin + App ID to app.json:
-//        ["react-native-google-mobile-ads", { "androidAppId": ADMOB_APP_ID,
-//                                             "iosAppId": ADMOB_APP_ID }]
-//   3) Replace the bodies of `loadRewardedAd` / `showRewardedAd` with the real
-//      implementation outlined below:
-//
-//      import mobileAds, { RewardedAd, RewardedAdEventType, AdEventType }
-//        from "react-native-google-mobile-ads";
-//      // call mobileAds().initialize() once at app start.
-//      const ad = RewardedAd.createForAdRequest(getActiveRewardedAdUnitId());
-//      ad.addAdEventListener(RewardedAdEventType.LOADED, ...);
-//      ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => earned = true);
-//      ad.load(); ... ad.show();
+// Test Mode (AD_TEST_MODE) uses Google's official test ad unit, so real builds
+// can be verified safely before flipping to live revenue.
 // ──────────────────────────────────────────────────────────────────────────────
+
+// The native SDK is loaded via a platform-resolved bridge (admobBridge.ts on
+// native, admobBridge.web.ts on web) so it is never bundled for web. The bridge
+// returns null in Expo Go / web, which routes callers to the simulator below.
+let initPromise: Promise<void> | null = null;
+function ensureInitialized(mod: GmaModule): Promise<void> {
+  if (!initPromise) {
+    initPromise = mod
+      .default()
+      .initialize()
+      .then(() => undefined)
+      .catch(() => undefined);
+  }
+  return initPromise;
+}
 
 const SIMULATED_AD_DURATION_MS = 600;
 
-let preloaded = false;
+// Current preloaded native rewarded ad + its readiness flag.
+let rewardedAd: ReturnType<GmaModule["RewardedAd"]["createForAdRequest"]> | null = null;
+let rewardedLoaded = false;
+let loadSubs: Array<() => void> = [];
+// Simulator-only "preloaded" flag so the simulated path mirrors the real one.
+let simulatedPreloaded = false;
+
+function clearLoadSubs() {
+  loadSubs.forEach((u) => {
+    try {
+      u();
+    } catch {
+      // ignore
+    }
+  });
+  loadSubs = [];
+}
 
 /**
  * Preloads a rewarded ad so `showRewardedAd` can display instantly.
- * No-op in the simulator; with native AdMob this triggers `ad.load()`.
+ * Real builds create + load() a RewardedAd; the simulator just flags readiness.
  */
 export async function loadRewardedAd(): Promise<void> {
-  // Simulated preload: mark ready. Real impl would create + load() the RewardedAd.
-  preloaded = true;
+  const mod = loadNativeGma();
+  if (!mod) {
+    simulatedPreloaded = true;
+    return;
+  }
+  await ensureInitialized(mod);
+  const { RewardedAd, RewardedAdEventType, AdEventType } = mod;
+
+  // Discard any stale instance/listeners before creating a fresh request.
+  clearLoadSubs();
+  rewardedLoaded = false;
+  rewardedAd = RewardedAd.createForAdRequest(getActiveRewardedAdUnitId(), {
+    requestNonPersonalizedAdsOnly: true,
+  });
+
+  await new Promise<void>((resolve) => {
+    let settled = false;
+    const done = () => {
+      if (!settled) {
+        settled = true;
+        resolve();
+      }
+    };
+    loadSubs.push(
+      rewardedAd!.addAdEventListener(RewardedAdEventType.LOADED, () => {
+        rewardedLoaded = true;
+        done();
+      })
+    );
+    loadSubs.push(
+      rewardedAd!.addAdEventListener(AdEventType.ERROR, () => {
+        rewardedLoaded = false;
+        done();
+      })
+    );
+    try {
+      rewardedAd!.load();
+    } catch {
+      done();
+    }
+  });
 }
 
 /**
  * Shows a rewarded ad and resolves once the lifecycle completes.
- * `earned` is true only when the user earned the reward (onUserEarnedReward).
+ * `earned` is true only when the user earned the reward (EARNED_REWARD).
  *
  * In Expo Go / web this resolves `{ earned: true, simulated: true }` after a
  * short delay so the calling screen can present its own "watching" UI.
  */
 export async function showRewardedAd(): Promise<RewardedAdResult> {
-  if (!preloaded) {
+  const mod = loadNativeGma();
+  if (!mod) {
+    // Expo Go / web: simulate a completed rewarded view.
+    if (!simulatedPreloaded) {
+      await loadRewardedAd();
+    }
+    simulatedPreloaded = false;
+    await new Promise((resolve) => setTimeout(resolve, SIMULATED_AD_DURATION_MS));
+    return { earned: true, simulated: true };
+  }
+
+  await ensureInitialized(mod);
+  const { RewardedAdEventType, AdEventType } = mod;
+
+  if (!rewardedAd || !rewardedLoaded) {
     await loadRewardedAd();
   }
-  preloaded = false;
+  if (!rewardedAd || !rewardedLoaded) {
+    return { earned: false, error: "ad_load_failed" };
+  }
 
-  // Web + Expo Go: simulate a completed rewarded view.
-  await new Promise((resolve) => setTimeout(resolve, SIMULATED_AD_DURATION_MS));
-  return { earned: true, simulated: true };
+  const ad = rewardedAd;
+  return new Promise<RewardedAdResult>((resolve) => {
+    let earned = false;
+    let settled = false;
+    const subs: Array<() => void> = [];
+    const cleanup = () => {
+      subs.forEach((u) => {
+        try {
+          u();
+        } catch {
+          // ignore
+        }
+      });
+      clearLoadSubs();
+      rewardedAd = null;
+      rewardedLoaded = false;
+    };
+    const finish = (result: RewardedAdResult) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(result);
+    };
+
+    subs.push(
+      ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
+        earned = true;
+      })
+    );
+    subs.push(
+      ad.addAdEventListener(AdEventType.CLOSED, () => {
+        finish({ earned });
+      })
+    );
+    subs.push(
+      ad.addAdEventListener(AdEventType.ERROR, () => {
+        finish({ earned: false, error: "ad_show_failed" });
+      })
+    );
+    try {
+      ad.show();
+    } catch {
+      finish({ earned: false, error: "ad_show_failed" });
+    }
+  });
 }
 
-/** Whether real (native) AdMob is wired up. False in Expo Go / web today. */
+/** Whether real (native) AdMob is wired up. False in Expo Go / web. */
 export function isNativeAdsAvailable(): boolean {
-  // Becomes true once the native module is installed in a dev/prod build.
-  return false && Platform.OS !== "web";
+  return !!loadNativeGma();
 }
